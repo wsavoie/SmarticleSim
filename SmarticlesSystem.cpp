@@ -65,7 +65,7 @@ std::ofstream simParams;
 
 double gravity = -9.81;
 double dT = .001;
-double contact_recovery_speed = 0.1;
+double contact_recovery_speed = .3;
 double tFinal = 2000;
 
 bool povray_output = true;
@@ -191,7 +191,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem) {
 	/////////////////
 
   Smarticle smarticle0(&mphysicalSystem, 1, 1000, mat_g,
-		  1, 1, .1, .05, S_CYLINDER);
+		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), ChQuaternion<>(1, 0, 0, 0));
   smarticle0.Create();
 
 //  //////
