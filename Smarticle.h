@@ -9,7 +9,9 @@
 #define SMARTICLE_H_
 
 #include "core/ChVector.h"
-#include "physics/ChSystem.h"
+//#include "physics/ChSystem.h"  // Arman: take care of this later
+#include "chrono_parallel/physics/ChSystemParallel.h"
+
 
 enum ArmType { S_CYLINDER, S_CAPSULE, S_BOX };
 
@@ -19,7 +21,8 @@ class Smarticle {
 public:
   // Construct a smarticle and add it to ChSystem.
   Smarticle(
-		  	ChSystem* otherSystem,
+//		  	ChSystem* otherSystem,
+			ChSystemParallelDVI* otherSystem,
 			int sID,
 			double other_density,
 			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
@@ -79,7 +82,8 @@ private:
   ChSharedPtr<ChFunction> rm_function;
 
   ///< pointer to the Chrono system
-  ChSystem* m_system;  // Arman : use shared ptr. also go through chrono and modify
+//  ChSystem* m_system;  // Arman : take care of this later
+  ChSystemParallelDVI*  m_system;  // Arman : use shared ptr. also go through chrono and modify
 };
 }
 

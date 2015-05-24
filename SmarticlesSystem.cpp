@@ -27,31 +27,25 @@
 // ------------------------------------------------
 //             www.deltaknowledge.com
 // ------------------------------------------------
-//#include "physics/ChBodyEasy.h"
-#include "physics/ChContactContainer.h"
-#include "collision/ChCModelBulletBody.h"
-//#include "core/ChTimer.h"
-//#include "core/ChRealtimeStep.h"
-//#include "assets/ChTexture.h"
-#include "unit_IRRLICHT/ChIrrApp.h"
-#include <cstring>
-#include <fstream>
-#include <sstream>
-#include <time.h>
-#include <cstdlib>
-//#include <map>
-
-//*************** chrono parallel
-#include <stdio.h>
-#include <vector>
-#include <cmath>
-
+////*************** chrono parallel
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 #include "chrono_utils/ChUtilsCreators.h"     //Arman: why is this
 #include "chrono_utils/ChUtilsInputOutput.h"  //Arman: Why is this
 #include "chrono_utils/ChUtilsGenerators.h"
+
+#include <ctime>
+#include <stdlib.h>  // system
+#include "core/ChFileutils.h" // for MakeDirectory
+#include "Smarticle.h"
+
+
+//#include <fstream> // Arman: I don't know why this is not required
+//#include <cstring> // Arman: I don't know why this is not required
+//#include <stdio.h> // Arman: I don't know why this is not required
+
+
 
 //#ifdef CHRONO_PARALLEL_HAS_OPENGL
 //#undef CHRONO_PARALLEL_HAS_OPENGL
@@ -65,20 +59,8 @@
 
 using namespace chrono;
 //using namespace chrono::collision;
-using namespace std;
-
-// Use the main namespaces of Irrlicht
-//using namespace irr;
-//using namespace core;
-//using namespace scene;
-//using namespace video;
-//using namespace io;
-//using namespace gui;
 //using namespace std;
-#include <ctime>
-#include "Smarticle.h"
-#include <stdlib.h>  // system
-#include "core/ChFileutils.h" // for MakeDirectory
+
 std::ofstream simParams;
 
 double gravity = -9.81;
@@ -137,18 +119,18 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   omp_set_num_threads(threads);
 
   mphysicalSystem.GetSettings()->perform_thread_tuning = thread_tuning;
-  mphysicalSystem.GetSettings()->min_threads = max(1, threads/2);
+  mphysicalSystem.GetSettings()->min_threads = std::max(1, threads/2);
   mphysicalSystem.GetSettings()->max_threads = int(3.0 * threads / 2);
 
   // ---------------------
   // Print the rest of parameters
   // ---------------------
-  simParams << endl <<
-		  " number of threads: " << threads << endl <<
-		  " max_iteration_normal: " << max_iteration_normal << endl <<
-		  " max_iteration_sliding: " << max_iteration_sliding << endl <<
-		  " max_iteration_spinning: " << max_iteration_spinning << endl <<
-		  " max_iteration_bilateral: " << max_iteration_bilateral << endl << endl;
+  simParams << std::endl <<
+		  " number of threads: " << threads << std::endl <<
+		  " max_iteration_normal: " << max_iteration_normal << std::endl <<
+		  " max_iteration_sliding: " << max_iteration_sliding << std::endl <<
+		  " max_iteration_spinning: " << max_iteration_spinning << std::endl <<
+		  " max_iteration_bilateral: " << max_iteration_bilateral << std::endl << std::endl;
 
   // ---------------------
   // Edit mphysicalSystem settings.
@@ -272,7 +254,7 @@ int main(int argc, char* argv[]) {
 	  timeinfo = localtime(&rawtime);
 	  const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	  simParams.open(simulationParams);
-	  simParams << " Job was submitted at date/time: " << asctime(timeinfo) << endl;
+	  simParams << " Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
 
 	  ChTimerParallel step_timer;
 
@@ -281,13 +263,13 @@ int main(int argc, char* argv[]) {
 	  // --------------------------
 
 	  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
-	    cout << "Error creating directory " << out_dir << endl;
+		  std::cout << "Error creating directory " << out_dir << std::endl;
 	    return 1;
 	  }
 
 	  if (povray_output) {
 	    if (ChFileutils::MakeDirectory(pov_dir_mbd.c_str()) < 0) {
-	      cout << "Error creating directory " << pov_dir_mbd << endl;
+	    	std::cout << "Error creating directory " << pov_dir_mbd << std::endl;
 	      return 1;
 	    }
 	  }

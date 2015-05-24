@@ -13,7 +13,8 @@
 using namespace chrono;
 
 Smarticle::Smarticle(
-		ChSystem* otherSystem,
+//		ChSystem* otherSystem,
+		ChSystemParallelDVI* otherSystem,
 		int sID,
 		double other_density,
 		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
