@@ -50,14 +50,15 @@ SET(DEMOS "")
 
 
 SET(DEMOS ${DEMOS}
+	SmarticlesSystem
 	#smarticleParallel
-icePar	
+#icePar	
 )
 
 FOREACH(PROGRAM ${DEMOS})
     MESSAGE(STATUS "...add ${PROGRAM}")
 
-    ADD_EXECUTABLE(${PROGRAM}  "${PROGRAM}.cpp")
+    ADD_EXECUTABLE(${PROGRAM}  "${PROGRAM}.cpp" Smarticle.cpp)
     SOURCE_GROUP(""  FILES "${PROGRAM}.cpp")
 
     SET_TARGET_PROPERTIES(${PROGRAM} PROPERTIES
