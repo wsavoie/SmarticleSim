@@ -82,29 +82,26 @@ void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right a
 	arm = chrono::ChSharedBodyPtr(new chrono::ChBody(new chrono::collision::ChCollisionModelParallel));
 	ChVector<> posArm = rotation.Rotate(posRel) + position;
 	arm->SetPos(posArm);
-	arm->SetRot(rotation);
+	arm->SetRot(rotation*armRelativeRot);
     arm->SetCollide(true);
     arm->SetBodyFixed(false);
 	arm->SetMaterialSurface(mat_g);
-
-	arm->GetCollisionModel()->ClearModel();
-
 	// calc mass properties
+//	arm->GetCollisionModel()->ClearModel();
+
+	// NOTE: you can not combine this switch case with the next one. For some reason, it seams mass property need to be added before clearing the collision model
 	switch (armType) {
 	case S_CYLINDER: {
 		vol = utils::CalcCylinderVolume(r, len);
 		gyr = utils::CalcCylinderGyration(r, len).Get_Diag();
-		utils::AddCylinderGeometry(arm.get_ptr(), r, len, posArm, rotation*armRelativeRot);
 	} break;
 	case S_CAPSULE: {
 		vol = utils::CalcCapsuleVolume(r, len);
 		gyr = utils::CalcCapsuleGyration(r, len).Get_Diag();
-		utils::AddCapsuleGeometry(arm.get_ptr(), r, len, posArm, rotation*armRelativeRot);
 	} break;
 	case S_BOX: {
 		vol = utils::CalcBoxVolume(ChVector<>(r, len, r2));
 		gyr = utils::CalcBoxGyration(ChVector<>(r, len, r2)).Get_Diag();
-		utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(r, len, r2), posArm, rotation*armRelativeRot);
 	} break;
 	default:
 		std::cout << "Error! smarticle shape not supported. Please choose from {cylinder, capsule, box}" << std::endl;
@@ -116,6 +113,24 @@ void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right a
 	// create body
     arm->SetMass(mass);
     arm->SetInertiaXX(mass * gyr);
+
+	arm->GetCollisionModel()->ClearModel();
+
+	// calc mass properties
+	switch (armType) {
+	case S_CYLINDER: {
+		utils::AddCylinderGeometry(arm.get_ptr(), r, len, ChVector<>(0, 0, 0));
+	} break;
+	case S_CAPSULE: {
+		utils::AddCapsuleGeometry(arm.get_ptr(), r, len, ChVector<>(0, 0, 0));
+	} break;
+	case S_BOX: {
+		utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(r, len, r2), ChVector<>(0, 0, 0));
+	} break;
+	default:
+		std::cout << "Error! smarticle shape not supported. Please choose from {cylinder, capsule, box}" << std::endl;
+		break;
+	}
 
     // finalize collision
     arm->GetCollisionModel()->SetFamily(smarticleID);

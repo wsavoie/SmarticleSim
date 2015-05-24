@@ -96,7 +96,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   bool thread_tuning = false;
 
   //	uint max_iteration = 20;//10000;
-  int max_iteration_normal = 0;
+  int max_iteration_normal = 200;
   int max_iteration_sliding = 200;
   int max_iteration_spinning = 0;
   int max_iteration_bilateral = 100;
@@ -169,56 +169,63 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem) {
 	// Ground body
 	/////////////////
 
-	ChVector<> boxDim(10, 10, .2);
+	ChVector<> boxDim(10, 10, 2);
 	ChVector<> boxLoc(0, 0, -3);
 
   ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+  ground->SetMaterialSurface(mat_g);
+  ground->SetPos(boxLoc);
+
 //  ground->SetIdentifier(-1);
   ground->SetBodyFixed(true);
   ground->SetCollide(true);
-  ground->SetMaterialSurface(mat_g);
+
   ground->GetCollisionModel()->ClearModel();
-
-  utils::AddBoxGeometry(ground.get_ptr(), boxDim, boxLoc, ChQuaternion<>(1, 0, 0, 0));
-
+  utils::AddBoxGeometry(ground.get_ptr(), boxDim);
   ground->GetCollisionModel()->BuildModel();
+
   mphysicalSystem.AddBody(ground);
 
 	/////////////////
 	// Smarticle body
 	/////////////////
 
-//  Smarticle smarticle0(&mphysicalSystem, 1, 1000, mat_g,
-//		  1, 1, .1, .05, S_CYLINDER);
-//  smarticle0.Create();
+  Smarticle smarticle0(&mphysicalSystem, 1, 1000, mat_g,
+		  1, 1, .1, .05, S_CYLINDER);
+  smarticle0.Create();
 
-  //////
-	double r = .1;
-	double l = 1;
-	double len = l;
-	double w = 1;
-  ChVector<> posRel = ChVector<>(-w/2 + r, l/2 - r, 0);
-  ChSharedBodyPtr arm;
-  arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
-	arm->SetPos(posRel);
-	arm->SetRot(QUNIT);
-  arm->SetCollide(true);
-  arm->SetBodyFixed(false);
-	arm->SetMaterialSurface(mat_g);
-
-	arm->GetCollisionModel()->ClearModel();
-
-	double vol = utils::CalcCylinderVolume(r, len);
-	ChVector<> gyr = utils::CalcCylinderGyration(r, len).Get_Diag();
-	utils::AddCylinderGeometry(arm.get_ptr(), r, len, posRel, QUNIT);
-
-	double mass = 1000 * vol;
-
-	// create body
-    arm->SetMass(mass);
-    arm->SetInertiaXX(mass * gyr);
-    arm->GetCollisionModel()->BuildModel();
-    mphysicalSystem.AddBody(arm);
+//  //////
+//	double r = .1;
+//	double l = 1;
+//	double len = l;
+//	double w = 3;
+//  ChVector<> posRel = ChVector<>(-w/2 + r, l/2 - r, 1);
+//  ChSharedPtr<ChBody> m_arm = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+//	m_arm->SetMaterialSurface(mat_g);
+//
+//	m_arm->SetPos(posRel);
+////	m_arm->SetRot(QUNIT);
+//  m_arm->SetCollide(true);
+//  m_arm->SetBodyFixed(false);
+//
+////	double vol = utils::CalcCylinderVolume(r, len);
+////	ChVector<> gyr = utils::CalcCylinderGyration(r, len).Get_Diag();
+//	r = 1;
+//	double vol = utils::CalcSphereVolume(r);
+//	ChVector<> gyr = utils::CalcSphereGyration(r).Get_Diag();
+//
+//	double mass = 1000 * vol;
+//
+//	// create body
+//    m_arm->SetMass(mass);
+//    m_arm->SetInertiaXX(mass * gyr);
+//
+//  m_arm->GetCollisionModel()->ClearModel();
+////	utils::AddCylinderGeometry(arm.get_ptr(), r, len, posRel, QUNIT);
+//	utils::AddSphereGeometry(m_arm.get_ptr(), r);
+//
+//    m_arm->GetCollisionModel()->BuildModel();
+//    mphysicalSystem.AddBody(m_arm);
 
 
 
@@ -285,7 +292,7 @@ int main(int argc, char* argv[]) {
 
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
-	ChVector<> CameraLocation = ChVector<>(0, -5, 20);
+	ChVector<> CameraLocation = ChVector<>(-6, -4, 3);
 	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
 	gl_window.Initialize(1280, 720, "Smarticles", &mphysicalSystem);
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
