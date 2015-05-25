@@ -95,7 +95,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   // Desired number of OpenMP threads (will be clamped to maximum available)
   int threads = 1;
   // Perform dynamic tuning of number of threads?
-  bool thread_tuning = false;
+  bool thread_tuning = true;
 
   //	uint max_iteration = 20;//10000;
   int max_iteration_normal = 200;
@@ -171,37 +171,52 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	// Ground body
 	/////////////////
 
+	// ground
 	ChVector<> boxDim(100, 100, 2);
-	ChVector<> boxLoc(0, 0, -4);
+	ChVector<> boxLoc(0, 0, -7);
+	ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	ground->SetMaterialSurface(mat_g);
+	ground->SetPos(boxLoc);
 
-  ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-  ground->SetMaterialSurface(mat_g);
-  ground->SetPos(boxLoc);
+	//  ground->SetIdentifier(-1);
+	ground->SetBodyFixed(true);
+	ground->SetCollide(true);
 
-//  ground->SetIdentifier(-1);
-  ground->SetBodyFixed(true);
-  ground->SetCollide(true);
+	ground->GetCollisionModel()->ClearModel();
+	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, 2, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	ground->GetCollisionModel()->BuildModel();
+	mphysicalSystem.AddBody(ground);
 
-  ground->GetCollisionModel()->ClearModel();
-  utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, 2, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
-  ground->GetCollisionModel()->BuildModel();
+	// bucket
+	ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	ChVector<> hdim(5, 5, 2.5);
+	double hthick = .2;
+	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, hdim, hthick);
 
-  mphysicalSystem.AddBody(ground);
 
 	/////////////////
 	// Smarticle body
 	/////////////////
+	ChVector<> smarticleLengths(1, 1, 0.2); // l, w, t
+	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
+	int nX = hdim.x / sLenghWithTol.x;
+	int nY = hdim.y / sLenghWithTol.z;
+	int nZ = 30;
 
-  for (int i= 0; i < 5; i++) {
-	  for (int j = 0; j < 20; j ++) {
-		  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
-				  1, 1, .2, .05, S_BOX, ChVector<>(i * 4, j * 1.0 , 0), ChQuaternion<>(1, 0, 0, 0));
-		//  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
-		//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 3, VECT_X));
-		  smarticle0->Create();
-		  mySmarticlesVec.push_back(smarticle0);
-	  }
-  }
+	for (int k = 0; k < nZ; k++) {
+		for (int i= -nX+1; i < nX; i++) {
+			for (int j = -nY+1; j < nY; j ++) {
+			  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
+					  smarticleLengths.x, smarticleLengths.y, smarticleLengths.z, .05, S_BOX,
+					  ChVector<>(0, 0, hdim.z) + ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y),
+					  ChQuaternion<>(1, 0, 0, 0));
+			//  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
+			//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 3, VECT_X));
+			  smarticle0->Create();
+			  mySmarticlesVec.push_back(smarticle0);
+			}
+		}
+	}
 	/////////////////
 	// test body
 	/////////////////
@@ -352,9 +367,12 @@ int main(int argc, char* argv[]) {
   ChSharedPtr<ChFunction> fun2 = ChSharedPtr<ChFunction>(new ChFunction_Ramp(0,1));
   ChSharedPtr<ChFunction> fun3 = ChSharedPtr<ChFunction>(new ChFunction_Ramp(0,-1));
 
+  ChSharedPtr<ChFunction> fun4 = ChSharedPtr<ChFunction>(new ChFunction_Const(CH_C_PI / 2));
+  ChSharedPtr<ChFunction> fun5 = ChSharedPtr<ChFunction>(new ChFunction_Const(-CH_C_PI / 2));
+
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
-	  mySmarticlesVec[i]->SetActuatorFunction(0, fun2);
-	  mySmarticlesVec[i]->SetActuatorFunction(1, fun3);
+	  mySmarticlesVec[i]->SetActuatorFunction(0, fun4);
+	  mySmarticlesVec[i]->SetActuatorFunction(1, fun4);
 
   }
 
