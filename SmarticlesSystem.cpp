@@ -66,10 +66,10 @@ std::ofstream simParams;
 double gravity = -9.81;
 double dT = .01;
 double contact_recovery_speed = .3;
-double tFinal = 2000;
+double tFinal = 50;
 
 bool povray_output = true;
-int out_fps = 120;
+int out_fps = 25;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
 
@@ -183,7 +183,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
   ground->SetCollide(true);
 
   ground->GetCollisionModel()->ClearModel();
-  utils::AddBoxGeometry(ground.get_ptr(), boxDim);
+  utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, 2, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
   ground->GetCollisionModel()->BuildModel();
 
   mphysicalSystem.AddBody(ground);
@@ -266,16 +266,12 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 void SavePovFilesMBD(ChSystemParallelDVI& mphysicalSystem,
                      int tStep) {
   int out_steps = std::ceil((1.0 / dT) / out_fps);
+  printf("tStep %d , outstep %d \n", tStep, out_steps);
 
   static int out_frame = 0;
 
   // If enabled, output data for PovRay postprocessing.
   if (povray_output && tStep % out_steps == 0) {
-		if (tStep / out_steps == 0) {
-			const std::string rmCmd = std::string("rm ") + pov_dir_mbd + std::string("/*.dat");
-			system(rmCmd.c_str());
-		}
-
     char filename[100];
     sprintf(filename, "%s/data_%03d.dat", pov_dir_mbd.c_str(), out_frame + 1);
     utils::WriteShapesPovray(&mphysicalSystem, filename);
@@ -310,6 +306,16 @@ int main(int argc, char* argv[]) {
 	    	std::cout << "Error creating directory " << pov_dir_mbd << std::endl;
 	      return 1;
 	    }
+	  }
+
+	  const std::string rmCmd = std::string("rm -rf ") + pov_dir_mbd;
+	  std::system(rmCmd.c_str());
+
+	  if (povray_output) {
+		if (ChFileutils::MakeDirectory(pov_dir_mbd.c_str()) < 0) {
+			std::cout << "Error creating directory " << pov_dir_mbd << std::endl;
+		  return 1;
+		}
 	  }
 
   // Create a ChronoENGINE physical system
@@ -354,7 +360,7 @@ int main(int argc, char* argv[]) {
 
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 	  int stage = int(mphysicalSystem.GetChTime() / (CH_C_PI/2));
-	  printf("yo %d \n", stage%4);
+//	  printf("yo %d \n", stage%4);
 //	  switch (stage % 4) {
 //	  case 0: {
 //		  smarticle0->SetActuatorFunction(0, fun2);
