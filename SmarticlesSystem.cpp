@@ -195,7 +195,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
   for (int i= 0; i < 5; i++) {
 	  for (int j = 0; j < 20; j ++) {
 		  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
-				  1, 1, .2, .05, S_BOX, ChVector<>(i * 4, j * 0.6 , 0), ChQuaternion<>(1, 0, 0, 0));
+				  1, 1, .2, .05, S_BOX, ChVector<>(i * 4, j * 1.0 , 0), ChQuaternion<>(1, 0, 0, 0));
 		//  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
 		//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 3, VECT_X));
 		  smarticle0->Create();
@@ -354,6 +354,7 @@ int main(int argc, char* argv[]) {
 
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
 	  mySmarticlesVec[i]->SetActuatorFunction(0, fun2);
+	  mySmarticlesVec[i]->SetActuatorFunction(1, fun3);
 
   }
 
