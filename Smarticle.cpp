@@ -9,6 +9,9 @@
 #include "chrono_utils/ChUtilsGeometry.h"
 #include "chrono_utils/ChUtilsCreators.h"
 
+#include "chrono_parallel/physics/ChSystemParallel.h"
+#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
+
 
 using namespace chrono;
 
@@ -51,30 +54,27 @@ void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right a
 						//	Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
-	double jClearance = 1.1 * r;
+	double jClearance = 1.3 * r;
 	if (armType == S_BOX) {
-		jClearance = 1.1 * r2;
+		jClearance = 1.3 * r2;
 	}
 
 	ChQuaternion<> armRelativeRot = QUNIT;
 
 	double len;
-	chrono::ChSharedBodyPtr arm;
+	ChSharedBodyPtr arm;
 	switch (armID) {
 	case 0: {
 		posRel = ChVector<>(-w/2 - l/2 - jClearance, 0, 0); // Arman!! : the arms overlap with this measure. But right now we are considering ideal case
 		len = l;
-		arm = arm0;
 	} break;
 	case 1: {
 		posRel = ChVector<>(0, 0, 0); // Arman!! : the arms overlap with this measure. But right now we are considering ideal case
 		len = w;
-		arm = arm1;
 	} break;
 	case 2: {
 		posRel = ChVector<>(w/2 + l/2 + jClearance, 0, 0); // Arman!! : the arms overlap with this measure. But right now we are considering ideal case
 		len = l;
-		arm = arm2;
 	} break;
 	default:
 		std::cout << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
@@ -101,13 +101,18 @@ void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right a
 	}
 
 	// create body, set position and rotation, add surface property, and clear/make collision model
-	arm = chrono::ChSharedBodyPtr(new chrono::ChBody(new chrono::collision::ChCollisionModelParallel));
+	arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
 	ChVector<> posArm = rotation.Rotate(posRel) + position;
 
 	arm->SetPos(posArm);
 	arm->SetRot(rotation*armRelativeRot);
     arm->SetCollide(true);
     arm->SetBodyFixed(false);
+//    if (armID == 1)
+//    	arm->SetBodyFixed(true);
+//    else
+//    	arm->SetBodyFixed(false);
+
 	arm->SetMaterialSurface(mat_g);
 
 	double mass = density * vol;
@@ -139,7 +144,103 @@ void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right a
 //    arm->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(smarticleID);
     arm->GetCollisionModel()->BuildModel();
     m_system->AddBody(arm);
+
+
+
+
+	switch (armID) {
+	case 0: {
+		arm0 = arm;
+	} break;
+	case 1: {
+		arm1 = arm;
+	} break;
+	case 2: {
+		arm2 = arm;
+	} break;
+	default:
+		std::cout << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
+		break;
+	}
 }
+
+
+ChSharedBodyPtr Smarticle::GetArm(int armID) {
+	ChSharedBodyPtr arm;
+	switch (armID) {
+	case 0: {
+		arm = arm0;
+	} break;
+	case 1: {
+		arm = arm1;
+	} break;
+	case 2: {
+		arm = arm2;
+	} break;
+	default:
+		std::cout << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
+		break;
+	}
+	return arm;
+}
+
+ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
+	ChSharedPtr<ChLinkLockRevolute> link;
+	switch (jointID) {
+	case 0: {
+		link = link_revolute01;
+	} break;
+	case 1: {
+		link = link_revolute12;
+	} break;
+	default:
+		std::cout << "Error! smarticle can only have joints with ids from {0, 1}" << std::endl;
+		break;
+	}
+	return link;
+}
+
+
+void Smarticle::CreateJoints() {
+	// link 1
+	link_revolute01 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
+	ChVector<> pR01(-w/2, 0, 0);
+	link_revolute01->Initialize(arm0, arm1,
+        ChCoordsys<>(rotation.Rotate(pR01) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	m_system->AddLink(link_revolute01);
+
+
+	// link 2
+	link_revolute12 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
+	ChVector<> pR12(w/2, 0, 0);
+	link_revolute12->Initialize(arm1, arm2,
+        ChCoordsys<>(rotation.Rotate(pR12) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	m_system->AddLink(link_revolute12);
+}
+
+void Smarticle::CreateActuators() {
+	function01 = ChSharedPtr<ChFunction>(new ChFunction_Const(0));
+	function12 = ChSharedPtr<ChFunction>(new ChFunction_Const(0));
+
+	// link 1
+	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+	ChVector<> pR01(-w/2, 0, 0);
+	link_actuator01->Initialize(arm0, arm1,
+	        ChCoordsys<>(rotation.Rotate(pR01) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+	link_actuator01->Set_rot_funct(function01);
+	m_system->AddLink(link_actuator01);
+
+	// link 2
+	link_actuator12 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+	ChVector<> pR12(w/2, 0, 0);
+	link_actuator12->Initialize(arm1, arm2,
+	        ChCoordsys<>(rotation.Rotate(pR12) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+	link_actuator12->Set_rot_funct(function12);
+	m_system->AddLink(link_actuator12);
+}
+
 
 void Smarticle::Create() {
 	// Create Arms
@@ -147,18 +248,33 @@ void Smarticle::Create() {
 	CreateArm(1);
 	CreateArm(2);
 
-//	link_revolute01 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
-//	ChVector<> pR01(-w/2 + r, 0, 0);
-//	link_revolute01->Initialize(arm0, arm1,
-//        ChCoordsys<>(rotation.Rotate(pR01) + position, rotation * QUNIT)); //Q_from_AngAxis(CH_C_PI / 2, VECT_Y))
-//	m_system->AddLink(link_revolute01);
-//
-//	link_revolute12 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
-//	ChVector<> pR12(w/2 - r, 0, 0);
-//	link_revolute12->Initialize(arm1, arm2,
-//        ChCoordsys<>(rotation.Rotate(pR12) + position, rotation * QUNIT)); //Q_from_AngAxis(CH_C_PI / 2, VECT_Y))
-//	m_system->AddLink(link_revolute12);
+	CreateJoints();
+	CreateActuators();
 }
+
+ChSharedPtr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
+	if (actuatorID == 0) {
+		return function01;
+	} else if (actuatorID == 1) {
+		return function12;
+	} else {
+		std::cout << "Error! smarticle can only have actuators with ids from {0, 1}" << std::endl;
+	}
+	return ChSharedPtr<ChFunction>(NULL);
+}
+
+void Smarticle::SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction) {
+	if (actuatorID == 0) {
+		function01 = actuatorFunction;
+	} else if (actuatorID == 1) {
+		function12 = actuatorFunction;
+	} else {
+		std::cout << "Error! smarticle can only have actuators with ids from {0, 1}" << std::endl;
+	}
+}
+
+void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
+
 
 Smarticle::~Smarticle() {}
 

@@ -40,10 +40,24 @@ public:
   // create the smarticle by creating arms, adding joint between them, and functions
   void Create();
 
+  // get arm shared pointer
+  ChSharedBodyPtr GetArm(int armID);
+
+  // get joint shared pointer
+  // jointID belongs to {0, 1}, i.e. the joint between 0 and 1, or between 1 and 2
+  ChSharedPtr<ChLinkLockRevolute> GetRevoluteJoint(int jointID);
+
+  // get actuator function
+  // actuatorID belongs to {0, 1}, i.e. the actuatorID between 0 and 1, or between 1 and 2
+  ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
+  void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
+
 private:
   // create smarticle arm, set collision, surface, and mass property.
   // armID = 0 (left arm), 1 (middle arm), 2 (right arm)
   void CreateArm(int armID);
+  void CreateJoints();
+  void CreateActuators();
 
  private:
   int smarticleID;
@@ -73,13 +87,16 @@ private:
  ChSharedBodyPtr arm2;	// right arm
 
   // joints
-  ChSharedPtr<ChLinkLockRevolute> link_revolute01; // revolute joint between arms 0 and 1
-  ChSharedPtr<ChLinkLockRevolute> link_revolute12; // revolute joint between arms 0 and 1
+  ChSharedPtr<ChLinkLockRevolute> link_revolute01; 	// revolute joint between arms 0 and 1
+  ChSharedPtr<ChLinkLockRevolute> link_revolute12; 	// revolute joint between arms 0 and 1
 
+  // Actuators
+  ChSharedPtr<ChLinkEngine> link_actuator01;	// actuator joint between arms 0 and 1
+  ChSharedPtr<ChLinkEngine> link_actuator12;	// actuator joint between arms 0 and 1
 
   // joints functions
-  ChSharedPtr<ChFunction> lm_function;
-  ChSharedPtr<ChFunction> rm_function;
+  ChSharedPtr<ChFunction> function01;
+  ChSharedPtr<ChFunction> function12;
 
   ///< pointer to the Chrono system
 //  ChSystem* m_system;  // Arman : take care of this later

@@ -73,6 +73,8 @@ int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
 
+Smarticle * smarticle0;
+
 // =============================================================================
 void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral) {
   if (argc > 1) {
@@ -170,7 +172,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem) {
 	/////////////////
 
 	ChVector<> boxDim(10, 10, 2);
-	ChVector<> boxLoc(0, 0, -3);
+	ChVector<> boxLoc(0, 0, -4);
 
   ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
   ground->SetMaterialSurface(mat_g);
@@ -190,11 +192,16 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem) {
 	// Smarticle body
 	/////////////////
 
-  Smarticle smarticle0(&mphysicalSystem, 1, 1000, mat_g,
+  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
 		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), ChQuaternion<>(1, 0, 0, 0));
-  smarticle0.Create();
+//  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
+//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y));
+  smarticle0->Create();
+	/////////////////
+	// test body
+	/////////////////
 
-//  //////
+////  //////
 //	double r = .1;
 //	double l = 1;
 //	double len = l;
@@ -208,11 +215,11 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem) {
 //  m_arm->SetCollide(true);
 //  m_arm->SetBodyFixed(false);
 //
-////	double vol = utils::CalcCylinderVolume(r, len);
-////	ChVector<> gyr = utils::CalcCylinderGyration(r, len).Get_Diag();
-//	r = 1;
-//	double vol = utils::CalcSphereVolume(r);
-//	ChVector<> gyr = utils::CalcSphereGyration(r).Get_Diag();
+//	double vol = utils::CalcCylinderVolume(r, len);
+//	ChVector<> gyr = utils::CalcCylinderGyration(r, len).Get_Diag();
+////	r = 1;
+////	double vol = utils::CalcSphereVolume(r);
+////	ChVector<> gyr = utils::CalcSphereGyration(r).Get_Diag();
 //
 //	double mass = 1000 * vol;
 //
@@ -221,13 +228,32 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem) {
 //    m_arm->SetInertiaXX(mass * gyr);
 //
 //  m_arm->GetCollisionModel()->ClearModel();
-////	utils::AddCylinderGeometry(arm.get_ptr(), r, len, posRel, QUNIT);
-//	utils::AddSphereGeometry(m_arm.get_ptr(), r);
+//	utils::AddCylinderGeometry(m_arm.get_ptr(), r, len, posRel, QUNIT);
+////	utils::AddSphereGeometry(m_arm.get_ptr(), r);
 //
 //    m_arm->GetCollisionModel()->BuildModel();
 //    mphysicalSystem.AddBody(m_arm);
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//    ChSharedPtr<ChLinkLockRevolute> shipGroundPrismatic(new ChLinkLockRevolute);
+//    shipGroundPrismatic->Initialize(
+//    		smarticle0.GetArm(0), ground, true, ChCoordsys<>(ChVector<>(0, l/2, 0)), ChCoordsys<>(posRel + ChVector<>(0, l/2, 0)));
+//    shipGroundPrismatic->SetName("ship_ground_prismatic");
+//    mphysicalSystem.AddLink(shipGroundPrismatic);
 
 
+//  ChSharedPtr<ChLinkLockRevolute> shipGroundPrismatic(new ChLinkLockRevolute);
+//  shipGroundPrismatic->Initialize(
+//  		smarticle0.GetArm(0), smarticle0.GetArm(1), true, ChCoordsys<>(ChVector<>(0, l/2, 0)), ChCoordsys<>(posRel + ChVector<>(0, l/2, 0)));
+//  shipGroundPrismatic->SetName("ship_ground_prismatic");
+//  mphysicalSystem.AddLink(shipGroundPrismatic);
 
 }
 // =============================================================================
@@ -309,6 +335,12 @@ int main(int argc, char* argv[]) {
   // ***************************** Simulation loop ********************************************
 
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
+	  ChSharedPtr<ChLinkLockRevolute> rev1 = smarticle0->GetRevoluteJoint(0);
+//	  rev1->SetMotion_ang(0);
+	  printf("rev angle %f %f %f \n", rev1->GetMotion_ang(), rev1->GetMotion_ang(), rev1->GetMotion_ang() );
+
+
+
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.start("step time");
 
@@ -326,6 +358,7 @@ int main(int argc, char* argv[]) {
 
 
   }
+  delete smarticle0;
   simParams.close();
   return 0;
 }

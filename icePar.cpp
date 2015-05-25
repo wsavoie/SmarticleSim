@@ -455,7 +455,7 @@ void create_system_particles(ChSystemParallelDVI& mphysicalSystem) {
   int idxI = mphysicalSystem.Get_bodylist()->size();
 
   // Generate ice particels
-  (void)CreateIceParticles(mphysicalSystem);
+//  (void)CreateIceParticles(mphysicalSystem);
 
   int idxJ = mphysicalSystem.Get_bodylist()->size();
 
@@ -757,7 +757,7 @@ int main(int argc, char* argv[]) {
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
   gl_window.Initialize(1280, 720, "mixerDVI", &mphysicalSystem);
-  gl_window.SetCamera(ChVector<>(-3, 12, -8), ChVector<>(7.2, 6, 8.2),
+  gl_window.SetCamera(ChVector<>(-3, 8, -8), ChVector<>(7.2, 4, 8.2),
                       ChVector<>(0, 1, 0));  // camera
 
 // Uncomment the following two lines for the OpenGL manager to automatically
