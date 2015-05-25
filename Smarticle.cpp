@@ -219,8 +219,8 @@ void Smarticle::CreateJoints() {
 }
 
 void Smarticle::CreateActuators() {
-	function01 = ChSharedPtr<ChFunction>(new ChFunction_Const(0));
-	function12 = ChSharedPtr<ChFunction>(new ChFunction_Const(0));
+//	function01 = ChSharedPtr<ChFunction>(new ChFunction_Const(0));
+//	function12 = ChSharedPtr<ChFunction>(new ChFunction_Const(0));
 
 	// link 1
 	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
@@ -228,7 +228,7 @@ void Smarticle::CreateActuators() {
 	link_actuator01->Initialize(arm0, arm1,
 	        ChCoordsys<>(rotation.Rotate(pR01) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
 	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-	link_actuator01->Set_rot_funct(function01);
+	SetActuatorFunction(0, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
 	m_system->AddLink(link_actuator01);
 
 	// link 2
@@ -237,7 +237,7 @@ void Smarticle::CreateActuators() {
 	link_actuator12->Initialize(arm1, arm2,
 	        ChCoordsys<>(rotation.Rotate(pR12) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
 	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-	link_actuator12->Set_rot_funct(function12);
+	SetActuatorFunction(1, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
 	m_system->AddLink(link_actuator12);
 }
 
@@ -266,8 +266,10 @@ ChSharedPtr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
 void Smarticle::SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction) {
 	if (actuatorID == 0) {
 		function01 = actuatorFunction;
+		link_actuator01->Set_rot_funct(function01);
 	} else if (actuatorID == 1) {
 		function12 = actuatorFunction;
+		link_actuator12->Set_rot_funct(function12);
 	} else {
 		std::cout << "Error! smarticle can only have actuators with ids from {0, 1}" << std::endl;
 	}

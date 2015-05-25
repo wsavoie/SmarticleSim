@@ -334,13 +334,12 @@ int main(int argc, char* argv[]) {
   int stepEnd = int(tFinal / dT);  // 1.0e6;//2.4e6;//600000;//2.4e6 * (.02 * paramsH.sizeScale) /
   // ***************************** Simulation loop ********************************************
 
+  ChSharedPtr<ChFunction> fun1 = ChSharedPtr<ChFunction>(new ChFunction_Const(0));
+  ChSharedPtr<ChFunction> fun2 = ChSharedPtr<ChFunction>(new ChFunction_Ramp(0,1));
+  ChSharedPtr<ChFunction> fun3 = ChSharedPtr<ChFunction>(new ChFunction_Ramp(0,-1));
+
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
-	  ChSharedPtr<ChLinkLockRevolute> rev1 = smarticle0->GetRevoluteJoint(0);
-//	  rev1->SetMotion_ang(0);
-	  printf("rev angle %f %f %f \n", rev1->GetMotion_ang(), rev1->GetMotion_ang(), rev1->GetMotion_ang() );
-
-
-
+	  smarticle0->SetActuatorFunction(0, fun2);
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.start("step time");
 
