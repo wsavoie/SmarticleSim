@@ -64,7 +64,7 @@ using namespace chrono;
 std::ofstream simParams;
 
 double gravity = -9.81;
-double dT = .001;
+double dT = .01;
 double contact_recovery_speed = .3;
 double tFinal = 2000;
 
@@ -195,7 +195,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem) {
   smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
 		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), ChQuaternion<>(1, 0, 0, 0));
 //  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
-//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y));
+//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 3, VECT_X));
   smarticle0->Create();
 	/////////////////
 	// test body
@@ -338,8 +338,26 @@ int main(int argc, char* argv[]) {
   ChSharedPtr<ChFunction> fun2 = ChSharedPtr<ChFunction>(new ChFunction_Ramp(0,1));
   ChSharedPtr<ChFunction> fun3 = ChSharedPtr<ChFunction>(new ChFunction_Ramp(0,-1));
 
+  smarticle0->SetActuatorFunction(0, fun2);
+
+
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
-	  smarticle0->SetActuatorFunction(0, fun2);
+	  int stage = int(mphysicalSystem.GetChTime() / (CH_C_PI/2));
+	  printf("yo %d \n", stage%4);
+//	  switch (stage % 4) {
+//	  case 0: {
+//		  smarticle0->SetActuatorFunction(0, fun2);
+//	  } break;
+//	  case 1: {
+////		  smarticle0->SetActuatorFunction(0, fun1);
+//	  } break;
+//	  case 2: {
+//		  smarticle0->SetActuatorFunction(0, fun3);
+//	  } break;
+//	  case 3: {
+////		  smarticle0->SetActuatorFunction(0, fun1);
+//	  } break;
+//	  }
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.start("step time");
 
