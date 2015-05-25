@@ -73,7 +73,7 @@ int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
 
-Smarticle * smarticle0;
+//Smarticle * smarticle0;
 
 // =============================================================================
 void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral) {
@@ -159,7 +159,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
 
 // =============================================================================
 
-void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem) {
+void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 	  ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
 		mat_g->SetFriction(0.1);
 		mat_g->SetCohesion(0);
@@ -171,7 +171,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem) {
 	// Ground body
 	/////////////////
 
-	ChVector<> boxDim(10, 10, 2);
+	ChVector<> boxDim(100, 100, 2);
 	ChVector<> boxLoc(0, 0, -4);
 
   ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
@@ -192,11 +192,16 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem) {
 	// Smarticle body
 	/////////////////
 
-  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
-		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), ChQuaternion<>(1, 0, 0, 0));
-//  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
-//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 3, VECT_X));
-  smarticle0->Create();
+  for (int i= 0; i < 5; i++) {
+	  for (int j = 0; j < 20; j ++) {
+		  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
+				  1, 1, .2, .05, S_BOX, ChVector<>(i * 4, j * 0.6 , 0), ChQuaternion<>(1, 0, 0, 0));
+		//  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
+		//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 3, VECT_X));
+		  smarticle0->Create();
+		  mySmarticlesVec.push_back(smarticle0);
+	  }
+  }
 	/////////////////
 	// test body
 	/////////////////
@@ -310,7 +315,10 @@ int main(int argc, char* argv[]) {
   // Create a ChronoENGINE physical system
   ChSystemParallelDVI mphysicalSystem;
   InitializeMbdPhysicalSystem(mphysicalSystem, argc, argv);
-  CreateMbdPhysicalSystemObjects(mphysicalSystem);
+
+  std::vector<Smarticle*> mySmarticlesVec;
+  CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
+
 
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
@@ -338,7 +346,10 @@ int main(int argc, char* argv[]) {
   ChSharedPtr<ChFunction> fun2 = ChSharedPtr<ChFunction>(new ChFunction_Ramp(0,1));
   ChSharedPtr<ChFunction> fun3 = ChSharedPtr<ChFunction>(new ChFunction_Ramp(0,-1));
 
-  smarticle0->SetActuatorFunction(0, fun2);
+  for (int i = 0; i < mySmarticlesVec.size(); i++) {
+	  mySmarticlesVec[i]->SetActuatorFunction(0, fun2);
+
+  }
 
 
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
@@ -375,7 +386,10 @@ int main(int argc, char* argv[]) {
 
 
   }
-  delete smarticle0;
+  for (int i = 0; i < mySmarticlesVec.size(); i++) {
+	  delete mySmarticlesVec[i];
+
+  }
   simParams.close();
   return 0;
 }
