@@ -66,7 +66,7 @@ std::ofstream simParams;
 double gravity = -9.81;
 double dT = .01;
 double contact_recovery_speed = .3;
-double tFinal = 50;
+double tFinal = 30;
 
 bool povray_output = true;
 int out_fps = 25;
@@ -173,7 +173,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 
 	// ground
 	ChVector<> boxDim(100, 100, 2);
-	ChVector<> boxLoc(0, 0, -7);
+	ChVector<> boxLoc(0, 0, -5.2);
 	ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
@@ -201,14 +201,14 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
 	int nX = hdim.x / sLenghWithTol.x;
 	int nY = hdim.y / sLenghWithTol.z;
-	int nZ = 30;
+	int nZ = 20;
 
 	for (int k = 0; k < nZ; k++) {
 		for (int i= -nX+1; i < nX; i++) {
 			for (int j = -nY+1; j < nY; j ++) {
 			  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
 					  smarticleLengths.x, smarticleLengths.y, smarticleLengths.z, .05, S_BOX,
-					  ChVector<>(0, 0, hdim.z) + ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y),
+					  ChVector<>(0, 0, hdim.z + (i%3) * sLenghWithTol.z) + ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y),
 					  ChQuaternion<>(1, 0, 0, 0));
 			//  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
 			//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 3, VECT_X));
