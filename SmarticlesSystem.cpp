@@ -173,7 +173,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 
 	// ground
 	ChVector<> boxDim(100, 100, 2);
-	ChVector<> boxLoc(0, 0, -5.2);
+	ChVector<> boxLoc(0, 0, -2.7);
 	ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
