@@ -47,34 +47,12 @@ Smarticle::Smarticle(
 
 }
 
-void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right arm
-	ChVector<> posRel; 	// 	relative postion of the arm wrt the smarticle position.
-						//	Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
+void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
 	double jClearance = 1.3 * r2;
 
-	ChQuaternion<> armRelativeRot = QUNIT;
-
-	double len;
 	ChSharedBodyPtr arm;
-	switch (armID) {
-	case 0: {
-		posRel = ChVector<>(-w/2 - l/2 - jClearance, 0, 0); // Arman!! : the arms overlap with this measure. But right now we are considering ideal case
-		len = l;
-	} break;
-	case 1: {
-		posRel = ChVector<>(0, 0, 0); // Arman!! : the arms overlap with this measure. But right now we are considering ideal case
-		len = w;
-	} break;
-	case 2: {
-		posRel = ChVector<>(w/2 + l/2 + jClearance, 0, 0); // Arman!! : the arms overlap with this measure. But right now we are considering ideal case
-		len = l;
-	} break;
-	default:
-		std::cout << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
-		break;
-	}
 
 	vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
 	gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
@@ -102,14 +80,8 @@ void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right a
 	arm->GetCollisionModel()->ClearModel();
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
 
-    // finalize collision
-//    arm->GetCollisionModel()->SetFamily(smarticleID);
-//    arm->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(smarticleID);
     arm->GetCollisionModel()->BuildModel();
     m_system->AddBody(arm);
-
-
-
 
 	switch (armID) {
 	case 0: {
@@ -207,9 +179,10 @@ void Smarticle::CreateActuators() {
 
 void Smarticle::Create() {
 	// Create Arms
-	CreateArm(0);
-	CreateArm(1);
-	CreateArm(2);
+	double jClearance = 1.3 * r2; // space betwen to connected arms at joint, when they are straight
+	CreateArm(0, l, ChVector<>(-w/2 - l/2 - jClearance, 0, 0));
+	CreateArm(1, w, ChVector<>(0, 0, 0));
+	CreateArm(2, l, ChVector<>(w/2 + l/2 + jClearance, 0, 0));
 
 	CreateJoints();
 	CreateActuators();

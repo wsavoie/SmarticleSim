@@ -51,7 +51,13 @@ public:
 private:
   // create smarticle arm, set collision, surface, and mass property.
   // armID = 0 (left arm), 1 (middle arm), 2 (right arm)
-  void CreateArm(int armID);
+  void CreateArm(
+		  int armID, 			// 0: left arm, 1: middle arm, 2: right arm
+		  double len, 			// arm length
+		  ChVector<> posRel, 	// relative position of the arm wrt the smarticle position, which is the center of the center arm
+								// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
+		  ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
+		  );
   void CreateJoints();
   void CreateActuators();
 

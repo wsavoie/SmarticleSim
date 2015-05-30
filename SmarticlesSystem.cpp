@@ -199,9 +199,9 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	/////////////////
 	ChVector<> smarticleLengths(1, 1, 0.2); // l, w, t
 	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
-	int nX = hdim.x / sLenghWithTol.x;
-	int nY = hdim.y / sLenghWithTol.z;
-	int nZ = 20;
+	int nX = 2;//hdim.x / sLenghWithTol.x;
+	int nY = 2;//hdim.y / sLenghWithTol.z;
+	int nZ = 1;
 
 	for (int k = 0; k < nZ; k++) {
 		for (int i= -nX+1; i < nX; i++) {
