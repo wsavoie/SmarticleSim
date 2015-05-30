@@ -71,8 +71,8 @@ private:
   // length
   double l;  // arm length including the thickness
   double w;  // mid-segment length including thickness
-  double r;  // in-plane thickness of arm
-  double r2;  // off-plane  thickness of arm, i.e. prependicular to the object
+  double r;  // in-plane half-thickness of arm
+  double r2;  // off-plane  half-thickness of arm, i.e. prependicular to the object
 
   // material property
   double density;

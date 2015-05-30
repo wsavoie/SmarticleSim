@@ -179,10 +179,18 @@ void Smarticle::CreateActuators() {
 
 void Smarticle::Create() {
 	// Create Arms
-	double jClearance = 1.3 * r2; // space betwen to connected arms at joint, when they are straight
-	CreateArm(0, l, ChVector<>(-w/2 - l/2 - jClearance, 0, 0));
+//	// straight smarticle
+//	double jClearance = 1.3 * r2; // space betwen to connected arms at joint, when they are straight
+//	CreateArm(0, l, ChVector<>(-w/2 - l/2 - jClearance, 0, 0));
+//	CreateArm(1, w, ChVector<>(0, 0, 0));
+//	CreateArm(2, l, ChVector<>(w/2 + l/2 + jClearance, 0, 0));
+
+	// U smarticle
+	double jClearance = .05 * r2; // space at joint
+	double l_mod = l - jClearance;
+	CreateArm(0, l_mod, ChVector<>(-w/2 + r2, 0, l_mod/2 + r2 + jClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(2, l, ChVector<>(w/2 + l/2 + jClearance, 0, 0));
+	CreateArm(2, l_mod, ChVector<>(w/2 - r2, 0, l_mod/2 + r2 + jClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
 
 	CreateJoints();
 	CreateActuators();

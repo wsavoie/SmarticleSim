@@ -188,10 +188,10 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	mphysicalSystem.AddBody(ground);
 
 	// bucket
-	ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	ChVector<> hdim(5, 5, 2.5);
 	double hthick = .2;
-	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, hdim, hthick);
+//	ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+//	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, hdim, hthick);
 
 
 	/////////////////
@@ -199,8 +199,8 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	/////////////////
 	ChVector<> smarticleLengths(1, 1, 0.2); // l, w, t
 	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
-	int nX = 2;//hdim.x / sLenghWithTol.x;
-	int nY = 2;//hdim.y / sLenghWithTol.z;
+	int nX = 1;//hdim.x / sLenghWithTol.x;
+	int nY = 1;//hdim.y / sLenghWithTol.z;
 	int nZ = 1;
 
 	for (int k = 0; k < nZ; k++) {
@@ -370,11 +370,11 @@ int main(int argc, char* argv[]) {
   ChSharedPtr<ChFunction> fun4 = ChSharedPtr<ChFunction>(new ChFunction_Const(CH_C_PI / 2));
   ChSharedPtr<ChFunction> fun5 = ChSharedPtr<ChFunction>(new ChFunction_Const(-CH_C_PI / 2));
 
-  for (int i = 0; i < mySmarticlesVec.size(); i++) {
-	  mySmarticlesVec[i]->SetActuatorFunction(0, fun4);
-	  mySmarticlesVec[i]->SetActuatorFunction(1, fun4);
-
-  }
+//  for (int i = 0; i < mySmarticlesVec.size(); i++) {
+//	  mySmarticlesVec[i]->SetActuatorFunction(0, fun4);
+//	  mySmarticlesVec[i]->SetActuatorFunction(1, fun4);
+//
+//  }
 
 
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
