@@ -25,7 +25,6 @@ Smarticle::Smarticle(
 		double other_w,
 		double other_r,
 		double other_r2,
-		ArmType aType,
 		ChVector<> pos,
 		ChQuaternion<> rot) :
 				m_system(otherSystem),
@@ -36,7 +35,6 @@ Smarticle::Smarticle(
 				w(other_w),
 				r(other_r),
 				r2(other_r2),
-				armType(aType),
 				position(pos),
 				rotation(rot) {
 
@@ -54,10 +52,7 @@ void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right a
 						//	Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
-	double jClearance = 1.3 * r;
-	if (armType == S_BOX) {
-		jClearance = 1.3 * r2;
-	}
+	double jClearance = 1.3 * r2;
 
 	ChQuaternion<> armRelativeRot = QUNIT;
 
@@ -81,25 +76,8 @@ void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right a
 		break;
 	}
 
-	// NOTE: you can not combine this switch case with the next one. For some reason, it seams mass property need to be added before clearing the collision model
-	switch (armType) {
-	case S_CYLINDER: {
-		vol = utils::CalcCylinderVolume(r, len/2.0);
-		gyr = utils::CalcCylinderGyration(r, len/2.0).Get_Diag();
-	} break;
-	case S_CAPSULE: {
-		vol = utils::CalcCapsuleVolume(r, len/2.0);
-		gyr = utils::CalcCapsuleGyration(r, len/2.0).Get_Diag();
-	} break;
-	case S_BOX: {
-		vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
-		gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
-	} break;
-	default:
-		std::cout << "Error! smarticle shape not supported. Please choose from {cylinder, capsule, box}" << std::endl;
-		break;
-	}
-
+	vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
+	gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
 	arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
 	ChVector<> posArm = rotation.Rotate(posRel) + position;
@@ -122,22 +100,7 @@ void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right a
     arm->SetInertiaXX(mass * gyr);
 
 	arm->GetCollisionModel()->ClearModel();
-
-	// calc mass properties
-	switch (armType) {
-	case S_CYLINDER: {
-		utils::AddCylinderGeometry(arm.get_ptr(), r, len/2.0, ChVector<>(0, 0, 0));
-	} break;
-	case S_CAPSULE: {
-		utils::AddCapsuleGeometry(arm.get_ptr(), r, len/2.0, ChVector<>(0, 0, 0));
-	} break;
-	case S_BOX: {
-		utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
-	} break;
-	default:
-		std::cout << "Error! smarticle shape not supported. Please choose from {cylinder, capsule, box}" << std::endl;
-		break;
-	}
+	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
 
     // finalize collision
 //    arm->GetCollisionModel()->SetFamily(smarticleID);

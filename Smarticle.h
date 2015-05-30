@@ -12,9 +12,6 @@
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
 
-
-enum ArmType { S_CYLINDER, S_CAPSULE, S_BOX };
-
 namespace chrono {
 
 class Smarticle {
@@ -30,7 +27,6 @@ public:
 			double other_w,
 			double other_r,
 			double other_r2 = 0,
-			ArmType aType = S_CYLINDER,
 			ChVector<> pos = ChVector<>(0, 0, 0),
 			ChQuaternion<> rot = QUNIT);
 
@@ -69,17 +65,12 @@ private:
   // length
   double l;  // arm length including the thickness
   double w;  // mid-segment length including thickness
-  double r;  // radius of the cross-section, if ArmType is S_CYLINDER or S_CAPSULE
-          // in-plane thickness if ArmType is S_BOX
-  double r2;  // off-plane  thickness, i.e. prependicular to the object, if
-              // ArmType is S_BOX
+  double r;  // in-plane thickness of arm
+  double r2;  // off-plane  thickness of arm, i.e. prependicular to the object
 
   // material property
   double density;
   ChSharedPtr<ChMaterialSurface> mat_g;
-
-  // geometry
-  ArmType armType;
 
   // bodies
  ChSharedBodyPtr arm0;	// left arm
