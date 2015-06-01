@@ -36,7 +36,7 @@
 #include "chrono_utils/ChUtilsGenerators.h"
 
 #include <ctime>
-#include <stdlib.h>  // system
+#include <stdlib.h>  // system, rand, srand, RAND_MAX
 #include "core/ChFileutils.h" // for MakeDirectory
 #include "Smarticle.h"
 
@@ -61,20 +61,30 @@ using namespace chrono;
 //using namespace chrono::collision;
 //using namespace std;
 
+// =============================================================================
 std::ofstream simParams;
+ChSharedPtr<ChBody> bucket;
 
 double gravity = -9.81;
 double dT = .01;
 double contact_recovery_speed = .3;
 double tFinal = 30;
+double sizeScale = 1000;
+double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
+
 
 bool povray_output = true;
 int out_fps = 25;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
 
-//Smarticle * smarticle0;
+ChVector<> bucket_ctr = ChVector<>(0,0,0);
+ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
+double bucket_thick = sizeScale * .001;
 
+// =============================================================================
+void MySeed(double s = time(NULL)) { srand(s); }
+double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
 void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral) {
   if (argc > 1) {
@@ -172,8 +182,8 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	/////////////////
 
 	// ground
-	ChVector<> boxDim(100, 100, 2);
-	ChVector<> boxLoc(0, 0, -2.7);
+	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
+	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -.0027);
 	ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
@@ -183,33 +193,49 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	ground->SetCollide(true);
 
 	ground->GetCollisionModel()->ClearModel();
-	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, 2, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	ground->GetCollisionModel()->BuildModel();
 	mphysicalSystem.AddBody(ground);
 
 	// bucket
-	ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-	ChVector<> hdim(5, 5, 2.5);
-	double hthick = .2;
-	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, hdim, hthick);
+	bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr);
 
 
 	/////////////////
 	// Smarticle body
 	/////////////////
-	ChVector<> smarticleLengths(1, 1, 0.2); // l, w, t
+	MySeed(964);
+	double w_smarticle 	= sizeScale * 0.0117;
+	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+	double t_smarticle 	= sizeScale * .00127;
+	double t2_smarticle	= sizeScale * .0005;
+	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
 	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
-	int nX = hdim.x / sLenghWithTol.x;
-	int nY = hdim.y / sLenghWithTol.z;
-	int nZ = 20;
 
+//	int nX = bucket_interior_halfDim.x / sLenghWithTol.x;
+//	int nY = bucket_interior_halfDim.y / sLenghWithTol.z;
+//	int nZ = 1;
+	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
+	int nX = bucket_interior_halfDim.x / maxDim;
+	int nY = bucket_interior_halfDim.y / maxDim;
+	int nZ = 1;
+
+	int smarticleCount = 0;
 	for (int k = 0; k < nZ; k++) {
-		for (int i= -nX+1; i < nX; i++) {
+		for (int i= -nX + 1; i < nX; i++) {
 			for (int j = -nY+1; j < nY; j ++) {
-			  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
-					  smarticleLengths.x, smarticleLengths.y, smarticleLengths.z, .05,
-					  ChVector<>(0, 0, hdim.z + (i%3) * sLenghWithTol.z) + ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y),
-					  ChQuaternion<>(1, 0, 0, 0));
+				ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+				myRot.Normalize();
+				ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , k * maxDim);
+//				ChVector<> myPos = ChVector<>(0, 0, bucket_interior_halfDim.z + (i%3) * sLenghWithTol.z)
+//						+ ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y);
+
+			  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem, smarticleCount + 3 /* 1 and 2 are the first two objects */,
+					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+					  myPos,
+					  myRot);
+			  smarticleCount++;
 			//  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
 			//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 3, VECT_X));
 			  smarticle0->Create();
@@ -295,6 +321,67 @@ void SavePovFilesMBD(ChSystemParallelDVI& mphysicalSystem,
   }
 }
 // =============================================================================
+double Find_Max_Z(ChSystemParallelDVI& mphysicalSystem) {
+
+	double zMax = -999999999;
+	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+		ChBody* bodyPtr = *(myIter + i);
+		if ( strcmp(bodyPtr->GetName(), "smarticle_arm") == 0 ) {
+			if (zMax < bodyPtr->GetPos().z) {
+				zMax = bodyPtr->GetPos().z;
+			}
+		}
+	}
+	return zMax;
+}
+// =============================================================================
+bool IsIn(ChVector<> pt, ChVector<> min, ChVector<> max) {
+	if ((pt > max) || (pt < min)) {
+		return false;
+	}
+	return true;
+}
+// =============================================================================
+void PrintFractions(ChSystemParallelDVI& mphysicalSystem, int tStep) {
+	const std::string vol_frac = out_dir + "/volumeFraction.txt";
+	int stepSave = 10;
+	if (tStep % stepSave != 0) return;
+
+	std::ofstream vol_frac_of;
+	if (tStep == 0) {
+	  vol_frac_of.open(vol_frac);
+	} else {
+	  vol_frac_of.open(vol_frac, std::ios::app);
+	}
+
+	double zMax = Find_Max_Z(mphysicalSystem);
+	zMax = std::min(zMax, bucket_ctr.z + bucket_interior_halfDim.z);
+
+	int countInside = 0;
+	double totalVolume = 0;
+	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+		ChBody* bodyPtr = *(myIter + i);
+		if ( strcmp(bodyPtr->GetName(), "smarticle_arm") == 0 ) {
+			if ( IsIn(bodyPtr->GetPos(), bucket_ctr - bucket_interior_halfDim, bucket_ctr + bucket_interior_halfDim) ) {
+				countInside ++;
+				totalVolume += bodyPtr->GetMass() / bodyPtr->GetDensity();
+			}
+		}
+	}
+
+	double volumeFraction = totalVolume / (8 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * zMax);
+
+	vol_frac_of << mphysicalSystem.GetChTime() << ", " << volumeFraction << std::endl;
+
+
+
+
+
+	  vol_frac_of.close();
+}
+// =============================================================================
 
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
@@ -304,7 +391,6 @@ int main(int argc, char* argv[]) {
 	  const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	  simParams.open(simulationParams);
 	  simParams << " Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
-
 	  ChTimerParallel step_timer;
 
 	  // --------------------------
@@ -347,8 +433,8 @@ int main(int argc, char* argv[]) {
 
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
-	ChVector<> CameraLocation = ChVector<>(-6, -4, 3);
-	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
+	ChVector<> CameraLocation = sizeScale * ChVector<>(-.1, -.06, .06);
+	ChVector<> CameraLookAt = sizeScale * ChVector<>(0, 0, -.01);
 	gl_window.Initialize(1280, 720, "Smarticles", &mphysicalSystem);
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
 	gl_window.SetRenderMode(opengl::WIREFRAME);
@@ -370,15 +456,25 @@ int main(int argc, char* argv[]) {
   ChSharedPtr<ChFunction> fun4 = ChSharedPtr<ChFunction>(new ChFunction_Const(CH_C_PI / 2));
   ChSharedPtr<ChFunction> fun5 = ChSharedPtr<ChFunction>(new ChFunction_Const(-CH_C_PI / 2));
 
-  for (int i = 0; i < mySmarticlesVec.size(); i++) {
-	  mySmarticlesVec[i]->SetActuatorFunction(0, fun4);
-	  mySmarticlesVec[i]->SetActuatorFunction(1, fun4);
+//  for (int i = 0; i < mySmarticlesVec.size(); i++) {
+//	  mySmarticlesVec[i]->SetActuatorFunction(0, fun4);
+//	  mySmarticlesVec[i]->SetActuatorFunction(1, fun4);
+//
+//  }
 
-  }
-
+  double omega_bucket = 2 * CH_C_PI * 30;  // 30 Hz vibration similar to Gravish 2012, PRL
+  double vibration_amp = sizeScale * 0.0002;
 
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
-	  int stage = int(mphysicalSystem.GetChTime() / (CH_C_PI/2));
+	  double t = mphysicalSystem.GetChTime();
+
+	  // move bucket
+	  double x_bucket = vibration_amp * sin(omega_bucket * t);
+	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
+	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
+	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
+
+//	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);
 //	  switch (stage % 4) {
 //	  case 0: {
@@ -409,7 +505,7 @@ int main(int argc, char* argv[]) {
 	  step_timer.stop("step time");
 	  printf("step: %d\n", tStep);
 
-
+	  PrintFractions(mphysicalSystem, tStep);
   }
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
 	  delete mySmarticlesVec[i];

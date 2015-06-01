@@ -48,10 +48,21 @@ public:
   ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
   void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
+  // Smarticle volume
+  double GetVolume();
+  ChVector<> Get_cm();
+  double GetDensity() {return density;};
+
 private:
   // create smarticle arm, set collision, surface, and mass property.
   // armID = 0 (left arm), 1 (middle arm), 2 (right arm)
-  void CreateArm(int armID);
+  void CreateArm(
+		  int armID, 			// 0: left arm, 1: middle arm, 2: right arm
+		  double len, 			// arm length
+		  ChVector<> posRel, 	// relative position of the arm wrt the smarticle position, which is the center of the center arm
+								// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
+		  ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
+		  );
   void CreateJoints();
   void CreateActuators();
 
@@ -65,8 +76,11 @@ private:
   // length
   double l;  // arm length including the thickness
   double w;  // mid-segment length including thickness
-  double r;  // in-plane thickness of arm
-  double r2;  // off-plane  thickness of arm, i.e. prependicular to the object
+  double r;  // in-plane half-thickness of arm
+  double r2;  // off-plane  half-thickness of arm, i.e. prependicular to the object
+  double jointClearance; // space at joint
+  double volume;
+  double mass;
 
   // material property
   double density;
