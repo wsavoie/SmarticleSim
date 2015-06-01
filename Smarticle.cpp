@@ -38,6 +38,8 @@ Smarticle::Smarticle(
 				position(pos),
 				rotation(rot) {
 
+	jointClearance = .05 * r2;
+	volume = GetVolume();
 
 	// create 3 bodies to be connected
 
@@ -50,7 +52,7 @@ Smarticle::Smarticle(
 void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
-	double jClearance = 1.3 * r2;
+	double jointClearance = 1.3 * r2;
 
 	ChSharedBodyPtr arm;
 
@@ -182,20 +184,22 @@ void Smarticle::CreateActuators() {
 void Smarticle::Create() {
 	// Create Arms
 //	// straight smarticle
-//	double jClearance = 1.3 * r2; // space betwen to connected arms at joint, when they are straight
-//	CreateArm(0, l, ChVector<>(-w/2 - l/2 - jClearance, 0, 0));
+//	double jointClearance = 1.3 * r2; // space betwen to connected arms at joint, when they are straight
+//	CreateArm(0, l, ChVector<>(-w/2 - l/2 - jointClearance, 0, 0));
 //	CreateArm(1, w, ChVector<>(0, 0, 0));
-//	CreateArm(2, l, ChVector<>(w/2 + l/2 + jClearance, 0, 0));
+//	CreateArm(2, l, ChVector<>(w/2 + l/2 + jointClearance, 0, 0));
 
 	// U smarticle
-	double jClearance = .05 * r2; // space at joint
-	double l_mod = l - jClearance;
-	CreateArm(0, l_mod, ChVector<>(-w/2 + r2, 0, l_mod/2 + r2 + jClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+	double l_mod = l - jointClearance;
+	CreateArm(0, l_mod, ChVector<>(-w/2 + r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(2, l_mod, ChVector<>(w/2 - r2, 0, l_mod/2 + r2 + jClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+	CreateArm(2, l_mod, ChVector<>(w/2 - r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
 
 	CreateJoints();
 	CreateActuators();
+
+	// mass property
+	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
 }
 
 ChSharedPtr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
@@ -219,6 +223,16 @@ void Smarticle::SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actu
 	} else {
 		std::cout << "Error! smarticle can only have actuators with ids from {0, 1}" << std::endl;
 	}
+}
+
+double Smarticle::GetVolume() {
+//	return r * r2 * (w + 2 * (l + jointClearance));
+	return r * r2 * (w + 2 * l);
+}
+
+ChVector<> Smarticle::Get_cm() {
+	return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos()) / mass;
+
 }
 
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
