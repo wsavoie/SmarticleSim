@@ -67,11 +67,14 @@ double gravity = -9.81;
 double dT = .01;
 double contact_recovery_speed = .3;
 double tFinal = 30;
+double sizeScale = 1000;
 
 bool povray_output = true;
 int out_fps = 25;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
+
+ChSharedPtr<ChBody> bucket;
 
 //Smarticle * smarticle0;
 
@@ -172,8 +175,8 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	/////////////////
 
 	// ground
-	ChVector<> boxDim(100, 100, 2);
-	ChVector<> boxLoc(0, 0, -2.7);
+	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
+	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -.0027);
 	ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
@@ -183,33 +186,41 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	ground->SetCollide(true);
 
 	ground->GetCollisionModel()->ClearModel();
-	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, 2, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	ground->GetCollisionModel()->BuildModel();
 	mphysicalSystem.AddBody(ground);
 
 	// bucket
-	ChVector<> hdim(5, 5, 2.5);
-	double hthick = .2;
-//	ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-//	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, hdim, hthick);
+	ChVector<> hdim = sizeScale * ChVector<>(.05, .05, .025);
+	double hthick = sizeScale * .001;
+	bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, hdim, hthick);
 
 
 	/////////////////
 	// Smarticle body
 	/////////////////
-	ChVector<> smarticleLengths(1, 1, 0.2); // l, w, t
-	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
 	int nX = 1;//hdim.x / sLenghWithTol.x;
 	int nY = 1;//hdim.y / sLenghWithTol.z;
 	int nZ = 1;
 
+	double w_smarticle 	= sizeScale * 0.0117;
+	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+	double t_smarticle 	= sizeScale * .00127;
+	double t2_smarticle	= sizeScale * .0005;
+
+	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
+	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
+
+	int smarticleCount = 0;
 	for (int k = 0; k < nZ; k++) {
 		for (int i= -nX+1; i < nX; i++) {
 			for (int j = -nY+1; j < nY; j ++) {
-			  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
-					  smarticleLengths.x, smarticleLengths.y, smarticleLengths.z, .05,
+			  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem, smarticleCount + 3 /* 1 and 2 are the first two objects */,
+					  1000, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
 					  ChVector<>(0, 0, hdim.z + (i%3) * sLenghWithTol.z) + ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y),
 					  ChQuaternion<>(1, 0, 0, 0));
+			  smarticleCount++;
 			//  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
 			//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 3, VECT_X));
 			  smarticle0->Create();
@@ -295,6 +306,21 @@ void SavePovFilesMBD(ChSystemParallelDVI& mphysicalSystem,
   }
 }
 // =============================================================================
+double Find_Max_Z(ChSystemParallelDVI& mphysicalSystem) {
+
+	double zMax = -999999999;
+	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+		ChBody* bodyPtr = *(myIter + i);
+		if ( strcmp(bodyPtr->GetName(), "smarticle_arm") == 0 ) {
+			if (zMax < bodyPtr->GetPos().z) {
+				zMax = bodyPtr->GetPos().z;
+			}
+		}
+	}
+	return zMax;
+}
+// =============================================================================
 
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
@@ -347,8 +373,8 @@ int main(int argc, char* argv[]) {
 
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
-	ChVector<> CameraLocation = ChVector<>(-6, -4, 3);
-	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
+	ChVector<> CameraLocation = sizeScale * ChVector<>(-.1, -.06, .06);
+	ChVector<> CameraLookAt = sizeScale * ChVector<>(0, 0, -.01);
 	gl_window.Initialize(1280, 720, "Smarticles", &mphysicalSystem);
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
 	gl_window.SetRenderMode(opengl::WIREFRAME);
@@ -376,9 +402,23 @@ int main(int argc, char* argv[]) {
 //
 //  }
 
+  double omega_bucket = 2 * CH_C_PI;
+  double vibration_amp = sizeScale * 0.002;
 
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
-	  int stage = int(mphysicalSystem.GetChTime() / (CH_C_PI/2));
+	  double t = mphysicalSystem.GetChTime();
+
+	  // move bucket
+	  double x_bucket = vibration_amp * sin(omega_bucket * t);
+	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
+	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
+	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
+
+	  real3 aabbMin, aabbMax;
+	  ((collision::ChCollisionSystemParallel*)mphysicalSystem.GetCollisionSystem())->GetAABB(aabbMin, aabbMax);
+	  printf("zMax %f \n", Find_Max_Z(mphysicalSystem));
+
+//	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);
 //	  switch (stage % 4) {
 //	  case 0: {

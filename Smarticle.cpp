@@ -60,6 +60,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
 	ChVector<> posArm = rotation.Rotate(posRel) + position;
 
+	arm->SetName("smarticle_arm");
 	arm->SetPos(posArm);
 	arm->SetRot(rotation*armRelativeRot);
     arm->SetCollide(true);
@@ -79,6 +80,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 
 	arm->GetCollisionModel()->ClearModel();
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
+	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 
     arm->GetCollisionModel()->BuildModel();
     m_system->AddBody(arm);
