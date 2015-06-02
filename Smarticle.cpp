@@ -49,6 +49,20 @@ Smarticle::Smarticle(
 
 }
 
+//void Smarticle::Initialize(
+////		ChSystem* otherSystem,
+//		ChSystemParallelDVI* otherSystem,
+//		int sID,
+//		double other_density,
+//		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+//		double other_l,
+//		double other_w,
+//		double other_r,
+//		double other_r2,
+//		ChVector<> pos,
+//		ChQuaternion<> rot) {
+//
+//}
 void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume

@@ -37,16 +37,16 @@ public:
   void Create();
 
   // get arm shared pointer
-  ChSharedBodyPtr GetArm(int armID);
+  virtual ChSharedBodyPtr GetArm(int armID);
 
   // get joint shared pointer
   // jointID belongs to {0, 1}, i.e. the joint between 0 and 1, or between 1 and 2
-  ChSharedPtr<ChLinkLockRevolute> GetRevoluteJoint(int jointID);
+  virtual ChSharedPtr<ChLinkLockRevolute> GetRevoluteJoint(int jointID);
 
   // get actuator function
   // actuatorID belongs to {0, 1}, i.e. the actuatorID between 0 and 1, or between 1 and 2
-  ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
-  void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
+  virtual ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
+  virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
   // Smarticle volume
   double GetVolume();
