@@ -231,15 +231,18 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 //				ChVector<> myPos = ChVector<>(0, 0, bucket_interior_halfDim.z + (i%3) * sLenghWithTol.z)
 //						+ ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y);
 
-			  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem, smarticleCount + 3 /* 1 and 2 are the first two objects */,
-					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
-					  myPos,
-					  myRot);
-			  smarticleCount++;
+			  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
+			  smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
+			  					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+			  					  myPos,
+			  					  myRot);
 			//  smarticle0 = new Smarticle(&mphysicalSystem, 1, 1000, mat_g,
 			//		  1, 1, .2, .05, S_BOX, ChVector<>(1,1,0), Q_from_AngAxis(CH_C_PI / 3, VECT_Y) * Q_from_AngAxis(CH_C_PI / 3, VECT_X));
 			  smarticle0->Create();
 			  mySmarticlesVec.push_back(smarticle0);
+
+			  smarticleCount++;
+
 			}
 		}
 	}

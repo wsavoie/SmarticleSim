@@ -18,8 +18,11 @@ class Smarticle {
 public:
   // Construct a smarticle and add it to ChSystem.
   Smarticle(
-		  	ChSystem* otherSystem,
-//			ChSystemParallelDVI* otherSystem,
+		  ChSystem* otherSystem
+		  //			ChSystemParallelDVI* otherSystem
+		  );
+
+  void Properties(
 			int sID,
 			double other_density,
 			ChSharedPtr<ChMaterialSurface> surfaceMaterial,

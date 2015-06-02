@@ -16,8 +16,24 @@
 using namespace chrono;
 
 Smarticle::Smarticle(
-		ChSystem* otherSystem,
-//		ChSystemParallelDVI* otherSystem,
+		  ChSystem* otherSystem
+		  //			ChSystemParallelDVI* otherSystem
+		  ) : m_system(otherSystem) {
+	smarticleID = -1;
+	density = 7800;
+	l = 1;
+	w = 1;
+	r = .05;
+	r2 = .01;
+	position = ChVector<>(0);
+	rotation = QUNIT;
+
+	jointClearance = .05 * r2;
+	volume = GetVolume();
+}
+
+
+void Smarticle::Properties(
 		int sID,
 		double other_density,
 		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
@@ -26,43 +42,22 @@ Smarticle::Smarticle(
 		double other_r,
 		double other_r2,
 		ChVector<> pos,
-		ChQuaternion<> rot) :
-				m_system(otherSystem),
-				smarticleID(sID),
-				density(other_density),
-				mat_g(surfaceMaterial),
-				l(other_l),
-				w(other_w),
-				r(other_r),
-				r2(other_r2),
-				position(pos),
-				rotation(rot) {
+		ChQuaternion<> rot) {
+
+	smarticleID = sID;
+	density = other_density;
+	mat_g = surfaceMaterial;
+	l = other_l;
+	w = other_w;
+	r = other_r;
+	r2 = other_r2;
+	position = pos;
+	rotation = rot;
 
 	jointClearance = .05 * r2;
 	volume = GetVolume();
 
-	// create 3 bodies to be connected
-
-
-
-	// add joints
-
 }
-
-//void Smarticle::Initialize(
-////		ChSystem* otherSystem,
-//		ChSystemParallelDVI* otherSystem,
-//		int sID,
-//		double other_density,
-//		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
-//		double other_l,
-//		double other_w,
-//		double other_r,
-//		double other_r2,
-//		ChVector<> pos,
-//		ChQuaternion<> rot) {
-//
-//}
 void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
