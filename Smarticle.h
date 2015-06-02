@@ -18,8 +18,8 @@ class Smarticle {
 public:
   // Construct a smarticle and add it to ChSystem.
   Smarticle(
-//		  	ChSystem* otherSystem,
-			ChSystemParallelDVI* otherSystem,
+		  	ChSystem* otherSystem,
+//			ChSystemParallelDVI* otherSystem,
 			int sID,
 			double other_density,
 			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
@@ -89,8 +89,8 @@ protected:
 
 
   ///< pointer to the Chrono system
-//  ChSystem* m_system;  // Arman : take care of this later
-  ChSystemParallelDVI*  m_system;  // Arman : use shared ptr. also go through chrono and modify
+  ChSystem* m_system;  // Arman : take care of this later
+//  ChSystemParallelDVI*  m_system;  // Arman : use shared ptr. also go through chrono and modify
 
  private:
   double jointClearance; // space at joint
