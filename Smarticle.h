@@ -66,25 +66,35 @@ private:
   void CreateJoints();
   void CreateActuators();
 
- private:
-  int smarticleID;
-
+protected:
   // location and orientation (location of the center of the middle arm)
   ChVector<> position;
   ChQuaternion<> rotation;
+
+  // ID
+  int smarticleID;
 
   // length
   double l;  // arm length including the thickness
   double w;  // mid-segment length including thickness
   double r;  // in-plane half-thickness of arm
   double r2;  // off-plane  half-thickness of arm, i.e. prependicular to the object
-  double jointClearance; // space at joint
+
   double volume;
   double mass;
 
   // material property
   double density;
   ChSharedPtr<ChMaterialSurface> mat_g;
+
+
+  ///< pointer to the Chrono system
+//  ChSystem* m_system;  // Arman : take care of this later
+  ChSystemParallelDVI*  m_system;  // Arman : use shared ptr. also go through chrono and modify
+
+ private:
+  double jointClearance; // space at joint
+
 
   // bodies
  ChSharedBodyPtr arm0;	// left arm
@@ -103,9 +113,6 @@ private:
   ChSharedPtr<ChFunction> function01;
   ChSharedPtr<ChFunction> function12;
 
-  ///< pointer to the Chrono system
-//  ChSystem* m_system;  // Arman : take care of this later
-  ChSystemParallelDVI*  m_system;  // Arman : use shared ptr. also go through chrono and modify
 };
 }
 

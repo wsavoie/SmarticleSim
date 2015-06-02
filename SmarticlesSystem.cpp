@@ -66,7 +66,7 @@ std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
 
 double gravity = -9.81;
-double dT = .01;
+double dT = .005;
 double contact_recovery_speed = .3;
 double tFinal = 30;
 double sizeScale = 1000;
@@ -111,7 +111,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   int max_iteration_normal = 200;
   int max_iteration_sliding = 200;
   int max_iteration_spinning = 0;
-  int max_iteration_bilateral = 100;
+  int max_iteration_bilateral = 1000;
 
   // ----------------------
   // Set params from input
