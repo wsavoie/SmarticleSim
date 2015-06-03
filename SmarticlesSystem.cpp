@@ -80,7 +80,9 @@ const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
 
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
-ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
+//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
+ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.075, .075, .0375);
+//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 double bucket_thick = sizeScale * .001;
 
 // =============================================================================
@@ -172,7 +174,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
 
 void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 	  ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
-		mat_g->SetFriction(0.1);
+		mat_g->SetFriction(0.5);
 		mat_g->SetCohesion(0);
 		mat_g->SetCompliance(0.0);
 		mat_g->SetComplianceT(0.0);
@@ -184,7 +186,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 
 	// ground
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
-	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -.0027);
+	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -bucket_interior_halfDim.z - boxDim.z*5); // 1.1 to add 10% clearance between bucket and ground
 	ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
@@ -195,12 +197,17 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 
 	ground->GetCollisionModel()->ClearModel();
 	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	ground->GetCollisionModel()->SetFamily(1);
+	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	ground->GetCollisionModel()->BuildModel();
 	mphysicalSystem.AddBody(ground);
 
 	// bucket
 	bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr);
+	bucket->GetCollisionModel()->SetFamily(1);
+	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	bucket->SetBodyFixed(false);
 
 
 	/////////////////
@@ -345,6 +352,16 @@ bool IsIn(ChVector<> pt, ChVector<> min, ChVector<> max) {
 		return false;
 	}
 	return true;
+}
+// =============================================================================
+void FixBodies(ChSystemParallelDVI& mphysicalSystem, int tStep) {
+	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+		ChBody* bodyPtr = *(myIter + i);
+		if (bodyPtr->GetPos().z < -1.5 * bucket_interior_halfDim.z) {
+			bodyPtr->SetBodyFixed(true);
+		}
+	}
 }
 // =============================================================================
 void PrintFractions(ChSystemParallelDVI& mphysicalSystem, int tStep) {
@@ -509,6 +526,7 @@ int main(int argc, char* argv[]) {
 	  step_timer.stop("step time");
 	  printf("step: %d\n", tStep);
 
+	  FixBodies(mphysicalSystem, tStep);
 	  PrintFractions(mphysicalSystem, tStep);
   }
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
