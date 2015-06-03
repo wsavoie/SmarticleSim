@@ -74,9 +74,6 @@ protected:
   ChVector<> position;
   ChQuaternion<> rotation;
 
-  // ID
-  int smarticleID;
-
   // length
   double l;  // arm length including the thickness
   double w;  // mid-segment length including thickness
@@ -96,6 +93,8 @@ protected:
 //  ChSystemParallelDVI*  m_system;  // Arman : use shared ptr. also go through chrono and modify
 
  private:
+  // ID
+  int smarticleID;
   double jointClearance; // space at joint
 
 
