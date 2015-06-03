@@ -16,7 +16,10 @@ void SmarticleU::Create() {
 	ChVector<> box1_dim = ChVector<>(w / 2.0, r, r2);
 	ChVector<> box2_dim = ChVector<>(r2, r, l / 2.0);
 	ChVector<> box3_dim = ChVector<>(r2, r, l / 2.0);
-	ChVector<> box1_loc = ChVector<>(0, 0, 0);					;
+
+	// relative location of the boxes wrt smarticle position,
+	// smarticle position is the location of the center of the center segment
+	ChVector<> box1_loc = ChVector<>(0, 0, 0);
 	ChVector<> box2_loc = ChVector<>(-w / 2.0 + r2, 0, l / 2.0 + r2);
 	ChVector<> box3_loc = ChVector<>(w / 2.0 - r2, 0, l / 2.0 + r2) ;
 

@@ -228,7 +228,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 			for (int j = -nY+1; j < nY; j ++) {
 				ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 				myRot.Normalize();
-				ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , k * maxDim);
+				ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , k * maxDim + maxDim);
 //				ChVector<> myPos = ChVector<>(0, 0, bucket_interior_halfDim.z + (i%3) * sLenghWithTol.z)
 //						+ ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y);
 
