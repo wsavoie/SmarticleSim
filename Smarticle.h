@@ -22,7 +22,10 @@ public:
 		  //			ChSystemParallelDVI* otherSystem
 		  );
 
-  void Properties(
+  // Destructor. Nothing happens
+  ~Smarticle();
+
+  virtual void Properties(
 			int sID,
 			double other_density,
 			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
@@ -33,11 +36,8 @@ public:
 			ChVector<> pos = ChVector<>(0, 0, 0),
 			ChQuaternion<> rot = QUNIT);
 
-  // Destructor. Nothing happens
-  ~Smarticle();
-
   // create the smarticle by creating arms, adding joint between them, and functions
-  void Create();
+  virtual void Create();
 
   // get arm shared pointer
   virtual ChSharedBodyPtr GetArm(int armID);
@@ -52,9 +52,9 @@ public:
   virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
   // Smarticle volume
-  double GetVolume();
-  ChVector<> Get_cm();
-  double GetDensity() {return density;};
+  virtual double GetVolume();
+  virtual ChVector<> Get_cm();
+  virtual double GetDensity() {return density;};
 
 private:
   // create smarticle arm, set collision, surface, and mass property.

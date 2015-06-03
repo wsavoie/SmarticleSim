@@ -32,6 +32,8 @@ Smarticle::Smarticle(
 	volume = GetVolume();
 }
 
+Smarticle::~Smarticle() {}
+
 
 void Smarticle::Properties(
 		int sID,
@@ -246,6 +248,4 @@ ChVector<> Smarticle::Get_cm() {
 
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
-
-Smarticle::~Smarticle() {}
 
