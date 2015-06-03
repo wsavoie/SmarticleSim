@@ -39,6 +39,7 @@
 #include <stdlib.h>  // system, rand, srand, RAND_MAX
 #include "core/ChFileutils.h" // for MakeDirectory
 #include "Smarticle.h"
+#include "SmarticleU.h"
 
 
 //#include <fstream> // Arman: I don't know why this is not required
@@ -231,7 +232,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 //				ChVector<> myPos = ChVector<>(0, 0, bucket_interior_halfDim.z + (i%3) * sLenghWithTol.z)
 //						+ ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y);
 
-			  Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
+			  SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
 			  smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
 			  					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
 			  					  myPos,
