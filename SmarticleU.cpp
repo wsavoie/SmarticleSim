@@ -67,6 +67,7 @@ void SmarticleU::Create() {
 	// create body
     smarticleU->SetMass(mass);
     smarticleU->SetInertiaXX(mInertia);
+    smarticleU->SetDensity(density);
 
 	smarticleU->GetCollisionModel()->ClearModel();
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box1_dim, box1_loc);
@@ -83,5 +84,5 @@ ChVector<> SmarticleU::Get_cm() {
 }
 
 double SmarticleU::GetVolume() {
-	return mass / density;
+	return (2 * r) * (2 * r2 )* (w + 2 * l);
 }

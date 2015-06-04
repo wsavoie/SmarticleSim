@@ -90,6 +90,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	// create body
     arm->SetMass(mass);
     arm->SetInertiaXX(mass * gyr);
+    arm->SetDensity(density);
 
 	arm->GetCollisionModel()->ClearModel();
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
@@ -238,7 +239,7 @@ void Smarticle::SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actu
 
 double Smarticle::GetVolume() {
 //	return r * r2 * (w + 2 * (l + jointClearance));
-	return r * r2 * (w + 2 * l);
+	return (2 * r) * (2 * r2 )* (w + 2 * l);
 }
 
 ChVector<> Smarticle::Get_cm() {

@@ -22,7 +22,9 @@ public:
 	SmarticleU(
 			  ChSystem* otherSystem
 			  //			ChSystemParallelDVI* otherSystem
-			  ) : Smarticle(otherSystem) {}
+			  ) : Smarticle(otherSystem) {
+		volume = GetVolume();
+	}
 
 	// Destructor. Nothing happens
 	~SmarticleU() {}
