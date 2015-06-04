@@ -76,7 +76,7 @@ ChSharedPtr<ChBody> bucket;
 	double vibration_freq = 10;
 	double dT = std::min(0.005, 1.0 / vibration_freq / 100);
 	double contact_recovery_speed = .05 * sizeScale;
-	double tFinal = 30;
+	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
 
 	SmarticleType smarticleType = SMART_U;
@@ -242,7 +242,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
 	int nX = bucket_interior_halfDim.x / maxDim;
 	int nY = bucket_interior_halfDim.y / maxDim;
-	int nZ = 1;
+	int nZ = 200;
 
 	int smarticleCount = 0;
 	for (int k = 0; k < nZ; k++) {
@@ -341,7 +341,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 void SavePovFilesMBD(ChSystemParallelDVI& mphysicalSystem,
                      int tStep) {
   int out_steps = std::ceil((1.0 / dT) / out_fps);
-  printf("tStep %d , outstep %d \n", tStep, out_steps);
+  printf("tStep %d , outstep %d, num bodies %d \n", tStep, out_steps, mphysicalSystem.Get_bodylist()->size());
 
   static int out_frame = 0;
 
