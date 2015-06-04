@@ -28,6 +28,7 @@
 //             www.deltaknowledge.com
 // ------------------------------------------------
 ////*************** chrono parallel
+#include <omp.h>
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
@@ -394,9 +395,9 @@ void PrintFractions(ChSystemParallelDVI& mphysicalSystem, int tStep, std::vector
 
 	std::ofstream vol_frac_of;
 	if (tStep == 0) {
-	  vol_frac_of.open(vol_frac);
+	  vol_frac_of.open(vol_frac.c_str());
 	} else {
-	  vol_frac_of.open(vol_frac, std::ios::app);
+	  vol_frac_of.open(vol_frac.c_str(), std::ios::app);
 	}
 
 	double zMax = Find_Max_Z(mphysicalSystem);
@@ -453,7 +454,7 @@ int main(int argc, char* argv[]) {
 	  time(&rawtime);
 	  timeinfo = localtime(&rawtime);
 	  const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
-	  simParams.open(simulationParams);
+	  simParams.open(simulationParams.c_str());
 	  simParams << " Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
 	  ChTimerParallel step_timer;
 
