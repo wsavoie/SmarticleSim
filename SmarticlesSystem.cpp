@@ -73,9 +73,9 @@ ChSharedPtr<ChBody> bucket;
 
 	double sizeScale = 1000;
 	double gravity = -9.81 * sizeScale;
-	double vibration_freq = 30;
+	double vibration_freq = 10;
 	double dT = std::min(0.005, 1.0 / vibration_freq / 100);
-	double contact_recovery_speed = .3;
+	double contact_recovery_speed = .05 * sizeScale;
 	double tFinal = 30;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
 
@@ -90,7 +90,7 @@ ChSharedPtr<ChBody> bucket;
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.075, .075, .0375);
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
-	double bucket_thick = sizeScale * .001;
+	double bucket_thick = sizeScale * .005;
 
 	// smarticle geometry
 	double w_smarticle 	= sizeScale * 0.0117;
@@ -115,6 +115,10 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
   if (argc > 3) {
     const char* text = argv[3];
     max_iteration_bilateral = atoi(text);
+  }
+  if (argc > 4) {
+    const char* text = argv[4];
+    l_smarticle = atoi(text);
   }
 }
 // =============================================================================
@@ -159,7 +163,8 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
 		  " max_iteration_normal: " << max_iteration_normal << std::endl <<
 		  " max_iteration_sliding: " << max_iteration_sliding << std::endl <<
 		  " max_iteration_spinning: " << max_iteration_spinning << std::endl <<
-		  " max_iteration_bilateral: " << max_iteration_bilateral << std::endl << std::endl;
+		  " max_iteration_bilateral: " << max_iteration_bilateral << std::endl <<
+		  " l_smarticle: " << l_smarticle << std::endl<< std::endl;
 
   // ---------------------
   // Edit mphysicalSystem settings.
@@ -431,7 +436,6 @@ void PrintFractions(ChSystemParallelDVI& mphysicalSystem, int tStep, std::vector
 //		}
 //	}
 
-	std::cout<< "you \n";
 	double totalVolume2 = 0;
 	int countInside2 = 0;
 	for (int i = 0; i < mySmarticlesVec.size(); i ++) {
@@ -528,7 +532,7 @@ int main(int argc, char* argv[]) {
 //  }
 
   double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
-  double vibration_amp = sizeScale * 0.0002;
+  double vibration_amp = sizeScale * 0.001;
 
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 	  double t = mphysicalSystem.GetChTime();
