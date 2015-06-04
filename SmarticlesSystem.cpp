@@ -118,7 +118,8 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
   }
   if (argc > 4) {
     const char* text = argv[4];
-    l_smarticle = atof(text);
+	double mult_l = atof(text);
+    l_smarticle = mult_l * w_smarticle;
   }
 }
 // =============================================================================
@@ -164,7 +165,8 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
 		  " max_iteration_sliding: " << max_iteration_sliding << std::endl <<
 		  " max_iteration_spinning: " << max_iteration_spinning << std::endl <<
 		  " max_iteration_bilateral: " << max_iteration_bilateral << std::endl <<
-		  " l_smarticle: " << l_smarticle << std::endl<< std::endl;
+		  " l_smarticle: " << l_smarticle << std::endl <<
+		  " l_smarticle mult: " << l_smarticle /  w_smarticle << std::endl << std::endl;
 
   // ---------------------
   // Edit mphysicalSystem settings.
