@@ -74,7 +74,7 @@ ChSharedPtr<ChBody> bucket;
 	double sizeScale = 1000;
 	double gravity = -9.81 * sizeScale;
 	double vibration_freq = 10;
-	double dT = std::min(0.005, 1.0 / vibration_freq / 100);
+	double dT = std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .05 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
@@ -82,7 +82,7 @@ ChSharedPtr<ChBody> bucket;
 	SmarticleType smarticleType = SMART_U;
 
 	bool povray_output = true;
-	int out_fps = 25;
+	int out_fps = 120;
 	const std::string out_dir = "PostProcess";
 	const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
 
@@ -244,7 +244,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
 	int nX = bucket_interior_halfDim.x / maxDim;
 	int nY = bucket_interior_halfDim.y / maxDim;
-	int nZ = 400;
+	int nZ = 1;
 
 	int smarticleCount = 0;
 	for (int k = 0; k < nZ; k++) {
@@ -448,7 +448,7 @@ void PrintFractions(ChSystemParallelDVI& mphysicalSystem, int tStep, std::vector
 		}
 	}
 
-	double volumeFraction = totalVolume2 / (4 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - bucket_interior_halfDim.z));
+	double volumeFraction = totalVolume2 / (4 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - (mBuckCtr.z - bucket_interior_halfDim.z)));
 
 	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2  << ", " << volumeFraction << ", " << zMax << std::endl;
 
@@ -461,9 +461,6 @@ int main(int argc, char* argv[]) {
 	  struct tm* timeinfo;
 	  time(&rawtime);
 	  timeinfo = localtime(&rawtime);
-	  const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
-	  simParams.open(simulationParams.c_str());
-	  simParams << " Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
 	  ChTimerParallel step_timer;
 
 	  // --------------------------
@@ -491,6 +488,10 @@ int main(int argc, char* argv[]) {
 		  return 1;
 		}
 	  }
+
+	  const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
+	  simParams.open(simulationParams.c_str());
+	  simParams << " Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
 
   // Create a ChronoENGINE physical system
   ChSystemParallelDVI mphysicalSystem;
