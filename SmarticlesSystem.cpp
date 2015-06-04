@@ -92,6 +92,12 @@ ChSharedPtr<ChBody> bucket;
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 	double bucket_thick = sizeScale * .001;
 
+	// smarticle geometry
+	double w_smarticle 	= sizeScale * 0.0117;
+	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+	double t_smarticle 	= sizeScale * .00127;
+	double t2_smarticle	= sizeScale * .0005;
+
 
 // =============================================================================
 void MySeed(double s = time(NULL)) { srand(s); }
@@ -222,10 +228,6 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	// Smarticle body
 	/////////////////
 	MySeed(964);
-	double w_smarticle 	= sizeScale * 0.0117;
-	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	double t_smarticle 	= sizeScale * .00127;
-	double t2_smarticle	= sizeScale * .0005;
 	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
 	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
 
