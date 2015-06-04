@@ -118,7 +118,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
   }
   if (argc > 4) {
     const char* text = argv[4];
-    l_smarticle = atoi(text);
+    l_smarticle = atof(text);
   }
 }
 // =============================================================================
@@ -242,7 +242,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
 	int nX = bucket_interior_halfDim.x / maxDim;
 	int nY = bucket_interior_halfDim.y / maxDim;
-	int nZ = 200;
+	int nZ = 400;
 
 	int smarticleCount = 0;
 	for (int k = 0; k < nZ; k++) {
