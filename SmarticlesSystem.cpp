@@ -230,7 +230,6 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	bucket->SetBodyFixed(false);
 
-
 	/////////////////
 	// Smarticle body
 	/////////////////
@@ -324,18 +323,18 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 //
 //
 //
-//    ChSharedPtr<ChLinkLockRevolute> shipGroundPrismatic(new ChLinkLockRevolute);
-//    shipGroundPrismatic->Initialize(
+//    ChSharedPtr<ChLinkLockRevolute> bucketGroundPrismatic(new ChLinkLockRevolute);
+//    bucketGroundPrismatic->Initialize(
 //    		smarticle0.GetArm(0), ground, true, ChCoordsys<>(ChVector<>(0, l/2, 0)), ChCoordsys<>(posRel + ChVector<>(0, l/2, 0)));
-//    shipGroundPrismatic->SetName("ship_ground_prismatic");
-//    mphysicalSystem.AddLink(shipGroundPrismatic);
+//    bucketGroundPrismatic->SetName("ship_ground_prismatic");
+//    mphysicalSystem.AddLink(bucketGroundPrismatic);
 
 
-//  ChSharedPtr<ChLinkLockRevolute> shipGroundPrismatic(new ChLinkLockRevolute);
-//  shipGroundPrismatic->Initialize(
+//  ChSharedPtr<ChLinkLockRevolute> bucketGroundPrismatic(new ChLinkLockRevolute);
+//  bucketGroundPrismatic->Initialize(
 //  		smarticle0.GetArm(0), smarticle0.GetArm(1), true, ChCoordsys<>(ChVector<>(0, l/2, 0)), ChCoordsys<>(posRel + ChVector<>(0, l/2, 0)));
-//  shipGroundPrismatic->SetName("ship_ground_prismatic");
-//  mphysicalSystem.AddLink(shipGroundPrismatic);
+//  bucketGroundPrismatic->SetName("ship_ground_prismatic");
+//  mphysicalSystem.AddLink(bucketGroundPrismatic);
 
 }
 // =============================================================================
@@ -545,6 +544,7 @@ int main(int argc, char* argv[]) {
 	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
 	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
 	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
+	  bucket->SetRot(QUNIT);
 
 //	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);
