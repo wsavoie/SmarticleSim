@@ -380,10 +380,10 @@ double Find_Max_Z(ChSystemParallelDVI& mphysicalSystem) {
 }
 // =============================================================================
 bool IsIn(ChVector<> pt, ChVector<> min, ChVector<> max) {
-	if ((pt > max) || (pt < min)) {
-		return false;
+	if ((pt < max) && (pt > min)) {
+		return true;
 	}
-	return true;
+	return false;
 }
 // =============================================================================
 void FixBodies(ChSystemParallelDVI& mphysicalSystem, int tStep) {
