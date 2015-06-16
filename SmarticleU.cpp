@@ -32,9 +32,10 @@ void SmarticleU::Create() {
 	double m3 = density * utils::CalcBoxVolume(box3_dim);
 
 	mass = m1 + m2 + m3;
+	ChVector<> cm;						// cm in abs reference frame
 	cm = (m1 * box1_loc + m2 * box2_loc + m3 * box3_loc) / mass + position;
 
-	ChVector<> rel_loc1 = box1_loc - (cm - position);
+	ChVector<> rel_loc1 = box1_loc - (cm - position); // relative location wrt CM, needed for parallel axis theorem
 	ChVector<> rel_loc2 = box2_loc - (cm - position);
 	ChVector<> rel_loc3 = box3_loc - (cm - position);
 
@@ -58,7 +59,7 @@ void SmarticleU::Create() {
 	smarticleU = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
 
 	smarticleU->SetName("smarticle_u");
-	smarticleU->SetPos(position);
+	smarticleU->SetPos(cm);
 	smarticleU->SetRot(rotation);
     smarticleU->SetCollide(true);
     smarticleU->SetBodyFixed(false);
@@ -80,7 +81,7 @@ void SmarticleU::Create() {
 }
 
 ChVector<> SmarticleU::Get_cm() {
-	return cm;
+	return smarticleU->GetPos();
 }
 
 double SmarticleU::GetVolume() {

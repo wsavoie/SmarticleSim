@@ -65,7 +65,6 @@ public:
 private:
 	  // bodies
 	 ChSharedBodyPtr smarticleU;	// left arm
-	 ChVector<> cm;
 };
 }
 
