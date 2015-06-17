@@ -74,7 +74,7 @@ ChSharedPtr<ChBody> bucket;
 	double sizeScale = 1000;
 	double gravity = -9.81 * sizeScale;
 	double vibration_freq = 10;
-	double dT = std::min(0.0005, 1.0 / vibration_freq / 200);
+	double dT = std::min(0.0003, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .05 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
