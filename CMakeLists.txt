@@ -30,16 +30,7 @@ FIND_LIBRARY(CHRONO_LIB_UTILS NAMES ChronoEngine_Utils PATHS ${CHRONO_PARALLEL_L
 
 #SET(LIBRARIES ${CHRONOENGINE_LIBRARIES} ${CHRONO_LIB} ${CHRONO_LIB_PARALLEL} ${CHRONO_LIB_UTILS})
 SET(LIBRARIES ${CHRONOENGINE_LIBRARIES} ${CHRONO_LIB_PARALLEL} ${CHRONO_LIB_UTILS})
-# ------------------------------------------------------------------------------
-# Thrust
-# ------------------------------------------------------------------------------
-find_package(GLEW)
-find_package(Thrust)
-  IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    SET(GLEW_DLL  "" CACHE FILEPATH "The GLEW DLL")
-    SET(GLFW_DLL  "" CACHE FILEPATH "The GLFW DLL")
-  ENDIF()
-  
+
 # ------------------------------------------------------------------------------
 # BLAZE -- required for some parallel solvers
 # ------------------------------------------------------------------------------
