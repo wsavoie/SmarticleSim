@@ -31,7 +31,9 @@ FIND_LIBRARY(CHRONO_LIB_UTILS NAMES ChronoEngine_Utils PATHS ${CHRONO_PARALLEL_L
 #SET(LIBRARIES ${CHRONOENGINE_LIBRARIES} ${CHRONO_LIB} ${CHRONO_LIB_PARALLEL} ${CHRONO_LIB_UTILS})
 SET(LIBRARIES ${CHRONOENGINE_LIBRARIES} ${CHRONO_LIB_PARALLEL} ${CHRONO_LIB_UTILS})
 
+
 MESSAGE( STATUS "CHRONOENGINE_INCLUDES:         " ${CHRONOENGINE_INCLUDES} )
+
 # ------------------------------------------------------------------------------
 # BLAZE -- required for some parallel solvers
 # ------------------------------------------------------------------------------
