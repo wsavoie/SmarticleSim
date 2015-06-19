@@ -357,12 +357,13 @@ void SavePovFilesMBD(ChSystemParallelDVI& mphysicalSystem,
 }
 // =============================================================================
 double Find_Max_Z(ChSystemParallelDVI& mphysicalSystem) {
-
 	const std::string smarticleTypeName;
 	if (smarticleType == SMART_ARMS) {
-		smarticleTypeName = "smarticle_arm";
+		//smarticleTypeName = "smarticle_arm";
+		const std::string smarticleTypeName = "smarticle_arm";
 	} else if (smarticleType == SMART_U) {
-		smarticleTypeName = "smarticle_u";
+		//smarticleTypeName = "smarticle_u";s
+		const std::string smarticleTypeName = "smarticle_u";
 	} else {
 		std::cout << "Error! Smarticle type is not set correctly" << std::endl;
 	}
