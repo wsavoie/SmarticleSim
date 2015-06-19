@@ -30,35 +30,17 @@ FIND_LIBRARY(CHRONO_LIB_UTILS NAMES ChronoEngine_Utils PATHS ${CHRONO_PARALLEL_L
 
 #SET(LIBRARIES ${CHRONOENGINE_LIBRARIES} ${CHRONO_LIB} ${CHRONO_LIB_PARALLEL} ${CHRONO_LIB_UTILS})
 SET(LIBRARIES ${CHRONOENGINE_LIBRARIES} ${CHRONO_LIB_PARALLEL} ${CHRONO_LIB_UTILS})
-# ------------------------------------------------------------------------------
-# Thrust
-# ------------------------------------------------------------------------------
-find_package(GLEW)
-find_package(Thrust)
-  IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    SET(GLEW_DLL  "" CACHE FILEPATH "The GLEW DLL")
-    SET(GLFW_DLL  "" CACHE FILEPATH "The GLFW DLL")
-  ENDIF()
-  
+
+
+MESSAGE( STATUS "CHRONOENGINE_INCLUDES:         " ${CHRONOENGINE_INCLUDES} )
+
 # ------------------------------------------------------------------------------
 # BLAZE -- required for some parallel solvers
 # ------------------------------------------------------------------------------
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 SET(BLAZE_DIR ""  CACHE PATH   "Where is Blaze located?")
-ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-FIND_PATH(BLAZE_DIR NAMES blaze/Blaze.h PATHS "/usr/include" "/usr/local/include")
-ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-FIND_PATH(BLAZE_DIR NAMES blaze/Blaze.h PATHS "/usr/include" "/usr/local/include")
-ENDIF()
-
-# ------------------------------------------------------------------------------
-# BOOST -- required for BLAZE
-# ------------------------------------------------------------------------------
-IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-   SET(BOOST_DIR ""  CACHE PATH   "Where is Boost located?")
-ENDIF()
-
-MESSAGE( STATUS "CHRONOENGINE_INCLUDES:         " ${CHRONOENGINE_INCLUDES} )
+SET(BOOST_DIR ""  CACHE PATH   "Where is Boost located?")
+set(CHRONO_PARALLEL_INC ${CHRONO_PARALLEL_INC} $(BLAZE_DIR))
+set(CHRONO_PARALLEL_INC ${CHRONO_PARALLEL_INC} $(BOOST_DIR))
 
 include_directories(
     ${CHRONOENGINE_INCLUDES}
@@ -67,29 +49,8 @@ include_directories(
     "${CHRONO_PARALLEL_LIB_PATH}/../" 
     "${CUDA_TOOLKIT_ROOT_DIR}/include"
     "${CUDA_SDK_ROOT_DIR}/common/inc"
-	${BLAZE_DIR}
-	${BOOST_DIR}
-	${THRUST_INCLUDE_DIR}
-	${GLEW_INCLUDE_DIR}
-	${GLM_INCLUDE_DIR}
     )
-IF(EXISTS ${GLEW_DLL})
-      ADD_CUSTOM_COMMAND(
-        TARGET COPY_DLLS POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${GLEW_DLL}"
-            "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>"
-      )
-    ENDIF()
-    IF(EXISTS ${GLFW_DLL})
-      ADD_CUSTOM_COMMAND(
-        TARGET COPY_DLLS POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${GLFW_DLL}"
-            "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>"
-      )
-    ENDIF()
-	
+
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 SET(DEMOS "")
 
