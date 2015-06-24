@@ -192,7 +192,98 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
 }
 
 // =============================================================================
+void CreateTestVolumeFraction(ChSystemParallelDVI& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec)
+{
+	ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+	mat_g->SetFriction(0.5);
+	mat_g->SetCohesion(0);
+	mat_g->SetCompliance(0.0);
+	mat_g->SetComplianceT(0.0);
+	mat_g->SetDampingF(0.2);
 
+	/////////////////
+	// Ground body
+	/////////////////
+
+	// ground
+	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
+	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -bucket_interior_halfDim.z - boxDim.z * 5); // 1.1 to add 10% clearance between bucket and ground
+	ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	ground->SetMaterialSurface(mat_g);
+	ground->SetPos(boxLoc);
+
+	// ground->SetIdentifier(-1);
+	ground->SetBodyFixed(true);
+	ground->SetCollide(true);
+
+	ground->GetCollisionModel()->ClearModel();
+	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0, 0, 0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	ground->GetCollisionModel()->SetFamily(1);
+	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	ground->GetCollisionModel()->BuildModel();
+	mphysicalSystem.AddBody(ground);
+
+	// bucket
+	bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr);
+	bucket->GetCollisionModel()->SetFamily(1);
+	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	bucket->SetBodyFixed(false);
+
+	/////////////////
+	// Smarticle body
+	/////////////////
+	MySeed(964);
+	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
+	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
+
+	//	int nX = bucket_interior_halfDim.x / sLenghWithTol.x;
+	//	int nY = bucket_interior_halfDim.y / sLenghWithTol.z;
+	//	int nZ = 1;
+	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
+	int smarticleCount = 0;
+	int nX = bucket_interior_halfDim.x / maxDim;
+	int nY = bucket_interior_halfDim.y / maxDim;
+	for (int i = -nX + 1; i < nX; i++) {
+		for (int j = -nY + 1; j < nY; j++) {
+			ChQuaternion<> myRot = QUNIT;
+			myRot.Normalize();
+			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, 0);
+			//				ChVector<> myPos = ChVector<>(0, 0, bucket_interior_halfDim.z + (i%3) * sLenghWithTol.z)
+			//						+ ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y);
+
+			if (smarticleType == SMART_ARMS) {
+				Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
+				smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
+					rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+					myPos,
+					myRot);
+				smarticle0->Create();
+				mySmarticlesVec.push_back((Smarticle*)smarticle0);
+				std::cout << "Volume of Smarticle:" << smarticle0->GetVolume() << std::endl;
+			}
+			else if (smarticleType == SMART_U) {
+				SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
+				smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
+					rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+					myPos,
+					myRot);
+				
+				smarticle0->Create();
+				mySmarticlesVec.push_back(smarticle0);
+				std::cout << "Volume of Smarticle:" << smarticle0->GetVolume() << std::endl;
+			}
+			else {
+				std::cout << "Error! Smarticle type is not set correctly" << std::endl;
+			}
+			smarticleCount++;
+
+		
+		}
+	}
+
+
+}
 void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 	  ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
 		mat_g->SetFriction(0.5);
@@ -357,12 +448,13 @@ void SavePovFilesMBD(ChSystemParallelDVI& mphysicalSystem,
 }
 // =============================================================================
 double Find_Max_Z(ChSystemParallelDVI& mphysicalSystem) {
-
 	const std::string smarticleTypeName;
 	if (smarticleType == SMART_ARMS) {
-		smarticleTypeName = "smarticle_arm";
+		//smarticleTypeName = "smarticle_arm";
+		const std::string smarticleTypeName = "smarticle_arm";
 	} else if (smarticleType == SMART_U) {
-		smarticleTypeName = "smarticle_u";
+		//smarticleTypeName = "smarticle_u";s
+		const std::string smarticleTypeName = "smarticle_u";
 	} else {
 		std::cout << "Error! Smarticle type is not set correctly" << std::endl;
 	}
@@ -497,8 +589,8 @@ int main(int argc, char* argv[]) {
   InitializeMbdPhysicalSystem(mphysicalSystem, argc, argv);
 
   std::vector<Smarticle*> mySmarticlesVec;
-  CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
-
+  //CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
+	CreateTestVolumeFraction(mphysicalSystem, mySmarticlesVec);
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
 
