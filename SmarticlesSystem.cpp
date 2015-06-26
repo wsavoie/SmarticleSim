@@ -74,7 +74,7 @@ ChSharedPtr<ChBody> bucket;
 	double sizeScale = 1000;
 	double gravity = -9.81 * sizeScale;
 	double vibration_freq = 10;
-	double dT = std::min(0.0003, 1.0 / vibration_freq / 200);
+	double dT = std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .05 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
@@ -88,7 +88,7 @@ ChSharedPtr<ChBody> bucket;
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.05, .050, .025);
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.075, .0750, .0375);
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 	double bucket_thick = sizeScale * .005;
 
@@ -166,7 +166,8 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
 		  " max_iteration_spinning: " << max_iteration_spinning << std::endl <<
 		  " max_iteration_bilateral: " << max_iteration_bilateral << std::endl <<
 		  " l_smarticle: " << l_smarticle << std::endl <<
-		  " l_smarticle mult: " << l_smarticle /  w_smarticle << std::endl << std::endl;
+		  " l_smarticle mult for w (w = mult x l): " << l_smarticle /  w_smarticle << std::endl <<
+		  " dT: " << dT << std::endl << std::endl;
 
   // ---------------------
   // Edit mphysicalSystem settings.
@@ -224,10 +225,18 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 
 	// bucket
 	bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr);
-	bucket->GetCollisionModel()->SetFamily(1);
-	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-	bucket->SetBodyFixed(false);
+//	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr);
+//	bucket->GetCollisionModel()->SetFamily(1);
+//	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+
+	bucket->SetMaterialSurface(mat_g);
+	bucket->SetBodyFixed(true);
+	bucket->SetCollide(true);
+	bucket->GetCollisionModel()->ClearModel();
+	utils::AddBoxGeometry(bucket.get_ptr(), ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, bucket_thick), bucket_ctr - ChVector<>(0, 0, bucket_interior_halfDim.z));
+	bucket->GetCollisionModel()->BuildModel();
+	mphysicalSystem.AddBody(bucket);
+
 
 	/////////////////
 	// Smarticle body
@@ -242,7 +251,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
 	int nX = bucket_interior_halfDim.x / maxDim;
 	int nY = bucket_interior_halfDim.y / maxDim;
-	int nZ = 150;
+	int nZ = 200;//20;
 
 	int smarticleCount = 0;
 	for (int k = 0; k < nZ; k++) {
@@ -519,12 +528,12 @@ int main(int argc, char* argv[]) {
   int stepEnd = int(tFinal / dT);  // 1.0e6;//2.4e6;//600000;//2.4e6 * (.02 * paramsH.sizeScale) /
   // ***************************** Simulation loop ********************************************
 
-  ChSharedPtr<ChFunction> fun1 = ChSharedPtr<ChFunction>(new ChFunction_Const(0));
-  ChSharedPtr<ChFunction> fun2 = ChSharedPtr<ChFunction>(new ChFunction_Ramp(0,1));
-  ChSharedPtr<ChFunction> fun3 = ChSharedPtr<ChFunction>(new ChFunction_Ramp(0,-1));
+  ChSharedPtr<ChFunction_Const> fun1 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(0));
+  ChSharedPtr<ChFunction_Ramp> fun2 = ChSharedPtr<ChFunction_Ramp>(new ChFunction_Ramp(0,1));
+  ChSharedPtr<ChFunction_Ramp> fun3 = ChSharedPtr<ChFunction_Ramp>(new ChFunction_Ramp(0,-1));
 
-  ChSharedPtr<ChFunction> fun4 = ChSharedPtr<ChFunction>(new ChFunction_Const(CH_C_PI / 2));
-  ChSharedPtr<ChFunction> fun5 = ChSharedPtr<ChFunction>(new ChFunction_Const(-CH_C_PI / 2));
+  ChSharedPtr<ChFunction_Const> fun4 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(CH_C_PI / 2));
+  ChSharedPtr<ChFunction_Const> fun5 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(-CH_C_PI / 2));
 
 //  for (int i = 0; i < mySmarticlesVec.size(); i++) {
 //	  mySmarticlesVec[i]->SetActuatorFunction(0, fun4);
@@ -537,14 +546,15 @@ int main(int argc, char* argv[]) {
 
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 	  double t = mphysicalSystem.GetChTime();
-
+	  printf("\n");
+printf("1 ");
 	  // move bucket
-	  double x_bucket = vibration_amp * sin(omega_bucket * t);
-	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
-	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
-	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
-	  bucket->SetRot(QUNIT);
-
+//	  double x_bucket = vibration_amp * sin(omega_bucket * t);
+//	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
+//	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
+//	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
+//	  bucket->SetRot(QUNIT);
+printf("2 ");
 //	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);
 //	  switch (stage % 4) {
@@ -563,7 +573,7 @@ int main(int argc, char* argv[]) {
 //	  }
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.start("step time");
-
+printf("3 ");
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(dT);
@@ -572,16 +582,21 @@ int main(int argc, char* argv[]) {
 #else
     mphysicalSystem.DoStepDynamics(dT);
 #endif
+printf("4 ");
 
 	  step_timer.stop("step time");
+printf("5 ");
 
 	  FixBodies(mphysicalSystem, tStep);
 	  PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
+printf("6 ");
+
   }
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
 	  delete mySmarticlesVec[i];
 
   }
+  mySmarticlesVec.clear();
   simParams.close();
   return 0;
 }

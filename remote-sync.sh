@@ -1,7 +1,9 @@
 #!/bin/sh
 
-USER=$1
-HOST=$2
+##USER=$1
+##HOST=$2
+USER="pazouki"
+HOST="euler"
 if [[ $USER == "" || $HOST == "" ]] ; then
 	echo "usage: `basename $0` user host"
 	exit 1
