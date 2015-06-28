@@ -54,7 +54,7 @@ public:
   // Smarticle volume
   virtual double GetVolume();
   virtual ChVector<> Get_cm();
-  virtual ChVector<> Get_pos();
+  virtual ChVector<> Get_InitPos();
   virtual double GetDensity() {return density;};
 
 private:
@@ -63,7 +63,7 @@ private:
   void CreateArm(
 		  int armID, 			// 0: left arm, 1: middle arm, 2: right arm
 		  double len, 			// arm length
-		  ChVector<> posRel, 	// relative position of the arm wrt the smarticle position, which is the center of the center arm
+		  ChVector<> posRel, 	// relative initPosition of the arm wrt the smarticle initPos, which is the center of the center arm
 								// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
 		  ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
 		  );
@@ -72,7 +72,7 @@ private:
 
 protected:
   // location and orientation (location of the center of the middle arm)
-  ChVector<> position;
+  ChVector<> initPos;
   ChQuaternion<> rotation;
 
   // length

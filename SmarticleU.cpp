@@ -17,8 +17,8 @@ void SmarticleU::Create() {
 	ChVector<> box2_dim = ChVector<>(r2, r, l / 2.0);
 	ChVector<> box3_dim = ChVector<>(r2, r, l / 2.0);
 
-	// relative location of the boxes wrt smarticle position,
-	// smarticle position is the location of the center of the center segment
+	// relative location of the boxes wrt smarticle initPos,
+	// smarticle initPos is the location of the center of the center segment
 	ChVector<> box1_loc = ChVector<>(0, 0, 0);
 	ChVector<> box2_loc = ChVector<>(-w / 2.0 + r2, 0, l / 2.0 + r2);
 	ChVector<> box3_loc = ChVector<>(w / 2.0 - r2, 0, l / 2.0 + r2) ;
@@ -32,12 +32,12 @@ void SmarticleU::Create() {
 	double m3 = density * utils::CalcBoxVolume(box3_dim);
 
 	mass = m1 + m2 + m3;
-	ChVector<> cm;						// cm in abs reference frame
-	cm = (m1 * box1_loc + m2 * box2_loc + m3 * box3_loc) / mass + position;
+	ChVector<> cmRel;						// cm in reletive reference frame at smarticle initPos
+	cmRel = (m1 * box1_loc + m2 * box2_loc + m3 * box3_loc) / mass;
 
-	ChVector<> rel_loc1 = box1_loc - (cm - position); // relative location wrt CM, needed for parallel axis theorem
-	ChVector<> rel_loc2 = box2_loc - (cm - position);
-	ChVector<> rel_loc3 = box3_loc - (cm - position);
+	ChVector<> rel_loc1 = box1_loc - cmRel; // relative location wrt CM, needed for parallel axis theorem
+	ChVector<> rel_loc2 = box2_loc - cmRel;
+	ChVector<> rel_loc3 = box3_loc - cmRel;
 
 	ChVector<> mInertia;
 	mInertia.x =
@@ -55,9 +55,10 @@ void SmarticleU::Create() {
 			m2 * (gyr2.z + ChVector<>(rel_loc2.x, rel_loc2.y, 0).Length2()) +
 			m3 * (gyr3.z + ChVector<>(rel_loc3.x, rel_loc3.y, 0).Length2()) ;
 
-	// create body, set position and rotation, add surface property, and clear/make collision model
+	// create body, set initPos and rotation, add surface property, and clear/make collision model
 	smarticleU = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
 
+	ChVector<> cm = rotation.Rotate(cmRel) + initPos;		// cm in abs reference frame
 	smarticleU->SetName("smarticle_u");
 	smarticleU->SetPos(cm);
 	smarticleU->SetRot(rotation);
