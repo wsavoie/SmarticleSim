@@ -18,11 +18,6 @@ void SmarticleU::Create() {
 	ChVector<> box3_dim = ChVector<>(r2, r, l / 2.0);
 
 	// relative location of the boxes wrt smarticle initPos,
-	// smarticle initPos is the location of the center of the center segment
-	ChVector<> box1_loc = ChVector<>(0, 0, 0);
-	ChVector<> box2_loc = ChVector<>(-w / 2.0 + r2, 0, l / 2.0 + r2);
-	ChVector<> box3_loc = ChVector<>(w / 2.0 - r2, 0, l / 2.0 + r2) ;
-
 	ChVector<> gyr1 = utils::CalcBoxGyration(box1_dim).Get_Diag();
 	ChVector<> gyr2 = utils::CalcBoxGyration(box2_dim).Get_Diag();
 	ChVector<> gyr3 = utils::CalcBoxGyration(box3_dim).Get_Diag();
@@ -32,6 +27,12 @@ void SmarticleU::Create() {
 	double m3 = density * utils::CalcBoxVolume(box3_dim);
 
 	mass = m1 + m2 + m3;
+
+	// smarticle initPos is the location of the center of the center segment
+	ChVector<> box1_loc = ChVector<>(0, 0, 0);
+	ChVector<> box2_loc = ChVector<>(-w / 2.0 + r2, 0, l / 2.0 + r2);
+	ChVector<> box3_loc = ChVector<>(w / 2.0 - r2, 0, l / 2.0 + r2) ;
+
 	ChVector<> cmRel;						// cm in reletive reference frame at smarticle initPos
 	cmRel = (m1 * box1_loc + m2 * box2_loc + m3 * box3_loc) / mass;
 
@@ -67,9 +68,10 @@ void SmarticleU::Create() {
 	smarticleU->SetMaterialSurface(mat_g);
 
 	smarticleU->GetCollisionModel()->ClearModel();
-	utils::AddBoxGeometry(smarticleU.get_ptr(), box1_dim, box1_loc);
-	utils::AddBoxGeometry(smarticleU.get_ptr(), box2_dim, box2_loc);
-	utils::AddBoxGeometry(smarticleU.get_ptr(), box3_dim, box3_loc);
+	// initialize collision geometry wrt cm
+	utils::AddBoxGeometry(smarticleU.get_ptr(), box1_dim, rel_loc1);
+	utils::AddBoxGeometry(smarticleU.get_ptr(), box2_dim, rel_loc2);
+	utils::AddBoxGeometry(smarticleU.get_ptr(), box3_dim, rel_loc3);
 	smarticleU->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
     smarticleU->GetCollisionModel()->BuildModel();  // this function overwrites the intertia
 
