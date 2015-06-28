@@ -74,7 +74,7 @@ ChSharedPtr<ChBody> bucket;
 	double sizeScale = 1;
 	double gravity = -9.81 * sizeScale;
 	double vibration_freq = 10;
-	double dT = std::min(0.00001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
+	double dT = std::min(0.0005, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .05 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
@@ -174,7 +174,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   // ---------------------
 
   double tolerance = 0.1;  // 1e-3;  // Arman, move it to paramsH
-  //double collisionEnvelop = 0.04 * paramsH.HSML;
+  double collisionEnvelop = .04 * t2_smarticle;
   mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
 
   mphysicalSystem.GetSettings()->solver.solver_mode = SLIDING;                              // NORMAL, SPINNING
@@ -188,7 +188,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   mphysicalSystem.ChangeSolverType(APGD);  // Arman check this APGD APGDBLAZE
   //  mphysicalSystem.GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 
-//    mphysicalSystem.GetSettings()->collision.collision_envelope = collisionEnvelop;   // global collisionEnvelop does not work. Maybe due to sph-tire size mismatch
+  mphysicalSystem.GetSettings()->collision.collision_envelope = collisionEnvelop;   // global collisionEnvelop does not work. Maybe due to sph-tire size mismatch
   mphysicalSystem.GetSettings()->collision.bins_per_axis = _make_int3(40, 40, 40);  // Arman check
 }
 
