@@ -71,10 +71,10 @@ ChSharedPtr<ChBody> bucket;
 
 
 
-	double sizeScale = 1000;
+	double sizeScale = 1;
 	double gravity = -9.81 * sizeScale;
 	double vibration_freq = 10;
-	double dT = std::min(0.0005, 1.0 / vibration_freq / 200);
+	double dT = std::min(0.00001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .05 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
@@ -251,41 +251,71 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
 	int nX = bucket_interior_halfDim.x / maxDim;
 	int nY = bucket_interior_halfDim.y / maxDim;
-	int nZ = 200;//20;
+	int nZ = 1;//20;
 
-	int smarticleCount = 0;
-	for (int k = 0; k < nZ; k++) {
-		for (int i= -nX + 1; i < nX; i++) {
-			for (int j = -nY+1; j < nY; j ++) {
-				ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
-				myRot.Normalize();
-				ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , k * maxDim + maxDim);
-//				ChVector<> myPos = ChVector<>(0, 0, bucket_interior_halfDim.z + (i%3) * sLenghWithTol.z)
-//						+ ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y);
+//	int smarticleCount = 0;
+//	for (int k = 0; k < nZ; k++) {
+//		for (int i= -nX + 1; i < nX; i++) {
+//			for (int j = -nY+1; j < nY; j ++) {
+//				ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+//				myRot.Normalize();
+//				ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , k * maxDim + maxDim);
+////				ChVector<> myPos = ChVector<>(0, 0, bucket_interior_halfDim.z + (i%3) * sLenghWithTol.z)
+////						+ ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y);
+//
+//				if (smarticleType == SMART_ARMS) {
+//					Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
+//					smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
+//									  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+//									  myPos,
+//									  myRot);
+//					smarticle0->Create();
+//					mySmarticlesVec.push_back((Smarticle*)smarticle0);
+//				} else if (smarticleType == SMART_U) {
+//					SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
+//					smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
+//									  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+//									  myPos,
+//									  myRot);
+//					smarticle0->Create();
+//					mySmarticlesVec.push_back(smarticle0);
+//				} else {
+//					std::cout << "Error! Smarticle type is not set correctly" << std::endl;
+//				}
+//				smarticleCount++;
+//			}
+//		}
+//	}
 
-				if (smarticleType == SMART_ARMS) {
-					Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
-					smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
-									  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
-									  myPos,
-									  myRot);
-					smarticle0->Create();
-					mySmarticlesVec.push_back((Smarticle*)smarticle0);
-				} else if (smarticleType == SMART_U) {
-					SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
-					smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
-									  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
-									  myPos,
-									  myRot);
-					smarticle0->Create();
-					mySmarticlesVec.push_back(smarticle0);
-				} else {
-					std::cout << "Error! Smarticle type is not set correctly" << std::endl;
-				}
-				smarticleCount++;
-			}
-		}
-	}
+
+	// test one smarticle
+
+	ChQuaternion<> myRot = Q_from_AngAxis(CH_C_PI / 2, VECT_X);// ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+	myRot.Normalize();
+	ChVector<> myPos = ChVector<>(nX / 2 * maxDim, nY / 2 * maxDim , nZ / 2 * maxDim + maxDim);
+	SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
+	smarticle0->Properties( 3 /* 1 and 2 are the first two objects */,
+					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+					  myPos,
+					  myRot);
+	smarticle0->Create();
+
+	ChVector<> inertiaS =1e6 * smarticle0->GetSmarticleBodyPointer()->GetInertiaXX();
+	printf("e inertia %f %f %f \n",inertiaS.x, inertiaS.y, inertiaS.z );
+
+	mySmarticlesVec.push_back(smarticle0);
+
+	ChVector<> IXX = smarticle0->GetSmarticleBodyPointer()->GetInertiaXX();
+	ChVector<> IXY = smarticle0->GetSmarticleBodyPointer()->GetInertiaXY();
+	ChVector<> posB = smarticle0->GetSmarticleBodyPointer()->GetPos();
+	ChVector<> posS = smarticle0->Get_InitPos();
+	double mass = smarticle0->GetSmarticleBodyPointer()->GetMass();
+
+
+
+
+
+
 	/////////////////
 	// test body
 	/////////////////
@@ -544,7 +574,18 @@ int main(int argc, char* argv[]) {
   double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
   double vibration_amp = sizeScale * 0.001;
 
+//  for (int tStep = 0; tStep < 1; tStep++) {
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
+
+	  ChVector<> itX = ((SmarticleU*)mySmarticlesVec[0])->GetSmarticleBodyPointer()->GetInertiaXX();
+
+		printf("/n/n/n ********** pos %f %f %f cm %f %f %f inertia %f %f %f", mySmarticlesVec[0]->Get_InitPos().x, mySmarticlesVec[0]->Get_InitPos().y, mySmarticlesVec[0]->Get_InitPos().z,
+				mySmarticlesVec[0]->Get_cm().x, mySmarticlesVec[0]->Get_cm().y, mySmarticlesVec[0]->Get_cm().z, itX.x, itX.y, itX.z);
+
+
+
+
+
 	  double t = mphysicalSystem.GetChTime();
 	  printf("\n");
 printf("1 ");
