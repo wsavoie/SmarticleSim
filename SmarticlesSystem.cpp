@@ -225,17 +225,21 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 
 	// bucket
 	bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-//	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr);
-//	bucket->GetCollisionModel()->SetFamily(1);
-//	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
-	bucket->SetMaterialSurface(mat_g);
-	bucket->SetBodyFixed(true);
-	bucket->SetCollide(true);
-	bucket->GetCollisionModel()->ClearModel();
-	utils::AddBoxGeometry(bucket.get_ptr(), ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, bucket_thick), bucket_ctr - ChVector<>(0, 0, bucket_interior_halfDim.z));
-	bucket->GetCollisionModel()->BuildModel();
-	mphysicalSystem.AddBody(bucket);
+	// 1: create bucket
+	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr);
+	bucket->GetCollisionModel()->SetFamily(1);
+	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	bucket->SetBodyFixed(false);
+
+	// 2: create plate
+//	bucket->SetMaterialSurface(mat_g);
+//	bucket->SetBodyFixed(true);
+//	bucket->SetCollide(true);
+//	bucket->GetCollisionModel()->ClearModel();
+//	utils::AddBoxGeometry(bucket.get_ptr(), ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, bucket_thick), bucket_ctr - ChVector<>(0, 0, bucket_interior_halfDim.z));
+//	bucket->GetCollisionModel()->BuildModel();
+//	mphysicalSystem.AddBody(bucket);
 
 
 	/////////////////
@@ -581,11 +585,11 @@ int main(int argc, char* argv[]) {
 	  printf("\n");
 printf("1 ");
 	  // move bucket
-//	  double x_bucket = vibration_amp * sin(omega_bucket * t);
-//	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
-//	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
-//	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
-//	  bucket->SetRot(QUNIT);
+	  double x_bucket = vibration_amp * sin(omega_bucket * t);
+	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
+	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
+	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
+	  bucket->SetRot(QUNIT);
 printf("2 ");
 //	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);
