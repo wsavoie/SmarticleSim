@@ -65,18 +65,18 @@ void SmarticleU::Create() {
     smarticleU->SetBodyFixed(false);
 	smarticleU->SetMaterialSurface(mat_g);
 
-	// create body
-    smarticleU->SetMass(mass);
-    smarticleU->SetInertiaXX(mInertia);
-    smarticleU->SetDensity(density);
-
 	smarticleU->GetCollisionModel()->ClearModel();
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box1_dim, box1_loc);
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box2_dim, box2_loc);
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box3_dim, box3_loc);
 	smarticleU->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+    smarticleU->GetCollisionModel()->BuildModel();  // this function overwrites the intertia
 
-    smarticleU->GetCollisionModel()->BuildModel();
+    // change mass and inertia property
+    smarticleU->SetMass(mass);
+    smarticleU->SetInertiaXX(mInertia);
+    smarticleU->SetDensity(density);
+
     m_system->AddBody(smarticleU);
 }
 

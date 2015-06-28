@@ -54,6 +54,7 @@ public:
   // Smarticle volume
   virtual double GetVolume();
   virtual ChVector<> Get_cm();
+  virtual ChVector<> Get_pos();
   virtual double GetDensity() {return density;};
 
 private:

@@ -87,16 +87,16 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 
 	double mass = density * vol;
 
-	// create body
+	arm->GetCollisionModel()->ClearModel();
+	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
+	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+    arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
+
+    // change mass and inertia property
     arm->SetMass(mass);
     arm->SetInertiaXX(mass * gyr);
     arm->SetDensity(density);
 
-	arm->GetCollisionModel()->ClearModel();
-	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
-	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
-
-    arm->GetCollisionModel()->BuildModel();
     m_system->AddBody(arm);
 
 	switch (armID) {
@@ -246,6 +246,11 @@ ChVector<> Smarticle::Get_cm() {
 	return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos()) / mass;
 
 }
+
+ChVector<> Smarticle::Get_pos() {
+	return position;
+}
+
 
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
