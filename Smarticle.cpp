@@ -25,7 +25,7 @@ Smarticle::Smarticle(
 	w = 1;
 	r = .05;
 	r2 = .01;
-	position = ChVector<>(0);
+	initPos = ChVector<>(0);
 	rotation = QUNIT;
 
 	jointClearance = .05 * r2;
@@ -53,7 +53,7 @@ void Smarticle::Properties(
 	w = other_w;
 	r = other_r;
 	r2 = other_r2;
-	position = pos;
+	initPos = pos;
 	rotation = rot;
 
 	jointClearance = .05 * r2;
@@ -71,7 +71,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
 	arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
-	ChVector<> posArm = rotation.Rotate(posRel) + position;
+	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
 
 	arm->SetName("smarticle_arm");
 	arm->SetPos(posArm);
@@ -87,16 +87,16 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 
 	double mass = density * vol;
 
-	// create body
+	arm->GetCollisionModel()->ClearModel();
+	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
+	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+    arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
+
+    // change mass and inertia property
     arm->SetMass(mass);
     arm->SetInertiaXX(mass * gyr);
     arm->SetDensity(density);
 
-	arm->GetCollisionModel()->ClearModel();
-	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
-	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
-
-    arm->GetCollisionModel()->BuildModel();
     m_system->AddBody(arm);
 
 	switch (armID) {
@@ -157,7 +157,7 @@ void Smarticle::CreateJoints() {
 	link_revolute01 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
 	ChVector<> pR01(-w/2, 0, 0);
 	link_revolute01->Initialize(arm0, arm1,
-        ChCoordsys<>(rotation.Rotate(pR01) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+        ChCoordsys<>(rotation.Rotate(pR01) + initPos, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
 	m_system->AddLink(link_revolute01);
 
 
@@ -165,7 +165,7 @@ void Smarticle::CreateJoints() {
 	link_revolute12 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
 	ChVector<> pR12(w/2, 0, 0);
 	link_revolute12->Initialize(arm1, arm2,
-        ChCoordsys<>(rotation.Rotate(pR12) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+        ChCoordsys<>(rotation.Rotate(pR12) + initPos, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
 	m_system->AddLink(link_revolute12);
 }
 
@@ -177,7 +177,7 @@ void Smarticle::CreateActuators() {
 	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
 	ChVector<> pR01(-w/2, 0, 0);
 	link_actuator01->Initialize(arm0, arm1,
-	        ChCoordsys<>(rotation.Rotate(pR01) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	        ChCoordsys<>(rotation.Rotate(pR01) + initPos, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
 	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
 	SetActuatorFunction(0, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
 	m_system->AddLink(link_actuator01);
@@ -186,7 +186,7 @@ void Smarticle::CreateActuators() {
 	link_actuator12 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
 	ChVector<> pR12(w/2, 0, 0);
 	link_actuator12->Initialize(arm1, arm2,
-	        ChCoordsys<>(rotation.Rotate(pR12) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	        ChCoordsys<>(rotation.Rotate(pR12) + initPos, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
 	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
 	SetActuatorFunction(1, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
 	m_system->AddLink(link_actuator12);
@@ -246,6 +246,11 @@ ChVector<> Smarticle::Get_cm() {
 	return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos()) / mass;
 
 }
+
+ChVector<> Smarticle::Get_InitPos() {
+	return initPos;
+}
+
 
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 

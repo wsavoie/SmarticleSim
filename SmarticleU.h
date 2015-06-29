@@ -35,6 +35,9 @@ public:
 	// get center of mass
 	virtual ChVector<> Get_cm();
 	virtual double GetVolume();
+	virtual ChSharedBodyPtr GetSmarticleBodyPointer() {
+		return smarticleU;
+	}
 
 	//////////////////////
 	// no support zone

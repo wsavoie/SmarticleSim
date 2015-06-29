@@ -71,10 +71,10 @@ ChSharedPtr<ChBody> bucket;
 
 
 
-	double sizeScale = 1000;
+	double sizeScale = 1;
 	double gravity = -9.81 * sizeScale;
 	double vibration_freq = 10;
-	double dT = std::min(0.0005, 1.0 / vibration_freq / 200);
+	double dT = std::min(0.0005, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .05 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
@@ -174,7 +174,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   // ---------------------
 
   double tolerance = 0.1;  // 1e-3;  // Arman, move it to paramsH
-  //double collisionEnvelop = 0.04 * paramsH.HSML;
+  double collisionEnvelop = .04 * t2_smarticle;
   mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
 
   mphysicalSystem.GetSettings()->solver.solver_mode = SLIDING;                              // NORMAL, SPINNING
@@ -188,7 +188,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   mphysicalSystem.ChangeSolverType(APGD);  // Arman check this APGD APGDBLAZE
   //  mphysicalSystem.GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 
-//    mphysicalSystem.GetSettings()->collision.collision_envelope = collisionEnvelop;   // global collisionEnvelop does not work. Maybe due to sph-tire size mismatch
+  mphysicalSystem.GetSettings()->collision.collision_envelope = collisionEnvelop;   // global collisionEnvelop does not work. Maybe due to sph-tire size mismatch
   mphysicalSystem.GetSettings()->collision.bins_per_axis = _make_int3(40, 40, 40);  // Arman check
 }
 
@@ -225,17 +225,21 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 
 	// bucket
 	bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-//	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr);
-//	bucket->GetCollisionModel()->SetFamily(1);
-//	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
-	bucket->SetMaterialSurface(mat_g);
-	bucket->SetBodyFixed(true);
-	bucket->SetCollide(true);
-	bucket->GetCollisionModel()->ClearModel();
-	utils::AddBoxGeometry(bucket.get_ptr(), ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, bucket_thick), bucket_ctr - ChVector<>(0, 0, bucket_interior_halfDim.z));
-	bucket->GetCollisionModel()->BuildModel();
-	mphysicalSystem.AddBody(bucket);
+	// 1: create bucket
+	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr);
+	bucket->GetCollisionModel()->SetFamily(1);
+	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	bucket->SetBodyFixed(false);
+
+	// 2: create plate
+//	bucket->SetMaterialSurface(mat_g);
+//	bucket->SetBodyFixed(true);
+//	bucket->SetCollide(true);
+//	bucket->GetCollisionModel()->ClearModel();
+//	utils::AddBoxGeometry(bucket.get_ptr(), ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, bucket_thick), bucket_ctr - ChVector<>(0, 0, bucket_interior_halfDim.z));
+//	bucket->GetCollisionModel()->BuildModel();
+//	mphysicalSystem.AddBody(bucket);
 
 
 	/////////////////
@@ -251,7 +255,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
 	int nX = bucket_interior_halfDim.x / maxDim;
 	int nY = bucket_interior_halfDim.y / maxDim;
-	int nZ = 200;//20;
+	int nZ = 200;
 
 	int smarticleCount = 0;
 	for (int k = 0; k < nZ; k++) {
@@ -286,6 +290,36 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 			}
 		}
 	}
+
+
+//	// test one smarticle
+//
+//	ChQuaternion<> myRot = Q_from_AngAxis(CH_C_PI / 2, VECT_X);// ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+//	myRot.Normalize();
+//	ChVector<> myPos = ChVector<>(nX / 2 * maxDim, nY / 2 * maxDim , nZ / 2 * maxDim + maxDim);
+//	SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
+//	smarticle0->Properties( 3 /* 1 and 2 are the first two objects */,
+//					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+//					  myPos,
+//					  myRot);
+//	smarticle0->Create();
+//
+//	ChVector<> inertiaS =1e6 * smarticle0->GetSmarticleBodyPointer()->GetInertiaXX();
+//	printf("e inertia %f %f %f \n",inertiaS.x, inertiaS.y, inertiaS.z );
+//
+//	mySmarticlesVec.push_back(smarticle0);
+//
+//	ChVector<> IXX = smarticle0->GetSmarticleBodyPointer()->GetInertiaXX();
+//	ChVector<> IXY = smarticle0->GetSmarticleBodyPointer()->GetInertiaXY();
+//	ChVector<> posB = smarticle0->GetSmarticleBodyPointer()->GetPos();
+//	ChVector<> posS = smarticle0->Get_InitPos();
+//	double mass = smarticle0->GetSmarticleBodyPointer()->GetMass();
+
+
+
+
+
+
 	/////////////////
 	// test body
 	/////////////////
@@ -544,16 +578,18 @@ int main(int argc, char* argv[]) {
   double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
   double vibration_amp = sizeScale * 0.001;
 
+//  for (int tStep = 0; tStep < 1; tStep++) {
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
+
 	  double t = mphysicalSystem.GetChTime();
 	  printf("\n");
 printf("1 ");
 	  // move bucket
-//	  double x_bucket = vibration_amp * sin(omega_bucket * t);
-//	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
-//	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
-//	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
-//	  bucket->SetRot(QUNIT);
+	  double x_bucket = vibration_amp * sin(omega_bucket * t);
+	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
+	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
+	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
+	  bucket->SetRot(QUNIT);
 printf("2 ");
 //	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);
