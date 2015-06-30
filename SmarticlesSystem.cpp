@@ -82,9 +82,11 @@ ChSharedPtr<ChBody> bucket;
 	SmarticleType smarticleType = SMART_U;
 
 	bool povray_output = true;
+	bool entangle_output = true;
 	int out_fps = 120;
 	const std::string out_dir = "PostProcess";
 	const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
+	const std::string entangle_dir = out_dir + "/entangleStats";
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
@@ -497,7 +499,55 @@ void PrintFractions(ChSystemParallelDVI& mphysicalSystem, int tStep, std::vector
 	vol_frac_of.close();
 }
 // =============================================================================
+//This method outputs to a file 
+void PrintEntangles(ChSystemParallelDVI& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,int tStep)
+{
+	static int out_frame = 0;
+	int out_steps = std::ceil((1.0 / dT) / out_fps);
+	if (entangle_output && tStep % out_steps == 0) {
+		char filename[100];
+		sprintf(filename, "%s/data_%03d.dat", entangle_dir.c_str(), out_frame + 1);
+		std::ofstream entangleNumbers;
+		entangleNumbers.open(filename);
+		
 
+		std::string smarticleTypeName;
+		if (smarticleType == SMART_ARMS) {
+			//smarticleTypeName = "smarticle_arm";
+			smarticleTypeName = "smarticle_arm";
+		}
+		else if (smarticleType == SMART_U) {
+			//smarticleTypeName = "smarticle_u";s
+			smarticleTypeName = "smarticle_u";
+		}
+		else {
+			std::cout << "Error! Smarticle type is not set correctly" << std::endl;
+		}
+
+		for (int i = 0; i < mySmarticlesVec.size(); i++) {
+			Smarticle* sPtr = mySmarticlesVec[i];
+			entangleNumbers << i;
+
+			//determine smarticles in neighborhood of current smarticle, If I remember correctly chrono bins space to avoid O(n^2) collision detection 
+			//get smarticles in nearest bin
+			int neighboring_smarticles;
+			
+			for (j = 0; j < neighboring_smarticles, j++)
+			{
+				// if any part of the neighboring smarticle passes through the plane created by the 3 links, they are considered to be entangled
+				
+				//if(entangled)
+				//{
+					//entangleNumbers << ", " << neighboringSmarticleNumber;
+					//}
+
+			}
+			entangleNumbers << std::endl;				
+		}
+		entangleNumbers.close();
+	}
+}
+// =============================================================================
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
 	  struct tm* timeinfo;
@@ -514,6 +564,7 @@ int main(int argc, char* argv[]) {
 	    return 1;
 	  }
 
+		//Will- is this necessary? You create a directory, delete it with rm command, then make it again 
 	  if (povray_output) {
 	    if (ChFileutils::MakeDirectory(pov_dir_mbd.c_str()) < 0) {
 	    	std::cout << "Error creating directory " << pov_dir_mbd << std::endl;
@@ -530,6 +581,12 @@ int main(int argc, char* argv[]) {
 		  return 1;
 		}
 	  }
+		if (entangle_output) {
+			if (ChFileutils::MakeDirectory(entangle_dir.c_str()) < 0) {
+				std::cout << "Error creating directory " << entangle_dir << std::endl;
+				return 1;
+			}
+		}
 
 	  const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	  simParams.open(simulationParams.c_str());

@@ -35,6 +35,12 @@ public:
 	// get center of mass
 	virtual ChVector<> Get_cm();
 	virtual double GetVolume();
+	virtual ChQuaternion<> GetRot();
+	virtual ChVector<> link1Pos();//center
+	virtual ChVector<> link2Pos();//left
+	virtual ChVector<> link3Pos();//right
+
+
 	virtual ChSharedBodyPtr GetSmarticleBodyPointer() {
 		return smarticleU;
 	}
@@ -67,7 +73,7 @@ public:
 
 private:
 	  // bodies
-	 ChSharedBodyPtr smarticleU;	// left arm
+	 ChSharedBodyPtr smarticleU;
 };
 }
 

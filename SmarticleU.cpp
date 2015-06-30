@@ -90,3 +90,24 @@ ChVector<> SmarticleU::Get_cm() {
 double SmarticleU::GetVolume() {
 	return (2 * r) * (2 * r2 )* (w + 2 * l);
 }
+ChQuaternion<> SmarticleU::GetRot(){
+	return smarticleU->GetRot();
+}
+
+ChVector<> SmarticleU::link1Pos(){
+	//convert box1 to box1_loc
+	ChVector<> Link1Loc = {0,0,0};
+	//then convert using tranformation matrices from relative space to absolute space
+	return Link1Loc;
+}
+ChVector<> SmarticleU::link2Pos(){
+	ChVector<> Link2Loc = ChVector<>(-w / 2.0 + r2, 0, l / 2.0 + r2); //retrieved from box2_dim definition
+	//then convert using tranformation matrices from relative space to absolute space
+	return Link2Loc;
+}
+ChVector<> SmarticleU::link3Pos(){
+	ChVector<> Link3Loc = ChVector<>(w / 2.0 + r2, 0, l / 2.0 + r2); //retrieved from box2_dim definition
+	//then convert using tranformation matrices from relative space to absolute space
+	return Link3Loc;
+}
+
