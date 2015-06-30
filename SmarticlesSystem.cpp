@@ -532,7 +532,7 @@ void PrintEntangles(ChSystemParallelDVI& mphysicalSystem, std::vector<Smarticle*
 			//get smarticles in nearest bin
 			int neighboring_smarticles;
 			
-			for (j = 0; j < neighboring_smarticles, j++)
+			for (int j = 0; j < neighboring_smarticles; j++)
 			{
 				// if any part of the neighboring smarticle passes through the plane created by the 3 links, they are considered to be entangled
 				
