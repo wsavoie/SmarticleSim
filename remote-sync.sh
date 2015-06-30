@@ -23,5 +23,5 @@ if [[ $LOCAL_DIR/* != $SAFE_DIR/* ]] ; then
 fi
 
 rsync --verbose --recursive --times \
-	--exclude ".*" --exclude "cmake/" --exclude "CMakeLists.txt" \
+	--exclude ".*" --exclude "cmake/" --exclude "CMakeLists.txt" --exclude "remote-sync.sh" \
 		$LOCAL_DIR/ $USER@$HOST:$REMOTE_DIR

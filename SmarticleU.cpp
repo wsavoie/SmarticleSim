@@ -59,9 +59,9 @@ void SmarticleU::Create() {
 	// create body, set initPos and rotation, add surface property, and clear/make collision model
 	smarticleU = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
 
-	ChVector<> cm = rotation.Rotate(cmRel) + initPos;		// cm in abs reference frame
+//	ChVector<> cm = initPos;		// cm in abs reference frame
 	smarticleU->SetName("smarticle_u");
-	smarticleU->SetPos(cm);
+	smarticleU->SetPos(initPos);
 	smarticleU->SetRot(rotation);
     smarticleU->SetCollide(true);
     smarticleU->SetBodyFixed(false);
