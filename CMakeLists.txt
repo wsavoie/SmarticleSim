@@ -34,6 +34,18 @@ SET(LIBRARIES ${CHRONOENGINE_LIBRARIES} ${CHRONO_LIB_PARALLEL} ${CHRONO_LIB_UTIL
 
 MESSAGE( STATUS "CHRONOENGINE_INCLUDES:         " ${CHRONOENGINE_INCLUDES} )
 
+# ------------------------------------------------------------------------------
+# BLAZE -- required for some parallel solvers
+# ------------------------------------------------------------------------------
+SET(BLAZE_DIR ""  CACHE PATH   "Where is Blaze located?")
+SET(BOOST_DIR ""  CACHE PATH   "Where is Boost located?")
+set(CHRONO_PARALLEL_INC ${CHRONO_PARALLEL_INC} ${BLAZE_DIR})
+set(CHRONO_PARALLEL_INC ${CHRONO_PARALLEL_INC} ${BOOST_DIR})
+
+FIND_PACKAGE(GLEW)
+
+set(CHRONO_PARALLEL_INC ${CHRONO_PARALLEL_INC} ${GLEW_INCLUDE_DIR})
+
 include_directories(
     ${CHRONOENGINE_INCLUDES}
     ${CHRONO_PARALLEL_INC}
@@ -41,6 +53,7 @@ include_directories(
     "${CHRONO_PARALLEL_LIB_PATH}/../" 
     "${CUDA_TOOLKIT_ROOT_DIR}/include"
     "${CUDA_SDK_ROOT_DIR}/common/inc"
+	${GLM_INCLUDE_DIR}
     )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
