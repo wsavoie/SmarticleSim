@@ -88,7 +88,7 @@ ChSharedPtr<ChBody> bucket;
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.075, .0750, .0375);
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 	double bucket_thick = sizeScale * .005;
 
@@ -227,7 +227,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 
 	// 1: create bucket
-	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr);
+	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr, QUNIT, true, false, true, false);
 	bucket->GetCollisionModel()->SetFamily(1);
 	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	bucket->SetBodyFixed(false);
@@ -255,7 +255,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
 	int nX = bucket_interior_halfDim.x / maxDim;
 	int nY = bucket_interior_halfDim.y / maxDim;
-	int nZ = 200;
+	int nZ = 150;//200;
 
 	int smarticleCount = 0;
 	for (int k = 0; k < nZ; k++) {
