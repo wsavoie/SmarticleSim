@@ -75,9 +75,10 @@ ChSharedPtr<ChBody> bucket;
 	double gravity = -9.81 * sizeScale;
 	double vibration_freq = 10;
 	double dT = std::min(0.0001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double contact_recovery_speed = .05 * sizeScale;
+	double contact_recovery_speed = 1 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
+	int numLayers = 400;
 
 	SmarticleType smarticleType = SMART_U;
 
@@ -124,6 +125,9 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 }
 // =============================================================================
 void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc, char* argv[]) {
+	// initializd random seeder
+	MySeed(964);
+
   // Desired number of OpenMP threads (will be clamped to maximum available)
   int threads = 1;
   // Perform dynamic tuning of number of threads?
@@ -193,13 +197,64 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
 }
 
 // =============================================================================
+void AddParticlesLayer(ChSystemParallelDVI& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
+
+	ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
+	mat_g->SetFriction(0.5);
+	/////////////////
+	// Smarticle body
+	/////////////////
+	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
+	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
+
+//	int nX = bucket_interior_halfDim.x / sLenghWithTol.x;
+//	int nY = bucket_interior_halfDim.y / sLenghWithTol.z;
+//	int nZ = 1;
+	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
+	int nX = bucket_interior_halfDim.x / maxDim;
+	int nY = bucket_interior_halfDim.y / maxDim;
+
+	int smarticleCount = mySmarticlesVec.size();
+	for (int i= -nX + 1; i < nX; i++) {
+		for (int j = -nY+1; j < nY; j ++) {
+			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+			myRot.Normalize();
+			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 5 * bucket_interior_halfDim.z); //1.5 * bucket_interior_halfDim.z to make sure it is above the pile
+//				ChVector<> myPos = ChVector<>(0, 0, bucket_interior_halfDim.z + (i%3) * sLenghWithTol.z)
+//						+ ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y);
+
+			if (smarticleType == SMART_ARMS) {
+				Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
+				smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects, i.e. ground and bucket */,
+								  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+								  myPos,
+								  myRot);
+				smarticle0->Create();
+				mySmarticlesVec.push_back((Smarticle*)smarticle0);
+			} else if (smarticleType == SMART_U) {
+				SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
+				smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
+								  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+								  myPos,
+								  myRot);
+				smarticle0->Create();
+				mySmarticlesVec.push_back(smarticle0);
+			} else {
+				std::cout << "Error! Smarticle type is not set correctly" << std::endl;
+			}
+			smarticleCount++;
+		}
+	}
+}
+
+// =============================================================================
 void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 	  ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
 		mat_g->SetFriction(0.5);
-		mat_g->SetCohesion(0);
-		mat_g->SetCompliance(0.0);
-		mat_g->SetComplianceT(0.0);
-		mat_g->SetDampingF(0.2);
+//		mat_g->SetCohesion(0);
+//		mat_g->SetCompliance(0.0);
+//		mat_g->SetComplianceT(0.0);
+//		mat_g->SetDampingF(0.2);
 
 	/////////////////
 	// Ground body
@@ -242,61 +297,22 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 //	mphysicalSystem.AddBody(bucket);
 
 
-	/////////////////
-	// Smarticle body
-	/////////////////
-	MySeed(964);
-	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
-	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
+	//	/////////////////
+//	// Smarticle body
+//	/////////////////
 
-//	int nX = bucket_interior_halfDim.x / sLenghWithTol.x;
-//	int nY = bucket_interior_halfDim.y / sLenghWithTol.z;
-//	int nZ = 1;
-	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
-	int nX = bucket_interior_halfDim.x / maxDim;
-	int nY = bucket_interior_halfDim.y / maxDim;
-	int nZ = 150;//200;
-
-	int smarticleCount = 0;
-	for (int k = 0; k < nZ; k++) {
-		for (int i= -nX + 1; i < nX; i++) {
-			for (int j = -nY+1; j < nY; j ++) {
-				ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
-				myRot.Normalize();
-				ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , k * maxDim + maxDim);
-//				ChVector<> myPos = ChVector<>(0, 0, bucket_interior_halfDim.z + (i%3) * sLenghWithTol.z)
-//						+ ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y);
-
-				if (smarticleType == SMART_ARMS) {
-					Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
-					smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
-									  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
-									  myPos,
-									  myRot);
-					smarticle0->Create();
-					mySmarticlesVec.push_back((Smarticle*)smarticle0);
-				} else if (smarticleType == SMART_U) {
-					SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
-					smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
-									  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
-									  myPos,
-									  myRot);
-					smarticle0->Create();
-					mySmarticlesVec.push_back(smarticle0);
-				} else {
-					std::cout << "Error! Smarticle type is not set correctly" << std::endl;
-				}
-				smarticleCount++;
-			}
-		}
-	}
-
-
+//	MySeed(964);
+//	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
+//	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
+//
+//	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
+//	int nX = bucket_interior_halfDim.x / maxDim;
+//	int nY = bucket_interior_halfDim.y / maxDim;
 //	// test one smarticle
 //
 //	ChQuaternion<> myRot = Q_from_AngAxis(CH_C_PI / 2, VECT_X);// ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 //	myRot.Normalize();
-//	ChVector<> myPos = ChVector<>(nX / 2 * maxDim, nY / 2 * maxDim , nZ / 2 * maxDim + maxDim);
+//	ChVector<> myPos = ChVector<>(nX / 2 * maxDim, nY / 2 * maxDim , 30 / 2 * maxDim + maxDim);
 //	SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
 //	smarticle0->Properties( 3 /* 1 and 2 are the first two objects */,
 //					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
@@ -309,11 +325,12 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 //
 //	mySmarticlesVec.push_back(smarticle0);
 //
-//	ChVector<> IXX = smarticle0->GetSmarticleBodyPointer()->GetInertiaXX();
-//	ChVector<> IXY = smarticle0->GetSmarticleBodyPointer()->GetInertiaXY();
-//	ChVector<> posB = smarticle0->GetSmarticleBodyPointer()->GetPos();
-//	ChVector<> posS = smarticle0->Get_InitPos();
-//	double mass = smarticle0->GetSmarticleBodyPointer()->GetMass();
+//////*** stuff needed to be printed
+////	ChVector<> IXX = smarticle0->GetSmarticleBodyPointer()->GetInertiaXX();
+////	ChVector<> IXY = smarticle0->GetSmarticleBodyPointer()->GetInertiaXY();
+////	ChVector<> posB = smarticle0->GetSmarticleBodyPointer()->GetPos();
+////	ChVector<> posS = smarticle0->Get_InitPos();
+////	double mass = smarticle0->GetSmarticleBodyPointer()->GetMass();
 
 
 
@@ -541,6 +558,7 @@ int main(int argc, char* argv[]) {
 
   std::vector<Smarticle*> mySmarticlesVec;
   CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
+
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
 
@@ -578,11 +596,20 @@ int main(int argc, char* argv[]) {
   double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
   double vibration_amp = sizeScale * 0.001;
 
+  double timeForVerticalDisplcement = 1.5 * sqrt(2 * w_smarticle / mphysicalSystem.Get_G_acc().Length()); // 1.5 for safety proximity
+  int numGeneratedLayers = 0;
+
 //  for (int tStep = 0; tStep < 1; tStep++) {
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
-
 	  double t = mphysicalSystem.GetChTime();
-	  printf("\n");
+
+	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+			  (numGeneratedLayers < numLayers) ){
+		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+		  numGeneratedLayers ++;
+	  }
+
+	   printf("\n");
 printf("1 ");
 	  // move bucket
 	  double x_bucket = vibration_amp * sin(omega_bucket * t);
