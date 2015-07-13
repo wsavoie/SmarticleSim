@@ -568,6 +568,8 @@ int main(int argc, char* argv[]) {
 	ChVector<> CameraLookAt = sizeScale * ChVector<>(0, 0, -.01);
 	gl_window.Initialize(1280, 720, "Smarticles", &mphysicalSystem);
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
+	gl_window.viewer->render_camera.camera_scale = 1.0/(1000.0)*sizeScale;
+	gl_window.viewer->render_camera.near_clip = .001;
 	gl_window.SetRenderMode(opengl::WIREFRAME);
 
 // Uncomment the following two lines for the OpenGL manager to automatically
