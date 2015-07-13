@@ -612,14 +612,12 @@ int main(int argc, char* argv[]) {
 	  }
 
 	   printf("\n");
-printf("1 ");
 	  // move bucket
 	  double x_bucket = vibration_amp * sin(omega_bucket * t);
 	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
 	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
 	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
 	  bucket->SetRot(QUNIT);
-printf("2 ");
 //	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);
 //	  switch (stage % 4) {
@@ -638,7 +636,6 @@ printf("2 ");
 //	  }
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.start("step time");
-printf("3 ");
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(dT);
@@ -647,14 +644,12 @@ printf("3 ");
 #else
     mphysicalSystem.DoStepDynamics(dT);
 #endif
-printf("4 ");
 
 	  step_timer.stop("step time");
-printf("5 ");
+	  std::cout << "step time: " << step_timer.GetTime("step time") << std::endl;
 
 	  FixBodies(mphysicalSystem, tStep);
 	  PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
-printf("6 ");
 
   }
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
