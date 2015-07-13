@@ -522,6 +522,9 @@ int main(int argc, char* argv[]) {
 	  timeinfo = localtime(&rawtime);
 	  ChTimerParallel step_timer;
 
+	  time_t rawtimeCurrent;
+	  struct tm* timeinfoDiff;
+
 	  // --------------------------
 	  // Create output directories.
 	  // --------------------------
@@ -645,11 +648,16 @@ int main(int argc, char* argv[]) {
     mphysicalSystem.DoStepDynamics(dT);
 #endif
 
+	  time(&rawtimeCurrent);
+	  double timeDiff = difftime(rawtimeCurrent, rawtime);
+
 	  step_timer.stop("step time");
-	  std::cout << "step time: " << step_timer.GetTime("step time") << std::endl;
+	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
 
 	  FixBodies(mphysicalSystem, tStep);
 	  PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
+
+	  std::cout.flush();
 
   }
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
