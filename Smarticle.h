@@ -96,7 +96,7 @@ protected:
 
  private:
   // ID
-  int smarticleID;
+  int smarticleID;			// smarticleID is not bodyID. smarticle is composed of 3 bodies.
   double jointClearance; // space at joint
 
 

@@ -93,6 +93,7 @@ ChSharedPtr<ChBody> bucket;
 
 
 
+
 // =============================================================================
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
@@ -238,7 +239,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 5 * bucket_interior_halfDim.z); //1.5 * bucket_interior_halfDim.z to make sure it is above the pile
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
-				smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects, i.e. ground and bucket */,
+				smarticle0->Properties(smarticleCount  /* 1 and 2 are the first two objects, i.e. ground and bucket */,
 								  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
 								  myPos,
 								  myRot);
@@ -246,7 +247,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				mySmarticlesVec.push_back((Smarticle*)smarticle0);
 			} else if (smarticleType == SMART_U) {
 				SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
-				smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects */,
+				smarticle0->Properties(smarticleCount  /* 1 and 2 are the first two objects */,
 								  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
 								  myPos,
 								  myRot);
@@ -322,6 +323,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 //	mphysicalSystem.AddBody(bucket);
 
 
+
 //	//	/////////////////
 //	// Smarticle body
 //	/////////////////
@@ -362,54 +364,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 
 
 
-//	/////////////////
-//	// test body
-//	/////////////////
-//	double r = .1;
-//	double l = 1;
-//	double len = l;
-//	double w = 3;
-//  ChVector<> posRel = ChVector<>(-w/2 + r, l/2 - r, 1);
-//	ChSharedPtr<ChBody> m_arm;
-//	if (USE_PARALLEL) {
-//		m_arm = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-//	} else {
-//		m_arm = ChSharedPtr<ChBody>(new ChBody);
-//	}
-//	m_arm->SetMaterialSurface(mat_g);
-//
-//	m_arm->SetPos(posRel);
-////	m_arm->SetRot(QUNIT);
-//  m_arm->SetCollide(true);
-//  m_arm->SetBodyFixed(false);
-//
-//	double vol = utils::CalcCylinderVolume(r, len);
-//	ChVector<> gyr = utils::CalcCylinderGyration(r, len).Get_Diag();
-////	r = 1;
-////	double vol = utils::CalcSphereVolume(r);
-////	ChVector<> gyr = utils::CalcSphereGyration(r).Get_Diag();
-//
-//	double mass = 1000 * vol;
-//
-//	// create body
-//    m_arm->SetMass(mass);
-//    m_arm->SetInertiaXX(mass * gyr);
-//
-//  m_arm->GetCollisionModel()->ClearModel();
-//	utils::AddCylinderGeometry(m_arm.get_ptr(), r, len, posRel, QUNIT);
-////	utils::AddSphereGeometry(m_arm.get_ptr(), r);
-//
-//    m_arm->GetCollisionModel()->BuildModel();
-//    mphysicalSystem.AddBody(m_arm);
-
-
-
-
-
-
-
-
-
+/////////////////////////////////////////////
 //    ChSharedPtr<ChLinkLockRevolute> bucketGroundPrismatic(new ChLinkLockRevolute);
 //    bucketGroundPrismatic->Initialize(
 //    		smarticle0.GetArm(0), ground, true, ChCoordsys<>(ChVector<>(0, l/2, 0)), ChCoordsys<>(posRel + ChVector<>(0, l/2, 0)));
