@@ -61,7 +61,6 @@ ChSharedPtr<ChBody> bucket;
 
 
 
-
 	double sizeScale = 1;
 	double gravity = -9.81 * sizeScale;
 	double vibration_freq = 10;
@@ -122,32 +121,11 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	// initializd random seeder
 	MySeed(964);
 
-  // Desired number of OpenMP threads (will be clamped to maximum available)
-  int threads = 1;
-  // Perform dynamic tuning of number of threads?
-  bool thread_tuning = true;
-
-  //	uint max_iteration = 20;//10000;
-  int max_iteration_normal = 50;
-  int max_iteration_sliding = 50;
-  int max_iteration_spinning = 0;
-  int max_iteration_bilateral = 1000;
-
-  // ----------------------
-  // Set params from input
-  // ----------------------
-
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral);
 
   // ---------------------
   // Print the rest of parameters
   // ---------------------
   simParams << std::endl <<
-		  " number of threads: " << threads << std::endl <<
-		  " max_iteration_normal: " << max_iteration_normal << std::endl <<
-		  " max_iteration_sliding: " << max_iteration_sliding << std::endl <<
-		  " max_iteration_spinning: " << max_iteration_spinning << std::endl <<
-		  " max_iteration_bilateral: " << max_iteration_bilateral << std::endl <<
 		  " l_smarticle: " << l_smarticle << std::endl <<
 		  " l_smarticle mult for w (w = mult x l): " << l_smarticle /  w_smarticle << std::endl <<
 		  " dT: " << dT << std::endl << std::endl;
@@ -157,7 +135,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   // ---------------------
 
   // Modify some setting of the physical system for the simulation, if you want
-  mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR); // LCP_ITERATIVE_SOR_MULTITHREAD , LCP_ITERATIVE_SOR
+  mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR); // LCP_ITERATIVE_SOR_MULTITHREAD , LCP_ITERATIVE_SOR  (LCP_ITERATIVE_SOR_MULTITHREAD does not work)
   mphysicalSystem.SetIterLCPmaxItersSpeed(50);
   mphysicalSystem.SetIterLCPmaxItersStab(5);   // unuseful for Anitescu, only Tasora uses this
   mphysicalSystem.SetParallelThreadNumber(1);
@@ -248,9 +226,6 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
 	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
 
-//	int nX = bucket_interior_halfDim.x / sLenghWithTol.x;
-//	int nY = bucket_interior_halfDim.y / sLenghWithTol.z;
-//	int nZ = 1;
 	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
 	int nX = bucket_interior_halfDim.x / maxDim;
 	int nY = bucket_interior_halfDim.y / maxDim;
@@ -261,9 +236,6 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
 			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 5 * bucket_interior_halfDim.z); //1.5 * bucket_interior_halfDim.z to make sure it is above the pile
-//				ChVector<> myPos = ChVector<>(0, 0, bucket_interior_halfDim.z + (i%3) * sLenghWithTol.z)
-//						+ ChVector<>(i * sLenghWithTol.x, j * sLenghWithTol.z , k * sLenghWithTol.y);
-
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
 				smarticle0->Properties(smarticleCount + 3 /* 1 and 2 are the first two objects, i.e. ground and bucket */,
