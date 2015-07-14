@@ -460,12 +460,9 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	}
 
 	double zMax = Find_Max_Z(mphysicalSystem);
-	ChVector<> bucketMin = bucket->GetPos() - bucket_interior_halfDim;
+	ChVector<> bucketMin = bucket->GetPos();
 
-	ChVector<> mBuckCtr = bucket->GetPos();
-//	std::cout << "bucket stuff " << mBuckCtr.x << ", " << mBuckCtr.y << ", " << mBuckCtr.z << std::endl;
-
-	zMax = std::min(zMax, mBuckCtr.z + bucket_interior_halfDim.z);
+	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
 
 //	const std::string smarticleTypeName;
 //	if (smarticleType == SMART_ARMS) {
@@ -481,24 +478,25 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 //	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 //		ChBody* bodyPtr = *(myIter + i);
 //		if ( strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0 ) {
-//			if ( IsIn(bodyPtr->GetPos(), mBuckCtr - bucket_interior_halfDim, mBuckCtr + bucket_interior_halfDim) ) {
+//			if ( IsIn(bodyPtr->GetPos(), bucketMin, bucketMin + 2.0 * bucket_interior_halfDim) ) {
 //				countInside ++;
 //				totalVolume1 += bodyPtr->GetMass() / bodyPtr->GetDensity();
 //			}
 //		}
 //	}
 
+	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
 	double totalVolume2 = 0;
 	int countInside2 = 0;
 	for (int i = 0; i < mySmarticlesVec.size(); i ++) {
 		Smarticle* sPtr = mySmarticlesVec[i];
-		if ( IsIn(sPtr->Get_cm(), mBuckCtr - bucket_interior_halfDim, mBuckCtr + bucket_interior_halfDim) ) {
+		if ( IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim) ) {
 			countInside2 ++;
 			totalVolume2 += sPtr->GetVolume();
 		}
 	}
 
-	double volumeFraction = totalVolume2 / (4 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - (mBuckCtr.z - bucket_interior_halfDim.z)));
+	double volumeFraction = totalVolume2 / (4 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - bucketMin.z));
 
 	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2  << ", " << volumeFraction << ", " << zMax << std::endl;
 
