@@ -71,7 +71,7 @@ ChSharedPtr<ChBody> bucket;
 
 	double sizeScale = 1;
 	double gravity = -9.81 * sizeScale;
-	double vibration_freq = 10;
+	double vibration_freq = 0;
 	double dT = std::min(0.0001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.5 * sizeScale;
 	double tFinal = 100;
@@ -244,7 +244,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		for (int j = -nY+1; j < nY; j ++) {
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
-			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 5 * bucket_interior_halfDim.z); //1.5 * bucket_interior_halfDim.z to make sure it is above the pile
+			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 2* bucket_thick+2*bucket_interior_halfDim.z); //1.5 * bucket_interior_halfDim.z to make sure it is above the pile
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
 				smarticle0->Properties(smarticleCount  /* 1 and 2 are the first two objects, i.e. ground and bucket */,
@@ -461,8 +461,8 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 
 	double zMax = Find_Max_Z(mphysicalSystem);
 	ChVector<> bucketMin = bucket->GetPos();
-
-	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
+	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z + 2 * bucket_thick);
+	zMax = std::min(zMax, bucketCtr.z+bucket_interior_halfDim.z);
 
 //	const std::string smarticleTypeName;
 //	if (smarticleType == SMART_ARMS) {
@@ -485,10 +485,11 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 //		}
 //	}
 
-	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
+	//ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z+2*bucket_thick);
 	double totalVolume2 = 0;
 	int countInside2 = 0;
-	for (int i = 0; i < mySmarticlesVec.size(); i ++) {
+	
+for (int i = 0; i < mySmarticlesVec.size(); i ++) {
 		Smarticle* sPtr = mySmarticlesVec[i];
 		if ( IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim) ) {
 			countInside2 ++;
