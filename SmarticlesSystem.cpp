@@ -42,17 +42,6 @@
 #include "Smarticle.h"
 #include "SmarticleU.h"
 
-
-//#include <fstream> // Arman: I don't know why this is not required
-//#include <cstring> // Arman: I don't know why this is not required
-//#include <stdio.h> // Arman: I don't know why this is not required
-
-
-
-//#ifdef CHRONO_PARALLEL_HAS_OPENGL
-//#undef CHRONO_PARALLEL_HAS_OPENGL
-//#endif
-
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
@@ -61,15 +50,10 @@
 #define CH_SYSTEM ChSystemParallelDVI
 #else
 #define CH_SYSTEM ChSystem
-#undef CHRONO_PARALLEL_HAS_OPENGL
 #endif
 //***********************************
 // Use the namespace of Chrono
-
 using namespace chrono;
-//using namespace chrono::collision;
-//using namespace std;
-
 enum SmarticleType {SMART_ARMS , SMART_U};
 // =============================================================================
 std::ofstream simParams;
@@ -105,6 +89,9 @@ ChSharedPtr<ChBody> bucket;
 	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 	double t_smarticle 	= sizeScale * .00127;
 	double t2_smarticle	= sizeScale * .0005;
+
+	double collisionEnvelop = .4 * t2_smarticle;
+
 
 
 // =============================================================================
@@ -177,6 +164,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   mphysicalSystem.SetIterLCPwarmStarting(true);
   mphysicalSystem.SetUseSleeping(false);
+  mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
 }
 // =============================================================================
 void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, int argc, char* argv[]) {
@@ -232,7 +220,6 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // ---------------------
 
   double tolerance = 0.001;  // 1e-3;  // Arman, move it to paramsH
-  double collisionEnvelop = .4 * t2_smarticle;
   mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
 
   mphysicalSystem.GetSettings()->solver.solver_mode = SLIDING;                              // NORMAL, SPINNING
@@ -293,6 +280,9 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 								  myRot);
 				smarticle0->Create();
 				mySmarticlesVec.push_back(smarticle0);
+				if (!USE_PARALLEL) {
+					smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
+				}
 			} else {
 				std::cout << "Error! Smarticle type is not set correctly" << std::endl;
 			}
@@ -360,10 +350,10 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 //	mphysicalSystem.AddBody(bucket);
 
 
-	//	/////////////////
+//	//	/////////////////
 //	// Smarticle body
 //	/////////////////
-
+//
 //	MySeed(964);
 //	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
 //	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
@@ -375,7 +365,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 //
 //	ChQuaternion<> myRot = Q_from_AngAxis(CH_C_PI / 2, VECT_X);// ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 //	myRot.Normalize();
-//	ChVector<> myPos = ChVector<>(nX / 2 * maxDim, nY / 2 * maxDim , 30 / 2 * maxDim + maxDim);
+//	ChVector<> myPos = ChVector<>(nX / 2 * maxDim, nY / 2 * maxDim , 2 * maxDim);
 //	SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
 //	smarticle0->Properties( 3 /* 1 and 2 are the first two objects */,
 //					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
@@ -400,22 +390,20 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 
 
 
-	/////////////////
-	// test body
-	/////////////////
-
-////  //////
+//	/////////////////
+//	// test body
+//	/////////////////
 //	double r = .1;
 //	double l = 1;
 //	double len = l;
 //	double w = 3;
 //  ChVector<> posRel = ChVector<>(-w/2 + r, l/2 - r, 1);
-	ChSharedPtr<ChBody> m_arm;
-	if (USE_PARALLEL) {
-		m_arm = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-	} else {
-		m_arm = ChSharedPtr<ChBody>(new ChBody);
-	}
+//	ChSharedPtr<ChBody> m_arm;
+//	if (USE_PARALLEL) {
+//		m_arm = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+//	} else {
+//		m_arm = ChSharedPtr<ChBody>(new ChBody);
+//	}
 //	m_arm->SetMaterialSurface(mat_g);
 //
 //	m_arm->SetPos(posRel);
@@ -441,15 +429,15 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 //
 //    m_arm->GetCollisionModel()->BuildModel();
 //    mphysicalSystem.AddBody(m_arm);
-//
-//
-//
-//
-//
-//
-//
-//
-//
+
+
+
+
+
+
+
+
+
 //    ChSharedPtr<ChLinkLockRevolute> bucketGroundPrismatic(new ChLinkLockRevolute);
 //    bucketGroundPrismatic->Initialize(
 //    		smarticle0.GetArm(0), ground, true, ChCoordsys<>(ChVector<>(0, l/2, 0)), ChCoordsys<>(posRel + ChVector<>(0, l/2, 0)));
@@ -582,6 +570,15 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	vol_frac_of.close();
 }
 // =============================================================================
+void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
+	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+		(*myIter)->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
+		myIter++;
+	}
+
+}
+// =============================================================================
 
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
@@ -633,6 +630,9 @@ int main(int argc, char* argv[]) {
 
   std::vector<Smarticle*> mySmarticlesVec;
   CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
+#if(!USE_PARALLEL)
+  SetEnvelopeForSystemObjects(mphysicalSystem);
+#endif
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
