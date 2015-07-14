@@ -662,7 +662,7 @@ int main(int argc, char* argv[]) {
 	  // move bucket
 	  double x_bucket = vibration_amp * sin(omega_bucket * t);
 	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
-	  bucket->SetPos(ChVector<>(x_bucket, 0, 0));
+	  bucket->SetPos(ChVector<>(0, 0, x_bucket));
 	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
 	  bucket->SetRot(QUNIT);
 //	  int stage = int(t / (CH_C_PI/2));
