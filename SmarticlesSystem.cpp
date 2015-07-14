@@ -46,6 +46,14 @@
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
+#ifndef true 
+#define true 1
+#endif
+
+#ifndef false 
+#define false 0
+#endif
+
 #if USE_PARALLEL
 #define CH_SYSTEM ChSystemParallelDVI
 #else
