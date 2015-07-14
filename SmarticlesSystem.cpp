@@ -75,7 +75,7 @@ ChSharedPtr<ChBody> bucket;
 	double gravity = -9.81 * sizeScale;
 	double vibration_freq = 10;
 	double dT = std::min(0.0001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double contact_recovery_speed = 1 * sizeScale;
+	double contact_recovery_speed = 1.0 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
 	int numLayers = 400;
@@ -106,21 +106,21 @@ double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
 void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral) {
   if (argc > 1) {
-    const char* text = argv[1];
-    threads = atoi(text);
+	const char* text = argv[1];
+	double mult_l = atof(text);
+	l_smarticle = mult_l * w_smarticle;
   }
   if (argc > 2) {
     const char* text = argv[2];
-    max_iteration_sliding = atoi(text);
+    threads = atoi(text);
   }
   if (argc > 3) {
     const char* text = argv[3];
-    max_iteration_bilateral = atoi(text);
+    max_iteration_sliding = atoi(text);
   }
   if (argc > 4) {
     const char* text = argv[4];
-	double mult_l = atof(text);
-    l_smarticle = mult_l * w_smarticle;
+    max_iteration_bilateral = atoi(text);
   }
 }
 // =============================================================================
@@ -134,8 +134,8 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   bool thread_tuning = true;
 
   //	uint max_iteration = 20;//10000;
-  int max_iteration_normal = 200;
-  int max_iteration_sliding = 200;
+  int max_iteration_normal = 50;
+  int max_iteration_sliding = 50;
   int max_iteration_spinning = 0;
   int max_iteration_bilateral = 1000;
 
@@ -178,7 +178,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   // ---------------------
 
   double tolerance = 0.1;  // 1e-3;  // Arman, move it to paramsH
-  double collisionEnvelop = .1 * t2_smarticle;
+  double collisionEnvelop = .4 * t2_smarticle;
   mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
 
   mphysicalSystem.GetSettings()->solver.solver_mode = SLIDING;                              // NORMAL, SPINNING
@@ -192,7 +192,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   mphysicalSystem.ChangeSolverType(APGD);  // Arman check this APGD APGDBLAZE
   //  mphysicalSystem.GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 
-  mphysicalSystem.GetSettings()->collision.collision_envelope = collisionEnvelop;   // global collisionEnvelop does not work. Maybe due to sph-tire size mismatch
+  mphysicalSystem.GetSettings()->collision.collision_envelope = collisionEnvelop;
   mphysicalSystem.GetSettings()->collision.bins_per_axis = _make_int3(40, 40, 40);  // Arman check
 }
 
@@ -654,6 +654,7 @@ int main(int argc, char* argv[]) {
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
 
+	  std::cout << "particle velocity: " << ((SmarticleU*)mySmarticlesVec[0])->GetSmarticleBodyPointer()->GetPos_dt().Length() << std::endl;
 	  FixBodies(mphysicalSystem, tStep);
 	  PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
 

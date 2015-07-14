@@ -4,7 +4,7 @@ project(demo_Chrono_Parallel)
 
 #set path for local find modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-find_package(ChronoEngine   COMPONENTS unit_IRRLICHT )
+#find_package(ChronoEngine   COMPONENTS unit_IRRLICHT )
 OPTION(BUILD_OPENGL "Build the ChronoEngine_OpenGL library" on)
 if (${BUILD_OPENGL})
 	find_package(ChronoEngine   COMPONENTS unit_OPENGL )
