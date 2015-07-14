@@ -75,7 +75,7 @@ ChSharedPtr<ChBody> bucket;
 	double gravity = -9.81 * sizeScale;
 	double vibration_freq = 10;
 	double dT = std::min(0.0001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double contact_recovery_speed = 1.0 * sizeScale;
+	double contact_recovery_speed = 0.5 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
 	int numLayers = 400;
@@ -177,7 +177,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
   // Edit mphysicalSystem settings.
   // ---------------------
 
-  double tolerance = 0.1;  // 1e-3;  // Arman, move it to paramsH
+  double tolerance = 0.001;  // 1e-3;  // Arman, move it to paramsH
   double collisionEnvelop = .4 * t2_smarticle;
   mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
 
@@ -571,7 +571,7 @@ int main(int argc, char* argv[]) {
 	ChVector<> CameraLookAt = sizeScale * ChVector<>(0, 0, -.01);
 	gl_window.Initialize(1280, 720, "Smarticles", &mphysicalSystem);
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
-	gl_window.viewer->render_camera.camera_scale = 1.0/(1000.0)*sizeScale;
+	gl_window.viewer->render_camera.camera_scale = 2.0/(1000.0)*sizeScale;
 	gl_window.viewer->render_camera.near_clip = .001;
 	gl_window.SetRenderMode(opengl::WIREFRAME);
 
