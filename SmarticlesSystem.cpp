@@ -244,7 +244,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		for (int j = -nY+1; j < nY; j ++) {
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
-			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 2* bucket_thick+2*bucket_interior_halfDim.z); //1.5 * bucket_interior_halfDim.z to make sure it is above the pile
+			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 5 * bucket_interior_halfDim.z); //1.5 * bucket_interior_halfDim.z to make sure it is above the pile
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
 				smarticle0->Properties(smarticleCount  /* 1 and 2 are the first two objects, i.e. ground and bucket */,
@@ -461,8 +461,8 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 
 	double zMax = Find_Max_Z(mphysicalSystem);
 	ChVector<> bucketMin = bucket->GetPos();
-	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z + 2 * bucket_thick);
-	zMax = std::min(zMax, bucketCtr.z+bucket_interior_halfDim.z);
+
+	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
 
 //	const std::string smarticleTypeName;
 //	if (smarticleType == SMART_ARMS) {
@@ -485,11 +485,10 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 //		}
 //	}
 
-	//ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z+2*bucket_thick);
+	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z+2*bucket_thick);
 	double totalVolume2 = 0;
 	int countInside2 = 0;
-	
-for (int i = 0; i < mySmarticlesVec.size(); i ++) {
+	for (int i = 0; i < mySmarticlesVec.size(); i ++) {
 		Smarticle* sPtr = mySmarticlesVec[i];
 		if ( IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim) ) {
 			countInside2 ++;
@@ -573,7 +572,7 @@ int main(int argc, char* argv[]) {
 
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
-	ChVector<> CameraLocation = sizeScale * ChVector<>(-.1, -.06, .06);
+	ChVector<> CameraLocation = sizeScale * ChVector<>(-.2, -.06, .06);
 	ChVector<> CameraLookAt = sizeScale * ChVector<>(0, 0, -.01);
 	gl_window.Initialize(1280, 720, "Smarticles", &mphysicalSystem);
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
