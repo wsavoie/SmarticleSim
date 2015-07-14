@@ -91,7 +91,6 @@ protected:
 
   ///< pointer to the Chrono system
   ChSystem* m_system;  // Arman : take care of this later
-//  ChSystemParallelDVI*  m_system;  // Arman : use shared ptr. also go through chrono and modify
 
  private:
   // ID

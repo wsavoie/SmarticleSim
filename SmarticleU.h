@@ -9,8 +9,6 @@
 #define SMARTICLEU_H_
 
 #include "core/ChVector.h"
-//#include "physics/ChSystem.h"  // Arman: take care of this later
-#include "chrono_parallel/physics/ChSystemParallel.h"
 #include "Smarticle.h"
 
 namespace chrono {
@@ -21,7 +19,6 @@ public:
 	// Construct a smarticleU and add it to ChSystem.
 	SmarticleU(
 			  ChSystem* otherSystem
-			  //			ChSystemParallelDVI* otherSystem
 			  ) : Smarticle(otherSystem) {
 		volume = GetVolume();
 	}
