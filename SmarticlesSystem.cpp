@@ -56,6 +56,13 @@
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
+
+#if USE_PARALLEL
+#define CH_SYSTEM ChSystemParallelDVI
+#else
+#define CH_SYSTEM ChSystem
+#undef CHRONO_PARALLEL_HAS_OPENGL
+#endif
 //***********************************
 // Use the namespace of Chrono
 
@@ -124,7 +131,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
   }
 }
 // =============================================================================
-void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc, char* argv[]) {
+void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc, char* argv[]) {
 	// initializd random seeder
 	MySeed(964);
 
@@ -145,21 +152,68 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
 
   SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral);
 
+  // ---------------------
+  // Print the rest of parameters
+  // ---------------------
+  simParams << std::endl <<
+		  " number of threads: " << threads << std::endl <<
+		  " max_iteration_normal: " << max_iteration_normal << std::endl <<
+		  " max_iteration_sliding: " << max_iteration_sliding << std::endl <<
+		  " max_iteration_spinning: " << max_iteration_spinning << std::endl <<
+		  " max_iteration_bilateral: " << max_iteration_bilateral << std::endl <<
+		  " l_smarticle: " << l_smarticle << std::endl <<
+		  " l_smarticle mult for w (w = mult x l): " << l_smarticle /  w_smarticle << std::endl <<
+		  " dT: " << dT << std::endl << std::endl;
+
+  // ---------------------
+  // Edit mphysicalSystem settings.
+  // ---------------------
+
+  // Modify some setting of the physical system for the simulation, if you want
+  mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR); // LCP_ITERATIVE_SOR_MULTITHREAD , LCP_ITERATIVE_SOR
+  mphysicalSystem.SetIterLCPmaxItersSpeed(50);
+  mphysicalSystem.SetIterLCPmaxItersStab(5);   // unuseful for Anitescu, only Tasora uses this
+  mphysicalSystem.SetParallelThreadNumber(1);
+  mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
+  mphysicalSystem.SetIterLCPwarmStarting(true);
+  mphysicalSystem.SetUseSleeping(false);
+}
+// =============================================================================
+void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, int argc, char* argv[]) {
+	// initializd random seeder
+	MySeed(964);
+
+  // Desired number of OpenMP threads (will be clamped to maximum available)
+  int threads = 1;
+  // Perform dynamic tuning of number of threads?
+  bool thread_tuning = true;
+
+  //	uint max_iteration = 20;//10000;
+  int max_iteration_normal = 50;
+  int max_iteration_sliding = 50;
+  int max_iteration_spinning = 0;
+  int max_iteration_bilateral = 50;
+
+  // ----------------------
+  // Set params from input
+  // ----------------------
+
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral);
+
   // ----------------------
   // Set number of threads.
   // ----------------------
 
   //  omp_get_num_procs();
-  int max_threads = mphysicalSystem.GetParallelThreadNumber();
-  if (threads > max_threads)
-    threads = max_threads;
-  mphysicalSystem.SetParallelThreadNumber(threads);
-  omp_set_num_threads(threads);
+	int max_threads = mphysicalSystem.GetParallelThreadNumber();
+	if (threads > max_threads)
+	threads = max_threads;
+	mphysicalSystem.SetParallelThreadNumber(threads);
+	omp_set_num_threads(threads);
 
-  mphysicalSystem.GetSettings()->perform_thread_tuning = thread_tuning;
-  mphysicalSystem.GetSettings()->min_threads = std::max(1, threads/2);
-  mphysicalSystem.GetSettings()->max_threads = int(3.0 * threads / 2);
-
+	mphysicalSystem.GetSettings()->perform_thread_tuning = thread_tuning;
+	mphysicalSystem.GetSettings()->min_threads = std::max(1, threads/2);
+	mphysicalSystem.GetSettings()->max_threads = int(3.0 * threads / 2);
   // ---------------------
   // Print the rest of parameters
   // ---------------------
@@ -197,7 +251,7 @@ void InitializeMbdPhysicalSystem(ChSystemParallelDVI& mphysicalSystem, int argc,
 }
 
 // =============================================================================
-void AddParticlesLayer(ChSystemParallelDVI& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
+void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 
 	ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
 	mat_g->SetFriction(0.5);
@@ -248,7 +302,7 @@ void AddParticlesLayer(ChSystemParallelDVI& mphysicalSystem, std::vector<Smartic
 }
 
 // =============================================================================
-void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
+void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 	  ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
 		mat_g->SetFriction(0.5);
 //		mat_g->SetCohesion(0);
@@ -263,7 +317,12 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	// ground
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
 	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -bucket_interior_halfDim.z - boxDim.z*5); // 1.1 to add 10% clearance between bucket and ground
-	ChSharedPtr<ChBody> ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	ChSharedPtr<ChBody> ground;
+	if (USE_PARALLEL) {
+		ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	} else {
+		ground = ChSharedPtr<ChBody>(new ChBody);
+	}
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
 
@@ -279,7 +338,11 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 	mphysicalSystem.AddBody(ground);
 
 	// bucket
-	bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	if (USE_PARALLEL) {
+		bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	} else {
+		bucket = ChSharedPtr<ChBody>(new ChBody);
+	}
 
 	// 1: create bucket
 	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr, QUNIT, true, false, true, false);
@@ -347,7 +410,12 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 //	double len = l;
 //	double w = 3;
 //  ChVector<> posRel = ChVector<>(-w/2 + r, l/2 - r, 1);
-//  ChSharedPtr<ChBody> m_arm = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	ChSharedPtr<ChBody> m_arm;
+	if (USE_PARALLEL) {
+		m_arm = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	} else {
+		m_arm = ChSharedPtr<ChBody>(new ChBody);
+	}
 //	m_arm->SetMaterialSurface(mat_g);
 //
 //	m_arm->SetPos(posRel);
@@ -398,7 +466,7 @@ void CreateMbdPhysicalSystemObjects(ChSystemParallelDVI& mphysicalSystem, std::v
 }
 // =============================================================================
 
-void SavePovFilesMBD(ChSystemParallelDVI& mphysicalSystem,
+void SavePovFilesMBD(CH_SYSTEM& mphysicalSystem,
                      int tStep) {
   int out_steps = std::ceil((1.0 / dT) / out_fps);
   printf("tStep %d , outstep %d, num bodies %d \n", tStep, out_steps, mphysicalSystem.Get_bodylist()->size());
@@ -415,7 +483,7 @@ void SavePovFilesMBD(ChSystemParallelDVI& mphysicalSystem,
   }
 }
 // =============================================================================
-double Find_Max_Z(ChSystemParallelDVI& mphysicalSystem) {
+double Find_Max_Z(CH_SYSTEM& mphysicalSystem) {
 	std::string smarticleTypeName;
 	if (smarticleType == SMART_ARMS) {
 		//smarticleTypeName = "smarticle_arm";
@@ -446,7 +514,7 @@ bool IsIn(ChVector<> pt, ChVector<> min, ChVector<> max) {
 	return false;
 }
 // =============================================================================
-void FixBodies(ChSystemParallelDVI& mphysicalSystem, int tStep) {
+void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
 	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 		ChBody* bodyPtr = *(myIter + i);
@@ -456,7 +524,7 @@ void FixBodies(ChSystemParallelDVI& mphysicalSystem, int tStep) {
 	}
 }
 // =============================================================================
-void PrintFractions(ChSystemParallelDVI& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
+void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
 	const std::string vol_frac = out_dir + "/volumeFraction.txt";
 	int stepSave = 10;
 	if (tStep % stepSave != 0) return;
@@ -556,8 +624,12 @@ int main(int argc, char* argv[]) {
 	  simParams << " Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
 
   // Create a ChronoENGINE physical system
-  ChSystemParallelDVI mphysicalSystem;
-  InitializeMbdPhysicalSystem(mphysicalSystem, argc, argv);
+  CH_SYSTEM mphysicalSystem;
+#if (USE_PARALLEL)
+	  InitializeMbdPhysicalSystem_Parallel(mphysicalSystem, argc, argv);
+#else
+	  InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
+#endif
 
   std::vector<Smarticle*> mySmarticlesVec;
   CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);

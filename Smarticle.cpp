@@ -9,6 +9,7 @@
 #include "chrono_utils/ChUtilsGeometry.h"
 #include "chrono_utils/ChUtilsCreators.h"
 
+
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
 //#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
@@ -70,7 +71,11 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
 	gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
-	arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
+	if (USE_PARALLEL) {
+		arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
+	} else {
+		arm = ChSharedBodyPtr(new ChBody);
+	}
 	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
 
 	arm->SetName("smarticle_arm");

@@ -60,7 +60,12 @@ void SmarticleU::Create() {
 			m3 * (gyr3.z + ChVector<>(rel_loc3.x, rel_loc3.y, 0).Length2()) ;
 
 	// create body, set initPos and rotation, add surface property, and clear/make collision model
-	smarticleU = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
+	if (USE_PARALLEL) {
+		smarticleU = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
+	} else {
+		smarticleU = ChSharedBodyPtr(new ChBody);
+	}
+
 
 //	ChVector<> cm = initPos;		// cm in abs reference frame
 	smarticleU->SetName("smarticle_u");
