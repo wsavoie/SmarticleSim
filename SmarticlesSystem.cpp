@@ -73,8 +73,8 @@ ChSharedPtr<ChBody> bucket;
 
 	double sizeScale = 1;
 	double gravity = -9.81 * sizeScale;
-	double vibration_freq = 10;
-	double dT = std::min(0.0001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
+	double vibration_freq = .0000001;
+	double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.5 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
@@ -608,11 +608,11 @@ int main(int argc, char* argv[]) {
   AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
 
 
-  for (int i = 0; i < mySmarticlesVec.size(); i++) {
-	  mySmarticlesVec[i]->SetActuatorFunction(0, fun2);
-	  mySmarticlesVec[i]->SetActuatorFunction(1, fun1);
-
-  }
+//  for (int i = 0; i < mySmarticlesVec.size(); i++) {
+//	  mySmarticlesVec[i]->SetActuatorFunction(0, fun2);
+//	  mySmarticlesVec[i]->SetActuatorFunction(1, fun1);
+//
+//  }
 
   double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
   double vibration_amp = sizeScale * 0.0005;
@@ -633,6 +633,17 @@ int main(int argc, char* argv[]) {
 //		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
 //		  numGeneratedLayers ++;
 //	  }
+
+
+	    for (int i = 0; i < mySmarticlesVec.size(); i++) {
+	    	double omega = 10;
+	    	if (tStep < 500) {
+	    		mySmarticlesVec[i]->SetActuatorFunction(0, -omega, dT);
+	    	} else {
+	    		mySmarticlesVec[i]->SetActuatorFunction(0, omega, dT);
+	    	}
+
+	    }
 
 
 

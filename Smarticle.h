@@ -52,6 +52,7 @@ public:
   // actuatorID belongs to {0, 1}, i.e. the actuatorID between 0 and 1, or between 1 and 2
   virtual ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
   virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
+  virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
 
   // Smarticle volume
   virtual double GetVolume();
