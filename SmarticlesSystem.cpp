@@ -620,11 +620,11 @@ int main(int argc, char* argv[]) {
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 	  double t = mphysicalSystem.GetChTime();
 
-	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-			  (numGeneratedLayers < numLayers) ){
-		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-		  numGeneratedLayers ++;
-	  }
+//	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+//			  (numGeneratedLayers < numLayers) ){
+//		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+//		  numGeneratedLayers ++;
+//	  }
 
 	   printf("\n");
 	  // move bucket
@@ -666,7 +666,6 @@ int main(int argc, char* argv[]) {
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
 
-	  std::cout << "particle velocity: " << ((SmarticleU*)mySmarticlesVec[0])->GetSmarticleBodyPointer()->GetPos_dt().Length() << std::endl;
 	  FixBodies(mphysicalSystem, tStep);
 	  PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
 
