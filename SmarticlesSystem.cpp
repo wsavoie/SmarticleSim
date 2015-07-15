@@ -244,7 +244,9 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		for (int j = -nY+1; j < nY; j ++) {
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
-			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 5 * bucket_interior_halfDim.z); //1.5 * bucket_interior_halfDim.z to make sure it is above the pile
+			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_thick);
+			// ***  added 2*bucket_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
+
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
 				smarticle0->Properties(smarticleCount  /* 1 and 2 are the first two objects, i.e. ground and bucket */,
@@ -462,8 +464,11 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	double zMax = Find_Max_Z(mphysicalSystem);
 	ChVector<> bucketMin = bucket->GetPos();
 
-	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
+	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_thick);
+	// *** remember, 2 * bucket_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_thick from each side
 
+
+	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
 //	const std::string smarticleTypeName;
 //	if (smarticleType == SMART_ARMS) {
 //		smarticleTypeName = "smarticle_arm";
@@ -478,19 +483,18 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 //	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 //		ChBody* bodyPtr = *(myIter + i);
 //		if ( strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0 ) {
-//			if ( IsIn(bodyPtr->GetPos(), bucketMin, bucketMin + 2.0 * bucket_interior_halfDim) ) {
+//			if ( IsIn(bodyPtr->GetPos(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + 2 * ChVector<>(0, 0, 2 * bucket_thick)) ) {
 //				countInside ++;
 //				totalVolume1 += bodyPtr->GetMass() / bodyPtr->GetDensity();
 //			}
 //		}
 //	}
 
-	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z+2*bucket_thick);
 	double totalVolume2 = 0;
 	int countInside2 = 0;
 	for (int i = 0; i < mySmarticlesVec.size(); i ++) {
 		Smarticle* sPtr = mySmarticlesVec[i];
-		if ( IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim) ) {
+		if ( IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + ChVector<>(0, 0, 2 * bucket_thick)) ) {
 			countInside2 ++;
 			totalVolume2 += sPtr->GetVolume();
 		}
@@ -572,7 +576,7 @@ int main(int argc, char* argv[]) {
 
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
-	ChVector<> CameraLocation = sizeScale * ChVector<>(-.2, -.06, .06);
+	ChVector<> CameraLocation = sizeScale * ChVector<>(-.1, -.06, .1);
 	ChVector<> CameraLookAt = sizeScale * ChVector<>(0, 0, -.01);
 	gl_window.Initialize(1280, 720, "Smarticles", &mphysicalSystem);
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
