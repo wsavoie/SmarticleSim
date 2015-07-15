@@ -247,7 +247,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		for (int j = -nY+1; j < nY; j ++) {
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
-			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
+			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 2.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 			//ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 			// ***  added 2*bucket_half_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
 
@@ -598,17 +598,21 @@ int main(int argc, char* argv[]) {
   // ***************************** Simulation loop ********************************************
 
   ChSharedPtr<ChFunction_Const> fun1 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(0));
-  ChSharedPtr<ChFunction_Ramp> fun2 = ChSharedPtr<ChFunction_Ramp>(new ChFunction_Ramp(0,1));
+  ChSharedPtr<ChFunction_Ramp> fun2 = ChSharedPtr<ChFunction_Ramp>(new ChFunction_Ramp(0,5));
   ChSharedPtr<ChFunction_Ramp> fun3 = ChSharedPtr<ChFunction_Ramp>(new ChFunction_Ramp(0,-1));
 
   ChSharedPtr<ChFunction_Const> fun4 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(CH_C_PI / 2));
   ChSharedPtr<ChFunction_Const> fun5 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(-CH_C_PI / 2));
 
-//  for (int i = 0; i < mySmarticlesVec.size(); i++) {
-//	  mySmarticlesVec[i]->SetActuatorFunction(0, fun4);
-//	  mySmarticlesVec[i]->SetActuatorFunction(1, fun4);
-//
-//  }
+
+  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+
+
+  for (int i = 0; i < mySmarticlesVec.size(); i++) {
+	  mySmarticlesVec[i]->SetActuatorFunction(0, fun2);
+	  mySmarticlesVec[i]->SetActuatorFunction(1, fun1);
+
+  }
 
   double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
   double vibration_amp = sizeScale * 0.0005;
@@ -618,15 +622,17 @@ int main(int argc, char* argv[]) {
 
 //  CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
 
+  printf("************** size sys %d \n", mySmarticlesVec.size());
 //  for (int tStep = 0; tStep < 1; tStep++) {
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 	  double t = mphysicalSystem.GetChTime();
 
-	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-			  (numGeneratedLayers < numLayers) ){
-		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-		  numGeneratedLayers ++;
-	  }
+//	  int sSize1 = mySmarticlesVec.size();
+//	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+//			  (numGeneratedLayers < numLayers) ){
+//		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+//		  numGeneratedLayers ++;
+//	  }
 
 
 
