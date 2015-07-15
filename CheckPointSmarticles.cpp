@@ -30,13 +30,13 @@ void CheckPointSmarticles_Write(
 		return;
 	}
 #ifdef _WIN32
-		std::System("mkdir checkPointFiles");
+		std::system("mkdir checkPointFiles");
 #else
 		std::system("mkdir -p checkPointFiles");
 #endif
 		if (tStep / tStepsCheckPoint == 0) {
 #ifdef _WIN32
-		std::System("rm checkPointFiles/*.csv");
+		std::system("rm checkPointFiles/*.csv");
 #else
 		std::system("rm checkPointFiles/*.csv");
 #endif

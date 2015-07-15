@@ -185,8 +185,8 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set number of threads.
   // ----------------------
 
-  //  omp_get_num_procs();
-	int max_threads = mphysicalSystem.GetParallelThreadNumber();
+  //  
+	int max_threads = omp_get_num_procs();
 	if (threads > max_threads)
 	threads = max_threads;
 	mphysicalSystem.SetParallelThreadNumber(threads);
@@ -194,7 +194,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 
 	mphysicalSystem.GetSettings()->perform_thread_tuning = thread_tuning;
 	mphysicalSystem.GetSettings()->min_threads = std::max(1, threads/2);
-	mphysicalSystem.GetSettings()->max_threads = int(3.0 * threads / 2);
+	mphysicalSystem.GetSettings()->max_threads = std::min(max_threads, int(3.0 * threads / 2));
   // ---------------------
   // Print the rest of parameters
   // ---------------------
