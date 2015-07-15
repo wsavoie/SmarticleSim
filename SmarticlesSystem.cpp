@@ -14,7 +14,7 @@
 //
 //   Demo code about
 //
-//     - collisions and contacts
+//     - Smarticle Simulation
 //
 //       (This is just a possible method of integration
 //       of Chrono::Engine + Irrlicht: many others
@@ -41,6 +41,8 @@
 #include "core/ChFileutils.h" // for MakeDirectory
 #include "Smarticle.h"
 #include "SmarticleU.h"
+#include "CheckPointSmarticles.h"
+
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -71,11 +73,12 @@ ChSharedPtr<ChBody> bucket;
 
 	double sizeScale = 1;
 	double gravity = -9.81 * sizeScale;
-	double vibration_freq = 0;
+	double vibration_freq = 10;
 	double dT = std::min(0.0001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.5 * sizeScale;
 	double tFinal = 100;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
+	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 400;
 
 	SmarticleType smarticleType = SMART_U;
@@ -226,9 +229,6 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 
 // =============================================================================
 void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
-
-	ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
-	mat_g->SetFriction(0.5);
 	/////////////////
 	// Smarticle body
 	/////////////////
@@ -249,7 +249,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
-				smarticle0->Properties(smarticleCount  /* 1 and 2 are the first two objects, i.e. ground and bucket */,
+				smarticle0->Properties(smarticleCount ,
 								  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
 								  myPos,
 								  myRot);
@@ -257,7 +257,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				mySmarticlesVec.push_back((Smarticle*)smarticle0);
 			} else if (smarticleType == SMART_U) {
 				SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
-				smarticle0->Properties(smarticleCount  /* 1 and 2 are the first two objects */,
+				smarticle0->Properties(smarticleCount,
 								  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
 								  myPos,
 								  myRot);
@@ -276,13 +276,6 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 
 // =============================================================================
 void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
-	  ChSharedPtr<ChMaterialSurface> mat_g(new ChMaterialSurface);
-		mat_g->SetFriction(0.5);
-//		mat_g->SetCohesion(0);
-//		mat_g->SetCompliance(0.0);
-//		mat_g->SetComplianceT(0.0);
-//		mat_g->SetDampingF(0.2);
-
 	/////////////////
 	// Ground body
 	/////////////////
@@ -557,6 +550,12 @@ int main(int argc, char* argv[]) {
 	  simParams.open(simulationParams.c_str());
 	  simParams << " Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
 
+
+	  // define material property for everything
+		mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
+		mat_g->SetFriction(0.5);
+
+
   // Create a ChronoENGINE physical system
   CH_SYSTEM mphysicalSystem;
 #if (USE_PARALLEL)
@@ -608,7 +607,7 @@ int main(int argc, char* argv[]) {
 //  }
 
   double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
-  double vibration_amp = sizeScale * 0.001;
+  double vibration_amp = sizeScale * 0.0005;
 
   double timeForVerticalDisplcement = 1.5 * sqrt(2 * w_smarticle / mphysicalSystem.Get_G_acc().Length()); // 1.5 for safety proximity
   int numGeneratedLayers = 0;
@@ -668,6 +667,17 @@ int main(int argc, char* argv[]) {
 	  PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
 
 	  std::cout.flush();
+
+
+	  CheckPointSmarticles_Write(mySmarticlesVec,
+	  		tStep,
+	  		mat_g,
+	  		l_smarticle,
+	  		w_smarticle,
+	  		t_smarticle,
+	  		t2_smarticle,
+	  		collisionEnvelop,
+	  		rho_smarticle);
 
   }
   for (int i = 0; i < mySmarticlesVec.size(); i++) {

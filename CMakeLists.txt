@@ -73,7 +73,7 @@ SET(DEMOS ${DEMOS}
 FOREACH(PROGRAM ${DEMOS})
     MESSAGE(STATUS "...add ${PROGRAM}")
 
-    ADD_EXECUTABLE(${PROGRAM}  "${PROGRAM}.cpp" Smarticle.cpp SmarticleU.cpp)
+    ADD_EXECUTABLE(${PROGRAM}  "${PROGRAM}.cpp" Smarticle.cpp SmarticleU.cpp CheckPointSmarticles.cpp)
     SOURCE_GROUP(""  FILES "${PROGRAM}.cpp")
 
     SET_TARGET_PROPERTIES(${PROGRAM} PROPERTIES
