@@ -81,7 +81,7 @@ ChSharedPtr<ChBody> bucket;
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 400;
 
-	SmarticleType smarticleType = SMART_U;
+	SmarticleType smarticleType = SMART_ARMS;
 
 	bool povray_output = true;
 	int out_fps = 120;
@@ -676,15 +676,15 @@ int main(int argc, char* argv[]) {
 	  std::cout.flush();
 
 
-	  CheckPointSmarticles_Write(mySmarticlesVec,
-	  		tStep,
-	  		mat_g,
-	  		l_smarticle,
-	  		w_smarticle,
-	  		t_smarticle,
-	  		t2_smarticle,
-	  		collisionEnvelop,
-	  		rho_smarticle);
+//	  CheckPointSmarticles_Write(mySmarticlesVec,
+//	  		tStep,
+//	  		mat_g,
+//	  		l_smarticle,
+//	  		w_smarticle,
+//	  		t_smarticle,
+//	  		t2_smarticle,
+//	  		collisionEnvelop,
+//	  		rho_smarticle);
 
   }
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
