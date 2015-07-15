@@ -88,8 +88,11 @@ ChSharedPtr<ChBody> bucket;
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
+	
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
-	double bucket_thick = sizeScale * .005;
+	double bucket_half_thick = sizeScale * .005;
+	double h = bucket_interior_halfDim.z * 2 + 2*bucket_half_thick; //from entangled paper height of available volume for smarticles in bucket
+	double d = bucket_interior_halfDim.y * 2; //from entangled paper width of availble volume for smarticles in bucket
 
 	// smarticle geometry
 	double w_smarticle 	= sizeScale * 0.0117;
@@ -244,8 +247,9 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		for (int j = -nY+1; j < nY; j ++) {
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
-			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_thick);
-			// ***  added 2*bucket_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
+			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
+			//ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
+			// ***  added 2*bucket_half_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
 
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
@@ -318,7 +322,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	}
 
 	// 1: create bucket
-	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_thick, bucket_ctr, QUNIT, true, false, true, false);
+	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
 	bucket->GetCollisionModel()->SetFamily(1);
 	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	bucket->SetBodyFixed(false);
@@ -328,7 +332,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 //	bucket->SetBodyFixed(true);
 //	bucket->SetCollide(true);
 //	bucket->GetCollisionModel()->ClearModel();
-//	utils::AddBoxGeometry(bucket.get_ptr(), ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, bucket_thick), bucket_ctr - ChVector<>(0, 0, bucket_interior_halfDim.z));
+//	utils::AddBoxGeometry(bucket.get_ptr(), ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, bucket_half_thick), bucket_ctr - ChVector<>(0, 0, bucket_interior_halfDim.z));
 //	bucket->GetCollisionModel()->BuildModel();
 //	mphysicalSystem.AddBody(bucket);
 
@@ -464,8 +468,8 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	double zMax = Find_Max_Z(mphysicalSystem);
 	ChVector<> bucketMin = bucket->GetPos();
 
-	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_thick);
-	// *** remember, 2 * bucket_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_thick from each side
+	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
+	// *** remember, 2 * bucket_half_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_half_thick from each side
 
 
 	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
@@ -483,7 +487,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 //	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 //		ChBody* bodyPtr = *(myIter + i);
 //		if ( strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0 ) {
-//			if ( IsIn(bodyPtr->GetPos(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + 2 * ChVector<>(0, 0, 2 * bucket_thick)) ) {
+//			if ( IsIn(bodyPtr->GetPos(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + 2 * ChVector<>(0, 0, 2 * bucket_half_thick)) ) {
 //				countInside ++;
 //				totalVolume1 += bodyPtr->GetMass() / bodyPtr->GetDensity();
 //			}
@@ -494,7 +498,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	int countInside2 = 0;
 	for (int i = 0; i < mySmarticlesVec.size(); i ++) {
 		Smarticle* sPtr = mySmarticlesVec[i];
-		if ( IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + ChVector<>(0, 0, 2 * bucket_thick)) ) {
+		if ( IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + ChVector<>(0, 0, 2 * bucket_half_thick)) ) {
 			countInside2 ++;
 			totalVolume2 += sPtr->GetVolume();
 		}
