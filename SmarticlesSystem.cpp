@@ -616,15 +616,19 @@ int main(int argc, char* argv[]) {
   double timeForVerticalDisplcement = 1.5 * sqrt(2 * w_smarticle / mphysicalSystem.Get_G_acc().Length()); // 1.5 for safety proximity
   int numGeneratedLayers = 0;
 
+//  CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
+
 //  for (int tStep = 0; tStep < 1; tStep++) {
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 	  double t = mphysicalSystem.GetChTime();
 
-//	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-//			  (numGeneratedLayers < numLayers) ){
-//		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-//		  numGeneratedLayers ++;
-//	  }
+	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+			  (numGeneratedLayers < numLayers) ){
+		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+		  numGeneratedLayers ++;
+	  }
+
+
 
 	   printf("\n");
 	  // move bucket

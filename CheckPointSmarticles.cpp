@@ -86,19 +86,21 @@ void CheckPointSmarticles_Read(
 		ChSystemParallelDVI & mphysicalSystem,
 		std::vector<Smarticle*> & mySmarticlesVec) {
 	std::ifstream inSmarticles;
-	inSmarticles.open("smarticles.txt");
+	inSmarticles.open("smarticles.csv");
 	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction;
 	double rho_smarticle;
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	char ddCh;
 	inSmarticles >>
-	l_smarticle >> ddCh >>
-	w_smarticle >> ddCh >>
-	t_smarticle >> ddCh >>
-	t2_smarticle >> ddCh >>
-	collisionEnvelop >> ddCh >>
-	rho_smarticle >> ddCh >>
-	friction >> ddCh;
+	l_smarticle >>
+	w_smarticle >>
+	t_smarticle >>
+	t2_smarticle >>
+	collisionEnvelop >>
+	rho_smarticle >>
+	friction;
+	printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f",
+			l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticle, friction);
 	mat_g->SetFriction(friction);
 
 	ddCh = '!';
