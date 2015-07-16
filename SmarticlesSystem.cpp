@@ -277,7 +277,55 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		}
 	}
 }
+ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, double apo, double t, double height, double mass, ChSystemParallelDVI& mphysicalSystem, ChSharedPtr<ChMaterialSurface> wallMat)
+{
+	//t = thick
+	//apothem or inradius of cyl
+	int i = 0;
+	double s = apo * 2.0 * tan(CH_C_PI / n);//side length of cyl
+	double ang = 2.0 * CH_C_PI / n;
 
+
+	double xx = (s + t) / 2.0;
+	double zz = height / 2.0;
+	double yy = t / 2.0;
+	double x = sin(ang*i)*(t / 2.0 + apo);
+	double z = height / 2.0;
+	double y = cos(ang*i)*(t / 2.0 + apo);
+	ChQuaternion<> quat = Angle_to_Quat(ANGLESET_RXYZ, Vector(0, 0, ang*i));
+
+	ChSharedPtr<ChBody> frect(new ChBody);
+	frect->SetMass(mass*n);
+	frect->GetCollisionModel()->ClearModel();
+	frect->GetCollisionModel()->AddBox(xx, yy, zz, Vector(x, y, z),quat);
+
+
+	frect->SetBodyFixed(true);
+	mphysicalSystem.AddBody(frect);
+	frect->SetMaterialSurface(wallMat);
+	utils::AddBoxGeometry(frect.get_ptr(), Vector(xx, yy, zz), Vector(x, y, z), quat);
+	for (i = 1; i < n; i++)
+	{
+		quat = Angle_to_Quat(ANGLESET_RXYZ, Vector(0, 0, ang*i));
+		xx = (s + t) / 2.0;
+		zz = height / 2.0;
+		yy = t / 2.0;
+		x = sin(ang*i)*(t / 2.0 + apo);
+		z = height / 2.0;
+		y = cos(ang*i)*(t / 2.0 + apo);
+
+		frect->GetCollisionModel()->AddBox(xx,yy ,zz,Vector(x,y,z), quat);
+		if (ang*i < CH_C_PI / 2.0 || ang*i > 3.0 * CH_C_PI / 2.0)
+		{
+			utils::AddBoxGeometry(frect.get_ptr(), Vector(xx, yy, zz), Vector(x, y, z), quat);
+		}
+		
+	}
+
+	frect->GetCollisionModel()->BuildModel();
+	frect->SetMaterialSurface(wallMat);
+	return frect;
+}
 // =============================================================================
 void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 	/////////////////
@@ -315,10 +363,13 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	}
 
 	// 1: create bucket
-	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+	//bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+	bucket = create_cylinder_from_blocks(15,.044,bucket_half_thick,.06,1,mphysicalSystem,mat_g);
+	//create_cylinder_from_blocks(int n, double apo, double t, double height, double mass, ChSystemParallelDVI& mphysicalSystem, ChSharedPtr<ChMaterialSurface> wallMat)
 	bucket->GetCollisionModel()->SetFamily(1);
 	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	bucket->SetBodyFixed(false);
+	
 
 	// 2: create plate
 //	bucket->SetMaterialSurface(mat_g);
@@ -712,3 +763,5 @@ int main(int argc, char* argv[]) {
   simParams.close();
   return 0;
 }
+
+
