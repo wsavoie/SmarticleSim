@@ -91,6 +91,7 @@ ChSharedPtr<ChBody> bucket;
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
+	double bucket_rad = sizeScale*0.044;
 	
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 	double bucket_half_thick = sizeScale * .005;
@@ -247,7 +248,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		for (int j = -nY+1; j < nY; j ++) {
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
-			ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim , bucket_ctr.z + 2.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
+			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 2.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 			//ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 			// ***  added 2*bucket_half_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
 
@@ -277,55 +278,70 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		}
 	}
 }
-ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, double apo, double t, double height, double mass, ChSystemParallelDVI& mphysicalSystem, ChSharedPtr<ChMaterialSurface> wallMat)
+// =============================================================================
+//creates an approximate cylinder from a n-sided regular polygon
+//n = number of boxs to use
+//apo = radius of cylinder, center point to midpoint of side a side
+
+ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, ChSystemParallelDVI& mphysicalSystem, ChSharedPtr<ChMaterialSurface> wallMat)
 {
-	//t = thick
-	//apothem or inradius of cyl
-	int i = 0;
+	
+	ChSharedPtr<ChBody> cylWall(new ChBody);
+	cylWall->SetIdentifier(id);
+	cylWall->SetMass(mass);
+	cylWall->SetPos(bucket_ctr);
+	cylWall->SetRot(QUNIT);
+	cylWall->SetBodyFixed(true);
+
+	double apo = bucket_rad;
+	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
+	double height = 2 * bucket_interior_halfDim.z + 2*t;
 	double s = apo * 2.0 * tan(CH_C_PI / n);//side length of cyl
+	
 	double ang = 2.0 * CH_C_PI / n;
-
-
-	double xx = (s + t) / 2.0;
-	double zz = height / 2.0;
-	double yy = t / 2.0;
-	double x = sin(ang*i)*(t / 2.0 + apo);
-	double z = height / 2.0;
-	double y = cos(ang*i)*(t / 2.0 + apo);
-	ChQuaternion<> quat = Angle_to_Quat(ANGLESET_RXYZ, Vector(0, 0, ang*i));
-
-	ChSharedPtr<ChBody> frect(new ChBody);
-	frect->SetMass(mass*n);
-	frect->GetCollisionModel()->ClearModel();
-	frect->GetCollisionModel()->AddBox(xx, yy, zz, Vector(x, y, z),quat);
-
-
-	frect->SetBodyFixed(true);
-	mphysicalSystem.AddBody(frect);
-	frect->SetMaterialSurface(wallMat);
-	utils::AddBoxGeometry(frect.get_ptr(), Vector(xx, yy, zz), Vector(x, y, z), quat);
-	for (i = 1; i < n; i++)
+	Vector pSize = (0,0,0); //size of plates
+	Vector pPos = (0,0,0);  //position of each plate
+	ChQuaternion<> quat=QUNIT; //rotation of each plate
+	
+	cylWall->GetCollisionModel()->ClearModel();
+	cylWall->SetMaterialSurface(wallMat);
+	for (int i = 0; i < n; i++)
 	{
+
+		pSize= Vector((s + t) / 2.0,
+			t / 2.0,
+			height / 2.0);
+
+		pPos=bucket_ctr+ Vector(sin(ang*i)*(t / 2.0 + apo),
+			cos(ang*i)*(t / 2.0 + apo),
+			0);
+
 		quat = Angle_to_Quat(ANGLESET_RXYZ, Vector(0, 0, ang*i));
-		xx = (s + t) / 2.0;
-		zz = height / 2.0;
-		yy = t / 2.0;
-		x = sin(ang*i)*(t / 2.0 + apo);
-		z = height / 2.0;
-		y = cos(ang*i)*(t / 2.0 + apo);
 
-		frect->GetCollisionModel()->AddBox(xx,yy ,zz,Vector(x,y,z), quat);
-		if (ang*i < CH_C_PI / 2.0 || ang*i > 3.0 * CH_C_PI / 2.0)
-		{
-			utils::AddBoxGeometry(frect.get_ptr(), Vector(xx, yy, zz), Vector(x, y, z), quat);
-		}
+		cylWall->GetCollisionModel()->AddBox(pSize.x, pSize.y, pSize.z, pPos, quat);
 		
+		//this is here to make half the cylinder invisible.
+		if (ang*i < CH_C_PI / 2.0 || ang*i > 3.0 * CH_C_PI / 2.0) 
+		{
+			utils::AddBoxGeometry(cylWall.get_ptr(), pSize, pPos, quat);
+		}
 	}
+	//Add ground piece
 
-	frect->GetCollisionModel()->BuildModel();
-	frect->SetMaterialSurface(wallMat);
-	return frect;
+	cylWall->GetCollisionModel()->AddBox(bucket_rad, bucket_rad, pSize.y, bucket_ctr + Vector(0, 0, -t - bucket_interior_halfDim.z), QUNIT);
+	utils::AddBoxGeometry(cylWall.get_ptr(), Vector(bucket_rad,bucket_rad, pSize.y), bucket_ctr + Vector(0, 0, -t -bucket_interior_halfDim.z), QUNIT);
+
+
+	mphysicalSystem.AddBody(cylWall);
+	cylWall->GetCollisionModel()->BuildModel();
+	cylWall->SetMaterialSurface(wallMat);
+	cylWall->SetMass(mass*n);
+	cylWall->SetPos(bucket_ctr);
+	mphysicalSystem.AddBody(cylWall);
+
+	return cylWall;
 }
+
 // =============================================================================
 void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 	/////////////////
@@ -364,8 +380,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 
 	// 1: create bucket
 	//bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
-	bucket = create_cylinder_from_blocks(15,.044,bucket_half_thick,.06,1,mphysicalSystem,mat_g);
-	//create_cylinder_from_blocks(int n, double apo, double t, double height, double mass, ChSystemParallelDVI& mphysicalSystem, ChSharedPtr<ChMaterialSurface> wallMat)
+	bucket = create_cylinder_from_blocks(15,1,1, mphysicalSystem,mat_g);
 	bucket->GetCollisionModel()->SetFamily(1);
 	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	bucket->SetBodyFixed(false);
