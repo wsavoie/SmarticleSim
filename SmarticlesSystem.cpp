@@ -76,13 +76,22 @@ ChSharedPtr<ChBody> bucket;
 
 	double sizeScale = 1;
 	double gravity = -9.81 * sizeScale;
-	double vibration_freq = .0000001;
-	double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
+	
+	double vibration_freq = 30;
+	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
+	//double vibration_amp = sizeScale * 0.00055;
+	double gamma = 2.0 * gravity;
+	double vibration_amp = gamma / (omega_bucket*omega_bucket);
+
+
+
+	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
+	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.5 * sizeScale;
-	double tFinal = 100;
+	double tFinal = 19;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
 	ChSharedPtr<ChMaterialSurface> mat_g;
-	int numLayers = 400;
+	int numLayers = 250;
 
 	
 
@@ -251,7 +260,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		for (int j = -nY+1; j < nY; j ++) {
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
-			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 2.0 * bucket_interior_halfDim.z + 4 * bucket_half_thick);
+			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 2.0 * bucket_interior_halfDim.z + 6 * bucket_half_thick);
 			//ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 			// ***  added 2*bucket_half_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
 
@@ -332,7 +341,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, bool
 		cylWall->GetCollisionModel()->AddBox(pSize.x, pSize.y, pSize.z, pPos, quat);
 		
 		//this is here to make half the cylinder invisible.
-		if (ang*i < CH_C_PI / 2.0 || ang*i > 3.0 * CH_C_PI / 2.0) 
+		if (ang*i < CH_C_PI  || ang*i > 3.0 * CH_C_PI / 2.0) 
 		{
 			utils::AddBoxGeometry(cylWall.get_ptr(), pSize, pPos, quat);
 		}
@@ -620,7 +629,17 @@ void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
 
 }
 // =============================================================================
-
+// move bucket
+void vibrate_bucket(double t) {
+	double x_bucket = vibration_amp*sin(omega_bucket * t);
+	double xDot_bucket = vibration_amp*omega_bucket*cos(omega_bucket * t);
+	double xDDot_bucket = vibration_amp*omega_bucket*omega_bucket*-1 * sin(omega_bucket * t);
+	bucket->SetPos(ChVector<>(0, 0, x_bucket));
+	bucket->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
+	bucket->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
+	bucket->SetRot(QUNIT);
+}
+// =============================================================================
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
 	  struct tm* timeinfo;
@@ -721,8 +740,7 @@ int main(int argc, char* argv[]) {
 //
 //  }
 
-  double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
-  double vibration_amp = sizeScale * 0.0005;
+
 
   double timeForVerticalDisplcement = 1.5 * sqrt(2 * w_smarticle / mphysicalSystem.Get_G_acc().Length()); // 1.5 for safety proximity
   int numGeneratedLayers = 0;
@@ -741,6 +759,12 @@ int main(int argc, char* argv[]) {
 		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
 		  numGeneratedLayers ++;
 	  }
+		if (numGeneratedLayers == numLayers)
+		{
+			//start shaking
+		}
+
+
 		if (smarticleType == SMART_ARMS)
 		{
 
@@ -758,13 +782,20 @@ int main(int argc, char* argv[]) {
 		}
 
 	   printf("\n");
-	  // move bucket
 
-	  double x_bucket = vibration_amp * sin(omega_bucket * t);
-	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
-	  bucket->SetPos(ChVector<>(0, 0, x_bucket));
-	  bucket->SetPos_dt(ChVector<>(xDot_bucket, 0, 0));
-	  bucket->SetRot(QUNIT);
+		 if (t > tFinal){
+			 bucket->SetBodyFixed(false);
+			 vibrate_bucket(t);
+		 }
+		 else{ bucket->SetBodyFixed(true);}
+		 
+
+
+		
+	
+
+
+
 //	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);
 //	  switch (stage % 4) {
