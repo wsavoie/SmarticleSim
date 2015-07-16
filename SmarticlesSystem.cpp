@@ -81,7 +81,7 @@ ChSharedPtr<ChBody> bucket;
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 400;
 
-	SmarticleType smarticleType = SMART_ARMS;
+	SmarticleType smarticleType = SMART_U;
 
 	bool povray_output = true;
 	int out_fps = 120;
@@ -283,16 +283,21 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 //n = number of boxs to use
 //apo = radius of cylinder, center point to midpoint of side a side
 
-ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, ChSystemParallelDVI& mphysicalSystem, ChSharedPtr<ChMaterialSurface> wallMat)
+ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, ChSystemParallelDVI* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
 {
-	
-	ChSharedPtr<ChBody> cylWall(new ChBody);
+	ChSharedPtr<ChBody> cylWall;
+	if (USE_PARALLEL) {
+		cylWall = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	}
+	else {
+		cylWall = ChSharedPtr<ChBody>(new ChBody);
+	}
 	cylWall->SetIdentifier(id);
 	cylWall->SetMass(mass);
 	cylWall->SetPos(bucket_ctr);
 	cylWall->SetRot(QUNIT);
-	cylWall->SetBodyFixed(true);
-
+	cylWall->SetBodyFixed(false);
+	cylWall->SetCollide(true);
 	double apo = bucket_rad;
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double height = 2 * bucket_interior_halfDim.z + 2*t;
@@ -329,16 +334,14 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, ChSy
 	//Add ground piece
 
 	cylWall->GetCollisionModel()->AddBox(bucket_rad, bucket_rad, pSize.y, bucket_ctr + Vector(0, 0, -t - bucket_interior_halfDim.z), QUNIT);
-	utils::AddBoxGeometry(cylWall.get_ptr(), Vector(bucket_rad,bucket_rad, pSize.y), bucket_ctr + Vector(0, 0, -t -bucket_interior_halfDim.z), QUNIT);
+	utils::AddBoxGeometry(cylWall.get_ptr(), Vector(bucket_rad+t,bucket_rad+t, pSize.y), bucket_ctr + Vector(0, 0, -t -bucket_interior_halfDim.z), QUNIT);
 
 
-	mphysicalSystem.AddBody(cylWall);
+	cylWall->GetCollisionModel()->SetFamily(1);
+	cylWall->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	cylWall->GetCollisionModel()->BuildModel();
-	cylWall->SetMaterialSurface(wallMat);
-	cylWall->SetMass(mass*n);
-	cylWall->SetPos(bucket_ctr);
-	mphysicalSystem.AddBody(cylWall);
 
+	mphysicalSystem->AddBody(cylWall);
 	return cylWall;
 }
 
@@ -380,11 +383,10 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 
 	// 1: create bucket
 	//bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
-	bucket = create_cylinder_from_blocks(15,1,1, mphysicalSystem,mat_g);
-	bucket->GetCollisionModel()->SetFamily(1);
-	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	bucket = create_cylinder_from_blocks(15,1,1, &mphysicalSystem,mat_g);
+
 	bucket->SetBodyFixed(false);
-	
+	bucket->SetCollide(true);
 
 	// 2: create plate
 //	bucket->SetMaterialSurface(mat_g);
@@ -690,31 +692,35 @@ int main(int argc, char* argv[]) {
 
   printf("************** size sys %d \n", mySmarticlesVec.size());
 //  for (int tStep = 0; tStep < 1; tStep++) {
+	
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 	  double t = mphysicalSystem.GetChTime();
 
-//	  int sSize1 = mySmarticlesVec.size();
-//	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-//			  (numGeneratedLayers < numLayers) ){
-//		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-//		  numGeneratedLayers ++;
-//	  }
+	  int sSize1 = mySmarticlesVec.size();
+	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+			  (numGeneratedLayers < numLayers) ){
+		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+		  numGeneratedLayers ++;
+	  }
+		if (smarticleType == SMART_ARMS)
+		{
 
+			for (int i = 0; i < mySmarticlesVec.size(); i++) {
+				double omega = 10;
+				if (tStep < 500) {
+					mySmarticlesVec[i]->SetActuatorFunction(0, -omega, dT);
+				}
+				else {
+					mySmarticlesVec[i]->SetActuatorFunction(0, omega, dT);
+				}
 
-	    for (int i = 0; i < mySmarticlesVec.size(); i++) {
-	    	double omega = 10;
-	    	if (tStep < 500) {
-	    		mySmarticlesVec[i]->SetActuatorFunction(0, -omega, dT);
-	    	} else {
-	    		mySmarticlesVec[i]->SetActuatorFunction(0, omega, dT);
-	    	}
+			}
 
-	    }
-
-
+		}
 
 	   printf("\n");
 	  // move bucket
+
 	  double x_bucket = vibration_amp * sin(omega_bucket * t);
 	  double xDot_bucket = omega_bucket * vibration_amp * cos(omega_bucket * t);
 	  bucket->SetPos(ChVector<>(0, 0, x_bucket));
