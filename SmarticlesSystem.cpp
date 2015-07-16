@@ -65,6 +65,9 @@
 // Use the namespace of Chrono
 using namespace chrono;
 enum SmarticleType {SMART_ARMS , SMART_U};
+enum BucketType { CYLINDER, BOX };
+SmarticleType smarticleType = SMART_U;
+BucketType bucketType = CYLINDER;
 // =============================================================================
 std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
@@ -81,7 +84,7 @@ ChSharedPtr<ChBody> bucket;
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 400;
 
-	SmarticleType smarticleType = SMART_U;
+	
 
 	bool povray_output = true;
 	int out_fps = 120;
@@ -248,7 +251,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		for (int j = -nY+1; j < nY; j ++) {
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
-			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 2.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
+			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 2.0 * bucket_interior_halfDim.z + 4 * bucket_half_thick);
 			//ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 			// ***  added 2*bucket_half_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
 
@@ -283,7 +286,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 //n = number of boxs to use
 //apo = radius of cylinder, center point to midpoint of side a side
 
-ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, ChSystemParallelDVI* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
+ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, bool overlap, ChSystemParallelDVI* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
 {
 	ChSharedPtr<ChBody> cylWall;
 	if (USE_PARALLEL) {
@@ -300,9 +303,12 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, ChSy
 	cylWall->SetCollide(true);
 	double apo = bucket_rad;
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
-	double height = 2 * bucket_interior_halfDim.z + 2*t;
+	double height = bucket_interior_halfDim.z;
 	double s = apo * 2.0 * tan(CH_C_PI / n);//side length of cyl
-	
+	double o_lap = 0;
+	if (overlap){ o_lap = t * 2; }
+
+
 	double ang = 2.0 * CH_C_PI / n;
 	Vector pSize = (0,0,0); //size of plates
 	Vector pPos = (0,0,0);  //position of each plate
@@ -314,12 +320,12 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, ChSy
 	{
 
 		pSize= Vector((s + t) / 2.0,
-			t / 2.0,
-			height / 2.0);
+			t,
+			height+o_lap);
 
 		pPos=bucket_ctr+ Vector(sin(ang*i)*(t / 2.0 + apo),
 			cos(ang*i)*(t / 2.0 + apo),
-			0);
+			height);
 
 		quat = Angle_to_Quat(ANGLESET_RXYZ, Vector(0, 0, ang*i));
 
@@ -333,8 +339,8 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, ChSy
 	}
 	//Add ground piece
 
-	cylWall->GetCollisionModel()->AddBox(bucket_rad, bucket_rad, pSize.y, bucket_ctr + Vector(0, 0, -t - bucket_interior_halfDim.z), QUNIT);
-	utils::AddBoxGeometry(cylWall.get_ptr(), Vector(bucket_rad+t,bucket_rad+t, pSize.y), bucket_ctr + Vector(0, 0, -t -bucket_interior_halfDim.z), QUNIT);
+	cylWall->GetCollisionModel()->AddBox(bucket_rad+t, bucket_rad+t, t, Vector(0, 0, -t), QUNIT);
+	utils::AddBoxGeometry(cylWall.get_ptr(), Vector(bucket_rad + t, bucket_rad + t, t), Vector(0, 0, -t ), QUNIT);
 
 
 	cylWall->GetCollisionModel()->SetFamily(1);
@@ -382,8 +388,12 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	}
 
 	// 1: create bucket
-	//bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
-	bucket = create_cylinder_from_blocks(15,1,1, &mphysicalSystem,mat_g);
+	if (bucketType == BOX){
+		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+	}
+	if (bucketType == CYLINDER){
+		bucket = create_cylinder_from_blocks(15, 1, 1,true, &mphysicalSystem, mat_g);
+	}
 
 	bucket->SetBodyFixed(false);
 	bucket->SetCollide(true);
@@ -476,10 +486,8 @@ void SavePovFilesMBD(CH_SYSTEM& mphysicalSystem,
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem) {
 	std::string smarticleTypeName;
 	if (smarticleType == SMART_ARMS) {
-		//smarticleTypeName = "smarticle_arm";
 		smarticleTypeName = "smarticle_arm";
 	} else if (smarticleType == SMART_U) {
-		//smarticleTypeName = "smarticle_u";s
 		smarticleTypeName = "smarticle_u";
 	} else {
 		std::cout << "Error! Smarticle type is not set correctly" << std::endl;
@@ -498,10 +506,25 @@ double Find_Max_Z(CH_SYSTEM& mphysicalSystem) {
 }
 // =============================================================================
 bool IsIn(ChVector<> pt, ChVector<> min, ChVector<> max) {
+
 	if ((pt < max) && (pt > min)) {
 		return true;
 	}
+
 	return false;
+}
+// =============================================================================
+//used for now cylinder
+//rad is (radius from center, , max z)
+bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
+{
+	double xydist = (std::sqrt((pt.x - centralPt.x)*(pt.x - centralPt.x) + (pt.y - centralPt.y)*(pt.y - centralPt.y)));
+	
+	if (xydist >= rad.x) { return false;} // if outside radius
+	
+	if (pt.z < rad.y || pt.z >rad.z){ return false; }
+
+	return true;
 }
 // =============================================================================
 void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
@@ -532,7 +555,6 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 	// *** remember, 2 * bucket_half_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_half_thick from each side
 
-
 	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
 //	const std::string smarticleTypeName;
 //	if (smarticleType == SMART_ARMS) {
@@ -557,16 +579,33 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 
 	double totalVolume2 = 0;
 	int countInside2 = 0;
-	for (int i = 0; i < mySmarticlesVec.size(); i ++) {
-		Smarticle* sPtr = mySmarticlesVec[i];
-		if ( IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + ChVector<>(0, 0, 2 * bucket_half_thick)) ) {
-			countInside2 ++;
-			totalVolume2 += sPtr->GetVolume();
+	double volumeFraction = 0;
+	if (bucketType == BOX)
+	{
+		for (int i = 0; i < mySmarticlesVec.size(); i++) {
+			Smarticle* sPtr = mySmarticlesVec[i];
+			if (IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + ChVector<>(0, 0, 2 * bucket_half_thick))) {
+				countInside2++;
+				totalVolume2 += sPtr->GetVolume();
+			}
 		}
+
+		volumeFraction = totalVolume2 / (4 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - bucketMin.z));
 	}
+	if (bucketType == CYLINDER)
+	{
+		for (int i = 0; i < mySmarticlesVec.size(); i++) {
+			Smarticle* sPtr = mySmarticlesVec[i];
+			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
+			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, 2*bucket_interior_halfDim.z+2*bucket_half_thick))) {
+				countInside2++;
+				totalVolume2 += sPtr->GetVolume();
+			}
+		}
 
-	double volumeFraction = totalVolume2 / (4 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - bucketMin.z));
-
+		volumeFraction = totalVolume2 / (4 * CH_C_PI*bucket_rad*bucket_rad* 2* bucket_interior_halfDim.z);
+	}
+	//zmax+bucketCtr.z makes bottom of box start at zero
 	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2  << ", " << volumeFraction << ", " << zMax << std::endl;
 
 	vol_frac_of.close();
