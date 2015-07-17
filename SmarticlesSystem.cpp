@@ -61,6 +61,8 @@
 #else
 #define CH_SYSTEM ChSystem
 #endif
+
+
 //***********************************
 // Use the namespace of Chrono
 using namespace chrono;
@@ -69,6 +71,7 @@ enum BucketType { CYLINDER, BOX };
 SmarticleType smarticleType = SMART_U;
 BucketType bucketType = CYLINDER;
 // =============================================================================
+double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
 
@@ -87,8 +90,8 @@ ChSharedPtr<ChBody> bucket;
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double contact_recovery_speed = 0.5 * sizeScale;
-	double tFinal = 19;
+	double contact_recovery_speed = 0.1 * sizeScale;
+	double tFinal = 12;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 250;
@@ -125,7 +128,7 @@ ChSharedPtr<ChBody> bucket;
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
-void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral) {
+void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt) {
   if (argc > 1) {
 	const char* text = argv[1];
 	double mult_l = atof(text);
@@ -143,6 +146,10 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
     const char* text = argv[4];
     max_iteration_bilateral = atoi(text);
   }
+	if (argc > 5){
+		const char* text = argv[5];
+		dt = atof(text);
+	}
 }
 // =============================================================================
 void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc, char* argv[]) {
@@ -192,7 +199,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set params from input
   // ----------------------
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral);
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT);
 
   // ----------------------
   // Set number of threads.
@@ -250,17 +257,29 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 	/////////////////
 	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
 	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
-
+	ChVector<> myPos;
+	double z;
 	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
 	int nX = bucket_interior_halfDim.x / maxDim;
 	int nY = bucket_interior_halfDim.y / maxDim;
 
 	int smarticleCount = mySmarticlesVec.size();
+	if (smarticleCount < 9){z = 0;}
+	else{ z = Find_Max_Z(mphysicalSystem); }
+	 
 	for (int i= -nX + 1; i < nX; i++) {
 		for (int j = -nY+1; j < nY; j ++) {
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
-			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 2.0 * bucket_interior_halfDim.z + 6 * bucket_half_thick);
+		
+				
+			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + 2 * MyRand()*w_smarticle - w_smarticle
+					, j * maxDim + bucket_ctr.y + 2 * MyRand()*w_smarticle - w_smarticle
+					, z + w_smarticle/2.0);
+			
+			//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
+			
+			
 			//ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 			// ***  added 2*bucket_half_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
 
@@ -614,7 +633,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 
 		volumeFraction = totalVolume2 / (4 * CH_C_PI*bucket_rad*bucket_rad* 2* bucket_interior_halfDim.z);
 	}
-	//zmax+bucketCtr.z makes bottom of box start at zero
+
 	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2  << ", " << volumeFraction << ", " << zMax << std::endl;
 
 	vol_frac_of.close();
@@ -731,7 +750,7 @@ int main(int argc, char* argv[]) {
   ChSharedPtr<ChFunction_Const> fun5 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(-CH_C_PI / 2));
 
 
-  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+  //AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
 
 
 //  for (int i = 0; i < mySmarticlesVec.size(); i++) {
@@ -742,8 +761,12 @@ int main(int argc, char* argv[]) {
 
 
 
-  double timeForVerticalDisplcement = 1.5 * sqrt(2 * w_smarticle / mphysicalSystem.Get_G_acc().Length()); // 1.5 for safety proximity
-  int numGeneratedLayers = 0;
+  //double timeForVerticalDisplcement = 1.0 * sqrt(2 * w_smarticle / mphysicalSystem.Get_G_acc().Length()); // 1.5 for safety proximity
+	//removed length since unnecessary sqrt in that calc
+
+	double timeForVerticalDisplcement = .045; // 1.5 for safety proximity
+ 
+	int numGeneratedLayers = 0;
 
 //  CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
 
@@ -759,10 +782,10 @@ int main(int argc, char* argv[]) {
 		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
 		  numGeneratedLayers ++;
 	  }
-		if (numGeneratedLayers == numLayers)
-		{
-			//start shaking
-		}
+		//if (numGeneratedLayers == numLayers)
+		//{
+		//	//start shaking
+		//}
 
 
 		if (smarticleType == SMART_ARMS)
@@ -783,7 +806,7 @@ int main(int argc, char* argv[]) {
 
 	   printf("\n");
 
-		 if (t > tFinal){
+		 if (t > 8.0){
 			 bucket->SetBodyFixed(false);
 			 vibrate_bucket(t);
 		 }
