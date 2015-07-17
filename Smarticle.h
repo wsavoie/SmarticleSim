@@ -16,6 +16,23 @@
 
 namespace chrono {
 
+// structs to attach motion to smarticles
+struct JointMotion {
+	double theta1;			// lower limit of the motion
+	double theta2;			// upper limit of the motion
+	double omega;			// joint angular velocity
+};
+
+struct SmarticleMotionPiece {
+	JointMotion joint_01;	// joint 1 motion,
+	JointMotion joint_12;	// joint 1 motion
+	double timeInterval;	// time of action
+	double startTime;		// start time of the motion
+	int motionSegment;
+};
+
+
+
 class Smarticle {
 public:
   // Construct a smarticle and add it to ChSystem.
@@ -59,6 +76,11 @@ public:
   virtual ChVector<> Get_cm();
   virtual ChVector<> Get_InitPos();
   virtual double GetDensity() {return density;};
+  virtual void AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece);
+  //	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented
+  //	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
+
+  virtual void UpdateSmarticleMotion();
 
 private:
   // create smarticle arm, set collision, surface, and mass property.
@@ -117,6 +139,11 @@ protected:
   // joints functions
   ChSharedPtr<ChFunction> function01;
   ChSharedPtr<ChFunction> function12;
+
+  std::vector<ChSharedPtr<SmarticleMotionPiece>> motion_vector;
+  ChSharedPtr<SmarticleMotionPiece> current_motion;
+
+
 
 };
 }

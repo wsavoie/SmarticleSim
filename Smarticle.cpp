@@ -270,6 +270,20 @@ ChVector<> Smarticle::Get_InitPos() {
 	return initPos;
 }
 
+void Smarticle::AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece) {
+	motion_vector.push_back(s_motionPiece);
+}
+
+virtual void UpdateSmarticleMotion() {
+	double currentTime = m_system->GetChTime();
+	int currentSegment = current_motion->motionSegment;
+	if (  (current_motion->startTime + current_motion->startTime > currentTime) &&
+			(current_motion->motionSegment < motion_vector.size() - 1)  ) {
+		current_motion = motionSegment[]
+	}
+
+}
+
 
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
