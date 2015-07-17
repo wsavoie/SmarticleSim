@@ -526,7 +526,8 @@ double Find_Max_Z(CH_SYSTEM& mphysicalSystem) {
 		ChBody* bodyPtr = *(myIter + i);
 		if ( strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0 ) {
 			if (zMax < bodyPtr->GetPos().z) {
-				zMax = bodyPtr->GetPos().z;
+				//zMax = bodyPtr->GetPos().z;
+				zMax = bodyPtr->GetPos().z - bucket->GetPos().z;
 			}
 		}
 	}
@@ -625,7 +626,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 		for (int i = 0; i < mySmarticlesVec.size(); i++) {
 			Smarticle* sPtr = mySmarticlesVec[i];
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
-			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, 2*bucket_interior_halfDim.z+2*bucket_half_thick))) {
+			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2*bucket_interior_halfDim.z+2*bucket_half_thick))) {
 				countInside2++;
 				totalVolume2 += sPtr->GetVolume();
 			}
