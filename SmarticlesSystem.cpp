@@ -83,8 +83,8 @@ ChSharedPtr<ChBody> bucket;
 	double vibration_freq = 30;
 	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 	//double vibration_amp = sizeScale * 0.00055;
-	double gamma = 2.0 * gravity;
-	double vibration_amp = gamma / (omega_bucket*omega_bucket);
+	double mGamma = 2.0 * gravity;
+	double vibration_amp = mGamma / (omega_bucket*omega_bucket);
 
 
 
@@ -275,7 +275,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				
 			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + 2 * MyRand()*w_smarticle - w_smarticle
 					, j * maxDim + bucket_ctr.y + 2 * MyRand()*w_smarticle - w_smarticle
-					, z + w_smarticle/2.0);
+					, z + 0.5 * maxDim);
 			
 			//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 			
