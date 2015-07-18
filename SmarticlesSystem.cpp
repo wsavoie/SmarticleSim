@@ -311,72 +311,67 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 }
 // =============================================================================
 //creates an approximate cylinder from a n-sided regular polygon
-//n = number of boxs to use
-//apo = radius of cylinder, center point to midpoint of side a side
+//num_boxes = number of boxes to use
+//bucket_rad = radius of cylinder, center point to midpoint of side a side
 
-ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, bool overlap, ChSystemParallelDVI* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
+ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, double mass, bool overlap, ChSystemParallelDVI* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
 {
-	ChSharedPtr<ChBody> cylWall;
+	ChSharedPtr<ChBody> cyl_container;
 	if (USE_PARALLEL) {
-		cylWall = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+		cyl_container = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	}
 	else {
-		cylWall = ChSharedPtr<ChBody>(new ChBody);
+		cyl_container = ChSharedPtr<ChBody>(new ChBody);
 	}
-	cylWall->SetIdentifier(id);
-	cylWall->SetMass(mass);
-	cylWall->SetPos(bucket_ctr);
-	cylWall->SetRot(QUNIT);
-	cylWall->SetBodyFixed(false);
-	cylWall->SetCollide(true);
-	double apo = bucket_rad;
+	cyl_container->SetIdentifier(id);
+	cyl_container->SetMass(mass);
+	cyl_container->SetPos(bucket_ctr);
+	cyl_container->SetRot(QUNIT);
+	cyl_container->SetBodyFixed(false);
+	cyl_container->SetCollide(true);
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
-	double height = bucket_interior_halfDim.z;
-	double s = apo * 2.0 * tan(CH_C_PI / n);//side length of cyl
+	double half_height = bucket_interior_halfDim.z;
+	double box_side = bucket_rad * 2.0 * tan(CH_C_PI / num_boxes);//side length of cyl
 	double o_lap = 0;
 	if (overlap){ o_lap = t * 2; }
 
 
-	double ang = 2.0 * CH_C_PI / n;
-	Vector pSize = (0,0,0); //size of plates
-	Vector pPos = (0,0,0);  //position of each plate
+	double ang = 2.0 * CH_C_PI / num_boxes;
+	ChVector<> box_size = (0,0,0); //size of plates
+	ChVector<> pPos = (0,0,0);  //position of each plate
 	ChQuaternion<> quat=QUNIT; //rotation of each plate
 	
-	cylWall->GetCollisionModel()->ClearModel();
-	cylWall->SetMaterialSurface(wallMat);
-	for (int i = 0; i < n; i++)
+	cyl_container->GetCollisionModel()->ClearModel();
+	cyl_container->SetMaterialSurface(wallMat);
+	for (int i = 0; i < num_boxes; i++)
 	{
 
-		pSize= Vector((s + t) / 2.0,
+		box_size= ChVector<>((box_side + t) / 2.0,
 			t,
-			height+o_lap);
+			half_height + o_lap);
 
-		pPos=bucket_ctr+ Vector(sin(ang*i)*(t / 2.0 + apo),
-			cos(ang*i)*(t / 2.0 + apo),
-			height);
+		pPos = bucket_ctr + ChVector<>(sin(ang * i) * (t + bucket_rad),
+			cos(ang*i)*(t + bucket_rad),
+			half_height);
 
-		quat = Angle_to_Quat(ANGLESET_RXYZ, Vector(0, 0, ang*i));
+		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
 
-		cylWall->GetCollisionModel()->AddBox(pSize.x, pSize.y, pSize.z, pPos, quat);
-		
 		//this is here to make half the cylinder invisible.
+		bool m_visualizatoin = false;
 		if (ang*i < CH_C_PI  || ang*i > 3.0 * CH_C_PI / 2.0) 
 		{
-			utils::AddBoxGeometry(cylWall.get_ptr(), pSize, pPos, quat);
+			m_visualizatoin = true;
 		}
+		utils::AddBoxGeometry(cyl_container.get_ptr(), box_size, pPos, quat, m_visualizatoin);
+
 	}
 	//Add ground piece
+	utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 
-	cylWall->GetCollisionModel()->AddBox(bucket_rad+t, bucket_rad+t, t, Vector(0, 0, -t), QUNIT);
-	utils::AddBoxGeometry(cylWall.get_ptr(), Vector(bucket_rad + t, bucket_rad + t, t), Vector(0, 0, -t ), QUNIT);
+	cyl_container->GetCollisionModel()->BuildModel();
 
-
-	cylWall->GetCollisionModel()->SetFamily(1);
-	cylWall->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-	cylWall->GetCollisionModel()->BuildModel();
-
-	mphysicalSystem->AddBody(cylWall);
-	return cylWall;
+	mphysicalSystem->AddBody(cyl_container);
+	return cyl_container;
 }
 
 // =============================================================================
@@ -547,13 +542,13 @@ bool IsIn(ChVector<> pt, ChVector<> min, ChVector<> max) {
 //rad is (radius from center, , max z)
 bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 {
-	double xydist = (std::sqrt((pt.x - centralPt.x)*(pt.x - centralPt.x) + (pt.y - centralPt.y)*(pt.y - centralPt.y)));
+	ChVector<> dist = pt - centralPt;
+	double xydist = (std::sqrt(dist.x * dist.x + dist.y + dist.y));
 	
-	if (xydist >= rad.x) { return false;} // if outside radius
-	
-	if (pt.z < rad.y || pt.z >rad.z){ return false; }
-
-	return true;
+	if ( (xydist < rad.x) && ((pt.z > rad.y) && (pt.z < rad.z))  ) {
+		return true;
+	}
+	return false;
 }
 // =============================================================================
 void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
@@ -632,7 +627,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 			}
 		}
 
-		volumeFraction = totalVolume2 / (4 * CH_C_PI*bucket_rad*bucket_rad* 2* bucket_interior_halfDim.z);
+		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2 * bucket_interior_halfDim.z);
 	}
 
 	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2  << ", " << volumeFraction << ", " << zMax << std::endl;
