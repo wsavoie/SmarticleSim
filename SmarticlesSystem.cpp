@@ -579,6 +579,10 @@ bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 	ChVector<> dist = pt - centralPt;
 	double xydist = (std::sqrt(dist.x * dist.x + dist.y + dist.y));
 	xydist = (std::sqrt((pt.x - centralPt.x)*(pt.x - centralPt.x) + (pt.y - centralPt.y)*(pt.y - centralPt.y)));
+//	if ((xydist < rad.x) && (pt.z >= rad.y) && (pt.z < rad.z)) {
+//		return true;
+//	}
+//	return false;
 	if (xydist >= rad.x) { return false; } // if outside radius
 	if (pt.z < rad.y || pt.z >rad.z){ return false; }
 	return true;
