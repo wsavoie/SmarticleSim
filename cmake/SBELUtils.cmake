@@ -183,8 +183,8 @@ endmacro(enable_cuda_support)
 ## -             SSE should be used by default  - ##
 ## ---------------------------------------------- ##
 ####################################################
-OPTION(USE_SSE "Compile with SSE support for floating point math" ON)
-OPTION(USE_DOUBLE "Compile with double precision math (no SSE support)" OFF)
+OPTION(USE_SSE "Compile with SSE support for floating point math" OFF)
+OPTION(USE_DOUBLE "Compile with double precision math (no SSE support)" ON)
 
 IF(USE_DOUBLE)
   OPTION(USE_SSE "Compile with SSE support for floating point math" OFF)

@@ -4,7 +4,7 @@ project(demo_Chrono_Parallel)
 
 #set path for local find modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake")
-find_package(ChronoEngine   COMPONENTS unit_IRRLICHT )
+#find_package(ChronoEngine   COMPONENTS unit_IRRLICHT )
 OPTION(BUILD_OPENGL "Build the ChronoEngine_OpenGL library" on)
 if (${BUILD_OPENGL})
 	find_package(ChronoEngine   COMPONENTS unit_OPENGL )
@@ -34,6 +34,21 @@ SET(LIBRARIES ${CHRONOENGINE_LIBRARIES} ${CHRONO_LIB_PARALLEL} ${CHRONO_LIB_UTIL
 
 MESSAGE( STATUS "CHRONOENGINE_INCLUDES:         " ${CHRONOENGINE_INCLUDES} )
 
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+# ------------------------------------------------------------------------------
+# BLAZE -- required for some parallel solvers
+# ------------------------------------------------------------------------------
+SET(BLAZE_DIR ""  CACHE PATH   "Where is Blaze located?")
+SET(BOOST_DIR ""  CACHE PATH   "Where is Boost located?")
+set(CHRONO_PARALLEL_INC ${CHRONO_PARALLEL_INC} ${BLAZE_DIR})
+set(CHRONO_PARALLEL_INC ${CHRONO_PARALLEL_INC} ${BOOST_DIR})
+
+FIND_PACKAGE(GLEW)
+
+set(CHRONO_PARALLEL_INC ${CHRONO_PARALLEL_INC} ${GLEW_INCLUDE_DIR})
+set(CHRONO_PARALLEL_INC ${CHRONO_PARALLEL_INC} ${GLM_INCLUDE_DIR})
+ENDIF()
+
 include_directories(
     ${CHRONOENGINE_INCLUDES}
     ${CHRONO_PARALLEL_INC}
@@ -51,6 +66,7 @@ SET(DEMOS "")
 
 SET(DEMOS ${DEMOS}
 	SmarticlesSystem
+
 	#smarticleParallel
 #icePar	
 )
@@ -58,7 +74,7 @@ SET(DEMOS ${DEMOS}
 FOREACH(PROGRAM ${DEMOS})
     MESSAGE(STATUS "...add ${PROGRAM}")
 
-    ADD_EXECUTABLE(${PROGRAM}  "${PROGRAM}.cpp" Smarticle.cpp)
+    ADD_EXECUTABLE(${PROGRAM}  "${PROGRAM}.cpp" Smarticle.cpp SmarticleU.cpp CheckPointSmarticles.cpp)
     SOURCE_GROUP(""  FILES "${PROGRAM}.cpp")
 
     SET_TARGET_PROPERTIES(${PROGRAM} PROPERTIES

@@ -12,8 +12,7 @@
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
 
-
-enum ArmType { S_CYLINDER, S_CAPSULE, S_BOX };
+#define USE_PARALLEL true
 
 namespace chrono {
 
@@ -21,8 +20,14 @@ class Smarticle {
 public:
   // Construct a smarticle and add it to ChSystem.
   Smarticle(
-//		  	ChSystem* otherSystem,
-			ChSystemParallelDVI* otherSystem,
+		  ChSystem* otherSystem
+		  //			ChSystemParallelDVI* otherSystem
+		  );
+
+  // Destructor. Nothing happens
+  ~Smarticle();
+
+  virtual void Properties(
 			int sID,
 			double other_density,
 			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
@@ -30,56 +35,71 @@ public:
 			double other_w,
 			double other_r,
 			double other_r2 = 0,
-			ArmType aType = S_CYLINDER,
 			ChVector<> pos = ChVector<>(0, 0, 0),
 			ChQuaternion<> rot = QUNIT);
 
-  // Destructor. Nothing happens
-  ~Smarticle();
-
   // create the smarticle by creating arms, adding joint between them, and functions
-  void Create();
+  virtual void Create();
 
   // get arm shared pointer
-  ChSharedBodyPtr GetArm(int armID);
+  virtual ChSharedBodyPtr GetArm(int armID);
 
   // get joint shared pointer
   // jointID belongs to {0, 1}, i.e. the joint between 0 and 1, or between 1 and 2
-  ChSharedPtr<ChLinkLockRevolute> GetRevoluteJoint(int jointID);
+  virtual ChSharedPtr<ChLinkLockRevolute> GetRevoluteJoint(int jointID);
 
   // get actuator function
   // actuatorID belongs to {0, 1}, i.e. the actuatorID between 0 and 1, or between 1 and 2
-  ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
-  void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
+  virtual ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
+  virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
+  virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
+
+  // Smarticle volume
+  virtual double GetVolume();
+  virtual ChVector<> Get_cm();
+  virtual ChVector<> Get_InitPos();
+  virtual double GetDensity() {return density;};
 
 private:
   // create smarticle arm, set collision, surface, and mass property.
   // armID = 0 (left arm), 1 (middle arm), 2 (right arm)
-  void CreateArm(int armID);
+  void CreateArm(
+		  int armID, 			// 0: left arm, 1: middle arm, 2: right arm
+		  double len, 			// arm length
+		  ChVector<> posRel, 	// relative initPosition of the arm wrt the smarticle initPos, which is the center of the center arm
+								// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
+		  ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
+		  );
   void CreateJoints();
   void CreateActuators();
 
- private:
-  int smarticleID;
-
+protected:
   // location and orientation (location of the center of the middle arm)
-  ChVector<> position;
+  ChVector<> initPos;
   ChQuaternion<> rotation;
 
   // length
   double l;  // arm length including the thickness
   double w;  // mid-segment length including thickness
-  double r;  // radius of the cross-section, if ArmType is S_CYLINDER or S_CAPSULE
-          // in-plane thickness if ArmType is S_BOX
-  double r2;  // off-plane  thickness, i.e. prependicular to the object, if
-              // ArmType is S_BOX
+  double r;  // in-plane half-thickness of arm
+  double r2;  // off-plane  half-thickness of arm, i.e. prependicular to the object
+
+  double volume;
+  double mass;
 
   // material property
   double density;
   ChSharedPtr<ChMaterialSurface> mat_g;
 
-  // geometry
-  ArmType armType;
+
+  ///< pointer to the Chrono system
+  ChSystem* m_system;  // Arman : take care of this later
+
+ private:
+  // ID
+  int smarticleID;			// smarticleID is not bodyID. smarticle is composed of 3 bodies.
+  double jointClearance; // space at joint
+
 
   // bodies
  ChSharedBodyPtr arm0;	// left arm
@@ -98,9 +118,6 @@ private:
   ChSharedPtr<ChFunction> function01;
   ChSharedPtr<ChFunction> function12;
 
-  ///< pointer to the Chrono system
-//  ChSystem* m_system;  // Arman : take care of this later
-  ChSystemParallelDVI*  m_system;  // Arman : use shared ptr. also go through chrono and modify
 };
 }
 

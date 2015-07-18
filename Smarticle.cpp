@@ -9,15 +9,34 @@
 #include "chrono_utils/ChUtilsGeometry.h"
 #include "chrono_utils/ChUtilsCreators.h"
 
+
+//#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
+//#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 
 using namespace chrono;
 
 Smarticle::Smarticle(
-//		ChSystem* otherSystem,
-		ChSystemParallelDVI* otherSystem,
+		  ChSystem* otherSystem
+		  ) : m_system(otherSystem) {
+	smarticleID = -1;
+	density = 7800;
+	l = 1;
+	w = 1;
+	r = .05;
+	r2 = .01;
+	initPos = ChVector<>(0);
+	rotation = QUNIT;
+
+	jointClearance = .05 * r2;
+	volume = GetVolume();
+}
+
+Smarticle::~Smarticle() {}
+
+
+void Smarticle::Properties(
 		int sID,
 		double other_density,
 		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
@@ -25,85 +44,41 @@ Smarticle::Smarticle(
 		double other_w,
 		double other_r,
 		double other_r2,
-		ArmType aType,
 		ChVector<> pos,
-		ChQuaternion<> rot) :
-				m_system(otherSystem),
-				smarticleID(sID),
-				density(other_density),
-				mat_g(surfaceMaterial),
-				l(other_l),
-				w(other_w),
-				r(other_r),
-				r2(other_r2),
-				armType(aType),
-				position(pos),
-				rotation(rot) {
+		ChQuaternion<> rot) {
 
+	smarticleID = sID;
+	density = other_density;
+	mat_g = surfaceMaterial;
+	l = other_l;
+	w = other_w;
+	r = other_r;
+	r2 = other_r2;
+	initPos = pos;
+	rotation = rot;
 
-	// create 3 bodies to be connected
-
-
-
-	// add joints
+	jointClearance = .05 * r2;
+	volume = GetVolume();
 
 }
-
-void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right arm
-	ChVector<> posRel; 	// 	relative postion of the arm wrt the smarticle position.
-						//	Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
+void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
-	double jClearance = 1.3 * r;
-	if (armType == S_BOX) {
-		jClearance = 1.3 * r2;
-	}
+	double jointClearance = 1.3 * r2;
 
-	ChQuaternion<> armRelativeRot = QUNIT;
-
-	double len;
 	ChSharedBodyPtr arm;
-	switch (armID) {
-	case 0: {
-		posRel = ChVector<>(-w/2 - l/2 - jClearance, 0, 0); // Arman!! : the arms overlap with this measure. But right now we are considering ideal case
-		len = l;
-	} break;
-	case 1: {
-		posRel = ChVector<>(0, 0, 0); // Arman!! : the arms overlap with this measure. But right now we are considering ideal case
-		len = w;
-	} break;
-	case 2: {
-		posRel = ChVector<>(w/2 + l/2 + jClearance, 0, 0); // Arman!! : the arms overlap with this measure. But right now we are considering ideal case
-		len = l;
-	} break;
-	default:
-		std::cout << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
-		break;
-	}
 
-	// NOTE: you can not combine this switch case with the next one. For some reason, it seams mass property need to be added before clearing the collision model
-	switch (armType) {
-	case S_CYLINDER: {
-		vol = utils::CalcCylinderVolume(r, len/2.0);
-		gyr = utils::CalcCylinderGyration(r, len/2.0).Get_Diag();
-	} break;
-	case S_CAPSULE: {
-		vol = utils::CalcCapsuleVolume(r, len/2.0);
-		gyr = utils::CalcCapsuleGyration(r, len/2.0).Get_Diag();
-	} break;
-	case S_BOX: {
-		vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
-		gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
-	} break;
-	default:
-		std::cout << "Error! smarticle shape not supported. Please choose from {cylinder, capsule, box}" << std::endl;
-		break;
-	}
-
+	vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
+	gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
-	arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
-	ChVector<> posArm = rotation.Rotate(posRel) + position;
+	if (USE_PARALLEL) {
+		arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
+	} else {
+		arm = ChSharedBodyPtr(new ChBody);
+	}
+	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
 
+	arm->SetName("smarticle_arm");
 	arm->SetPos(posArm);
 	arm->SetRot(rotation*armRelativeRot);
     arm->SetCollide(true);
@@ -117,36 +92,17 @@ void Smarticle::CreateArm(int armID) { // 0: left arm, 1: middle arm, 2: right a
 
 	double mass = density * vol;
 
-	// create body
+	arm->GetCollisionModel()->ClearModel();
+	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
+	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+    arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
+
+    // change mass and inertia property
     arm->SetMass(mass);
     arm->SetInertiaXX(mass * gyr);
+    arm->SetDensity(density);
 
-	arm->GetCollisionModel()->ClearModel();
-
-	// calc mass properties
-	switch (armType) {
-	case S_CYLINDER: {
-		utils::AddCylinderGeometry(arm.get_ptr(), r, len/2.0, ChVector<>(0, 0, 0));
-	} break;
-	case S_CAPSULE: {
-		utils::AddCapsuleGeometry(arm.get_ptr(), r, len/2.0, ChVector<>(0, 0, 0));
-	} break;
-	case S_BOX: {
-		utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
-	} break;
-	default:
-		std::cout << "Error! smarticle shape not supported. Please choose from {cylinder, capsule, box}" << std::endl;
-		break;
-	}
-
-    // finalize collision
-//    arm->GetCollisionModel()->SetFamily(smarticleID);
-//    arm->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(smarticleID);
-    arm->GetCollisionModel()->BuildModel();
     m_system->AddBody(arm);
-
-
-
 
 	switch (armID) {
 	case 0: {
@@ -206,7 +162,7 @@ void Smarticle::CreateJoints() {
 	link_revolute01 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
 	ChVector<> pR01(-w/2, 0, 0);
 	link_revolute01->Initialize(arm0, arm1,
-        ChCoordsys<>(rotation.Rotate(pR01) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+        ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
 	m_system->AddLink(link_revolute01);
 
 
@@ -214,7 +170,7 @@ void Smarticle::CreateJoints() {
 	link_revolute12 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
 	ChVector<> pR12(w/2, 0, 0);
 	link_revolute12->Initialize(arm1, arm2,
-        ChCoordsys<>(rotation.Rotate(pR12) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+        ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
 	m_system->AddLink(link_revolute12);
 }
 
@@ -226,30 +182,41 @@ void Smarticle::CreateActuators() {
 	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
 	ChVector<> pR01(-w/2, 0, 0);
 	link_actuator01->Initialize(arm0, arm1,
-	        ChCoordsys<>(rotation.Rotate(pR01) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
-	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-	SetActuatorFunction(0, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
+	        ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+//	SetActuatorFunction(0, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
 	m_system->AddLink(link_actuator01);
 
 	// link 2
 	link_actuator12 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
 	ChVector<> pR12(w/2, 0, 0);
 	link_actuator12->Initialize(arm1, arm2,
-	        ChCoordsys<>(rotation.Rotate(pR12) + position, Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
-	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-	SetActuatorFunction(1, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
+	        ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+//	SetActuatorFunction(1, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
 	m_system->AddLink(link_actuator12);
 }
 
 
 void Smarticle::Create() {
 	// Create Arms
-	CreateArm(0);
-	CreateArm(1);
-	CreateArm(2);
+//	// straight smarticle
+//	double jointClearance = 1.3 * r2; // space betwen to connected arms at joint, when they are straight
+//	CreateArm(0, l, ChVector<>(-w/2 - l/2 - jointClearance, 0, 0));
+//	CreateArm(1, w, ChVector<>(0, 0, 0));
+//	CreateArm(2, l, ChVector<>(w/2 + l/2 + jointClearance, 0, 0));
+
+	// U smarticle
+	double l_mod = l - jointClearance;
+	CreateArm(0, l_mod, ChVector<>(-w/2 + r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+	CreateArm(1, w, ChVector<>(0, 0, 0));
+	CreateArm(2, l_mod, ChVector<>(w/2 - r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
 
 	CreateJoints();
 	CreateActuators();
+
+	// mass property
+	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
 }
 
 ChSharedPtr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
@@ -275,8 +242,35 @@ void Smarticle::SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actu
 	}
 }
 
+void Smarticle::SetActuatorFunction(int actuatorID, double omega, double dT) {
+	double diffTheta = dT * omega;
+	ChSharedPtr<ChLinkEngine> mlink_actuator;
+	if (actuatorID == 0) {
+		mlink_actuator = link_actuator01;
+	} else {
+		mlink_actuator = link_actuator12;
+	}
+//	ChSharedPtr<ChFunction_Const> mfun1 = mlink_actuator->Get_rot_funct().DynamicCastTo<ChFunction_Const>();
+//	mfun1->Set_yconst(diffTheta + mfun1->Get_yconst());
+	ChSharedPtr<ChFunction_Const> mfun2 = mlink_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
+	mfun2->Set_yconst(omega);
+}
+
+double Smarticle::GetVolume() {
+//	return r * r2 * (w + 2 * (l + jointClearance));
+	return (2 * r) * (2 * r2 )* (w + 2 * l);
+}
+
+ChVector<> Smarticle::Get_cm() {
+	return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos()) / mass;
+
+}
+
+ChVector<> Smarticle::Get_InitPos() {
+	return initPos;
+}
+
+
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
-
-Smarticle::~Smarticle() {}
 
