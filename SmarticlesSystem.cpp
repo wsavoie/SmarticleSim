@@ -108,7 +108,7 @@ ChSharedPtr<ChBody> bucket;
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	double bucket_rad = sizeScale*0.044;
+	double bucket_rad = sizeScale*0.022;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .025);
 
 	
