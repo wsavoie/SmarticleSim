@@ -81,18 +81,21 @@ ChSharedPtr<ChBody> bucket;
 	double gravity = -9.81 * sizeScale;
 	
 	double vibration_freq = 30;
+	
 	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 	//double vibration_amp = sizeScale * 0.00055;
 	double mGamma = 2.0 * gravity;
 	double vibration_amp = mGamma / (omega_bucket*omega_bucket);
-
+	
 
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double contact_recovery_speed = 0.1 * sizeScale;
+	double contact_recovery_speed = 0.2 * sizeScale;
 	double tFinal = 12;
-	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
+	double vibrateStart= tFinal-5.0;
+
+	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 250;
 
@@ -105,8 +108,9 @@ ChSharedPtr<ChBody> bucket;
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	double bucket_rad = sizeScale*0.044;
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .025);
+
 	
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 	double bucket_half_thick = sizeScale * .005;
@@ -218,15 +222,17 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // ---------------------
   // Print the rest of parameters
   // ---------------------
-  simParams << std::endl <<
-		  " number of threads: " << threads << std::endl <<
-		  " max_iteration_normal: " << max_iteration_normal << std::endl <<
-		  " max_iteration_sliding: " << max_iteration_sliding << std::endl <<
-		  " max_iteration_spinning: " << max_iteration_spinning << std::endl <<
-		  " max_iteration_bilateral: " << max_iteration_bilateral << std::endl <<
-		  " l_smarticle: " << l_smarticle << std::endl <<
-		  " l_smarticle mult for w (w = mult x l): " << l_smarticle /  w_smarticle << std::endl <<
-		  " dT: " << dT << std::endl << std::endl;
+	simParams << std::endl <<
+		" number of threads: " << threads << std::endl <<
+		" max_iteration_normal: " << max_iteration_normal << std::endl <<
+		" max_iteration_sliding: " << max_iteration_sliding << std::endl <<
+		" max_iteration_spinning: " << max_iteration_spinning << std::endl <<
+		" max_iteration_bilateral: " << max_iteration_bilateral << std::endl <<
+		" l_smarticle: " << l_smarticle << std::endl <<
+		" l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
+		" dT: " << dT << std::endl <<
+		" tFinal: " << tFinal << std::endl <<
+		" vibrate start: " << vibrateStart << std::endl << std::endl;
 
   // ---------------------
   // Edit mphysicalSystem settings.
@@ -357,16 +363,45 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, double ma
 		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
 
 		//this is here to make half the cylinder invisible.
-		bool m_visualizatoin = false;
+		bool m_visualization = false;
 		if (ang*i < CH_C_PI  || ang*i > 3.0 * CH_C_PI / 2.0) 
 		{
-			m_visualizatoin = true;
+			m_visualization = true;
 		}
-		utils::AddBoxGeometry(cyl_container.get_ptr(), box_size, pPos, quat, m_visualizatoin);
+		utils::AddBoxGeometry(cyl_container.get_ptr(), box_size, pPos, quat, m_visualization);
 
 	}
 	//Add ground piece
+	//
 	utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, 0, ChVector<>(bucket_rad, 0, -t), QUNIT);
+	//utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
+
+	//checks top,bottom, and middle location
+	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos() + Vector(0,0,2 * bucket_interior_halfDim.z + 2 * bucket_half_thick), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos(), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos() + Vector(0, 0, bucket_interior_halfDim.z), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	
+	//ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
+	
+	
+	
+	/*bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
+	{
+		bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_half_thick))
+			ChVector<> dist = pt - centralPt;
+		double xydist = (std::sqrt(dist.x * dist.x + dist.y + dist.y));
+
+		if ((xydist < rad.x) && ((pt.z > rad.y) && (pt.z < rad.z))) {
+			return true;
+		}*/
+	
+	
+	
+	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos(), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+		
+		//, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_half_thick
+		//z, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_half_thick
 
 	cyl_container->GetCollisionModel()->BuildModel();
 
@@ -415,7 +450,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
 	}
 	if (bucketType == CYLINDER){
-		bucket = create_cylinder_from_blocks(15, 1, 1,true, &mphysicalSystem, mat_g);
+		bucket = create_cylinder_from_blocks(25, 1, 1,true, &mphysicalSystem, mat_g);
 	}
 
 	bucket->SetBodyFixed(false);
@@ -544,11 +579,10 @@ bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 {
 	ChVector<> dist = pt - centralPt;
 	double xydist = (std::sqrt(dist.x * dist.x + dist.y + dist.y));
-	
-	if ( (xydist < rad.x) && ((pt.z > rad.y) && (pt.z < rad.z))  ) {
-		return true;
-	}
-	return false;
+	xydist = (std::sqrt((pt.x - centralPt.x)*(pt.x - centralPt.x) + (pt.y - centralPt.y)*(pt.y - centralPt.y)));
+	if (xydist >= rad.x) { return false; } // if outside radius
+	if (pt.z < rad.y || pt.z >rad.z){ return false; }
+	return true;
 }
 // =============================================================================
 void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
@@ -802,7 +836,7 @@ int main(int argc, char* argv[]) {
 
 	   printf("\n");
 
-		 if (t > 8.0){
+		 if (t > vibrateStart){
 			 bucket->SetBodyFixed(false);
 			 vibrate_bucket(t);
 		 }
