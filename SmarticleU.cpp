@@ -16,9 +16,9 @@ using namespace chrono;
 
 
 void SmarticleU::Create() {
-	ChVector<> box1_dim = ChVector<>(w / 2.0, r, r2);
-	ChVector<> box2_dim = ChVector<>(r2, r, l / 2.0);
-	ChVector<> box3_dim = ChVector<>(r2, r, l / 2.0);
+	ChVector<> box1_dim = ChVector<>(w / 2.0, r/2, r2/2.0);
+	ChVector<> box2_dim = ChVector<>(r2/2.0, r/2.0, l / 2.0);
+	ChVector<> box3_dim = ChVector<>(r2/2.0, r/2.0, l / 2.0);
 
 	// relative location of the boxes wrt smarticle initPos,
 	ChVector<> gyr1 = utils::CalcBoxGyration(box1_dim).Get_Diag();
@@ -33,8 +33,8 @@ void SmarticleU::Create() {
 
 	// smarticle initPos is the location of the center of the center segment
 	ChVector<> box1_loc = ChVector<>(0, 0, 0);
-	ChVector<> box2_loc = ChVector<>(-w / 2.0 + r2, 0, l / 2.0 + r2);
-	ChVector<> box3_loc = ChVector<>(w / 2.0 - r2, 0, l / 2.0 + r2) ;
+	ChVector<> box2_loc = ChVector<>(-w / 2.0 + r2/2.0, 0, l / 2.0 + r2/2.0);
+	ChVector<> box3_loc = ChVector<>(w / 2.0 - r2/2.0, 0, l / 2.0 + r2/2.0) ;
 
 	ChVector<> cmRel;						// cm in reletive reference frame at smarticle initPos
 	cmRel = (m1 * box1_loc + m2 * box2_loc + m3 * box3_loc) / mass;
