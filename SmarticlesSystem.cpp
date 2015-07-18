@@ -83,7 +83,7 @@ ChSharedPtr<ChBody> bucket;
 	double vibration_freq = 30;
 	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 	//double vibration_amp = sizeScale * 0.00055;
-	double gamma = 3.0 * gravity;
+	double gamma = 2.0 * gravity;
 	double vibration_amp = gamma / (omega_bucket*omega_bucket);
 
 
@@ -91,7 +91,7 @@ ChSharedPtr<ChBody> bucket;
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.1 * sizeScale;
-	double tFinal = 15;
+	double tFinal = 12;
 	double rho_smarticle = 7850 / (sizeScale * sizeScale * sizeScale);
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 250;
@@ -273,8 +273,8 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 			myRot.Normalize();
 		
 				
-			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + MyRand()*w_smarticle - w_smarticle / 2.0
-					, j * maxDim + bucket_ctr.y + MyRand()*w_smarticle - w_smarticle/2.0
+			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + 2 * MyRand()*w_smarticle - w_smarticle
+					, j * maxDim + bucket_ctr.y + 2 * MyRand()*w_smarticle - w_smarticle
 					, z + w_smarticle/2.0);
 			
 			//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
@@ -294,7 +294,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 			} else if (smarticleType == SMART_U) {
 				SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
 				smarticle0->Properties(smarticleCount,
-								  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle/2, t2_smarticle/2,
+								  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
 								  myPos,
 								  myRot);
 				smarticle0->Create();
@@ -348,8 +348,8 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int n, int id, double mass, bool
 	{
 
 		pSize= Vector((s + t) / 2.0,
-			t/2,
-			height*2+o_lap);
+			t,
+			height+o_lap);
 
 		pPos=bucket_ctr+ Vector(sin(ang*i)*(t / 2.0 + apo),
 			cos(ang*i)*(t / 2.0 + apo),
@@ -420,7 +420,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
 	}
 	if (bucketType == CYLINDER){
-		bucket = create_cylinder_from_blocks(30, 1, 1,true, &mphysicalSystem, mat_g);
+		bucket = create_cylinder_from_blocks(15, 1, 1,true, &mphysicalSystem, mat_g);
 	}
 
 	bucket->SetBodyFixed(false);
@@ -619,7 +619,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 			}
 		}
 
-		volumeFraction = totalVolume2 / (bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - bucketMin.z));
+		volumeFraction = totalVolume2 / (4 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - bucketMin.z));
 	}
 	if (bucketType == CYLINDER)
 	{
@@ -632,7 +632,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 			}
 		}
 
-		volumeFraction = totalVolume2 / (CH_C_PI*bucket_rad*bucket_rad* 2* bucket_interior_halfDim.z);
+		volumeFraction = totalVolume2 / (4 * CH_C_PI*bucket_rad*bucket_rad* 2* bucket_interior_halfDim.z);
 	}
 
 	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2  << ", " << volumeFraction << ", " << zMax << std::endl;
@@ -807,9 +807,7 @@ int main(int argc, char* argv[]) {
 
 	   printf("\n");
 
-		 //if (Find_Max_Z(mphysicalSystem)>= bucket->GetPos().z+2*bucket_half_thick+2*bucket_interior_halfDim.z)
-		 if (t>tFinal-5)
-		 {
+		 if (t > 8.0){
 			 bucket->SetBodyFixed(false);
 			 vibrate_bucket(t);
 		 }
