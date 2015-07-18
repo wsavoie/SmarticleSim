@@ -292,7 +292,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
 				smarticle0->Properties(smarticleCount ,
-								  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+								  rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 								  myPos,
 								  myRot);
 				smarticle0->Create();
@@ -300,7 +300,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 			} else if (smarticleType == SMART_U) {
 				SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
 				smarticle0->Properties(smarticleCount,
-								  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+								  rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 								  myPos,
 								  myRot);
 				smarticle0->Create();
@@ -374,7 +374,6 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, double ma
 	//Add ground piece
 	//
 	utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
-	utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, 0, ChVector<>(bucket_rad, 0, -t), QUNIT);
 	//utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
 
 	//checks top,bottom, and middle location
