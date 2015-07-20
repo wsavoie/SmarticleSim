@@ -92,12 +92,12 @@ ChSharedPtr<ChBody> bucket;
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.2 * sizeScale;
-	double tFinal = 8;
+	double tFinal = 10;
 	double vibrateStart= tFinal-5.0;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	ChSharedPtr<ChMaterialSurface> mat_g;
-	int numLayers = 65;
+	int numLayers = 100;
 
 	
 
@@ -109,7 +109,7 @@ ChSharedPtr<ChBody> bucket;
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	double bucket_rad = sizeScale*0.022;
-	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .015);
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .010);
 
 	
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
@@ -132,7 +132,7 @@ ChSharedPtr<ChBody> bucket;
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
-void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt) {
+void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers) {
   if (argc > 1) {
 	const char* text = argv[1];
 	double mult_l = atof(text);
@@ -153,6 +153,10 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 	if (argc > 5){
 		const char* text = argv[5];
 		dt = atof(text);
+	}
+	if (argc > 6){
+		const char* text = argv[6];
+		num_layers = atoi(text);
 	}
 }
 // =============================================================================
@@ -186,8 +190,8 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 // =============================================================================
 void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, int argc, char* argv[]) {
 	// initializd random seeder
-	MySeed(964);
-
+	//MySeed(964);
+	srand(time(NULL));
   // Desired number of OpenMP threads (will be clamped to maximum available)
   int threads = 1;
   // Perform dynamic tuning of number of threads?
@@ -203,7 +207,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set params from input
   // ----------------------
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT);
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers);
 
   // ----------------------
   // Set number of threads.
@@ -283,7 +287,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 
 			ChVector<> myPos = ChVector<>(bucket_ctr.x + MyRand()*bucket_interior_halfDim.x - MyRand()*bucket_interior_halfDim.x / 2.0,
 				bucket_ctr.y + MyRand()*bucket_interior_halfDim.y - MyRand()*bucket_interior_halfDim.y / 2.0,
-				std::min(2.6*bucket_interior_halfDim.z ,z)+i*w_smarticle/4);
+				std::min(3.5*bucket_interior_halfDim.z ,z)+i*w_smarticle/4);
 
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
