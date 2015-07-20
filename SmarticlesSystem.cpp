@@ -92,12 +92,12 @@ ChSharedPtr<ChBody> bucket;
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.2 * sizeScale;
-	double tFinal = 12;
+	double tFinal = 8;
 	double vibrateStart= tFinal-5.0;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	ChSharedPtr<ChMaterialSurface> mat_g;
-	int numLayers = 250;
+	int numLayers = 65;
 
 	
 
@@ -109,7 +109,7 @@ ChSharedPtr<ChBody> bucket;
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	double bucket_rad = sizeScale*0.022;
-	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .025);
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .015);
 
 	
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
@@ -123,7 +123,7 @@ ChSharedPtr<ChBody> bucket;
 	double t_smarticle 	= sizeScale * .00127;
 	double t2_smarticle	= sizeScale * .0005;
 
-	double collisionEnvelop = .4 * t2_smarticle;
+	double collisionEnvelope = .4 * t2_smarticle;
 
 
 
@@ -252,7 +252,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   mphysicalSystem.ChangeSolverType(APGD);  // Arman check this APGD APGDBLAZE
   //  mphysicalSystem.GetSettings()->collision.narrowphase_algorithm = NARROWPHASE_HYBRID_MPR;
 
-  mphysicalSystem.GetSettings()->collision.collision_envelope = collisionEnvelop;
+  mphysicalSystem.GetSettings()->collision.collision_envelope = collisionEnvelope;
   mphysicalSystem.GetSettings()->collision.bins_per_axis = _make_int3(40, 40, 40);  // Arman check
 }
 
@@ -262,7 +262,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 	// Smarticle body
 	/////////////////
 	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
-	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
+	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, smarticleLengths.z);
 	ChVector<> myPos;
 	double z;
 	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
@@ -270,48 +270,92 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 	int nY = bucket_interior_halfDim.y / maxDim;
 
 	int smarticleCount = mySmarticlesVec.size();
-	if (smarticleCount < 9){z = 0;}
+	if (smarticleCount < 9){ z = 0; }
 	else{ z = Find_Max_Z(mphysicalSystem); }
-	 
-	for (int i= -nX + 1; i < nX; i++) {
-		for (int j = -nY+1; j < nY; j ++) {
+	int numPerLayer = 9;
+	//this filling method works better for smaller diameter where diameter < 3*width of staple	
+	if (w_smarticle * 6 > bucket_interior_halfDim.x * 2)
+	{
+		for (int i = 0; i < numPerLayer; i++)
+		{
 			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
-		
-				
-			ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + 2 * MyRand()*w_smarticle - w_smarticle
-					, j * maxDim + bucket_ctr.y + 2 * MyRand()*w_smarticle - w_smarticle
-					, z + 0.5 * maxDim);
-			
-			//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
-			
-			
-			//ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
-			// ***  added 2*bucket_half_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
+
+			ChVector<> myPos = ChVector<>(bucket_ctr.x + MyRand()*bucket_interior_halfDim.x - MyRand()*bucket_interior_halfDim.x / 2.0,
+				bucket_ctr.y + MyRand()*bucket_interior_halfDim.y - MyRand()*bucket_interior_halfDim.y / 2.0,
+				std::min(2.6*bucket_interior_halfDim.z ,z)+i*w_smarticle/4);
 
 			if (smarticleType == SMART_ARMS) {
-				Smarticle * smarticle0  = new Smarticle(&mphysicalSystem);
-				smarticle0->Properties(smarticleCount ,
-								  rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
-								  myPos,
-								  myRot);
+				Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
+				smarticle0->Properties(smarticleCount,
+					rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+					myPos,
+					myRot);
 				smarticle0->Create();
 				mySmarticlesVec.push_back((Smarticle*)smarticle0);
-			} else if (smarticleType == SMART_U) {
-				SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
+			}
+			else if (smarticleType == SMART_U) {
+				SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
 				smarticle0->Properties(smarticleCount,
-								  rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
-								  myPos,
-								  myRot);
+					rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+					myPos,
+					myRot);
 				smarticle0->Create();
 				mySmarticlesVec.push_back(smarticle0);
 				if (!USE_PARALLEL) {
-					smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
+					smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 				}
-			} else {
+			}
+			else {
 				std::cout << "Error! Smarticle type is not set correctly" << std::endl;
 			}
 			smarticleCount++;
+		}
+	}
+	else
+	{
+		for (int i = -nX + 1; i < nX; i++) {
+			for (int j = -nY + 1; j < nY; j++) {
+				ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+				myRot.Normalize();
+
+
+				ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + 2 * MyRand()*w_smarticle - w_smarticle
+					, j * maxDim + bucket_ctr.y + 2 * MyRand()*w_smarticle - w_smarticle
+					, z + 0.5 * maxDim);
+
+				//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
+
+
+				//ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
+				// ***  added 2*bucket_half_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
+
+				if (smarticleType == SMART_ARMS) {
+					Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
+					smarticle0->Properties(smarticleCount,
+						rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+						myPos,
+						myRot);
+					smarticle0->Create();
+					mySmarticlesVec.push_back((Smarticle*)smarticle0);
+				}
+				else if (smarticleType == SMART_U) {
+					SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
+					smarticle0->Properties(smarticleCount,
+						rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+						myPos,
+						myRot);
+					smarticle0->Create();
+					mySmarticlesVec.push_back(smarticle0);
+					if (!USE_PARALLEL) {
+						smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+					}
+				}
+				else {
+					std::cout << "Error! Smarticle type is not set correctly" << std::endl;
+				}
+				smarticleCount++;
+			}
 		}
 	}
 }
@@ -449,7 +493,9 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
 	}
 	if (bucketType == CYLINDER){
+		mat_g->SetFriction(0.6); //found doing tan(theta) of staple on plexi material on 7/20
 		bucket = create_cylinder_from_blocks(25, 1, 1,true, &mphysicalSystem, mat_g);
+		mat_g->SetFriction(0.5); //setting back need to test on monolayer of staples
 	}
 
 	bucket->SetBodyFixed(false);
@@ -613,7 +659,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	double zMax = Find_Max_Z(mphysicalSystem);
 	ChVector<> bucketMin = bucket->GetPos();
 
-	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
+	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
 	// *** remember, 2 * bucket_half_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_half_thick from each side
 
 	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
@@ -658,7 +704,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 		for (int i = 0; i < mySmarticlesVec.size(); i++) {
 			Smarticle* sPtr = mySmarticlesVec[i];
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
-			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2*bucket_interior_halfDim.z+2*bucket_half_thick))) {
+			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2*bucket_interior_halfDim.z))) {
 				countInside2++;
 				totalVolume2 += sPtr->GetVolume();
 			}
@@ -675,7 +721,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
 	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
 	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
-		(*myIter)->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
+		(*myIter)->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 		myIter++;
 	}
 
@@ -735,7 +781,7 @@ int main(int argc, char* argv[]) {
 
 	  // define material property for everything
 		mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
-		mat_g->SetFriction(0.5);
+		mat_g->SetFriction(0.5); // .6 for wall to staple using tan (theta) tested on 7/20
 
 
   // Create a ChronoENGINE physical system
@@ -797,7 +843,7 @@ int main(int argc, char* argv[]) {
   //double timeForVerticalDisplcement = 1.0 * sqrt(2 * w_smarticle / mphysicalSystem.Get_G_acc().Length()); // 1.5 for safety proximity
 	//removed length since unnecessary sqrt in that calc
 
-	double timeForVerticalDisplcement = .045; // 1.5 for safety proximity
+	double timeForVerticalDisplcement = 0.05; // 1.5 for safety proximity
  
 	int numGeneratedLayers = 0;
 
@@ -898,7 +944,7 @@ int main(int argc, char* argv[]) {
 //	  		w_smarticle,
 //	  		t_smarticle,
 //	  		t2_smarticle,
-//	  		collisionEnvelop,
+//	  		collisionEnvelope,
 //	  		rho_smarticle);
 
   }
