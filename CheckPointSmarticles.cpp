@@ -89,7 +89,7 @@ void CheckPointSmarticles_Read(
 	inSmarticles.open("smarticles.csv");
 	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction;
 	double rho_smarticle;
-	ChSharedPtr<ChMaterialSurface> mat_g;
+	ChSharedPtr<ChMaterialSurface> mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
 	char ddCh;
 	inSmarticles >>
 	l_smarticle >>
@@ -128,6 +128,8 @@ void CheckPointSmarticles_Read(
 		inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
 		q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >>  q4.e3 >> ddCh;
 	}
+
+	printf("num smarticles: %d\n", mySmarticlesVec.size());
 
 }
 
