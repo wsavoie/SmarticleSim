@@ -98,6 +98,7 @@ ChSharedPtr<ChBody> bucket;
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 100;
+	double armAngle = 90;
 
 	
 
@@ -132,7 +133,7 @@ ChSharedPtr<ChBody> bucket;
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
-void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers) {
+void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle) {
   if (argc > 1) {
 	const char* text = argv[1];
 	double mult_l = atof(text);
@@ -157,6 +158,10 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 	if (argc > 6){
 		const char* text = argv[6];
 		num_layers = atoi(text);
+	}
+	if (argc > 7){
+		const char* text = argv[7];
+		mangle = atof(text);
 	}
 }
 // =============================================================================
@@ -207,7 +212,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set params from input
   // ----------------------
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers);
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle);
 
   // ----------------------
   // Set number of threads.
@@ -304,8 +309,10 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 					rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 					myPos,
 					myRot);
+					smarticle0->SetAngle(armAngle, true);
 				smarticle0->Create();
 				mySmarticlesVec.push_back(smarticle0);
+				
 				if (!USE_PARALLEL) {
 					smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 				}
