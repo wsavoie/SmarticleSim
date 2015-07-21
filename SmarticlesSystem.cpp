@@ -138,22 +138,29 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 	double mult_l = atof(text);
 	l_smarticle = mult_l * w_smarticle;
   }
-  if (argc > 2) {
-    const char* text = argv[2];
-    threads = atoi(text);
+
+  if (USE_PARALLEL) {
+	  if (argc > 2) {
+		const char* text = argv[2];
+		threads = atoi(text);
+	  }
+	  if (argc > 3) {
+		const char* text = argv[3];
+		max_iteration_sliding = atoi(text);
+	  }
+	  if (argc > 4) {
+		const char* text = argv[4];
+		max_iteration_bilateral = atoi(text);
+	  }
+		if (argc > 5){
+			const char* text = argv[5];
+			dt = atof(text);
+		}
+		if (argc > 6){
+			const char* text = argv[6];
+			numLayers = atoi(text);
+		}
   }
-  if (argc > 3) {
-    const char* text = argv[3];
-    max_iteration_sliding = atoi(text);
-  }
-  if (argc > 4) {
-    const char* text = argv[4];
-    max_iteration_bilateral = atoi(text);
-  }
-	if (argc > 5){
-		const char* text = argv[5];
-		dt = atof(text);
-	}
 }
 // =============================================================================
 void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc, char* argv[]) {
@@ -164,6 +171,12 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   // ---------------------
   // Print the rest of parameters
   // ---------------------
+
+	int dummyNumber0;
+	int dummyNumber1;
+	int dummyNumber2;
+  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT);
+
   simParams << std::endl <<
 		  " l_smarticle: " << l_smarticle << std::endl <<
 		  " l_smarticle mult for w (w = mult x l): " << l_smarticle /  w_smarticle << std::endl <<
@@ -187,15 +200,14 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, int argc, char* argv[]) {
 	// initializd random seeder
 	MySeed(964);
-
   // Desired number of OpenMP threads (will be clamped to maximum available)
   int threads = 1;
   // Perform dynamic tuning of number of threads?
   bool thread_tuning = true;
 
   //	uint max_iteration = 20;//10000;
-  int max_iteration_normal = 50;
-  int max_iteration_sliding = 50;
+  int max_iteration_normal = 250;
+  int max_iteration_sliding = 250;
   int max_iteration_spinning = 0;
   int max_iteration_bilateral = 50;
 
@@ -320,7 +332,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 //num_boxes = number of boxes to use
 //bucket_rad = radius of cylinder, center point to midpoint of side a side
 
-ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, double mass, bool overlap, ChSystemParallelDVI* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
+ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, double mass, bool overlap, CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
 {
 	ChSharedPtr<ChBody> cyl_container;
 	if (USE_PARALLEL) {
