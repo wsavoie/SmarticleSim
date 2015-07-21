@@ -138,32 +138,33 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 	double mult_l = atof(text);
 	l_smarticle = mult_l * w_smarticle;
   }
-
-  if (USE_PARALLEL) {
-	  if (argc > 2) {
+	if (argc > 2){
 		const char* text = argv[2];
+		dt = atof(text);
+	}
+	if (argc > 3){
+		const char* text = argv[3];
+		numLayers = atoi(text);
+	}
+	if (argc > 4){
+		const char* text = argv[4];
+		mangle = atof(text);
+	}
+
+	/// if parallel, get solver setting
+  if (USE_PARALLEL) {
+	  if (argc > 5) {
+		const char* text = argv[5];
 		threads = atoi(text);
 	  }
-	  if (argc > 3) {
-		const char* text = argv[3];
+	  if (argc > 6) {
+		const char* text = argv[6];
 		max_iteration_sliding = atoi(text);
 	  }
-	  if (argc > 4) {
-		const char* text = argv[4];
+	  if (argc > 7) {
+		const char* text = argv[7];
 		max_iteration_bilateral = atoi(text);
 	  }
-		if (argc > 5){
-			const char* text = argv[5];
-			dt = atof(text);
-		}
-		if (argc > 6){
-			const char* text = argv[6];
-			numLayers = atoi(text);
-		}
-		if (argc > 7){
-			const char* text = argv[7];
-			mangle = atof(text);
-		}
   }
 }
 // =============================================================================
