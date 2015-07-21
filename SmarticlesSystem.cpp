@@ -241,7 +241,9 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 		" l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
 		" dT: " << dT << std::endl <<
 		" tFinal: " << tFinal << std::endl <<
-		" vibrate start: " << vibrateStart << std::endl << std::endl;
+		" vibrate start: " << vibrateStart << std::endl <<
+		" arm angle: " << armAngle << std::endl << std::endl;
+	
 
   // ---------------------
   // Edit mphysicalSystem settings.
