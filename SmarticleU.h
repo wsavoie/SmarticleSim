@@ -35,6 +35,8 @@ public:
 	virtual ChSharedBodyPtr GetSmarticleBodyPointer() {
 		return smarticleU;
 	}
+	virtual void SetAngle(double mangle, bool degrees);
+	virtual double GetAngle(bool degrees);
 
 	//////////////////////
 	// no support zone
@@ -61,10 +63,12 @@ public:
 	virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction) {
 		printf("Warning!! SmarticleU does not have actuator. Actuator cannot be set.\n");
 	}
+	
+
 
 private:
 	  // bodies
-	 ChSharedBodyPtr smarticleU;	// left arm
+	ChSharedBodyPtr smarticleU;
 };
 }
 

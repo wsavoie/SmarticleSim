@@ -45,7 +45,8 @@ void Smarticle::Properties(
 		double other_r,
 		double other_r2,
 		ChVector<> pos,
-		ChQuaternion<> rot) {
+		ChQuaternion<> rot,
+		double other_angle) {
 
 	smarticleID = sID;
 	density = other_density;
@@ -56,6 +57,7 @@ void Smarticle::Properties(
 	r2 = other_r2;
 	initPos = pos;
 	rotation = rot;
+	angle = other_angle;
 
 	jointClearance = .05 * r2;
 	volume = GetVolume();
@@ -270,6 +272,18 @@ ChVector<> Smarticle::Get_InitPos() {
 	return initPos;
 }
 
+void Smarticle::SetAngle(double mangle, bool degrees = false)
+{
+	if (degrees) { angle = mangle*CH_C_PI / 180.0; }
+	else{ angle = mangle; }
+}
+double Smarticle::GetAngle(bool degrees = false)
+{
+	if (degrees)
+		return angle*180.0 / CH_C_PI;
+	else
+		return angle;
+}
 
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
