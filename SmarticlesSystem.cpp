@@ -96,6 +96,7 @@ ChSharedPtr<ChBody> bucket;
 	double vibrateStart= tFinal-5.0;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
+	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 100;
 	double armAngle = 90;
@@ -170,7 +171,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 // =============================================================================
 void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc, char* argv[]) {
 	// initializd random seeder
-	MySeed(964);
+	MySeed();
 
 
   // ---------------------
@@ -302,7 +303,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 
 			ChVector<> myPos = ChVector<>(bucket_ctr.x + MyRand()*bucket_interior_halfDim.x - MyRand()*bucket_interior_halfDim.x / 2.0,
 				bucket_ctr.y + MyRand()*bucket_interior_halfDim.y - MyRand()*bucket_interior_halfDim.y / 2.0,
-				std::min(3.5*bucket_interior_halfDim.z ,z)+i*w_smarticle/4);
+				std::min(9*bucket_interior_halfDim.z ,z)+i*w_smarticle/4);
 
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
@@ -385,7 +386,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 //num_boxes = number of boxes to use
 //bucket_rad = radius of cylinder, center point to midpoint of side a side
 
-ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, double mass, bool overlap, CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
+ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool overlap, CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
 {
 	ChSharedPtr<ChBody> cyl_container;
 	if (USE_PARALLEL) {
@@ -395,7 +396,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, double ma
 		cyl_container = ChSharedPtr<ChBody>(new ChBody);
 	}
 	cyl_container->SetIdentifier(id);
-	cyl_container->SetMass(mass);
+	//cyl_container->SetMass(mass);
 	cyl_container->SetPos(bucket_ctr);
 	cyl_container->SetRot(QUNIT);
 	cyl_container->SetBodyFixed(false);
@@ -405,8 +406,6 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, double ma
 	double box_side = bucket_rad * 2.0 * tan(CH_C_PI / num_boxes);//side length of cyl
 	double o_lap = 0;
 	if (overlap){ o_lap = t * 2; }
-
-
 	double ang = 2.0 * CH_C_PI / num_boxes;
 	ChVector<> box_size = (0,0,0); //size of plates
 	ChVector<> pPos = (0,0,0);  //position of each plate
@@ -419,7 +418,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, double ma
 
 		box_size= ChVector<>((box_side + t) / 2.0,
 			t,
-			half_height + o_lap);
+			4*half_height + o_lap);
 
 		pPos = bucket_ctr + ChVector<>(sin(ang * i) * (t + bucket_rad),
 			cos(ang*i)*(t + bucket_rad),
@@ -438,7 +437,12 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, double ma
 	}
 	//Add ground piece
 	//
+
+	
 	utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	//add up volume of bucket and multiply by rho to get mass;
+	double cyl_volume = CH_C_PI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * bucket_rad + 2 * t)*(2 * bucket_rad + 2 * t) - bucket_rad*bucket_rad) + (CH_C_PI)*(bucket_rad + 2 * t)*(bucket_rad + 2 * t) * 2 * t;
+	cyl_container->SetMass(rho_cylinder*cyl_volume);
 	//utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
 
 	//checks top,bottom, and middle location
@@ -510,17 +514,21 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	}
 
 	// 1: create bucket
+		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
 	if (bucketType == BOX){
 		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
 	}
 	if (bucketType == CYLINDER){
-		mat_g->SetFriction(0.6); //found doing tan(theta) of staple on plexi material on 7/20
-		bucket = create_cylinder_from_blocks(25, 1, 1,true, &mphysicalSystem, mat_g);
-		mat_g->SetFriction(0.5); //setting back need to test on monolayer of staples
+		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
+		
+		bucket = create_cylinder_from_blocks(25, 1, true, &mphysicalSystem, mat_g);
+		mat_g->SetFriction(0.5); //steel - steel
 	}
 
 	bucket->SetBodyFixed(false);
 	bucket->SetCollide(true);
+	bucket->GetCollisionModel()->SetFamily(1);
+	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
 	// 2: create plate
 //	bucket->SetMaterialSurface(mat_g);
@@ -974,6 +982,7 @@ int main(int argc, char* argv[]) {
 
   }
   mySmarticlesVec.clear();
+	simParams << "completed"<<std::endl;
   simParams.close();
   return 0;
 }
