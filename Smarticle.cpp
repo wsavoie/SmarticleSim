@@ -285,16 +285,17 @@ double Smarticle::GetAngle(bool degrees = false)
 		return angle;
 }
 
-void Smarticle::AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece) {
+void Smarticle::AddMotion(std::shared_ptr<SmarticleMotionPiece> s_motionPiece) {
 	motion_vector.push_back(s_motionPiece);
 }
 
-virtual void UpdateSmarticleMotion() {
+void Smarticle::UpdateSmarticleMotion() {
 	double currentTime = m_system->GetChTime();
 	int currentSegment = current_motion->motionSegment;
-	if (  (current_motion->startTime + current_motion->startTime > currentTime) &&
-			(current_motion->motionSegment < motion_vector.size() - 1)  ) {
-		current_motion = motionSegment[]
+	double t_in = current_motion->startTime - currentTime;
+	if (  (t_in >= 0 && t_in < current_motion->timeInterval) &&
+			(current_motion->motionSegment < motion_vector.size() - 1) ) {
+		current_motion = motion_vector[current_motion->motionSegment + 1];
 	}
 
 }

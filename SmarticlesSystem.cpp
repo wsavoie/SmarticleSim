@@ -43,6 +43,7 @@
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
 
+#include <memory>
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
@@ -776,7 +777,6 @@ int main(int argc, char* argv[]) {
 
 	  time_t rawtimeCurrent;
 	  struct tm* timeinfoDiff;
-
 	  // --------------------------
 	  // Create output directories.
 	  // --------------------------

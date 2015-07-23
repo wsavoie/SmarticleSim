@@ -11,6 +11,7 @@
 #include "core/ChVector.h"
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
+#include <memory>
 
 #define USE_PARALLEL true
 
@@ -77,7 +78,7 @@ public:
   virtual ChVector<> Get_cm();
   virtual ChVector<> Get_InitPos();
   virtual double GetDensity() {return density;};
-  virtual void AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece);
+  virtual void AddMotion(std::shared_ptr<SmarticleMotionPiece> s_motionPiece);
   //	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented
   //	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
 
@@ -145,8 +146,8 @@ protected:
   ChSharedPtr<ChFunction> function01;
   ChSharedPtr<ChFunction> function12;
 
-  std::vector<ChSharedPtr<SmarticleMotionPiece>> motion_vector;
-  ChSharedPtr<SmarticleMotionPiece> current_motion;
+  std::vector<std::shared_ptr<SmarticleMotionPiece>> motion_vector;
+  std::shared_ptr<SmarticleMotionPiece> current_motion;
 
 
 
