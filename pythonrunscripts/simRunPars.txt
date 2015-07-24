@@ -22,3 +22,5 @@ smart3 lw
 smart1 numlayer
 smart2 numlayer
 smart3 numlayer
+
+use tabs to separate each entry and make sure there are no tabs or spaces after last entry on each line!

@@ -8,11 +8,11 @@ import ctypes
 
 compName = platform.node(); 
 
-def chooseDir(name):
+def chooseDir(name): #add your computer name in the dictionary here and the corresponding location where the program output will be placed
      return{
      'PHYS32240':'D:\\SimResults\\Chrono\\SmarticleU\\Results\\',
-     'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"'}[name]
-def chooseRunLoc(name):
+     'WS':'C:\\SimResults\\Chrono\\SmarticleU\\Results\\'}[name]
+def chooseRunLoc(name): #add your computer name in the dictionary here and the corresponding location of the exe file
      return{
      'PHYS32240':'"D:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
      'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"'}[name]
@@ -52,16 +52,11 @@ def runSim():
     bilateral_its= 55
     time.mktime
     [dT, angle, lw, numlayers] = getPars()
-    # dT = .003
-    # angle = [80, 90, 100, 110, 120]
-    # lw = [1.0]
-    # numlayers = [1]
     
     if (len(angle)>len(lw)):
         depVar=angle
     else:
         depVar=lw
-        
         
     if (depVar==angle):
         lw = lw*len(angle)

@@ -2,7 +2,8 @@ function [date] = getFileDate(file,varargin)
 %takes in folder or filename and pulls off date from first characters
 %varargin 1=string,
 %varargin 0(or nothing)=double
-pars = {1};
+
+pars = {1}; %initialize this var
 if(isstruct(file))
     fname = file.name;
 else
