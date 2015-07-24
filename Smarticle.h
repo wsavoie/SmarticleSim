@@ -65,6 +65,8 @@ public:
 	virtual void SetAngle(double mangle, bool degrees);
 	virtual double GetAngle(bool degrees);
 
+	//body fixing
+	virtual void SetBodyFixed(bool mev);
 private:
   // create smarticle arm, set collision, surface, and mass property.
   // armID = 0 (left arm), 1 (middle arm), 2 (right arm)

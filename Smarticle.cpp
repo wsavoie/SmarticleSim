@@ -158,7 +158,6 @@ ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
 	return link;
 }
 
-
 void Smarticle::CreateJoints() {
 	// link 1
 	link_revolute01 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
@@ -284,7 +283,10 @@ double Smarticle::GetAngle(bool degrees = false)
 	else
 		return angle;
 }
-
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
-
+void Smarticle::SetBodyFixed(bool mev){
+	arm0->SetBodyFixed(mev);
+	arm1->SetBodyFixed(mev);
+	arm2->SetBodyFixed(mev);
+}
