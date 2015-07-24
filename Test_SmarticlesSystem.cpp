@@ -69,7 +69,7 @@
 using namespace chrono;
 enum SmarticleType {SMART_ARMS , SMART_U};
 enum BucketType { CYLINDER, BOX };
-SmarticleType smarticleType = SMART_U;
+SmarticleType smarticleType = SMART_ARMS;//SMART_U;
 BucketType bucketType = CYLINDER;
 // =============================================================================
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
@@ -122,8 +122,10 @@ ChSharedPtr<ChBody> bucket;
 	// smarticle geometry
 	double w_smarticle 	= sizeScale * 0.0117;
 	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	double t_smarticle 	= sizeScale * .00127;
-	double t2_smarticle	= sizeScale * .0005;
+//	double t_smarticle 	= sizeScale * .00127;
+//	double t2_smarticle	= sizeScale * .0005;
+	double t_smarticle 	= sizeScale * .00254;
+	double t2_smarticle	= sizeScale * .001;
 
 	double collisionEnvelope = .4 * t2_smarticle;
 
