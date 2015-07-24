@@ -651,7 +651,6 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 		ChBody* bodyPtr = *(myIter + i);
 		if (bodyPtr->GetPos().z < -1.5 * bucket_interior_halfDim.z) {
 			bodyPtr->SetBodyFixed(true);
-
 			continue;
 		}
 		if (bodyPtr->GetPos().x > 5 * bucket_rad || bodyPtr->GetPos().x < -5 * bucket_rad) {
@@ -662,6 +661,10 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 		if (bodyPtr->GetPos().y > 5 * bucket_rad || bodyPtr->GetPos().y < -5 * bucket_rad) {
 			bodyPtr->SetBodyFixed(true);
 			continue;
+		}
+		if (bodyPtr->GetRot_dt().GetVector().Length2() > 10000)
+		{
+			bodyPtr->SetRot_dt(QUNIT);
 		}
 	}
 }
