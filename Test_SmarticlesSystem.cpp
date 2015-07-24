@@ -91,7 +91,7 @@ ChSharedPtr<ChBody> bucket;
 
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
+	double dT = 0.0001;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.2 * sizeScale;
 	double tFinal = 10;
 	double vibrateStart= tFinal-5.0;
@@ -110,7 +110,7 @@ ChSharedPtr<ChBody> bucket;
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	double bucket_rad = sizeScale*0.022;
+	double bucket_rad = sizeScale*0.044;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .010);
 
 	
@@ -213,8 +213,8 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   bool thread_tuning = true;
 
   //	uint max_iteration = 20;//10000;
-  int max_iteration_normal = 250;
-  int max_iteration_sliding = 250;
+  int max_iteration_normal = 50;
+  int max_iteration_sliding = 50;
   int max_iteration_spinning = 0;
   int max_iteration_bilateral = 50;
 
@@ -304,7 +304,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 
 			ChVector<> myPos = ChVector<>(bucket_ctr.x + MyRand()*bucket_interior_halfDim.x - MyRand()*bucket_interior_halfDim.x / 2.0,
 				bucket_ctr.y + MyRand()*bucket_interior_halfDim.y - MyRand()*bucket_interior_halfDim.y / 2.0,
-				std::min(9*bucket_interior_halfDim.z ,z)+i*w_smarticle/4);
+				std::min(9*bucket_interior_halfDim.z, z) + i * w_smarticle);
 
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
@@ -343,9 +343,9 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				myRot.Normalize();
 
 
-				ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + 2 * MyRand()*w_smarticle - w_smarticle
-					, j * maxDim + bucket_ctr.y + 2 * MyRand()*w_smarticle - w_smarticle
-					, z + 0.5 * maxDim);
+				ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + MyRand()*w_smarticle - 0.5 * w_smarticle
+					, j * maxDim + bucket_ctr.y + MyRand() * w_smarticle - 0.5 * w_smarticle
+					, z + maxDim);
 
 				//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 
@@ -515,21 +515,21 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	}
 
 	// 1: create bucket
-		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
-	if (bucketType == BOX){
-		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
-	}
-	if (bucketType == CYLINDER){
-		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
-		
-		bucket = create_cylinder_from_blocks(25, 1, true, &mphysicalSystem, mat_g);
-		mat_g->SetFriction(0.5); //steel - steel
-	}
-
-	bucket->SetBodyFixed(false);
-	bucket->SetCollide(true);
-	bucket->GetCollisionModel()->SetFamily(1);
-	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+//		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
+//	if (bucketType == BOX){
+//		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+//	}
+//	if (bucketType == CYLINDER){
+//		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
+//
+//		bucket = create_cylinder_from_blocks(25, 1, true, &mphysicalSystem, mat_g);
+//		mat_g->SetFriction(0.5); //steel - steel
+//	}
+//
+//	bucket->SetBodyFixed(false);
+//	bucket->SetCollide(true);
+//	bucket->GetCollisionModel()->SetFamily(1);
+//	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
 	// 2: create plate
 //	bucket->SetMaterialSurface(mat_g);
@@ -872,7 +872,7 @@ int main(int argc, char* argv[]) {
   //double timeForVerticalDisplcement = 1.0 * sqrt(2 * w_smarticle / mphysicalSystem.Get_G_acc().Length()); // 1.5 for safety proximity
 	//removed length since unnecessary sqrt in that calc
 
-	double timeForVerticalDisplcement = 0.05; // 1.5 for safety proximity
+	double timeForVerticalDisplcement = 0.1; // 1.5 for safety proximity
  
 	int numGeneratedLayers = 0;
 
