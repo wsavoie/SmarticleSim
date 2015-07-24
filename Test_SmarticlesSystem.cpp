@@ -70,7 +70,7 @@ using namespace chrono;
 enum SmarticleType {SMART_ARMS , SMART_U};
 enum BucketType { CYLINDER, BOX };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = CYLINDER;
+BucketType bucketType = BOX;
 // =============================================================================
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
@@ -91,7 +91,7 @@ ChSharedPtr<ChBody> bucket;
 
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double dT = 0.0001;//std::min(0.0005, 1.0 / vibration_freq / 200);
+	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.2 * sizeScale;
 	double tFinal = 10;
 	double vibrateStart= tFinal-5.0;
@@ -517,21 +517,21 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	}
 
 	// 1: create bucket
-//		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
-//	if (bucketType == BOX){
-//		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
-//	}
-//	if (bucketType == CYLINDER){
-//		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
-//
-//		bucket = create_cylinder_from_blocks(25, 1, true, &mphysicalSystem, mat_g);
-//		mat_g->SetFriction(0.5); //steel - steel
-//	}
-//
-//	bucket->SetBodyFixed(false);
-//	bucket->SetCollide(true);
-//	bucket->GetCollisionModel()->SetFamily(1);
-//	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
+	if (bucketType == BOX){
+		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+	}
+	if (bucketType == CYLINDER){
+		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
+
+		bucket = create_cylinder_from_blocks(25, 1, true, &mphysicalSystem, mat_g);
+		mat_g->SetFriction(0.5); //steel - steel
+	}
+
+	bucket->SetBodyFixed(false);
+	bucket->SetCollide(true);
+	bucket->GetCollisionModel()->SetFamily(1);
+	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
 	// 2: create plate
 //	bucket->SetMaterialSurface(mat_g);
