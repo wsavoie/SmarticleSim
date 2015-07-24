@@ -87,17 +87,17 @@ def runSim():
         winsound.Beep(1000,300)
         tElapsed = time.time()-tBegin
         os.chdir("..")
-        
-        ofpath = fileloc
-        fpath = fileloc
-        while True:
-            try:
-                split=os.path.splitext(fpath)
-                fpath= split[0]+'b'+split[1]
-                os.rename(ofpath,fpath)
-                break
-            except (NameError,WindowsError):
-                print 'trying rename again'
+        #renaming folder upon completion doesnt work
+        # ofpath = dirpath
+        # fpath = dirpath
+        # while True:
+            # try:
+                # split=os.path.splitext(fpath)
+                # fpath= split[0]+'b'+split[1]
+                # os.rename(ofpath,fpath)
+                # break
+            # except (NameError,WindowsError):
+                # print 'trying rename again'
 fileloc=chooseRunLoc(compName)
 runSim()
 

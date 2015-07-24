@@ -1,4 +1,4 @@
-plotType=2; %1 for constant angle 2 for constant l/w
+plotType=1; %1 for constant angle 2 for constant l/w
 if plotType == 1 %l/w
     dv='lw';
     dvunits = '';
@@ -56,7 +56,6 @@ for j= 1:length(files)
     Data = textscan(FID, '%s', 'delimiter', '\n', 'whitespace', '');
     CStr = Data{1};
     fclose(FID);
-    
     if cell2mat(strfind(CStr(end),'completed'))
         complFound(j)= cell2mat(strfind(CStr(end),'completed'));
     else
@@ -67,8 +66,7 @@ end
 
 
 for i=1:length(depVar)
-    depVarLegend{i}=num2str(depVar(i));
-    depVarLegend{i}=horzcat(depVarLegend{i},dvunits);
+    depVarLegend{i}=horzcat(num2str(depVar(i)),dvunits);.
 end
 legend(depVarLegend);
 % figText(gcf,13); personal script which changes font size of all numbers
