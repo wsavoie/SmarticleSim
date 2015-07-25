@@ -297,48 +297,6 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 	else{ z = Find_Max_Z(mphysicalSystem); }
 	int numPerLayer = 9;
 	//this filling method works better for smaller diameter where diameter < 3*width of staple	
-	if (w_smarticle * 6 > bucket_interior_halfDim.x * 2)
-	{
-		for (int i = 0; i < numPerLayer; i++)
-		{
-			ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
-			myRot.Normalize();
-
-			ChVector<> myPos = ChVector<>(bucket_ctr.x + MyRand()*bucket_interior_halfDim.x - MyRand()*bucket_interior_halfDim.x / 2.0,
-				bucket_ctr.y + MyRand()*bucket_interior_halfDim.y - MyRand()*bucket_interior_halfDim.y / 2.0,
-				std::min(9*bucket_interior_halfDim.z, z) + i * w_smarticle);
-
-			if (smarticleType == SMART_ARMS) {
-				Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
-				smarticle0->Properties(smarticleCount,
-					rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
-					myPos,
-					myRot);
-				smarticle0->Create();
-				mySmarticlesVec.push_back((Smarticle*)smarticle0);
-			}
-			else if (smarticleType == SMART_U) {
-				SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
-				smarticle0->Properties(smarticleCount,
-					rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
-					myPos,
-					myRot);
-					smarticle0->SetAngle(armAngle, true);
-				smarticle0->Create();
-				mySmarticlesVec.push_back(smarticle0);
-				
-				if (!USE_PARALLEL) {
-					smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-				}
-			}
-			else {
-				std::cout << "Error! Smarticle type is not set correctly" << std::endl;
-			}
-			smarticleCount++;
-		}
-	}
-	else
-	{
 		for (int i = -nX + 1; i < nX; i++) {
 			for (int j = -nY + 1; j < nY; j++) {
 				ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
@@ -355,6 +313,25 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				//ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 				// ***  added 2*bucket_half_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
 
+
+
+//				ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+
+
+
+
+				ChSharedPtr<SmarticleMotionPiece> myMotion(new SmarticleMotionPiece);
+				myMotion->joint_01.theta1 = -0.5 * CH_C_PI;
+				myMotion->joint_01.theta2 =  0.5 * CH_C_PI;
+				myMotion->joint_01.omega = 10;
+				myMotion->joint_12.theta1 = -0.5 * CH_C_PI;
+				myMotion->joint_12.theta2 =  0.5 * CH_C_PI;
+				myMotion->joint_12.omega = 0;
+				myMotion->timeInterval = 0.5;
+				myMotion->startTime = 0;
+				myMotion->motionSegment = 0;
+
+
 				if (smarticleType == SMART_ARMS) {
 					Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 					smarticle0->Properties(smarticleCount,
@@ -362,7 +339,14 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 						myPos,
 						myRot);
 					smarticle0->Create();
+					smarticle0->AddMotion(myMotion);
 					mySmarticlesVec.push_back((Smarticle*)smarticle0);
+
+
+
+					printf("**& segment \n");
+					printf("*&& segment %f\n", smarticle0->Get_Current_Motion()->joint_01.theta1);
+
 				}
 				else if (smarticleType == SMART_U) {
 					SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
@@ -382,7 +366,6 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				smarticleCount++;
 			}
 		}
-	}
 }
 // =============================================================================
 //creates an approximate cylinder from a n-sided regular polygon
@@ -770,6 +753,13 @@ void vibrate_bucket(double t) {
 	bucket->SetRot(QUNIT);
 }
 // =============================================================================
+void UpdateSmarticles(std::vector<Smarticle*> mySmarticlesVec) {
+	for (int i = 0; i < mySmarticlesVec.size(); i++) {
+		//mySmarticlesVec[i]->UpdateSmarticleMotion();
+		printf("*** segment %f\n", mySmarticlesVec[i]->Get_Current_Motion()->joint_01.theta1);
+	}
+}
+// =============================================================================
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
 	  struct tm* timeinfo;
@@ -878,6 +868,13 @@ int main(int argc, char* argv[]) {
  
 	int numGeneratedLayers = 0;
 
+	  int sSize1 = mySmarticlesVec.size();
+	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+			  (numGeneratedLayers < numLayers) ){
+		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+		  numGeneratedLayers ++;
+	  }
+
 //  CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
 
   printf("************** size sys %d \n", mySmarticlesVec.size());
@@ -886,33 +883,33 @@ int main(int argc, char* argv[]) {
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 	  double t = mphysicalSystem.GetChTime();
 
-	  int sSize1 = mySmarticlesVec.size();
-	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-			  (numGeneratedLayers < numLayers) ){
-		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-		  numGeneratedLayers ++;
-	  }
+//	  int sSize1 = mySmarticlesVec.size();
+//	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+//			  (numGeneratedLayers < numLayers) ){
+//		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+//		  numGeneratedLayers ++;
+//	  }
 		//if (numGeneratedLayers == numLayers)
 		//{
 		//	//start shaking
 		//}
 
 
-		if (smarticleType == SMART_ARMS)
-		{
-
-			for (int i = 0; i < mySmarticlesVec.size(); i++) {
-				double omega = 10;
-				if (tStep < 500) {
-					mySmarticlesVec[i]->SetActuatorFunction(0, -omega, dT);
-				}
-				else {
-					mySmarticlesVec[i]->SetActuatorFunction(0, omega, dT);
-				}
-
-			}
-
-		}
+//		if (smarticleType == SMART_ARMS)
+//		{
+//
+//			for (int i = 0; i < mySmarticlesVec.size(); i++) {
+//				double omega = 10;
+//				if (tStep < 500) {
+//					mySmarticlesVec[i]->SetActuatorFunction(0, -omega, dT);
+//				}
+//				else {
+//					mySmarticlesVec[i]->SetActuatorFunction(0, omega, dT);
+//				}
+//
+//			}
+//
+//		}
 
 	   printf("\n");
 
@@ -956,6 +953,7 @@ int main(int argc, char* argv[]) {
     mphysicalSystem.DoStepDynamics(dT);
 #endif
 
+    UpdateSmarticles(mySmarticlesVec);
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
 

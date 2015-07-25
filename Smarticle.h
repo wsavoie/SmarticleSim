@@ -18,18 +18,25 @@
 namespace chrono {
 
 // structs to attach motion to smarticles
-struct JointMotion {
+class JointMotion : public ChShared {
+public:
 	double theta1;			// lower limit of the motion
 	double theta2;			// upper limit of the motion
 	double omega;			// joint angular velocity
+
+	JointMotion() {}
+	~JointMotion() {}
 };
 
-struct SmarticleMotionPiece {
+struct SmarticleMotionPiece : public ChShared{
 	JointMotion joint_01;	// joint 1 motion,
 	JointMotion joint_12;	// joint 1 motion
 	double timeInterval;	// time of action
 	double startTime;		// start time of the motion
 	int motionSegment;
+
+	SmarticleMotionPiece() {}
+	~SmarticleMotionPiece() {}
 };
 
 
@@ -78,7 +85,7 @@ public:
   virtual ChVector<> Get_cm();
   virtual ChVector<> Get_InitPos();
   virtual double GetDensity() {return density;};
-  virtual void AddMotion(std::shared_ptr<SmarticleMotionPiece> s_motionPiece);
+  virtual void AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece);
   //	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented
   //	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
 
@@ -87,6 +94,8 @@ public:
 	//smarticle arm angle
 	virtual void SetAngle(double mangle, bool degrees);
 	virtual double GetAngle(bool degrees);
+
+	virtual ChSharedPtr<SmarticleMotionPiece> Get_Current_Motion();
 
 private:
   // create smarticle arm, set collision, surface, and mass property.
@@ -146,8 +155,8 @@ protected:
   ChSharedPtr<ChFunction> function01;
   ChSharedPtr<ChFunction> function12;
 
-  std::vector<std::shared_ptr<SmarticleMotionPiece>> motion_vector;
-  std::shared_ptr<SmarticleMotionPiece> current_motion;
+  std::vector<ChSharedPtr<SmarticleMotionPiece>> motion_vector;
+  ChSharedPtr<SmarticleMotionPiece> current_motion;
 
 
 
