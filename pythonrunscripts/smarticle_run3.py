@@ -47,7 +47,7 @@ def getPars():
     
     return [dt, angle, lw, numlayer]
 def runSim():
-    cores = 2
+    cores = 1
     sliding_its = 55
     bilateral_its= 55
     time.mktime
@@ -86,18 +86,22 @@ def runSim():
         print "######################"
         winsound.Beep(1000,300)
         tElapsed = time.time()-tBegin
-        os.chdir("..")
-        #renaming folder upon completion doesnt work
-        # ofpath = dirpath
-        # fpath = dirpath
-        # while True:
-            # try:
+        os.chdir("..\\..\\..")
+        
+        # renaming folder upon completion doesnt work
+        ofpath = dirpath
+        fpath = dirpath
+        count = 1
+        while True:
+            try:
                 # split=os.path.splitext(fpath)
                 # fpath= split[0]+'b'+split[1]
-                # os.rename(ofpath,fpath)
-                # break
-            # except (NameError,WindowsError):
-                # print 'trying rename again'
+                fpath = ofpath+' '+str(count)
+                os.rename(ofpath,fpath)
+                break
+            except (NameError,WindowsError):
+                print 'trying rename again'
+                count+=1
 fileloc=chooseRunLoc(compName)
 runSim()
 

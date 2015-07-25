@@ -236,7 +236,8 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 
 	mphysicalSystem.GetSettings()->perform_thread_tuning = thread_tuning;
 	mphysicalSystem.GetSettings()->min_threads = std::max(1, threads/2);
-	mphysicalSystem.GetSettings()->max_threads = std::min(max_threads, int(3.0 * threads / 2));
+	//mphysicalSystem.GetSettings()->max_threads = std::min(max_threads, int(3.0 * threads / 2));
+	mphysicalSystem.GetSettings()->max_threads =max_threads;
   // ---------------------
   // Print the rest of parameters
   // ---------------------
@@ -945,7 +946,10 @@ int main(int argc, char* argv[]) {
 			 bucket->SetBodyFixed(false);
 			 vibrate_bucket(t);
 		 }
-		 else{ bucket->SetBodyFixed(true);}
+		 else{ 
+				bucket->SetBodyFixed(true);
+				
+		 }
 		 
 
 
@@ -987,7 +991,8 @@ int main(int argc, char* argv[]) {
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
 
-	  FixBodies(mphysicalSystem, tStep);
+
+		FixBodies(mphysicalSystem, tStep);
 	  PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
 
 	  std::cout.flush();

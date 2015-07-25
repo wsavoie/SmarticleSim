@@ -1,12 +1,14 @@
 plotType=1; %1 for constant angle 2 for constant l/w
-if plotType == 1 %l/w
+if plotType == 2 %l/w
     dv='lw';
     dvunits = '';
     dvlabel = 'l/w';
+    dvaxis =[0,1.4,0.05,0.34]
 else             %angle 
     dv='ang';
     dvunits = '\circ';
     dvlabel = 'Angle (\circ)';
+    dvaxis =[0,120,0.05,.34]
     
 end
 
@@ -66,10 +68,10 @@ end
 
 
 for i=1:length(depVar)
-    depVarLegend{i}=horzcat(num2str(depVar(i)),dvunits);.
+    depVarLegend{i}=horzcat(num2str(depVar(i)),dvunits);
 end
 legend(depVarLegend);
-% figText(gcf,13); personal script which changes font size of all numbers
+figText(gcf,13);% personal script which changes font size of all numbers
 % in figure to 13
 figure(3)
 hold on;
@@ -84,7 +86,7 @@ incomplIdx=find(~complFound);
 
 % plot(finalphi(:,1),finalphi(:,2),'o-');
 plot(finalphi(incomplIdx,1),finalphi(incomplIdx,2),'*r');
-% figText(gcf,13);
+figText(gcf,13);
 %% errorbar calculation
 [uout, ~, outidx] = unique( finalphi(:,1));
 OutM = zeros(length(uout),3);
@@ -92,6 +94,5 @@ OutMatrix1  = [uout(:), accumarray( outidx, finalphi(:,2), [], @mean ) ];  %mean
 OutMatrix2  = [uout(:), accumarray( outidx, finalphi(:,2), [], @std ) ]; %std of phi'
 OutM(:,1:2) = OutMatrix1; % [angle mean phif ]
 OutM(:,3)   = OutMatrix2(:,2); % [std ]
-
-
 errorbar(OutM(:,1),OutM(:,2),OutM(:,3),'o-');
+axis(dvaxis)
