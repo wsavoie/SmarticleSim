@@ -329,7 +329,6 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				myMotion->joint_12.omega = 0;
 				myMotion->timeInterval = 0.5;
 				myMotion->startTime = 0;
-				myMotion->motionSegment = 0;
 
 
 				if (smarticleType == SMART_ARMS) {
@@ -341,11 +340,6 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 					smarticle0->Create();
 					smarticle0->AddMotion(myMotion);
 					mySmarticlesVec.push_back((Smarticle*)smarticle0);
-
-
-
-					printf("**& segment \n");
-					printf("*&& segment %f\n", smarticle0->Get_Current_Motion()->joint_01.theta1);
 
 				}
 				else if (smarticleType == SMART_U) {
@@ -755,8 +749,7 @@ void vibrate_bucket(double t) {
 // =============================================================================
 void UpdateSmarticles(std::vector<Smarticle*> mySmarticlesVec) {
 	for (int i = 0; i < mySmarticlesVec.size(); i++) {
-		//mySmarticlesVec[i]->UpdateSmarticleMotion();
-		printf("*** segment %f\n", mySmarticlesVec[i]->Get_Current_Motion()->joint_01.theta1);
+		mySmarticlesVec[i]->UpdateSmarticleMotionLoop();
 	}
 }
 // =============================================================================

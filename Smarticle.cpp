@@ -258,6 +258,17 @@ void Smarticle::SetActuatorFunction(int actuatorID, double omega, double dT) {
 	mfun2->Set_yconst(omega);
 }
 
+void Smarticle::SetActuatorFunction(int actuatorID, double omega) {
+	ChSharedPtr<ChLinkEngine> mlink_actuator;
+	if (actuatorID == 0) {
+		mlink_actuator = link_actuator01;
+	} else {
+		mlink_actuator = link_actuator12;
+	}
+	ChSharedPtr<ChFunction_Const> mfun2 = mlink_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
+	mfun2->Set_yconst(omega);
+}
+
 double Smarticle::GetVolume() {
 //	return r * r2 * (w + 2 * (l + jointClearance));
 	return (2 * r) * (2 * r2 )* (w + 2 * l);
@@ -286,18 +297,49 @@ double Smarticle::GetAngle(bool degrees = false)
 }
 
 void Smarticle::AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece) {
+	int numAddedMotions = motion_vector.size();
+	if (numAddedMotions == 0) {
+		current_motion = s_motionPiece;
+	}
+	s_motionPiece->SetMotionSegment(numAddedMotions);
 	motion_vector.push_back(s_motionPiece);
-	current_motion = s_motionPiece;
 }
 
 void Smarticle::UpdateSmarticleMotion() {
 	double currentTime = m_system->GetChTime();
-	int currentSegment = current_motion->motionSegment;
+	int currentSegment = current_motion->GetMotionSegment();
 	double t_in = current_motion->startTime - currentTime;
 	if (  (t_in >= 0 && t_in < current_motion->timeInterval) &&
 			(currentSegment < motion_vector.size() - 1) ) {
-		current_motion = motion_vector[current_motion->motionSegment + 1];
+		current_motion = motion_vector[currentSegment + 1];
 	}
+}
+
+void Smarticle::UpdateSmarticleMotionLoop() {
+	int currentSegment = current_motion->GetMotionSegment();
+	double ang01 = link_actuator01->Get_mot_rot();
+	double ang12 = link_actuator12->Get_mot_rot();
+	double omega1 = current_motion->joint_01.omega;
+	double omega2 = current_motion->joint_12.omega;
+
+	if ((ang01 < current_motion->joint_01.theta1) && (omega1 < 0)) {
+		omega1 *= -1;
+	}
+	if ((ang01 > current_motion->joint_01.theta2) && (omega1 > 0)) {
+		omega1 *= -1;
+	}
+	if ((ang12 < current_motion->joint_12.theta1) && (omega2 < 0)) {
+		omega2 *= -1;
+	}
+	if ((ang12 > current_motion->joint_12.theta2) && (omega2 > 0)) {
+		omega2 *= -1;
+	}
+
+	current_motion->joint_01.omega = omega1;
+	current_motion->joint_12.omega = omega2;
+
+	this->SetActuatorFunction(0, omega1);
+	this->SetActuatorFunction(1, omega2);
 
 }
 

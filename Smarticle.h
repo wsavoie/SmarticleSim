@@ -33,10 +33,15 @@ struct SmarticleMotionPiece : public ChShared{
 	JointMotion joint_12;	// joint 1 motion
 	double timeInterval;	// time of action
 	double startTime;		// start time of the motion
-	int motionSegment;
 
 	SmarticleMotionPiece() {}
 	~SmarticleMotionPiece() {}
+
+	virtual void SetMotionSegment(int s) {motionSegment = s;}
+	virtual int GetMotionSegment() {return motionSegment;}
+
+private:
+	int motionSegment;
 };
 
 
@@ -79,6 +84,8 @@ public:
   virtual ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
   virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
   virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
+  virtual void SetActuatorFunction(int actuatorID, double omega);
+
 
   // Smarticle volume
   virtual double GetVolume();
@@ -90,6 +97,7 @@ public:
   //	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
 
   virtual void UpdateSmarticleMotion();
+  virtual void UpdateSmarticleMotionLoop();
 
 	//smarticle arm angle
 	virtual void SetAngle(double mangle, bool degrees);
