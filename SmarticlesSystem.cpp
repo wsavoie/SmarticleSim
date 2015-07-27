@@ -43,7 +43,6 @@
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
 
-
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
@@ -128,7 +127,39 @@ ChSharedPtr<ChBody> bucket;
 
 
 
-
+	//wxImage GlFaceCanvas::GrabImage(){
+	//	const RenderingOptions& renderingOptions = m_appData.GetRenderingOptions();
+	//	const int width = renderingOptions.OutputWidth();
+	//	const int height = renderingOptions.OutputHeight();
+	//	const size_t bytesPerPixel = 3;	// RGB
+	//	const size_t imageSizeInBytes = bytesPerPixel * size_t(width) * size_t(height);		
+	//	
+	//	// Allocate with malloc, because the data will be managed by wxImage	
+	//	BYTE* pixels = static_cast<BYTE*>(malloc(imageSizeInBytes));	
+	//	// glReadPixels takes the lower-left corner, while GetViewportOffset gets the top left corner
+	//	const wxPoint topLeft = GetViewportOffset();
+	//	const wxPoint lowerLeft(topLeft.x, GetClientSize().GetHeight() - (topLeft.y + height));
+	//	// glReadPixels can align the first pixel in each row at 1-, 2-, 4- and 8-byte boundaries. We	
+	//	// have allocated the exact size needed for the image so we have to use 1-byte alignment	
+	//	// (otherwise glReadPixels would write out of bounds)	
+	//	glPixelStorei(GL_PACK_ALIGNMENT, 1);	glReadPixels(lowerLeft.x, topLeft.y, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+	//	// glReadPixels reads the given rectangle from bottom-left to top-right, so we must	
+	//	// reverse it	
+	//	for(int y = 0; y < height / 2; y++)	
+	//	{		
+	//			const int swapY = height - y - 1;
+	//			for(int x = 0; x < width; x++)		
+	//			{			
+	//				const int offset = int(bytesPerPixel) * (x + y * width);			
+	//				const int swapOffset = int(bytesPerPixel) * (x + swapY * width);
+	//				// Swap R, G and B of the 2 pixels			
+	//				std::swap(pixels[offset + 0], pixels[swapOffset + 0]);
+	//				std::swap(pixels[offset + 1], pixels[swapOffset + 1]);
+	//				std::swap(pixels[offset + 2], pixels[swapOffset + 2]);
+	//			}
+	//	}		
+	//	return wxImage(width, height, pixels);
+	//}
 // =============================================================================
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
@@ -468,7 +499,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 
 	// ground
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
-	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -bucket_interior_halfDim.z - boxDim.z*5); // 1.1 to add 10% clearance between bucket and ground
+	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -2*bucket_interior_halfDim.z - boxDim.z*5);
 	ChSharedPtr<ChBody> ground;
 	if (USE_PARALLEL) {
 		ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
@@ -650,7 +681,7 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
 	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 		ChBody* bodyPtr = *(myIter + i);
-		if (bodyPtr->GetPos().z < -1.5 * bucket_interior_halfDim.z) {
+		if (bodyPtr->GetPos().z < -2.0 * bucket_interior_halfDim.z) {
 			bodyPtr->SetBodyFixed(true);
 			continue;
 		}
@@ -865,7 +896,11 @@ int main(int argc, char* argv[]) {
 	gl_window.viewer->render_camera.camera_scale = 2.0/(1000.0)*sizeScale;
 	gl_window.viewer->render_camera.near_clip = .001;
 	gl_window.SetRenderMode(opengl::WIREFRAME);
+	//glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
+	//int nSize = 1280*720 * 3;
+	//char* dataBuffer = (char*)malloc(nSize*sizeof(char));
+	//glReadPixels((GLint)0, (GLint)0, (GLint)1280, (GLint)720, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
 
 
 // Uncomment the following two lines for the OpenGL manager to automatically

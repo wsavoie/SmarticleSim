@@ -1,14 +1,16 @@
 plotType=1; %1 for constant angle 2 for constant l/w
-if plotType == 2 %l/w
+
+
+if plotType == 1 %l/w
     dv='lw';
     dvunits = '';
     dvlabel = 'l/w';
-    dvaxis =[0,1.4,0.05,0.34]
-else             %angle 
+    dvaxis =[0,1.4,0.05,0.40]
+elseif plotType== 2          %angle 
     dv='ang';
     dvunits = '\circ';
     dvlabel = 'Angle (\circ)';
-    dvaxis =[0,120,0.05,.34]
+    dvaxis =[0,120,0.05,.35]
     
 end
 

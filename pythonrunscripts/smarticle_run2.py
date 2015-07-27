@@ -16,6 +16,11 @@ def chooseRunLoc(name): #add your computer name in the dictionary here and the c
      return{
      'PHYS32240':'"D:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
      'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"'}[name]
+     
+def chooseParLoc(name): #add your computer name in the dictionary here and the corresponding location of the exe file
+    return{
+    'PHYS32240':'D:\ChronoCode\chronoPkgs\Smarticles\pythonrunscripts\simRunPars.txt',
+    'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"'}[name]
 def makePath(path):
     try:
         os.makedirs(path)
@@ -28,7 +33,7 @@ def getFileNum():
     return{'smarticle_run.py':0,'smarticle_run2.py':1,'smarticle_run3.py':2
     }[x]
 def getPars():
-    with open('D:\ChronoCode\chronoPkgs\Smarticles\pythonrunscripts\simRunPars.txt', 'r+') as f:
+    with open(chooseParLoc(compName), 'r+') as f:
         read_data = f.readlines()
     f.closed
     fnum = getFileNum() #returns number based on current file
@@ -76,7 +81,7 @@ def runSim():
         tBegin = time.time()
         
         simT = time.time();          
-        x= "%s %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle[i],cores,sliding_its,bilateral_its)
+        x= "%s %.2f %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle[i],cores,sliding_its,bilateral_its)
         title= "%g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle[i],cores,sliding_its,bilateral_its)
         ctypes.windll.kernel32.SetConsoleTitleA(title)
         os.system(x)     

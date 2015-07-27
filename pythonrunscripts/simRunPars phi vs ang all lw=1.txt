@@ -1,0 +1,25 @@
+.001
+
+0	5 	10	15	20	25	30	35	40
+45	50	55	60	65	70	75	80	85
+90	95	100	105	110	115	120	125	130
+
+1.0
+1.0
+1.0
+
+48
+48
+48
+dt
+smart1 angle
+smart2 angle
+smart3 angle
+smart1 lw
+smart2 lw
+smart3 lw
+smart1 numlayer
+smart2 numlayer
+smart3 numlayer
+
+use tabs to separate each entry and make sure there are no tabs or spaces after last entry on each line!
