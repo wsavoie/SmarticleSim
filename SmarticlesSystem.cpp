@@ -1080,6 +1080,11 @@ int main(int argc, char* argv[]) {
 					mphysicalSystem.RemoveBody(bucket);
 					bucket_exist = false;
 				}
+				if (t > .2)
+				{
+					bucket_bott->SetBodyFixed(false);
+					vibrate_bucket(t,bucket_bott);
+				}
 			}
 			else{
 				bucket->SetBodyFixed(true);
@@ -1125,7 +1130,7 @@ int main(int argc, char* argv[]) {
 		//{
 		//	//start shaking
 		//}
-
+		printf("\n");
 
 		
 

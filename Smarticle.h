@@ -12,7 +12,15 @@
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
 
-#define USE_PARALLEL true
+#ifndef true 
+#define true 1
+#endif
+
+#ifndef false 
+#define false 0
+#endif
+
+#define USE_PARALLEL false
 
 namespace chrono {
 

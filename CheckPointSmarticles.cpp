@@ -7,6 +7,7 @@
 #include "CheckPointSmarticles.h"
 #include <fstream>
 #include <string>
+#include "SmarticleU.h"
 
 namespace chrono {
 
@@ -83,7 +84,7 @@ void CheckPointSmarticles_Write(
 //====================================================================================
 // note : for now, this is only for smarticleU and only for ChSystemParallelDVI
 void CheckPointSmarticles_Read(
-		ChSystemParallelDVI & mphysicalSystem,
+		CH_SYSTEM& mphysicalSystem,
 		std::vector<Smarticle*> & mySmarticlesVec) {
 	std::ifstream inSmarticles;
 	inSmarticles.open("smarticles.csv");

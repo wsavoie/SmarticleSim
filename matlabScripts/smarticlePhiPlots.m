@@ -1,4 +1,4 @@
-plotType=1; %1 for constant angle 2 for constant l/w
+plotType=2; %1 for constant angle 2 for constant l/w
 
 
 if plotType == 1 %l/w
