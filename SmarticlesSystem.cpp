@@ -80,7 +80,7 @@ ChSharedPtr<ChBody> bucket;
 	double gravity = -9.81 * sizeScale;
 	
 	double vibration_freq = 30;
-	
+	bool read = true;
 	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 	//double vibration_amp = sizeScale * 0.00055;
 	double mGamma = 2.0 * gravity;
@@ -100,8 +100,9 @@ ChSharedPtr<ChBody> bucket;
 	int numLayers = 100;
 	double armAngle = 90;
 	
+	
 
-	bool povray_output = true;
+	bool povray_output = false;
 	int out_fps = 120;
 	const std::string out_dir = "PostProcess";
 	const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
@@ -122,7 +123,7 @@ ChSharedPtr<ChBody> bucket;
 	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 	double t_smarticle 	= sizeScale * .00127;
 	double t2_smarticle	= sizeScale * .0005;
-
+	double m_smarticle = (t_smarticle)* (t2_smarticle)* (w_smarticle + 2 * l_smarticle);
 	double collisionEnvelope = .4 * t2_smarticle;
 
 
@@ -465,14 +466,21 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 		{
 			m_visualization = true;
 		}
-		utils::AddBoxGeometry(cyl_container.get_ptr(), box_size, pPos, quat, m_visualization);
-
+			utils::AddBoxGeometry(cyl_container.get_ptr(), box_size, pPos, quat, m_visualization);
 	}
 	//Add ground piece
 	//
 
-	
-	utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	if (!read)	{
+		//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+		//cyl_container->SetPos(cyl_container->GetPos() + Vector(0, 0, 2*vibration_amp*sin(omega_bucket * tFinal -omega_bucket*vibrateStart)));
+		ChSharedPtr<ChBody> buck_bott;
+		buck_bott->GetCollisionModel()->ClearModel();
+		utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+		buck_bott->GetCollisionModel()->BuildModel();
+		mphysicalSystem->AddBody(buck_bott);
+		buck_bott->SetCollide(true);
+	}
 	//add up volume of bucket and multiply by rho to get mass;
 	double cyl_volume = CH_C_PI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * bucket_rad + 2 * t)*(2 * bucket_rad + 2 * t) - bucket_rad*bucket_rad) + (CH_C_PI)*(bucket_rad + 2 * t)*(bucket_rad + 2 * t) * 2 * t;
 	cyl_container->SetMass(rho_cylinder*cyl_volume);
@@ -720,6 +728,89 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> my
 }
 
 // =============================================================================
+void PrintFractionsAndCOM(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) 
+{
+	double zCom = 0;
+	const std::string vol_frac = out_dir + "/volumeFraction.txt";
+	int stepSave = 10;
+	if (tStep % stepSave != 0) return;
+
+	std::ofstream vol_frac_of;
+	if (tStep == 0) {
+		vol_frac_of.open(vol_frac.c_str());
+	}
+	else {
+		vol_frac_of.open(vol_frac.c_str(), std::ios::app);
+	}
+
+	double zMax = Find_Max_Z(mphysicalSystem);
+	ChVector<> bucketMin = bucket->GetPos();
+
+	//zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z + 2*bucket_half_thick);
+	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
+	// *** remember, 2 * bucket_half_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_half_thick from each side
+
+	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
+	//	const std::string smarticleTypeName;
+	//	if (smarticleType == SMART_ARMS) {
+	//		smarticleTypeName = "smarticle_arm";
+	//	} else if (smarticleType == SMART_U) {
+	//		smarticleTypeName = "smarticle_u";
+	//	} else {
+	//		std::cout << "Error! Smarticle type is not set correctly" << std::endl;
+	//	}
+	//	int countInside = 0;
+	//	double totalVolume1 = 0;
+	//	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	//	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+	//		ChBody* bodyPtr = *(myIter + i);
+	//		if ( strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0 ) {
+	//			if ( IsIn(bodyPtr->GetPos(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + 2 * ChVector<>(0, 0, 2 * bucket_half_thick)) ) {
+	//				countInside ++;
+	//				totalVolume1 += bodyPtr->GetMass() / bodyPtr->GetDensity();
+	//			}
+	//		}
+	//	}
+
+	double totalVolume2 = 0;
+	int countInside2 = 0;
+	double volumeFraction = 0;
+	if (bucketType == BOX)
+	{
+		for (int i = 0; i < mySmarticlesVec.size(); i++) {
+			Smarticle* sPtr = mySmarticlesVec[i];
+			if (IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + ChVector<>(0, 0, 2 * bucket_half_thick))) {
+				countInside2++;
+				totalVolume2 += sPtr->GetVolume();
+				zCom += sPtr->Get_cm().z*m_smarticle;
+
+			}
+		}
+		
+		volumeFraction = totalVolume2 / (4 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - bucketMin.z));
+	}
+	if (bucketType == CYLINDER)
+	{
+		for (int i = 0; i < mySmarticlesVec.size(); i++) {
+			Smarticle* sPtr = mySmarticlesVec[i];
+			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
+			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z + 2 * bucket_interior_halfDim.z))) {
+				//if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2*bucket_interior_halfDim.z+2*bucket_half_thick))) {
+				countInside2++;
+				totalVolume2 += sPtr->GetVolume();
+				zCom += sPtr->Get_cm().z*m_smarticle;
+			}
+		}
+
+		//volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2 * bucket_interior_halfDim.z);
+		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * zMax);
+		
+	}
+	zCom = zCom / (countInside2*m_smarticle);
+	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax <<", "<< zCom<< std::endl;
+
+	vol_frac_of.close();
+}
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
 	const std::string vol_frac = out_dir + "/volumeFraction.txt";
 	int stepSave = 10;
@@ -807,17 +898,17 @@ void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
 }
 // =============================================================================
 // move bucket
-void vibrate_bucket(double t) {
+void vibrate_bucket(double t,ChSharedPtr<chrono::ChBody> body) {
 	//double x_bucket = vibration_amp*sin(omega_bucket * t);
 	//this allows for that at t=vibration start time, the bucket wont jump some amount
 	double phase = -omega_bucket*vibrateStart;
 	double x_bucket = vibration_amp*sin(omega_bucket * t+phase);
 	double xDot_bucket = vibration_amp*omega_bucket*cos(omega_bucket * t+phase);
 	double xDDot_bucket = vibration_amp*omega_bucket*omega_bucket*-1 * sin(omega_bucket * t+phase);
-	bucket->SetPos(ChVector<>(0, 0, x_bucket));
-	bucket->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
-	bucket->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
-	bucket->SetRot(QUNIT);
+	body->SetPos(ChVector<>(0, 0, x_bucket));
+	body->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
+	body->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
+	body->SetRot(QUNIT);
 }
 // =============================================================================
 int main(int argc, char* argv[]) {
@@ -938,53 +1029,107 @@ int main(int argc, char* argv[]) {
 	double timeForVerticalDisplcement = 0.05; // 1.5 for safety proximity
  
 	int numGeneratedLayers = 0;
+	
+	
 
 //  CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
 
   printf("************** size sys %d \n", mySmarticlesVec.size());
+
+	// bucket
+	ChSharedPtr<ChBody> bucket_bott;
+	if (USE_PARALLEL) {
+		bucket_bott = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	}
+	else {
+		bucket_bott = ChSharedPtr<ChBody>(new ChBody);
+	}
+	
+
+	if (read)
+	{ 
+		CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec); 
+		
+		bucket_bott->GetCollisionModel()->ClearModel();
+		GetLog() << "******HERE********";
+		utils::AddCylinderGeometry(bucket_bott.get_ptr(), bucket_rad + 2 * bucket_half_thick, bucket_half_thick, bucket->GetPos() + ChVector<>(0, 0, -bucket_half_thick), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+		bucket_bott->GetCollisionModel()->BuildModel();
+		
+		bucket_bott->SetCollide(true);
+		bucket_bott->SetBodyFixed(true);
+		//bucket_bott->GetCollisionModel()->SetFamily(1);
+		//bucket->GetCollisionModel()->BuildModel();
+		bucket->SetBodyFixed(false);
+		bucket->SetCollide(true);
+		mphysicalSystem.AddBody(bucket_bott);
+	}
+	bool bucket_exist = true;
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
-	  double t = mphysicalSystem.GetChTime();
+		double t = mphysicalSystem.GetChTime();
 
-	  int sSize1 = mySmarticlesVec.size();
-	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-			  (numGeneratedLayers < numLayers) ){
-		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-		  numGeneratedLayers ++;
-	  }
+		int sSize1 = mySmarticlesVec.size();
+		if (read)
+		{
+			if (t > .05){
+			
+				//bucket_bott->SetBodyFixed(false);
+				//vibrate_bucket(t,bucket_bott);
+				if (bucket_exist){
+					mphysicalSystem.RemoveBody(bucket);
+					bucket_exist = false;
+				}
+			}
+			else{
+				bucket->SetBodyFixed(true);
+			}
+		}
+		else{
+
+			if ((fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT) &&
+				(numGeneratedLayers < numLayers)){
+				AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+				numGeneratedLayers++;
+			}
+
+			if (smarticleType == SMART_ARMS)
+			{
+
+				for (int i = 0; i < mySmarticlesVec.size(); i++) {
+					double omega = 10;
+					if (tStep < 500) {
+						mySmarticlesVec[i]->SetActuatorFunction(0, -omega, dT);
+					}
+					else 
+					{
+						mySmarticlesVec[i]->SetActuatorFunction(0, omega, dT);
+						printf("\n");
+
+						
+					}
+
+				}
+
+			}
+			if (t > vibrateStart){
+				bucket->SetBodyFixed(false);
+				vibrate_bucket(t,bucket);
+			}
+			else{
+				bucket->SetBodyFixed(true);
+			}
+		}
+	  
 		//if (numGeneratedLayers == numLayers)
 		//{
 		//	//start shaking
 		//}
 
 
-		if (smarticleType == SMART_ARMS)
-		{
+		
 
-			for (int i = 0; i < mySmarticlesVec.size(); i++) {
-				double omega = 10;
-				if (tStep < 500) {
-					mySmarticlesVec[i]->SetActuatorFunction(0, -omega, dT);
-				}
-				else {
-					mySmarticlesVec[i]->SetActuatorFunction(0, omega, dT);
-				}
 
-			}
-
-		}
-
-	   printf("\n");
-
-		 if (t > vibrateStart){
-			 bucket->SetBodyFixed(false);
-			 vibrate_bucket(t);
-		 }
-		 else{ 
-				bucket->SetBodyFixed(true);
-				
-		 }
 		 
 
 
@@ -1028,20 +1173,26 @@ int main(int argc, char* argv[]) {
 
 
 		FixBodies(mphysicalSystem, tStep);
-	  PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
+		if (read)
+		{
+			PrintFractionsAndCOM(mphysicalSystem, tStep, mySmarticlesVec);
+		}
+		else{
+			PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
+		}
 
 	  std::cout.flush();
 
 
-//	  CheckPointSmarticles_Write(mySmarticlesVec,
-//	  		tStep,
-//	  		mat_g,
-//	  		l_smarticle,
-//	  		w_smarticle,
-//	  		t_smarticle,
-//	  		t2_smarticle,
-//	  		collisionEnvelope,
-//	  		rho_smarticle);
+	  CheckPointSmarticles_Write(mySmarticlesVec,
+	  		tStep,
+	  		mat_g,
+	  		l_smarticle,
+	  		w_smarticle,
+	  		t_smarticle,
+	  		t2_smarticle,
+	  		collisionEnvelope,
+	  		rho_smarticle);
 
   }
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
