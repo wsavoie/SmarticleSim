@@ -1,19 +1,22 @@
-plotType=2; %1 for constant angle 2 for constant l/w
+plotType=1; %1 for constant angle 2 for constant l/w
 
 
-if plotType == 1 %l/w
-    dv='lw';
-    dvunits = '';
-    dvlabel = 'l/w';
-    dvaxis =[0,1.4,0.05,0.40]
-elseif plotType== 2          %angle 
-    dv='ang';
-    dvunits = '\circ';
-    dvlabel = 'Angle (\circ)';
-    dvaxis =[0,120,0.05,.35]
-    
+switch plotType
+    case 1 %l/w
+        dv='lw';
+        dvunits = '';
+        dvlabel = 'l/w';
+        dvaxis =[0,1.4,0.05,0.40]
+    case 2 %angle 
+        dv='ang';
+        dvunits = '\circ';
+        dvlabel = 'Angle (\circ)';
+        dvaxis =[0,120,0.05,.35]
 end
 
+%volumeFraction.text
+%time,   SmarticleInContainer,   phi,   height,   COM.z in container   
+ 
 close all
 directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\Results');
 directory_name(length(directory_name)+1)='\';
@@ -34,7 +37,6 @@ depVar = zeros(length(files),1);
 finalphi = zeros(length(files),2);
 depVarLegend= cell(length(depVar),1);
 complFound = zeros(length(files),1);
-
 
 for j= 1:length(files)
     
@@ -73,6 +75,7 @@ for i=1:length(depVar)
     depVarLegend{i}=horzcat(num2str(depVar(i)),dvunits);
 end
 legend(depVarLegend);
+
 figText(gcf,13);% personal script which changes font size of all numbers
 % in figure to 13
 figure(3)
