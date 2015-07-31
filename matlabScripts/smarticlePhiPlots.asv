@@ -105,4 +105,4 @@ axis(dvaxis)
 [uout, ~, outidx] = unique( finalphi(:,1));
 xlabel(dvlabel);
 ylabel('\phi_f');
-figText(gcf,13);
+figText(gcf,13)

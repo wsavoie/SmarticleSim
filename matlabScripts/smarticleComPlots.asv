@@ -96,19 +96,14 @@ for i= 1:length(files)
     data=importdata(horzcat(directory_name,files(i).name,'\PostProcess\volumeFraction.txt'));
     t_0idx=find(data(:,1)>.3,1); %shaking starts at .5
     t_0=data(t_0idx,1);
-%     h_0=data(t_0idx,5);
     h_0=data(t_0idx,5);
     xdat =data(t_0idx:end,1)-t_0;
-%     ydat = data(t_0idx:end,5)*2/h_0-1;
-    ydat = data(t_0idx:end,5)/h_0;
+    ydat = data(t_0idx:end,5)/h_0-1;
+%     ydat = data(t_0idx:end,5)/h_0;
     out =fitStretched(parsin,depVar(i),xdat,ydat,PON);
     deltaFit(i)=out(1,1);
     betaFit(i)=out(1,2);
-%          plot(xdat,ydat);
-%     hold on;
 end
-
-
 figure(44)
 plot(depVar,betaFit,'.b-','MarkerSize',25);
 xlabel('\Gamma')
@@ -119,17 +114,7 @@ plot(depVar,deltaFit,'.b-','MarkerSize',25);
 xlabel('\Gamma')
 ylabel('\Delta')
 
-
-% plot(1./depVar,log(1/30*exp(deltaFit./depVar)),'g.-','MarkerSize',25);
-
-
 figure(46)
-[uout, ~, outidx] = unique( 1./depVar);
-OutM = zeros(length(uout),3);
-OutMatrix1  = [uout(:), accumarray( outidx,log(1/30*exp(deltaFit./depVar)), [], @mean ) ];  %mean of phi'
-OutMatrix2  = [uout(:), accumarray( outidx, log(1/30*exp(deltaFit./depVar)), [], @std ) ]; %std of phi'
-OutM(:,1:2) = OutMatrix1; % [angle mean phif ]
-OutM(:,3)   = OutMatrix2(:,2); % [std ]
-errorbar(OutM(:,1),OutM(:,2),OutM(:,3),'o-');
+plot(1./depVar,log(1/30*exp(deltaFit./depVar)),'g.-','MarkerSize',25);
 ylabel('ln(\tau/\tau_0)')
 xlabel('\Gamma^{-1}');

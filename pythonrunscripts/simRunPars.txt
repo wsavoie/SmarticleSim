@@ -1,26 +1,30 @@
 .001
 
-40	45	50	55	60	65	70	75	80	85	90	95	100	105	110	115	120	125	130
-90	95	100	105	110	115	120	125	130
+90
+120
 90	95	100	105	110	115	120	125	130
 
-1.0
+.379
 1.0
 1.0
 
-125
+80
 150
 150
+
+1.96	2.2
+2
+2
+
+1
+0
+1
+
 dt
-smart1 angle
-smart2 angle
-smart3 angle
-smart1 lw
-smart2 lw
-smart3 lw
-smart1 numlayer
-smart2 numlayer
-smart3 numlayer
-
+smart1,2,3 angle
+smart1,2,3 lw
+smart1,2,3 numlayer
+gamma1,2,3
+readFromOutput
 use tabs to separate each entry and make sure there are no tabs or spaces after last entry on each line!
 30	

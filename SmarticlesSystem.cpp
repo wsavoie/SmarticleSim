@@ -22,7 +22,7 @@
 //
 //	 CHRONO
 //   ------
-//   Multibody dinamics engine
+//   Multibody dynamics engine
 //
 // ------------------------------------------------
 //             www.deltaknowledge.com
@@ -42,10 +42,15 @@
 #include "Smarticle.h"
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
+//#include "D:\ChronoCode\libs\pngwriter-release-0.5.5\src\pngwriter.h"
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
+#define GLEW_STATIC
+#include <GL/glew.h>
+#pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "glu32.lib")
 
 #ifndef true 
 #define true 1
@@ -73,7 +78,7 @@ BucketType bucketType = CYLINDER;
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
-
+void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody> body, double dim);
 
 
 	double sizeScale = 1;
@@ -83,7 +88,7 @@ ChSharedPtr<ChBody> bucket;
 	bool read = true;
 	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 	//double vibration_amp = sizeScale * 0.00055;
-	double mGamma = 2 * gravity;
+	double mGamma = 1.23 * gravity;
 	double vibration_amp = mGamma / (omega_bucket*omega_bucket);
 	
 
@@ -128,46 +133,11 @@ ChSharedPtr<ChBody> bucket;
 	double m_smarticle = (t_smarticle)* (t2_smarticle)* (w_smarticle + 2 * l_smarticle);
 	double collisionEnvelope = .4 * t2_smarticle;
 
-
-
-	//wxImage GlFaceCanvas::GrabImage(){
-	//	const RenderingOptions& renderingOptions = m_appData.GetRenderingOptions();
-	//	const int width = renderingOptions.OutputWidth();
-	//	const int height = renderingOptions.OutputHeight();
-	//	const size_t bytesPerPixel = 3;	// RGB
-	//	const size_t imageSizeInBytes = bytesPerPixel * size_t(width) * size_t(height);		
-	//	
-	//	// Allocate with malloc, because the data will be managed by wxImage	
-	//	BYTE* pixels = static_cast<BYTE*>(malloc(imageSizeInBytes));	
-	//	// glReadPixels takes the lower-left corner, while GetViewportOffset gets the top left corner
-	//	const wxPoint topLeft = GetViewportOffset();
-	//	const wxPoint lowerLeft(topLeft.x, GetClientSize().GetHeight() - (topLeft.y + height));
-	//	// glReadPixels can align the first pixel in each row at 1-, 2-, 4- and 8-byte boundaries. We	
-	//	// have allocated the exact size needed for the image so we have to use 1-byte alignment	
-	//	// (otherwise glReadPixels would write out of bounds)	
-	//	glPixelStorei(GL_PACK_ALIGNMENT, 1);	glReadPixels(lowerLeft.x, topLeft.y, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-	//	// glReadPixels reads the given rectangle from bottom-left to top-right, so we must	
-	//	// reverse it	
-	//	for(int y = 0; y < height / 2; y++)	
-	//	{		
-	//			const int swapY = height - y - 1;
-	//			for(int x = 0; x < width; x++)		
-	//			{			
-	//				const int offset = int(bytesPerPixel) * (x + y * width);			
-	//				const int swapOffset = int(bytesPerPixel) * (x + swapY * width);
-	//				// Swap R, G and B of the 2 pixels			
-	//				std::swap(pixels[offset + 0], pixels[swapOffset + 0]);
-	//				std::swap(pixels[offset + 1], pixels[swapOffset + 1]);
-	//				std::swap(pixels[offset + 2], pixels[swapOffset + 2]);
-	//			}
-	//	}		
-	//	return wxImage(width, height, pixels);
-	//}
 // =============================================================================
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
-void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle) {
+void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle,double& gamma, bool& readFile) {
   if (argc > 1) {
 	const char* text = argv[1];
 	double mult_l = atof(text);
@@ -185,19 +155,27 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[4];
 		mangle = atof(text);
 	}
-
+	if (argc > 5){
+		const char* text = argv[5];
+		gamma = atof(text)*gravity;
+		vibration_amp= gamma / (omega_bucket*omega_bucket);
+	}
+	if (argc > 6){
+		const char* text = argv[6];
+		readFile = atoi(text);
+	}
 	/// if parallel, get solver setting
   if (USE_PARALLEL) {
-	  if (argc > 5) {
-		const char* text = argv[5];
-		threads = atoi(text);
-	  }
-	  if (argc > 6) {
-		const char* text = argv[6];
-		max_iteration_sliding = atoi(text);
-	  }
 	  if (argc > 7) {
 		const char* text = argv[7];
+		threads = atoi(text);
+	  }
+	  if (argc > 8) {
+		const char* text = argv[8];
+		max_iteration_sliding = atoi(text);
+	  }
+	  if (argc > 9) {
+		const char* text = argv[9];
 		max_iteration_bilateral = atoi(text);
 	  }
   }
@@ -215,7 +193,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	int dummyNumber0;
 	int dummyNumber1;
 	int dummyNumber2;
-  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle);
+  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle,mGamma,read);
 
 	simParams << std::endl <<
 		" l_smarticle: " << l_smarticle << std::endl <<
@@ -257,7 +235,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set params from input
   // ----------------------
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle);
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle,mGamma,read);
 
   // ----------------------
   // Set number of threads.
@@ -362,7 +340,8 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				mySmarticlesVec.push_back(smarticle0);
 				
 				if (!USE_PARALLEL) {
-					smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+					//smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+					//SetEnvelopeForObject(mphysicalSystem, smarticle0->GetSmarticleBodyPointer(),collisionEnvelope);
 				}
 			}
 			else {
@@ -408,7 +387,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 					smarticle0->Create();
 					mySmarticlesVec.push_back(smarticle0);
 					if (!USE_PARALLEL) {
-						smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+						//smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 					}
 				}
 				else {
@@ -448,7 +427,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	ChVector<> box_size = (0, 0, 0); //size of plates
 	ChVector<> pPos = (0, 0, 0);  //position of each plate
 	ChQuaternion<> quat = QUNIT; //rotation of each plate
-
+	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(.4*bucket_half_thick);
 	cyl_container->GetCollisionModel()->ClearModel();
 	cyl_container->SetMaterialSurface(wallMat);
 	for (int i = 0; i < num_boxes; i++)
@@ -472,10 +451,12 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 		}
 		utils::AddBoxGeometry(cyl_container.get_ptr(), box_size, pPos, quat, m_visualization);
 	}
+
 	//Add ground piece
 	//
 	if (!read)	{
-		utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+		//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+		utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
 	}
 	else{
 		cyl_container->SetPos(cyl_container->GetPos() + Vector(0, 0, vibration_amp*sin(CH_C_PI / 2.0)));//to place box in way which is maximum downward so upon creation it has no chance of starting particles inside
@@ -506,7 +487,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	/////////////////
 	// ground
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
-	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -2*bucket_interior_halfDim.z - boxDim.z*5);
+	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*bucket_interior_halfDim.z);
 	ChSharedPtr<ChBody> ground;
 	if (USE_PARALLEL) {
 		ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
@@ -618,7 +599,7 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
 	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 		ChBody* bodyPtr = *(myIter + i);
-		if (bodyPtr->GetPos().z < -2.0 * bucket_interior_halfDim.z) {
+		if (bodyPtr->GetPos().z < -4.0 * bucket_interior_halfDim.z) {
 			bodyPtr->SetBodyFixed(true);
 			continue;
 		}
@@ -640,7 +621,7 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
 	for (int i = 0; i < mySmarticlesVec.size(); i++) {
 		Smarticle* sPtr = mySmarticlesVec[i];
-		if (sPtr->Get_cm().z < -1.5 * bucket_interior_halfDim.z) {
+		if (sPtr->Get_cm().z < -4.0 * bucket_interior_halfDim.z) {
 			sPtr->SetBodyFixed(true); //Could/Should we write the destructor to remove these from system and then remove them from the vector too?
 				continue;
 			}
@@ -809,6 +790,12 @@ void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
 	}
 
 }
+void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody> body,double dim)
+{
+	body->GetCollisionModel()->SetDefaultSuggestedEnvelope(.4*dim);
+}
+
+
 // =============================================================================
 // move bucket
 void vibrate_bucket(double t,ChSharedPtr<chrono::ChBody> body) {
@@ -822,6 +809,54 @@ void vibrate_bucket(double t,ChSharedPtr<chrono::ChBody> body) {
 	body->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
 	body->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
 	body->SetRot(QUNIT);
+}
+
+bool screenshot(char *fileName){
+	int Xres = 1280;
+	int Yres = 720;
+	static unsigned char header[54] = {
+		0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+	unsigned char *pixels = (unsigned char *)malloc(Xres * Yres * 3);
+	((unsigned __int16 *)header)[9] = Xres;
+	((unsigned __int16 *)header)[11] = Yres;
+
+	glReadPixels(0, 0, Xres, Yres, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+	unsigned char temp;
+	for (unsigned int i = 0; i < Xres * Yres * 3; i += 3){
+		temp = pixels[i];
+		pixels[i] = pixels[i + 2];
+		pixels[i + 2] = temp;
+	}
+
+	HANDLE FileHandle;
+	unsigned long Size;
+
+	if (fileName == NULL){
+		char file[256];
+		unsigned int i = 0;
+		do {
+			sprintf(file, "Screenshot%d.bmp", i);
+			FileHandle = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+			i++;
+		} while (FileHandle == INVALID_HANDLE_VALUE);
+	}
+	else {
+		FileHandle = CreateFile(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (FileHandle == INVALID_HANDLE_VALUE)	return false;
+	}
+	DWORD NumberOfBytesWritten;
+	WriteFile(FileHandle, header, sizeof(header), &NumberOfBytesWritten, NULL);
+	WriteFile(FileHandle, pixels, Xres * Yres * 3, &NumberOfBytesWritten, NULL);
+
+	CloseHandle(FileHandle);
+
+	free(pixels);
+	return true;
 }
 // =============================================================================
 int main(int argc, char* argv[]) {
@@ -877,12 +912,12 @@ int main(int argc, char* argv[]) {
 #else
 	  InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
 #endif
-
+		
   std::vector<Smarticle*> mySmarticlesVec;
   CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
 	
 #if(!USE_PARALLEL)
-  SetEnvelopeForSystemObjects(mphysicalSystem);
+	SetEnvelopeForSystemObjects(mphysicalSystem);
 #endif
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
@@ -892,19 +927,19 @@ int main(int argc, char* argv[]) {
 	ChVector<> CameraLocation = sizeScale * ChVector<>(-.1, -.06, .1);
 	ChVector<> CameraLookAt = sizeScale * ChVector<>(0, 0, -.01);
 	char appTitle[240];
-	sprintf(appTitle,"Smarticle: lw: %g, ang: %g, numlayers: %d, dT: %g", l_smarticle / w_smarticle, armAngle, numLayers, dT);
+	sprintf(appTitle,"Smarticle: lw: %g, ang: %g, numlayers: %d, dT: %g, gamma: %g", l_smarticle / w_smarticle, armAngle, numLayers, dT,mGamma);
 	gl_window.Initialize(1280, 720, appTitle, &mphysicalSystem);
 
 	
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
 	gl_window.viewer->render_camera.camera_scale = 2.0/(1000.0)*sizeScale;
 	gl_window.viewer->render_camera.near_clip = .001;
-	gl_window.SetRenderMode(opengl::WIREFRAME);
+	gl_window.SetRenderMode(opengl::SOLID);
 	//glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-	//int nSize = 1280*720 * 3;
-	//char* dataBuffer = (char*)malloc(nSize*sizeof(char));
-	//glReadPixels((GLint)0, (GLint)0, (GLint)1280, (GLint)720, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
+	int nSize = 1280*720 * 3;
+	char* dataBuffer = (char*)malloc(nSize*sizeof(char));
+	glReadPixels((GLint)0, (GLint)0, (GLint)1280, (GLint)720, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
 
 
 // Uncomment the following two lines for the OpenGL manager to automatically
@@ -964,7 +999,9 @@ int main(int argc, char* argv[]) {
 		CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec); 
 		
 		bucket_bott->GetCollisionModel()->ClearModel();
-		utils::AddCylinderGeometry(bucket_bott.get_ptr(), bucket_rad*6 +2*bucket_half_thick, bucket_half_thick, bucket->GetPos() + ChVector<>(0, 0, -bucket_half_thick), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	
+		utils::AddBoxGeometry(bucket_bott.get_ptr(), Vector(bucket_rad+2*bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
+		//utils::AddCylinderGeometry(bucket_bott.get_ptr(), bucket_rad*6 +2*bucket_half_thick, bucket_half_thick, bucket->GetPos() + ChVector<>(0, 0, -bucket_half_thick), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 		bucket_bott->GetCollisionModel()->BuildModel();
 		
 		bucket_bott->SetCollide(true);
@@ -1083,7 +1120,9 @@ int main(int argc, char* argv[]) {
 
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
-
+		char filename[100];
+		sprintf(filename, "screenshot%d.bmp", tStep);
+		screenshot(filename);
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
 

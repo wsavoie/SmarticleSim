@@ -72,7 +72,7 @@ void SmarticleU::Create() {
 			m1 * (gyr1.z + ChVector<>(rel_loc1.x, rel_loc1.y, 0).Length2()) +
 			m2 * (gyr2.z + ChVector<>(rel_loc2.x, rel_loc2.y, 0).Length2()) +
 			m3 * (gyr3.z + ChVector<>(rel_loc3.x, rel_loc3.y, 0).Length2()) ;
-
+			
 	// create body, set initPos and rotation, add surface property, and clear/make collision model
 	if (USE_PARALLEL) {
 		smarticleU = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
@@ -90,7 +90,9 @@ void SmarticleU::Create() {
 	smarticleU->SetMaterialSurface(mat_g);
 
 	smarticleU->GetCollisionModel()->ClearModel();
+	//smarticleU->GetCollisionModel()->SetDefaultSuggestedEnvelope(.4*r2);
 	// initialize collision geometry wrt cm
+	
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box1_dim, rel_loc1);
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box2_dim, rel_loc2,quat2);
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box3_dim, rel_loc3,quat3);
