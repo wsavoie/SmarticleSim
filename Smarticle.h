@@ -17,6 +17,9 @@
 
 namespace chrono {
 
+enum MotionType {SQUARE_G, CIRCLE_G, RELEASE_G};
+
+
 // structs to attach motion to smarticles
 class JointMotion : public ChShared {
 public:
@@ -35,14 +38,18 @@ public:
 	JointMotion joint_12;	// joint 1 motion
 	double timeInterval;	// time of action
 	double startTime;		// start time of the motion
+	double dT;
 	SmarticleMotionPiece() {}
 	~SmarticleMotionPiece() {}
 
 	virtual void SetMotionSegment(int s) {motionSegment = s;}
 	virtual int GetMotionSegment() {return motionSegment;}
 
+	virtual void SetMotionType(MotionType myMotion) {motionType = myMotion;}
+	virtual MotionType GetMotionType() {return motionType;}
 private:
 	int motionSegment;
+	MotionType motionType;
 };
 
 
@@ -99,6 +106,8 @@ public:
 
   virtual void UpdateSmarticleMotion();
   virtual void UpdateSmarticleMotionLoop();
+  virtual void UpdateMySmarticleMotion();
+
 
 	//smarticle arm angle
 	virtual void SetAngle(double mangle, bool degrees);
@@ -118,6 +127,8 @@ private:
 		  );
   void CreateJoints();
   void CreateActuators();
+
+  void MoveSquare();
 
 protected:
   // location and orientation (location of the center of the middle arm)

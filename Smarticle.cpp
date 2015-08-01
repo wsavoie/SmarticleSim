@@ -343,6 +343,84 @@ void Smarticle::UpdateSmarticleMotionLoop() {
 
 }
 
+void Smarticle::MoveSquare() {
+	double ang01 = link_actuator01->Get_mot_rot();
+	double ang12 = link_actuator12->Get_mot_rot();
+	double omega1 = current_motion->joint_01.omega;
+	double omega2 = current_motion->joint_12.omega;
+
+	if (
+			ang01 > current_motion->joint_01.theta1 &&
+			ang01 < current_motion->joint_01.theta2 &&
+			ang12 > current_motion->joint_12.theta1 &&
+			ang12 < current_motion->joint_12.theta2)
+
+	if ((ang01 < current_motion->joint_01.theta1) && (omega1 < 0)) {
+		omega1 *= -1;
+	}
+	if ((ang01 > current_motion->joint_01.theta2) && (omega1 > 0)) {
+		omega1 *= -1;
+	}
+	if ((ang12 < current_motion->joint_12.theta1) && (omega2 < 0)) {
+		omega2 *= -1;
+	}
+	if ((ang12 > current_motion->joint_12.theta2) && (omega2 > 0)) {
+		omega2 *= -1;
+	}
+
+	current_motion->joint_01.omega = omega1;
+	current_motion->joint_12.omega = omega2;
+
+	this->SetActuatorFunction(0, omega1);
+	this->SetActuatorFunction(1, omega2);
+
+}
+
+void Smarticle::UpdateMySmarticleMotion() {
+	double ang01 = link_actuator01->Get_mot_rot();
+	double ang12 = link_actuator12->Get_mot_rot();
+	double omega1 = 0.1 * (current_motion->joint_01.theta2 - current_motion->joint_01.theta1) / dT;  // some omega to move back the ams angles into range
+	double omega2 = 0.1 * (current_motion->joint_12.theta2 - current_motion->joint_12.theta1) / dT;	 // some omega to move back the ams angles into range
+
+	bool inRange = true;
+
+	if (ang01 < current_motion->joint_01.theta1) {
+		current_motion->joint_01.omega = omega1;
+		inRange = false;
+	}
+	if (ang01 > current_motion->joint_01.theta2) {
+		current_motion->joint_01.omega = -omega1;
+		inRange = false;
+	}
+	if (ang12 < current_motion->joint_12.theta1) {
+		current_motion->joint_12.omega = omega2;
+		inRange = false;
+	}
+	if (ang12 > current_motion->joint_12.theta2) {
+		current_motion->joint_12.omega = -omega2;
+		inRange = false;
+	}
+
+	if (!inRange) {
+		return;
+	}
+
+	MotionType sMotion = current_motion->GetMotionType();
+	switch (current_motion->GetMotionType()) {
+	case SQUARE_G:
+		MoveSquare();
+		break;
+	case CIRCLE_G:
+		MoveCircle();
+		break;
+	case RELEASE_G:
+		MoveRelease();
+		break;
+	default:
+		break;
+	}
+}
+
 ChSharedPtr<SmarticleMotionPiece> Smarticle::Get_Current_Motion() {
 	return current_motion;
 }

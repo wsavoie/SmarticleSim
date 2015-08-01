@@ -330,6 +330,8 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				myMotion->timeInterval = 0.5;
 				myMotion->startTime = 0;
 
+				myMotion->SetMotionType(SQUARE_G);
+
 
 				if (smarticleType == SMART_ARMS) {
 					Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
