@@ -28,8 +28,9 @@ public:
 	~JointMotion() {}
 };
 
-struct SmarticleMotionPiece : public ChShared{
+class SmarticleMotionPiece : public ChShared{
 
+public:
 	JointMotion joint_01;	// joint 1 motion,
 	JointMotion joint_12;	// joint 1 motion
 	double timeInterval;	// time of action
