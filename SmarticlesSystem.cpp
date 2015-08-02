@@ -85,7 +85,7 @@ void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody>
 	double gravity = -9.81 * sizeScale;
 	
 	double vibration_freq = 30;
-	bool read = true;
+	bool rread = true;
 	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 	//double vibration_amp = sizeScale * 0.00055;
 	double mGamma = 1.23 * gravity;
@@ -193,7 +193,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	int dummyNumber0;
 	int dummyNumber1;
 	int dummyNumber2;
-  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle,mGamma,read);
+  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle,mGamma,rread);
 
 	simParams << std::endl <<
 		" l_smarticle: " << l_smarticle << std::endl <<
@@ -201,7 +201,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 		" dT: " << dT << std::endl <<
 		" Gamma: " << mGamma << std::endl <<
 		" numlayers: " << numLayers << std::endl <<
-		" read from file: " << read << std::endl << std::endl;
+		" read from file: " << rread << std::endl << std::endl;
   // ---------------------
   // Edit mphysicalSystem settings.
   // ---------------------
@@ -235,7 +235,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set params from input
   // ----------------------
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle,mGamma,read);
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle,mGamma,rread);
 
   // ----------------------
   // Set number of threads.
@@ -454,7 +454,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 
 	//Add ground piece
 	//
-	if (!read)	{
+	if (!rread)	{
 		//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 		utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad+t, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
 	}
@@ -684,7 +684,7 @@ void PrintFractionsAndCOM(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Sma
 			
 			double rad = bucket_rad; 
 			
-			if (read){
+			if (rread){
 				rad = 6 * bucket_rad+2*bucket_half_thick;//allows for larger region to test for com in when column collapses
 			}
 
@@ -811,53 +811,53 @@ void vibrate_bucket(double t,ChSharedPtr<chrono::ChBody> body) {
 	body->SetRot(QUNIT);
 }
 
-bool screenshot(char *fileName){
-	int Xres = 1280;
-	int Yres = 720;
-	static unsigned char header[54] = {
-		0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-	unsigned char *pixels = (unsigned char *)malloc(Xres * Yres * 3);
-	((unsigned __int16 *)header)[9] = Xres;
-	((unsigned __int16 *)header)[11] = Yres;
-
-	glReadPixels(0, 0, Xres, Yres, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-
-	unsigned char temp;
-	for (unsigned int i = 0; i < Xres * Yres * 3; i += 3){
-		temp = pixels[i];
-		pixels[i] = pixels[i + 2];
-		pixels[i + 2] = temp;
-	}
-
-	HANDLE FileHandle;
-	unsigned long Size;
-
-	if (fileName == NULL){
-		char file[256];
-		unsigned int i = 0;
-		do {
-			sprintf(file, "Screenshot%d.bmp", i);
-			FileHandle = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-			i++;
-		} while (FileHandle == INVALID_HANDLE_VALUE);
-	}
-	else {
-		FileHandle = CreateFile(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (FileHandle == INVALID_HANDLE_VALUE)	return false;
-	}
-	DWORD NumberOfBytesWritten;
-	WriteFile(FileHandle, header, sizeof(header), &NumberOfBytesWritten, NULL);
-	WriteFile(FileHandle, pixels, Xres * Yres * 3, &NumberOfBytesWritten, NULL);
-
-	CloseHandle(FileHandle);
-
-	free(pixels);
-	return true;
-}
+//bool screenshot(char *fileName){
+//	int Xres = 1280;
+//	int Yres = 720;
+//	static unsigned char header[54] = {
+//		0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
+//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
+//		0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
+//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+//
+//	unsigned char *pixels = (unsigned char *)malloc(Xres * Yres * 3);
+//	((unsigned __int16 *)header)[9] = Xres;
+//	((unsigned __int16 *)header)[11] = Yres;
+//
+//	glReadPixels(0, 0, Xres, Yres, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+//
+//	unsigned char temp;
+//	for (unsigned int i = 0; i < Xres * Yres * 3; i += 3){
+//		temp = pixels[i];
+//		pixels[i] = pixels[i + 2];
+//		pixels[i + 2] = temp;
+//	}
+//
+//	HANDLE FileHandle;
+//	unsigned long Size;
+//
+//	if (fileName == NULL){
+//		char file[256];
+//		unsigned int i = 0;
+//		do {
+//			sprintf(file, "Screenshot%d.bmp", i);
+//			FileHandle = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+//			i++;
+//		} while (FileHandle == INVALID_HANDLE_VALUE);
+//	}
+//	else {
+//		FileHandle = CreateFile(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+//		if (FileHandle == INVALID_HANDLE_VALUE)	return false;
+//	}
+//	DWORD NumberOfBytesWritten;
+//	WriteFile(FileHandle, header, sizeof(header), &NumberOfBytesWritten, NULL);
+//	WriteFile(FileHandle, pixels, Xres * Yres * 3, &NumberOfBytesWritten, NULL);
+//
+//	CloseHandle(FileHandle);
+//
+//	free(pixels);
+//	return true;
+//}
 // =============================================================================
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
@@ -935,11 +935,6 @@ int main(int argc, char* argv[]) {
 	gl_window.viewer->render_camera.camera_scale = 2.0/(1000.0)*sizeScale;
 	gl_window.viewer->render_camera.near_clip = .001;
 	gl_window.SetRenderMode(opengl::SOLID);
-	//glPixelStorei(GL_PACK_ALIGNMENT, 1);
-
-	int nSize = 1280*720 * 3;
-	char* dataBuffer = (char*)malloc(nSize*sizeof(char));
-	glReadPixels((GLint)0, (GLint)0, (GLint)1280, (GLint)720, GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
 
 
 // Uncomment the following two lines for the OpenGL manager to automatically
@@ -994,7 +989,7 @@ int main(int argc, char* argv[]) {
 	}
 	
 
-	if (read)
+	if (rread)
 	{ 
 		CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec); 
 		
@@ -1018,7 +1013,7 @@ int main(int argc, char* argv[]) {
 		double t = mphysicalSystem.GetChTime();
 
 		int sSize1 = mySmarticlesVec.size();
-		if (read)
+		if (rread)
 		{	
 			if (t > removeWallStart){
 			
@@ -1128,7 +1123,7 @@ int main(int argc, char* argv[]) {
 
 
 		FixBodies(mphysicalSystem, tStep);
-		if (read)
+		if (rread)
 		{
 			PrintFractionsAndCOM(mphysicalSystem, tStep, mySmarticlesVec);
 		}

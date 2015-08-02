@@ -16,7 +16,7 @@ def chooseRunLoc(name): #add your computer name in the dictionary here and the c
      return{
      'PHYS32240':'"D:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
      'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
-     'euler.wacc.wisc.edu':'/home/wsavoie/SmarticleRunFiles/SmarticlesSystem.exe'}[name]
+     'euler.wacc.wisc.edu':'/home/wsavoie/ChronoSrc/SmarticlesBuild/SmarticlesSystem'}[name]
      
 def chooseParLoc(name): #add your computer name in the dictionary here and the corresponding location of the exe file
     return{
@@ -60,7 +60,7 @@ def getPars():
     
     return [dt, angle, lw, numlayer, gamma, read]
 def runSim():
-    cores = 4
+    cores = 1
     sliding_its = 55
     bilateral_its= 55
     time.mktime
@@ -104,12 +104,14 @@ def runSim():
         
         simT = time.time();          
         x= "%s %f %g %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
+        x2= "%f %g %g %g %g %g %g %g %g"%(lw[i], dT,numlayers[i],angle[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
         title= "%g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle[i],gamma[i], read[0],cores,sliding_its,bilateral_its)
         # ctypes.windll.kernel32.SetConsoleTitleA(title)
         print 'hi'
         print x
         print 'hi'
-        os.system(x)
+        os.system('qsub bash_Smarticle.sh -F "'+x2+'"')
+        # os.system(x)
 
         endSimt = time.time()-simT
         print "######################"
@@ -117,7 +119,7 @@ def runSim():
         print "######################"
         # winsound.Beep(1000,300)
         tElapsed = time.time()-tBegin
-        os.chdir("..\\..")
+        os.chdir("../../")
         
         # renaming folder upon completion doesnt work
         ofpath = dirpath
