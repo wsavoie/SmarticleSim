@@ -1,26 +1,28 @@
 import numpy
-import scipy
 import sys, os, errno, platform,shutil
-import winsound,time, datetime
+import time, datetime
 from time import gmtime, strftime
 from datetime import date
 import ctypes
 
-compName = platform.node(); 
+compName = platform.node()
 
 def chooseDir(name): #add your computer name in the dictionary here and the corresponding location where the program output will be placed
      return{
      'PHYS32240':'D:\\SimResults\\Chrono\\SmarticleU\\Results\\',
-     'WS':'C:\\SimResults\\Chrono\\SmarticleU\\Results\\'}[name]
+     'WS':'C:\\SimResults\\Chrono\\SmarticleU\\Results\\',
+     'euler.wacc.wisc.edu':'/home/wsavoie/SmarticleResults/'}[name]
 def chooseRunLoc(name): #add your computer name in the dictionary here and the corresponding location of the exe file
      return{
      'PHYS32240':'"D:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
-     'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"'}[name]
+     'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
+     'euler.wacc.wisc.edu':'/home/wsavoie/SmarticleRunFiles/SmarticlesSystem.exe'}[name]
      
 def chooseParLoc(name): #add your computer name in the dictionary here and the corresponding location of the exe file
     return{
     'PHYS32240':'D:\ChronoCode\chronoPkgs\Smarticles\pythonrunscripts\simRunPars.txt',
-    'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"'}[name]
+    'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
+    'euler.wacc.wisc.edu':'/home/wsavoie/SmarticleScripts/simRunPars.txt'}[name]
 def makePath(path):
     try:
         os.makedirs(path)
@@ -58,7 +60,7 @@ def getPars():
     
     return [dt, angle, lw, numlayer, gamma, read]
 def runSim():
-    cores = 1
+    cores = 4
     sliding_its = 55
     bilateral_its= 55
     time.mktime
@@ -91,18 +93,19 @@ def runSim():
     for i in range(0,len(depVar)):
         d=date.fromtimestamp(time.time())
         t = d.strftime("%Y%m%d")
-        dirn = "%s lw=%g ang=%g gamma=%g "%(t, lw[i], angle[i],gamma[i])+read[0]*"r"
+        dirn = "%s lw=%g ang=%g g=%g "%(t, lw[i], angle[i],gamma[i])+read[0]*"r"
         dirpath = chooseDir(compName)+dirn
         print dirpath
         makePath(dirpath)
-        shutil.copyfile(chooseParLoc(compName)+"\..\smarticles.csv", dirpath+"\smarticles.csv")
+        if read[0]==1:
+            shutil.copyfile(chooseParLoc(compName)+"\..\smarticles.csv", dirpath+"\smarticles.csv")
         os.chdir(dirpath)
         tBegin = time.time()
         
         simT = time.time();          
         x= "%s %f %g %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
         title= "%g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle[i],gamma[i], read[0],cores,sliding_its,bilateral_its)
-        ctypes.windll.kernel32.SetConsoleTitleA(title)
+        # ctypes.windll.kernel32.SetConsoleTitleA(title)
         print 'hi'
         print x
         print 'hi'
@@ -112,9 +115,9 @@ def runSim():
         print "######################"
         print strftime("%H:%M:%S",gmtime())
         print "######################"
-        winsound.Beep(1000,300)
+        # winsound.Beep(1000,300)
         tElapsed = time.time()-tBegin
-        os.chdir("..\\..\\..")
+        os.chdir("..\\..")
         
         # renaming folder upon completion doesnt work
         ofpath = dirpath

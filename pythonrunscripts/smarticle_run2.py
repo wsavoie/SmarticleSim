@@ -91,7 +91,7 @@ def runSim():
     for i in range(0,len(depVar)):
         d=date.fromtimestamp(time.time())
         t = d.strftime("%Y%m%d")
-        dirn = "%s lw=%g ang=%g gamma=%g "%(t, lw[i], angle[i],gamma[i])+read[0]*"r"
+        dirn = "%s lw=%g ang=%g g=%g "%(t, lw[i], angle[i],gamma[i])+read[0]*"r"
         dirpath = chooseDir(compName)+dirn
         print dirpath
         makePath(dirpath)

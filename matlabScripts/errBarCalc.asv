@@ -1,8 +1,0 @@
-function [OutM] = errBarCalc(xdatin,ydatin)
-
-[uout, ~, outidx] = unique(xdatin); %
-OutM = zeros(length(uout),3);
-OutMatrix1  = [uout(:), accumarray( outidx,ydatin, [], @mean ) ];  %mean of ydata
-OutMatrix2  = [uout(:), accumarray( outidx, ydatin, [], @std ) ]; %std of ydata
-OutM(:,1:2) = OutMatrix1; % [depvar mean of ydata ]
-OutM(:,3)   = OutMatrix2(:,2); % [ ]

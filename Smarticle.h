@@ -20,7 +20,7 @@
 #define false 0
 #endif
 
-#define USE_PARALLEL false
+#define USE_PARALLEL true
 
 namespace chrono {
 

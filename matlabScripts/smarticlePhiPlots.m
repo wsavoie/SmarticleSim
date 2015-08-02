@@ -22,7 +22,7 @@ end
 %volumeFraction.text
 %time,   SmarticleInContainer,   phi,   height,   COM.z in container   
  
-close all
+% close all
 directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\Results');
 directory_name(length(directory_name)+1)='\';
 % directory_name = 'D:\SimResults\Chrono\SmarticleU\Results\';
@@ -106,3 +106,4 @@ axis(dvaxis)
 xlabel(dvlabel);
 ylabel('\phi_f');
 figText(gcf,13);
+hold all;

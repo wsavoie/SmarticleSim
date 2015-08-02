@@ -1,6 +1,6 @@
 import numpy
 import scipy
-import sys, os, errno, platform
+import sys, os, errno, platform,shutil
 import winsound,time, datetime
 from time import gmtime, strftime
 from datetime import date
@@ -58,7 +58,7 @@ def getPars():
     
     return [dt, angle, lw, numlayer, gamma, read]
 def runSim():
-    cores = 4
+    cores = 1
     sliding_its = 55
     bilateral_its= 55
     time.mktime
@@ -91,18 +91,23 @@ def runSim():
     for i in range(0,len(depVar)):
         d=date.fromtimestamp(time.time())
         t = d.strftime("%Y%m%d")
-        dirn = "%s lw=%g ang=%g gamma=%g "%(t, lw[i], angle[i],gamma[i])+read[0]*"r"
+        dirn = "%s lw=%g ang=%g g=%g "%(t, lw[i], angle[i],gamma[i])+read[0]*"r"
         dirpath = chooseDir(compName)+dirn
         print dirpath
         makePath(dirpath)
+        shutil.copyfile(chooseParLoc(compName)+"\..\smarticles.csv", dirpath+"\smarticles.csv")
         os.chdir(dirpath)
         tBegin = time.time()
         
         simT = time.time();          
-        x= "%s %.2f %g %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
+        x= "%s %f %g %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
         title= "%g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle[i],gamma[i], read[0],cores,sliding_its,bilateral_its)
         ctypes.windll.kernel32.SetConsoleTitleA(title)
-        os.system(x)     
+        print 'hi'
+        print x
+        print 'hi'
+        os.system(x)
+
         endSimt = time.time()-simT
         print "######################"
         print strftime("%H:%M:%S",gmtime())

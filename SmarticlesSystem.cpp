@@ -116,7 +116,7 @@ void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody>
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	double bucket_rad = sizeScale*0.022;
+	double bucket_rad = sizeScale*0.022*3;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .010);
 
 	
@@ -125,11 +125,11 @@ void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody>
 	double h = bucket_interior_halfDim.z * 2 + 2*bucket_half_thick; //from entangled paper height of available volume for smarticles in bucket
 	double d = bucket_interior_halfDim.y * 2; //from entangled paper width of availble volume for smarticles in bucket
 
-	// smarticle geometry
+	// smarticle geometry//
 	double w_smarticle 	= sizeScale * 0.0117;
 	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	double t_smarticle 	= sizeScale * .00127;
-	double t2_smarticle	= sizeScale * .0005;
+	double t_smarticle 	= sizeScale * .00127*3;
+	double t2_smarticle	= sizeScale * .0005*3;
 	double m_smarticle = (t_smarticle)* (t2_smarticle)* (w_smarticle + 2 * l_smarticle);
 	double collisionEnvelope = .4 * t2_smarticle;
 
@@ -456,7 +456,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	//
 	if (!read)	{
 		//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
-		utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
+		utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad+t, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
 	}
 	else{
 		cyl_container->SetPos(cyl_container->GetPos() + Vector(0, 0, vibration_amp*sin(CH_C_PI / 2.0)));//to place box in way which is maximum downward so upon creation it has no chance of starting particles inside
@@ -1122,7 +1122,7 @@ int main(int argc, char* argv[]) {
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
 		char filename[100];
 		sprintf(filename, "screenshot%d.bmp", tStep);
-		screenshot(filename);
+		//screenshot(filename);
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
 
