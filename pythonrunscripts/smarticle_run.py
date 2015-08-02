@@ -22,7 +22,7 @@ def chooseParLoc(name): #add your computer name in the dictionary here and the c
     return{
     'PHYS32240':'D:\ChronoCode\chronoPkgs\Smarticles\pythonrunscripts\simRunPars.txt',
     'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
-    'euler.wacc.wisc.edu':'/home/wsavoie/SmarticleScripts/simRunPars.txt'}[name]
+    'euler.wacc.wisc.edu':'/home/wsavoie/Smarticles/pythonrunscripts/simRunPars.txt'}[name]
 def makePath(path):
     try:
         os.makedirs(path)
