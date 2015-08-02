@@ -110,7 +110,7 @@ def runSim():
         print 'hi'
         print x
         print 'hi'
-        os.system('qsub bash_Smarticle.sh -F "'+x2+'"')
+        os.system('qsub /home/wsavoie/ChronoSrc/Smarticles/pythonrunscripts/bash_Smarticle.sh -F "'+x2+'"')
         # os.system(x)
 
         endSimt = time.time()-simT

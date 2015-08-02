@@ -5,4 +5,4 @@
 
 cd $PBS_O_WORKDIR
 
-./SmarticlesSystem > bash_Smarticle.out.$PBS_JOBID.`hostname`
+/home/wsavoie/ChronoSrc/SmarticlesBuild/SmarticlesSystem > bash_Smarticle.out.$PBS_JOBID.`hostname`
