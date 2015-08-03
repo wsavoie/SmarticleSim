@@ -45,7 +45,8 @@ public:
 			double other_r2 = 0,
 			ChVector<> pos = ChVector<>(0, 0, 0),
 			ChQuaternion<> rot = QUNIT,
-			double angle = CH_C_PI/2);
+			double angle1= CH_C_PI/2,
+			double angle2= CH_C_PI/2);
 
   // create the smarticle by creating arms, adding joint between them, and functions
   virtual void Create();
@@ -70,9 +71,13 @@ public:
   virtual double GetDensity() {return density;};
 
 	//smarticle arm angle
+	virtual void SetAngle(double mangle1, double mangle2, bool degrees);
 	virtual void SetAngle(double mangle, bool degrees);
-	virtual double GetAngle(bool degrees);
+	virtual void SetAngle1(double mangle1, bool degrees);
+	virtual void SetAngle2(double mangle2, bool degrees);
 
+	virtual double GetAngle1(bool degrees);
+	virtual double GetAngle2(bool degrees);
 	//body fixing
 	virtual void SetBodyFixed(bool mev);
 private:
@@ -98,7 +103,8 @@ protected:
   double w;  // mid-segment length including thickness
   double r;  // in-plane half-thickness of arm
   double r2;  // off-plane  half-thickness of arm, i.e. prependicular to the object
-	double angle; //angle between center segment and outer segments
+	double angle1; //angle between center segment and outer segments
+	double angle2; //angle between center segment and outer segments
   double volume;
   double mass;
 

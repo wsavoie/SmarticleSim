@@ -35,8 +35,14 @@ public:
 	virtual ChSharedBodyPtr GetSmarticleBodyPointer() {
 		return smarticleU;
 	}
+	virtual void SetAngle(double mangle1, double mangle2, bool degrees);
 	virtual void SetAngle(double mangle, bool degrees);
-	virtual double GetAngle(bool degrees);
+	virtual void SetAngle1(double mangle1, bool degrees);
+	virtual void SetAngle2(double mangle2, bool degrees);
+
+	virtual double GetAngle1(bool degrees);
+	virtual double GetAngle2(bool degrees);
+
 
 	//////////////////////
 	// no support zone

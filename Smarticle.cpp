@@ -28,7 +28,6 @@ Smarticle::Smarticle(
 	r2 = .01;
 	initPos = ChVector<>(0);
 	rotation = QUNIT;
-
 	jointClearance = .05 * r2;
 	volume = GetVolume();
 }
@@ -46,7 +45,8 @@ void Smarticle::Properties(
 		double other_r2,
 		ChVector<> pos,
 		ChQuaternion<> rot,
-		double other_angle) {
+		double other_angle,
+		double other_angle2){
 
 	smarticleID = sID;
 	density = other_density;
@@ -57,7 +57,8 @@ void Smarticle::Properties(
 	r2 = other_r2;
 	initPos = pos;
 	rotation = rot;
-	angle = other_angle;
+	angle1 = other_angle;
+	angle2 = other_angle2;
 
 	jointClearance = .05 * r2;
 	volume = GetVolume();
@@ -271,18 +272,59 @@ ChVector<> Smarticle::Get_InitPos() {
 	return initPos;
 }
 
-void Smarticle::SetAngle(double mangle, bool degrees = false)
-{
-	if (degrees) { angle = mangle*CH_C_PI / 180.0; }
-	else{ angle = mangle; }
-}
-double Smarticle::GetAngle(bool degrees = false)
+void Smarticle::SetAngle(double mangle1, double mangle2, bool degrees = false)
 {
 	if (degrees)
-		return angle*180.0 / CH_C_PI;
+	{
+		angle1 = mangle1*CH_C_PI / 180.0;
+		angle2 = mangle2*CH_C_PI / 180.0;
+	}
 	else
-		return angle;
+	{
+		angle1 = mangle1;
+		angle2 = mangle2;
+	}
 }
+void Smarticle::SetAngle(double mangle, bool degrees = false)
+{
+	if (degrees)
+	{
+		angle1 = mangle*CH_C_PI / 180.0;
+		angle2 = mangle*CH_C_PI / 180.0;
+	}
+	else
+	{
+		angle1 = mangle;
+		angle2 = mangle;
+	}
+}
+void Smarticle::SetAngle1(double mangle1, bool degrees = false)
+{
+	if (degrees) { angle1 = mangle1*CH_C_PI / 180.0; }
+	else{ angle1 = mangle1; }
+}
+void Smarticle::SetAngle2(double mangle2, bool degrees = false)
+{
+	if (degrees) { angle2 = mangle2*CH_C_PI / 180.0; }
+	else{ angle2 = mangle2; }
+}
+
+double Smarticle::GetAngle1(bool degrees = true)
+{
+	if (degrees)
+		return angle1*180.0 / CH_C_PI;
+	else
+		return angle1;
+}
+double Smarticle::GetAngle2(bool degrees = true)
+{
+	if (degrees)
+		return angle2*180.0 / CH_C_PI;
+	else
+		return angle2;
+}
+
+
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
 void Smarticle::SetBodyFixed(bool mev){

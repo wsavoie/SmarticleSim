@@ -105,8 +105,8 @@ void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody>
 	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 100;
-	double armAngle = 90;
-	
+	double armAngle1 = 90;
+	double armAngle2 = 90;
 	
 
 	bool povray_output = false;
@@ -137,7 +137,7 @@ void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody>
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
-void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle,double& gamma, bool& readFile) {
+void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle1,double& mangle2,double& gamma, bool& readFile) {
   if (argc > 1) {
 	const char* text = argv[1];
 	double mult_l = atof(text);
@@ -153,29 +153,33 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 	}
 	if (argc > 4){
 		const char* text = argv[4];
-		mangle = atof(text);
+		mangle1 = atof(text);
 	}
 	if (argc > 5){
 		const char* text = argv[5];
-		gamma = atof(text)*gravity;
-		vibration_amp= gamma / (omega_bucket*omega_bucket);
+		mangle2 = atof(text);
 	}
 	if (argc > 6){
 		const char* text = argv[6];
+		gamma = atof(text)*gravity;
+		vibration_amp= gamma / (omega_bucket*omega_bucket);
+	}
+	if (argc > 7){
+		const char* text = argv[7];
 		readFile = atoi(text);
 	}
 	/// if parallel, get solver setting
   if (USE_PARALLEL) {
-	  if (argc > 7) {
-		const char* text = argv[7];
-		threads = atoi(text);
-	  }
 	  if (argc > 8) {
 		const char* text = argv[8];
-		max_iteration_sliding = atoi(text);
+		threads = atoi(text);
 	  }
 	  if (argc > 9) {
 		const char* text = argv[9];
+		max_iteration_sliding = atoi(text);
+	  }
+	  if (argc > 10) {
+		const char* text = argv[10];
 		max_iteration_bilateral = atoi(text);
 	  }
   }
@@ -193,7 +197,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	int dummyNumber0;
 	int dummyNumber1;
 	int dummyNumber2;
-  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle,mGamma,rread);
+  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle1,armAngle2,mGamma,rread);
 
 	simParams << std::endl <<
 		" l_smarticle: " << l_smarticle << std::endl <<
@@ -235,7 +239,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set params from input
   // ----------------------
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle,mGamma,rread);
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle1,armAngle2,mGamma,rread);
 
   // ----------------------
   // Set number of threads.
@@ -266,7 +270,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 		" dT: " << dT << std::endl <<
 		" tFinal: " << tFinal << std::endl <<
 		" vibrate start: " << vibrateStart << std::endl <<
-		" arm angle: " << armAngle << std::endl << std::endl;
+		" arm angle 1 and 2: " << armAngle1<< " " << armAngle2 << std::endl << std::endl;
 	
 
   // ---------------------
@@ -335,7 +339,8 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 					rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 					myPos,
 					myRot);
-					smarticle0->SetAngle(armAngle, true);
+					//smarticle0->SetAngle(armAngle, true);
+				smarticle0->SetAngle(armAngle1,armAngle2, true);
 				smarticle0->Create();
 				mySmarticlesVec.push_back(smarticle0);
 				
@@ -383,7 +388,8 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 						rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						myPos,
 						myRot);
-					smarticle0->SetAngle(armAngle, true);
+					//smarticle0->SetAngle(armAngle, true);
+					smarticle0->SetAngle(armAngle1,armAngle2, true);
 					smarticle0->Create();
 					mySmarticlesVec.push_back(smarticle0);
 					if (!USE_PARALLEL) {
@@ -927,7 +933,7 @@ int main(int argc, char* argv[]) {
 	ChVector<> CameraLocation = sizeScale * ChVector<>(-.1, -.06, .1);
 	ChVector<> CameraLookAt = sizeScale * ChVector<>(0, 0, -.01);
 	char appTitle[240];
-	sprintf(appTitle,"Smarticle: lw: %g, ang: %g, numlayers: %d, dT: %g, gamma: %g", l_smarticle / w_smarticle, armAngle, numLayers, dT,mGamma);
+	sprintf(appTitle,"Smarticle: lw: %g, angs: %g,%g, numlayers: %d, dT: %g, gamma: %g", l_smarticle / w_smarticle, armAngle1,armAngle2, numLayers, dT,mGamma);
 	gl_window.Initialize(1280, 720, appTitle, &mphysicalSystem);
 
 	
