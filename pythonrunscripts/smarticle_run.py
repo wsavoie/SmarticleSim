@@ -46,33 +46,39 @@ def getPars():
     dt=read_data[0]
     dt=float(dt)
     
-    angle= read_data[fnum+2]
-    angle=[int(x) for x in angle.split('\t')]
+    angle1= read_data[fnum+2]
+    angle1=[int(x) for x in angle1.split('\t')]
     
-    lw = read_data[fnum+6]
+    angle2= read_data[fnum+6]
+    angle2=[int(x) for x in angle2.split('\t')]
+    
+    lw = read_data[fnum+10]
     lw = [float(x) for x in lw.split('\t')]
     
-    numlayer = read_data[fnum+10]
+    numlayer = read_data[fnum+14]
     numlayer = [int(x) for x in numlayer.split('\t')]
     
-    gamma = read_data[fnum+14]
+    gamma = read_data[fnum+18]
     gamma = [float(x) for x in gamma.split('\t')]
     
-    read = read_data[fnum+18]
+    read = read_data[fnum+22]
     read = [int(x) for x in read.split('\t')]
     
-    return [dt, angle, lw, numlayer, gamma, read]
+    return [dt, angle1,angle2, lw, numlayer, gamma, read]
 def runSim():
     cores = 1
     sliding_its = 55
     bilateral_its= 55
     time.mktime
-    [dT, angle, lw, numlayers, gamma, read] = getPars()
+    [dT, angle1,angle2, lw, numlayers, gamma, read] = getPars()
     
+    #break if len(angle1) != len(angle2)
+    if(len(angle1)!=len(angle2)):
+        sys.exit("error in simRunPars, angle inputs are not equal in length")
     #set depVar to something just in case first 2 
-    if (len(angle)>len(lw)):
-        depVar=angle
-    elif (len(lw)>len(angle)):
+    if (len(angle1)>len(lw)):
+        depVar=angle1
+    elif (len(lw)>len(angle1)):
         depVar=lw
     elif (read[0]==1): #this param takes priority
         depVar=gamma
@@ -80,15 +86,17 @@ def runSim():
         depVar=gamma
         
         
-    if (depVar==angle):
+    if (depVar==angle1):
         lw = lw*len(depVar)
         numlayers = numlayers*len(depVar)
         gamma = gamma*len(depVar)
     elif (depVar==lw): #will define numlayers explicitly in this case
-        angle = angle*len(depVar)
+        angle1 = angle1*len(depVar)
+        angle2 = angle2*len(depVar)
         gamma = gamma*len(depVar)
     elif (depVar==gamma):
-        angle = angle*len(depVar)
+        angle1 = angle1*len(depVar)
+        angle2 = angle2*len(depVar)
         lw = lw*len(depVar)
         numlayers = numlayers*len(depVar)
     #make file
@@ -96,7 +104,7 @@ def runSim():
     for i in range(0,len(depVar)):
         d=date.fromtimestamp(time.time())
         t = d.strftime("%Y%m%d")
-        dirn = "%s lw=%g ang=%g g=%g "%(t, lw[i], angle[i],gamma[i])+read[0]*"r"
+        dirn = "%s lw=%g ang1=%g ang2=%g g=%g "%(t, lw[i], angle1[i],angle2[i],gamma[i])+read[0]*"r"
         dirpath = chooseDir(compName)+dirn
         print dirpath
         makePath(dirpath)
@@ -106,9 +114,9 @@ def runSim():
         tBegin = time.time()
         
         simT = time.time();          
-        x= "%s %f %g %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
-        x2= "%f %g %g %g %g %g %g %g %g"%(lw[i], dT,numlayers[i],angle[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
-        title= "%g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle[i],gamma[i], read[0],cores,sliding_its,bilateral_its)
+        x= "%s %f %g %g %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle1[i],angle2[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
+        x2= "%f %g %g %g %g %g %g %g %g %g"%(lw[i], dT,numlayers[i],angle1[i],angle2[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
+        title= "%g %g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle1[i],angle2[2],gamma[i], read[0],cores,sliding_its,bilateral_its)
         # ctypes.windll.kernel32.SetConsoleTitleA(title)
         print 'hi'
         print x

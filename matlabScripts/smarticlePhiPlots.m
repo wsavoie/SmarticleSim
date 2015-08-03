@@ -107,16 +107,16 @@ xlabel(dvlabel);
 ylabel('\phi_f');
 figText(gcf,13);
 hold all;
-%% phif = c*vp/ve
-figure(22);
-phif = OutM(:,2);
-%dimensions of smarticle
-t1=.00127*3;
-t2=.0005*3;
-w=.0117;
-l= .379*w;
-vp=(t1) * (t2)* (w + 2 * l);
-%ve=p*V; %find this through simulation
-%
+% %% phif = c*vp/ve
+% figure(22);
+% phif = OutM(:,2);
+% %dimensions of smarticle
+% t1=.00127*3;
+% t2=.0005*3;
+% w=.0117;
+% l= .379*w;
+% vp=(t1) * (t2)* (w + 2 * l);
+% %ve=p*V; %find this through simulation
+% %
 
 
