@@ -1,4 +1,3 @@
-import numpy
 import sys, os, errno, platform,shutil
 import time, datetime
 from time import gmtime, strftime
@@ -10,7 +9,7 @@ compName = platform.node()
 def chooseDir(name): #add your computer name in the dictionary here and the corresponding location where the program output will be placed
      return{
      'PHYS32240':'D:\\SimResults\\Chrono\\SmarticleU\\Results\\',       #lab computer
-     'PHYS32164':'D:\\LabDropbox\\Dropbox\\WillSmarticles\\Results',    #goldman2
+     'PHYS32164':'D:\\LabDropbox\\Dropbox\\WillSmarticles\\Results\\',    #goldman2
      'WS':'C:\\SimResults\\Chrono\\SmarticleU\\Results\\',              #laptop
      'euler.wacc.wisc.edu':'/home/wsavoie/SmarticleResults/'            #Wisc server
      }[name]
@@ -116,7 +115,7 @@ def runSim():
         print 'hi'
         if sys.platform != 'win32':
             os.system('qsub /home/wsavoie/ChronoSrc/Smarticles/pythonrunscripts/bash_Smarticle.sh -F "'+x2+'"')
-        else
+        else:
             os.system(x)
         
         endSimt = time.time()-simT
