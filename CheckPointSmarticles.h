@@ -31,7 +31,9 @@ void CheckPointSmarticles_Write(
 		double t_smarticle,
 		double t2_smarticle,
 		double collisionEnvelop,
-		double rho_smarticle);
+		double rho_smarticle,
+		double angle1,
+		double angle2);
 void CheckPointSmarticles_Read(
 	CH_SYSTEM& mphysicalSystem,
 	std::vector<Smarticle*> & mySmarticlesVec);

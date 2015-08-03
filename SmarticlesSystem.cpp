@@ -1140,15 +1140,17 @@ int main(int argc, char* argv[]) {
 	  std::cout.flush();
 
 
-	  CheckPointSmarticles_Write(mySmarticlesVec,
-	  		tStep,
-	  		mat_g,
-	  		l_smarticle,
-	  		w_smarticle,
-	  		t_smarticle,
-	  		t2_smarticle,
-	  		collisionEnvelope,
-	  		rho_smarticle);
+		CheckPointSmarticles_Write(mySmarticlesVec,
+			tStep,
+			mat_g,
+			l_smarticle,
+			w_smarticle,
+			t_smarticle,
+			t2_smarticle,
+			collisionEnvelope,
+			rho_smarticle,
+			armAngle1,
+			armAngle2);
 
   }
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
