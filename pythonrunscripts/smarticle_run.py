@@ -9,18 +9,22 @@ compName = platform.node()
 
 def chooseDir(name): #add your computer name in the dictionary here and the corresponding location where the program output will be placed
      return{
-     'PHYS32240':'D:\\SimResults\\Chrono\\SmarticleU\\Results\\',
-     'WS':'C:\\SimResults\\Chrono\\SmarticleU\\Results\\',
-     'euler.wacc.wisc.edu':'/home/wsavoie/SmarticleResults/'}[name]
+     'PHYS32240':'D:\\SimResults\\Chrono\\SmarticleU\\Results\\',       #lab computer
+     'PHYS32164':'D:\\LabDropbox\\Dropbox\\WillSmarticles\\Results',    #goldman2
+     'WS':'C:\\SimResults\\Chrono\\SmarticleU\\Results\\',              #laptop
+     'euler.wacc.wisc.edu':'/home/wsavoie/SmarticleResults/'            #Wisc server
+     }[name]
 def chooseRunLoc(name): #add your computer name in the dictionary here and the corresponding location of the exe file
      return{
      'PHYS32240':'"D:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
+     'PHYS32164':'D:\\LabDropbox\\Dropbox\\WillSmarticles\\Release\\SmarticlesSystem.exe',
      'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
      'euler.wacc.wisc.edu':'/home/wsavoie/ChronoSrc/SmarticlesBuild/SmarticlesSystem'}[name]
      
 def chooseParLoc(name): #add your computer name in the dictionary here and the corresponding location of the exe file
     return{
     'PHYS32240':'D:\ChronoCode\chronoPkgs\Smarticles\pythonrunscripts\simRunPars.txt',
+    'PHYS32164':'D:\LabDropbox\Dropbox\WillSmarticles\Smarticles\pythonrunscripts\simRunPars.txt',
     'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
     'euler.wacc.wisc.edu':'/home/wsavoie/ChronoSrc/Smarticles/pythonrunscripts/simRunPars.txt'}[name]
 def makePath(path):
@@ -110,9 +114,11 @@ def runSim():
         print 'hi'
         print x
         print 'hi'
-        os.system('qsub /home/wsavoie/ChronoSrc/Smarticles/pythonrunscripts/bash_Smarticle.sh -F "'+x2+'"')
-        # os.system(x)
-
+        if sys.platform != 'win32':
+            os.system('qsub /home/wsavoie/ChronoSrc/Smarticles/pythonrunscripts/bash_Smarticle.sh -F "'+x2+'"')
+        else
+            os.system(x)
+        
         endSimt = time.time()-simT
         print "######################"
         print strftime("%H:%M:%S",gmtime())
