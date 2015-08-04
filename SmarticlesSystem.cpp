@@ -1004,6 +1004,8 @@ int main(int argc, char* argv[]) {
 	char appTitle[240];
 	sprintf(appTitle,"Smarticle: lw: %g, angs: %g,%g, numlayers: %d, dT: %g, gamma: %g", l_smarticle / w_smarticle, armAngle1,armAngle2, numLayers, dT,mGamma);
 	gl_window.Initialize(1280, 720, appTitle, &mphysicalSystem);
+	gl_window.viewer->contact_renderer.SetPointSize(.001);
+	gl_window.viewer->cloud.SetPointSize(0.001);
 
 	
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
@@ -1095,7 +1097,7 @@ int main(int argc, char* argv[]) {
 					//bucket_bott->SetBodyFixed(false);
 					//vibrate_bucket(t,bucket_bott);
 					if (bucket_exist){
-						mphysicalSystem.RemoveBody(bucket);
+						bucket->SetPos(ChVector<>(100, 0, 0));
 						bucket_exist = false;
 					}
 					if (t >collapseStart)
@@ -1195,6 +1197,7 @@ int main(int argc, char* argv[]) {
 		//screenshot(filename);
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
+	  printf("num contacts %d, time %f\n", numContacts, mphysicalSystem.GetChTime());
 
 
 		FixBodies(mphysicalSystem, tStep);
