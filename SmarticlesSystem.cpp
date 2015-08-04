@@ -519,6 +519,8 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	} else {
 		bucket = ChSharedPtr<ChBody>(new ChBody);
 	}
+
+
 	// 1: create bucket
 		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
 	if (bucketType == BOX){
@@ -534,6 +536,72 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	bucket->SetCollide(true);
 	bucket->GetCollisionModel()->SetFamily(1);
 	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+
+	// 2: create plate
+	//	bucket->SetMaterialSurface(mat_g);
+	//	bucket->SetBodyFixed(true);
+	//	bucket->SetCollide(true);
+	//	bucket->GetCollisionModel()->ClearModel();
+	//	utils::AddBoxGeometry(bucket.get_ptr(), ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, bucket_half_thick), bucket_ctr - ChVector<>(0, 0, bucket_interior_halfDim.z));
+	//	bucket->GetCollisionModel()->BuildModel();
+	//	mphysicalSystem.AddBody(bucket);
+
+
+
+	//	//	/////////////////
+	//	// Smarticle body
+	//	/////////////////
+	//
+	//	MySeed(964);
+	//	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
+	//	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
+	//
+	//	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
+	//	int nX = bucket_interior_halfDim.x / maxDim;
+	//	int nY = bucket_interior_halfDim.y / maxDim;
+	//	// test one smarticle
+	//
+	//	ChQuaternion<> myRot = Q_from_AngAxis(CH_C_PI / 2, VECT_X);// ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+	//	myRot.Normalize();
+	//	ChVector<> myPos = ChVector<>(nX / 2 * maxDim, nY / 2 * maxDim , 2 * maxDim);
+	//	SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
+	//	smarticle0->Properties( 3 /* 1 and 2 are the first two objects */,
+	//					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+	//					  myPos,
+	//					  myRot);
+	//	smarticle0->Create();
+	//
+	//	ChVector<> inertiaS =1e6 * smarticle0->GetSmarticleBodyPointer()->GetInertiaXX();
+	//	printf("e inertia %f %f %f \n",inertiaS.x, inertiaS.y, inertiaS.z );
+	//
+	//	mySmarticlesVec.push_back(smarticle0);
+	//
+	//////*** stuff needed to be printed
+	////	ChVector<> IXX = smarticle0->GetSmarticleBodyPointer()->GetInertiaXX();
+	////	ChVector<> IXY = smarticle0->GetSmarticleBodyPointer()->GetInertiaXY();
+	////	ChVector<> posB = smarticle0->GetSmarticleBodyPointer()->GetPos();
+	////	ChVector<> posS = smarticle0->Get_InitPos();
+	////	double mass = smarticle0->GetSmarticleBodyPointer()->GetMass();
+
+
+
+
+
+
+	/////////////////////////////////////////////
+	//    ChSharedPtr<ChLinkLockRevolute> bucketGroundPrismatic(new ChLinkLockRevolute);
+	//    bucketGroundPrismatic->Initialize(
+	//    		smarticle0.GetArm(0), ground, true, ChCoordsys<>(ChVector<>(0, l/2, 0)), ChCoordsys<>(posRel + ChVector<>(0, l/2, 0)));
+	//    bucketGroundPrismatic->SetName("ship_ground_prismatic");
+	//    mphysicalSystem.AddLink(bucketGroundPrismatic);
+
+
+	//  ChSharedPtr<ChLinkLockRevolute> bucketGroundPrismatic(new ChLinkLockRevolute);
+	//  bucketGroundPrismatic->Initialize(
+	//  		smarticle0.GetArm(0), smarticle0.GetArm(1), true, ChCoordsys<>(ChVector<>(0, l/2, 0)), ChCoordsys<>(posRel + ChVector<>(0, l/2, 0)));
+	//  bucketGroundPrismatic->SetName("ship_ground_prismatic");
+	//  mphysicalSystem.AddLink(bucketGroundPrismatic);
+
 }
 // =============================================================================
 
