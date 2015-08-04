@@ -1197,7 +1197,7 @@ int main(int argc, char* argv[]) {
 		//screenshot(filename);
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
-	  printf("num contacts %d, time %f\n", numContacts, mphysicalSystem.GetChTime());
+	  printf("num contacts %d, time %f\n", mphysicalSystem.GetNcontacts(), mphysicalSystem.GetChTime());
 
 
 		FixBodies(mphysicalSystem, tStep);
