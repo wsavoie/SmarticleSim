@@ -85,7 +85,7 @@ void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody>
 	double gravity = -9.81 * sizeScale;
 	
 	double vibration_freq = 30;
-	bool rread = true;
+	bool read_from_file = true;
 	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 	//double vibration_amp = sizeScale * 0.00055;
 	double mGamma = 1.23 * gravity;
@@ -197,7 +197,8 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	int dummyNumber0;
 	int dummyNumber1;
 	int dummyNumber2;
-  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle1,armAngle2,mGamma,rread);
+  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle1,armAngle2,mGamma,read_from_file);
+
 
 	simParams << std::endl <<
 		" l_smarticle: " << l_smarticle << std::endl <<
@@ -205,7 +206,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 		" dT: " << dT << std::endl <<
 		" Gamma: " << mGamma << std::endl <<
 		" numlayers: " << numLayers << std::endl <<
-		" read from file: " << rread << std::endl << std::endl;
+		" read from file: " << read_from_file << std::endl << std::endl;
   // ---------------------
   // Edit mphysicalSystem settings.
   // ---------------------
@@ -239,7 +240,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set params from input
   // ----------------------
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle1,armAngle2,mGamma,rread);
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle1,armAngle2,mGamma,read_from_file);
 
   // ----------------------
   // Set number of threads.
@@ -460,7 +461,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 
 	//Add ground piece
 	//
-	if (!rread)	{
+	if (!read_from_file)	{
 		//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 		utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad+t, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
 	}
@@ -690,7 +691,7 @@ void PrintFractionsAndCOM(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Sma
 			
 			double rad = bucket_rad; 
 			
-			if (rread){
+			if (read_from_file){
 				rad = 6 * bucket_rad+2*bucket_half_thick;//allows for larger region to test for com in when column collapses
 			}
 
@@ -995,7 +996,7 @@ int main(int argc, char* argv[]) {
 	}
 	
 
-	if (rread)
+	if (read_from_file)
 	{ 
 		CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec); 
 		
@@ -1019,7 +1020,7 @@ int main(int argc, char* argv[]) {
 		double t = mphysicalSystem.GetChTime();
 
 		int sSize1 = mySmarticlesVec.size();
-		if (rread)
+		if (read_from_file)
 		{	
 			if (t > removeWallStart){
 			
@@ -1129,7 +1130,7 @@ int main(int argc, char* argv[]) {
 
 
 		FixBodies(mphysicalSystem, tStep);
-		if (rread)
+		if (read_from_file)
 		{
 			PrintFractionsAndCOM(mphysicalSystem, tStep, mySmarticlesVec);
 		}
