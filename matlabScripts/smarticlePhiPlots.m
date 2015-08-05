@@ -118,5 +118,32 @@ hold all;
 % vp=(t1) * (t2)* (w + 2 * l);
 % %ve=p*V; %find this through simulation
 % %
+%% quadratic fitting of angle
+figure(12)
+lw = [1.2 1 .7 .379 .25];
+%y= a*x^2 -b*x + c
+fitVals = [2.45e-5, -.00278, .3161;
+           2.94e-5, -.00338, .3316; 
+           2.34e-5, -0.003, .3722;
+           1.69e-5, -.00228, .4204;
+           1.98e-5, .00264 .4628];
+suptitle('\phi_f vs. Angle for different l/w fit values (\phi_f=Ax^2+Bx+C)')
+subplot(2,2,1);
 
+plot(lw,fitVals(:,1),'.-','MarkerSize',25);
+title('A vs. l/w');
+xlabel('l/w');
+ylabel('A');
 
+subplot(2,2,2)
+plot(lw,fitVals(:,2),'.-','MarkerSize',25);
+title('B vs. l/w');
+xlabel('l/w');
+ylabel('B');
+
+subplot(2,1,2)
+plot(lw,fitVals(:,3),'.-','MarkerSize',25)
+
+title('C vs. l/w');
+xlabel('l/w');
+ylabel('C');

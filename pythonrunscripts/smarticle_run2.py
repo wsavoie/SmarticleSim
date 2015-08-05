@@ -1,26 +1,31 @@
-import numpy
-import scipy
-import sys, os, errno, platform
-import winsound,time, datetime
+import sys, os, errno, platform,shutil
+import time, datetime
 from time import gmtime, strftime
 from datetime import date
 import ctypes
 
-compName = platform.node(); 
+compName = platform.node()
 
 def chooseDir(name): #add your computer name in the dictionary here and the corresponding location where the program output will be placed
      return{
-     'PHYS32240':'D:\\SimResults\\Chrono\\SmarticleU\\Results\\',
-     'WS':'C:\\SimResults\\Chrono\\SmarticleU\\Results\\'}[name]
+     'PHYS32240':'D:\\SimResults\\Chrono\\SmarticleU\\Results\\',       #lab computer
+     'PHYS32164':'D:\\LabDropbox\\Dropbox\\WillSmarticles\\Results\\',    #goldman2
+     'WS':'C:\\SimResults\\Chrono\\SmarticleU\\Results\\',              #laptop
+     'euler.wacc.wisc.edu':'/home/wsavoie/SmarticleResults/'            #Wisc server
+     }[name]
 def chooseRunLoc(name): #add your computer name in the dictionary here and the corresponding location of the exe file
      return{
-     'PHYS32240':'"D:\ChronoCode\chronoPkgs\SmarticlesBuild\Release2\SmarticlesSystem2.exe"',
-     'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"'}[name]
+     'PHYS32240':'"D:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
+     'PHYS32164':'D:\\LabDropbox\\Dropbox\\WillSmarticles\\Release\\SmarticlesSystem.exe',
+     'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
+     'euler.wacc.wisc.edu':'/home/wsavoie/ChronoSrc/SmarticlesBuild/SmarticlesSystem'}[name]
      
 def chooseParLoc(name): #add your computer name in the dictionary here and the corresponding location of the exe file
     return{
     'PHYS32240':'D:\ChronoCode\chronoPkgs\Smarticles\pythonrunscripts\simRunPars.txt',
-    'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"'}[name]
+    'PHYS32164':'D:\LabDropbox\Dropbox\WillSmarticles\Smarticles\pythonrunscripts\simRunPars.txt',
+    'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
+    'euler.wacc.wisc.edu':'/home/wsavoie/ChronoSrc/Smarticles/pythonrunscripts/simRunPars.txt'}[name]
 def makePath(path):
     try:
         os.makedirs(path)
@@ -41,33 +46,39 @@ def getPars():
     dt=read_data[0]
     dt=float(dt)
     
-    angle= read_data[fnum+2]
-    angle=[int(x) for x in angle.split('\t')]
+    angle1= read_data[fnum+2]
+    angle1=[int(x) for x in angle1.split('\t')]
     
-    lw = read_data[fnum+6]
+    angle2= read_data[fnum+6]
+    angle2=[int(x) for x in angle2.split('\t')]
+    
+    lw = read_data[fnum+10]
     lw = [float(x) for x in lw.split('\t')]
     
-    numlayer = read_data[fnum+10]
+    numlayer = read_data[fnum+14]
     numlayer = [int(x) for x in numlayer.split('\t')]
     
-    gamma = read_data[fnum+14]
-    gamma = [int(x) for x in gamma.split('\t')]
+    gamma = read_data[fnum+18]
+    gamma = [float(x) for x in gamma.split('\t')]
     
-    read = read_data[fnum+18]
+    read = read_data[fnum+22]
     read = [int(x) for x in read.split('\t')]
     
-    return [dt, angle, lw, numlayer, gamma, read]
+    return [dt, angle1,angle2, lw, numlayer, gamma, read]
 def runSim():
-    cores = 4
+    cores = 1
     sliding_its = 55
     bilateral_its= 55
     time.mktime
-    [dT, angle, lw, numlayers, gamma, read] = getPars()
+    [dT, angle1,angle2, lw, numlayers, gamma, read] = getPars()
     
+    #break if len(angle1) != len(angle2)
+    if(len(angle1)!=len(angle2)):
+        sys.exit("error in simRunPars, angle inputs are not equal in length")
     #set depVar to something just in case first 2 
-    if (len(angle)>len(lw)):
-        depVar=angle
-    elif (len(lw)>len(angle)):
+    if (len(angle1)>len(lw)):
+        depVar=angle1
+    elif (len(lw)>len(angle1)):
         depVar=lw
     elif (read[0]==1): #this param takes priority
         depVar=gamma
@@ -75,15 +86,17 @@ def runSim():
         depVar=gamma
         
         
-    if (depVar==angle):
+    if (depVar==angle1):
         lw = lw*len(depVar)
         numlayers = numlayers*len(depVar)
         gamma = gamma*len(depVar)
     elif (depVar==lw): #will define numlayers explicitly in this case
-        angle = angle*len(depVar)
+        angle1 = angle1*len(depVar)
+        angle2 = angle2*len(depVar)
         gamma = gamma*len(depVar)
     elif (depVar==gamma):
-        angle = angle*len(depVar)
+        angle1 = angle1*len(depVar)
+        angle2 = angle2*len(depVar)
         lw = lw*len(depVar)
         numlayers = numlayers*len(depVar)
     #make file
@@ -91,25 +104,35 @@ def runSim():
     for i in range(0,len(depVar)):
         d=date.fromtimestamp(time.time())
         t = d.strftime("%Y%m%d")
-        dirn = "%s lw=%g ang=%g g=%g "%(t, lw[i], angle[i],gamma[i])+read[0]*"r"
+        dirn = "%s lw=%g ang1=%g ang2=%g g=%g "%(t, lw[i], angle1[i],angle2[i],gamma[i])+read[0]*"r"
         dirpath = chooseDir(compName)+dirn
         print dirpath
         makePath(dirpath)
+        if read[0]==1:
+            shutil.copyfile(chooseParLoc(compName)+"\..\smarticles.csv", dirpath+"\smarticles.csv")
         os.chdir(dirpath)
         tBegin = time.time()
         
         simT = time.time();          
-        x= "%s %.2f %g %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
-        title= "%g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle[i],gamma[i], read[0],cores,sliding_its,bilateral_its)
-        ctypes.windll.kernel32.SetConsoleTitleA(title)
-        os.system(x)     
+        x= "%s %f %g %g %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle1[i],angle2[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
+        x2= "%f %g %g %g %g %g %g %g %g %g"%(lw[i], dT,numlayers[i],angle1[i],angle2[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
+        title= "%g %g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle1[i],angle2[i],gamma[i], read[0],cores,sliding_its,bilateral_its)
+        # ctypes.windll.kernel32.SetConsoleTitleA(title)
+        print 'hi'
+        print x
+        print 'hi'
+        if sys.platform != 'win32':
+            os.system('qsub /home/wsavoie/ChronoSrc/Smarticles/pythonrunscripts/bash_Smarticle.sh -F "'+x2+'"')
+        else:
+            os.system(x)
+        
         endSimt = time.time()-simT
         print "######################"
         print strftime("%H:%M:%S",gmtime())
         print "######################"
-        winsound.Beep(1000,300)
+        # winsound.Beep(1000,300)
         tElapsed = time.time()-tBegin
-        os.chdir("..\\..\\..")
+        os.chdir("../../")
         
         # renaming folder upon completion doesnt work
         ofpath = dirpath

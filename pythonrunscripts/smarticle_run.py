@@ -116,7 +116,7 @@ def runSim():
         simT = time.time();          
         x= "%s %f %g %g %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle1[i],angle2[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
         x2= "%f %g %g %g %g %g %g %g %g %g"%(lw[i], dT,numlayers[i],angle1[i],angle2[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
-        title= "%g %g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle1[i],angle2[2],gamma[i], read[0],cores,sliding_its,bilateral_its)
+        title= "%g %g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle1[i],angle2[i],gamma[i], read[0],cores,sliding_its,bilateral_its)
         # ctypes.windll.kernel32.SetConsoleTitleA(title)
         print 'hi'
         print x
