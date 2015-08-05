@@ -197,7 +197,6 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	int dummyNumber2;
   SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle1,armAngle2,mGamma,read_from_file);
 
-
 	simParams << std::endl <<
 		" l_smarticle: " << l_smarticle << std::endl <<
 		" l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
@@ -239,6 +238,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // ----------------------
 
   SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle1,armAngle2,mGamma,read_from_file);
+
 
   // ----------------------
   // Set number of threads.
@@ -569,6 +569,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	//					  rho_smarticle, mat_g,
 	//  					collisionEnvelope,
 	//  					l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+
 	//					  myPos,
 	//					  myRot);
 	//	smarticle0->Create();
