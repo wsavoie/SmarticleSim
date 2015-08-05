@@ -42,6 +42,7 @@
 #include "Smarticle.h"
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
+//#include "D:/ChronoCode/libs/png++-0.2.7/png.hpp";
 //#include "D:\ChronoCode\libs\pngwriter-release-0.5.5\src\pngwriter.h"
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
@@ -116,7 +117,7 @@ void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody>
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	double bucket_rad = sizeScale*0.022*3;
+	double bucket_rad = sizeScale*0.022;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .010);
 
 	
@@ -128,8 +129,8 @@ void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody>
 	// smarticle geometry//
 	double w_smarticle 	= sizeScale * 0.0117;
 	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	double t_smarticle 	= sizeScale * .00127*3;
-	double t2_smarticle	= sizeScale * .0005*3;
+	double t_smarticle 	= sizeScale * .00127;
+	double t2_smarticle	= sizeScale * .0005;
 	double m_smarticle = (t_smarticle)* (t2_smarticle)* (w_smarticle + 2 * l_smarticle);
 	double collisionEnvelope = .4 * t2_smarticle;
 
@@ -203,9 +204,12 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 		" l_smarticle: " << l_smarticle << std::endl <<
 		" l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
 		" dT: " << dT << std::endl <<
+		" tFinal: " << tFinal << std::endl <<
+		" vibrate start: " << vibrateStart << std::endl <<
 		" Gamma: " << mGamma << std::endl <<
 		" numlayers: " << numLayers << std::endl <<
-		" read from file: " << rread << std::endl << std::endl;
+		" read from file: " << rread << std::endl <<
+		" arm angle 1 and 2: " << armAngle1 << " " << armAngle2 << std::endl << std::endl;
   // ---------------------
   // Edit mphysicalSystem settings.
   // ---------------------
@@ -270,6 +274,9 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 		" dT: " << dT << std::endl <<
 		" tFinal: " << tFinal << std::endl <<
 		" vibrate start: " << vibrateStart << std::endl <<
+		" Gamma: " << mGamma << std::endl <<
+		" numlayers: " << numLayers << std::endl <<
+		" read from file: " << rread << std::endl << 
 		" arm angle 1 and 2: " << armAngle1<< " " << armAngle2 << std::endl << std::endl;
 	
 
@@ -816,54 +823,65 @@ void vibrate_bucket(double t,ChSharedPtr<chrono::ChBody> body) {
 	body->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
 	body->SetRot(QUNIT);
 }
-
-//bool screenshot(char *fileName){
-//	int Xres = 1280;
-//	int Yres = 720;
-//	static unsigned char header[54] = {
-//		0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
-//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
-//		0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
-//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-//
-//	unsigned char *pixels = (unsigned char *)malloc(Xres * Yres * 3);
-//	((unsigned __int16 *)header)[9] = Xres;
-//	((unsigned __int16 *)header)[11] = Yres;
-//
-//	glReadPixels(0, 0, Xres, Yres, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-//
-//	unsigned char temp;
-//	for (unsigned int i = 0; i < Xres * Yres * 3; i += 3){
-//		temp = pixels[i];
-//		pixels[i] = pixels[i + 2];
-//		pixels[i + 2] = temp;
+//bool screenshot2(char *fileName){
+//png::image< png::rgb_pixel > image(128, 128);
+//for (size_t y = 0; y < image.get_height(); ++y)
+//{
+//	for (size_t x = 0; x < image.get_width(); ++x)
+//	{
+//		image[y][x] = png::rgb_pixel(x, y, x + y);
+//		// non-checking equivalent of image.set_pixel(x, y, ...);
 //	}
-//
-//	HANDLE FileHandle;
-//	unsigned long Size;
-//
-//	if (fileName == NULL){
-//		char file[256];
-//		unsigned int i = 0;
-//		do {
-//			sprintf(file, "Screenshot%d.bmp", i);
-//			FileHandle = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-//			i++;
-//		} while (FileHandle == INVALID_HANDLE_VALUE);
-//	}
-//	else {
-//		FileHandle = CreateFile(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-//		if (FileHandle == INVALID_HANDLE_VALUE)	return false;
-//	}
-//	DWORD NumberOfBytesWritten;
-//	WriteFile(FileHandle, header, sizeof(header), &NumberOfBytesWritten, NULL);
-//	WriteFile(FileHandle, pixels, Xres * Yres * 3, &NumberOfBytesWritten, NULL);
-//
-//	CloseHandle(FileHandle);
-//
-//	free(pixels);
-//	return true;
 //}
+//image.write("rgb.png");
+//}
+bool screenshot(char *fileName){
+	int Xres = 1280;
+	int Yres = 720;
+	static unsigned char header[54] = {
+		0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+	unsigned char *pixels = (unsigned char *)malloc(Xres * Yres * 3);
+	((unsigned __int16 *)header)[9] = Xres;
+	((unsigned __int16 *)header)[11] = Yres;
+
+	glReadPixels(0, 0, Xres, Yres, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+	unsigned char temp;
+	for (unsigned int i = 0; i < Xres * Yres * 3; i += 3){
+		temp = pixels[i];
+		pixels[i] = pixels[i + 2];
+		pixels[i + 2] = temp;
+	}
+
+	HANDLE FileHandle;
+	unsigned long Size;
+
+	if (fileName == NULL){
+		char file[256];
+		unsigned int i = 0;
+		do {
+			sprintf(file, "Screenshot%d.bmp", i);
+			FileHandle = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+			i++;
+		} while (FileHandle == INVALID_HANDLE_VALUE);
+	}
+	else {
+		FileHandle = CreateFile(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (FileHandle == INVALID_HANDLE_VALUE)	return false;
+	}
+	DWORD NumberOfBytesWritten;
+	WriteFile(FileHandle, header, sizeof(header), &NumberOfBytesWritten, NULL);
+	WriteFile(FileHandle, pixels, Xres * Yres * 3, &NumberOfBytesWritten, NULL);
+
+	CloseHandle(FileHandle);
+
+	free(pixels);
+	return true;
+}
 // =============================================================================
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
