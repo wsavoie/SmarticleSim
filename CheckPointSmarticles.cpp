@@ -125,7 +125,9 @@ void CheckPointSmarticles_Read(
 	while (inSmarticles.good()) {
 		SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
 		smarticle0->Properties(smarticleCount,
-						  rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+						  rho_smarticle, mat_g,
+						  collisionEnvelop,
+						  l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						  p3,
 						  q4);
 		smarticle0->SetAngle(angle1, angle2, true);

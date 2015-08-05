@@ -78,8 +78,6 @@ BucketType bucketType = CYLINDER;
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
-void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody> body, double dim);
-
 
 	double sizeScale = 1;
 	double gravity = -9.81 * sizeScale;
@@ -328,7 +326,9 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 				smarticle0->Properties(smarticleCount,
-					rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+					rho_smarticle, mat_g,
+					collisionEnvelope,
+					l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 					myPos,
 					myRot);
 				smarticle0->Create();
@@ -337,18 +337,15 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 			else if (smarticleType == SMART_U) {
 				SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
 				smarticle0->Properties(smarticleCount,
-					rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+					rho_smarticle, mat_g,
+					collisionEnvelope,
+					l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 					myPos,
 					myRot);
 					//smarticle0->SetAngle(armAngle, true);
 				smarticle0->SetAngle(armAngle1,armAngle2, true);
 				smarticle0->Create();
 				mySmarticlesVec.push_back(smarticle0);
-				
-				if (!USE_PARALLEL) {
-					//smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-					//SetEnvelopeForObject(mphysicalSystem, smarticle0->GetSmarticleBodyPointer(),collisionEnvelope);
-				}
 			}
 			else {
 				std::cout << "Error! Smarticle type is not set correctly" << std::endl;
@@ -377,7 +374,9 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				if (smarticleType == SMART_ARMS) {
 					Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 					smarticle0->Properties(smarticleCount,
-						rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+						rho_smarticle, mat_g,
+						collisionEnvelope,
+						l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						myPos,
 						myRot);
 					smarticle0->Create();
@@ -386,16 +385,15 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				else if (smarticleType == SMART_U) {
 					SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
 					smarticle0->Properties(smarticleCount,
-						rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+						rho_smarticle, mat_g,
+						collisionEnvelope,
+						l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						myPos,
 						myRot);
 					//smarticle0->SetAngle(armAngle, true);
 					smarticle0->SetAngle(armAngle1,armAngle2, true);
 					smarticle0->Create();
 					mySmarticlesVec.push_back(smarticle0);
-					if (!USE_PARALLEL) {
-						//smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-					}
 				}
 				else {
 					std::cout << "Error! Smarticle type is not set correctly" << std::endl;
@@ -434,7 +432,6 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	ChVector<> box_size = (0, 0, 0); //size of plates
 	ChVector<> pPos = (0, 0, 0);  //position of each plate
 	ChQuaternion<> quat = QUNIT; //rotation of each plate
-	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(.4*bucket_half_thick);
 	cyl_container->GetCollisionModel()->ClearModel();
 	cyl_container->SetMaterialSurface(wallMat);
 	for (int i = 0; i < num_boxes; i++)
@@ -481,6 +478,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	
 	//ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
 	
+	cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	cyl_container->GetCollisionModel()->BuildModel();
 
 	mphysicalSystem->AddBody(cyl_container);
@@ -511,6 +509,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	ground->GetCollisionModel()->SetFamily(1);
 	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	ground->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	ground->GetCollisionModel()->BuildModel();
 	mphysicalSystem.AddBody(ground);
 	// bucket
@@ -543,6 +542,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	//	bucket->SetCollide(true);
 	//	bucket->GetCollisionModel()->ClearModel();
 	//	utils::AddBoxGeometry(bucket.get_ptr(), ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, bucket_half_thick), bucket_ctr - ChVector<>(0, 0, bucket_interior_halfDim.z));
+	//  bucket->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	//	bucket->GetCollisionModel()->BuildModel();
 	//	mphysicalSystem.AddBody(bucket);
 
@@ -566,7 +566,9 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	//	ChVector<> myPos = ChVector<>(nX / 2 * maxDim, nY / 2 * maxDim , 2 * maxDim);
 	//	SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
 	//	smarticle0->Properties( 3 /* 1 and 2 are the first two objects */,
-	//					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+	//					  rho_smarticle, mat_g,
+	//  					collisionEnvelope,
+	//  					l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
 	//					  myPos,
 	//					  myRot);
 	//	smarticle0->Create();
@@ -857,21 +859,6 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	vol_frac_of.close();
 }
 // =============================================================================
-void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
-	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
-	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
-		(*myIter)->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-		myIter++;
-	}
-
-}
-void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody> body,double dim)
-{
-	body->GetCollisionModel()->SetDefaultSuggestedEnvelope(.4*dim);
-}
-
-
-// =============================================================================
 // move bucket
 void vibrate_bucket(double t,ChSharedPtr<chrono::ChBody> body) {
 	//double x_bucket = vibration_amp*sin(omega_bucket * t);
@@ -991,9 +978,6 @@ int main(int argc, char* argv[]) {
   std::vector<Smarticle*> mySmarticlesVec;
   CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
 	
-#if(!USE_PARALLEL)
-	SetEnvelopeForSystemObjects(mphysicalSystem);
-#endif
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
 	
@@ -1074,6 +1058,7 @@ int main(int argc, char* argv[]) {
 	
 		utils::AddBoxGeometry(bucket_bott.get_ptr(), Vector(bucket_rad+2*bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
 		//utils::AddCylinderGeometry(bucket_bott.get_ptr(), bucket_rad*6 +2*bucket_half_thick, bucket_half_thick, bucket->GetPos() + ChVector<>(0, 0, -bucket_half_thick), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+		bucket_bott->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 		bucket_bott->GetCollisionModel()->BuildModel();
 		
 		bucket_bott->SetCollide(true);

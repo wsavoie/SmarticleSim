@@ -39,6 +39,7 @@ public:
 			int sID,
 			double other_density,
 			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+			double other_envelop,
 			double other_l,
 			double other_w,
 			double other_r,
@@ -107,6 +108,7 @@ protected:
 	double angle2; //angle between center segment and outer segments
   double volume;
   double mass;
+  double collisionEnvelop;
 
   // material property
   double density;
