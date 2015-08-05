@@ -64,41 +64,45 @@ def getPars():
     read = read_data[fnum+22]
     read = [int(x) for x in read.split('\t')]
     
-    return [dt, angle1,angle2, lw, numlayer, gamma, read]
+    csvFiles = read_data[fnum+26]
+    csvFiles = [str(x) for x in csvFiles.split('\t')]   
+    return [dt, angle1,angle2, lw, numlayer, gamma, read,csvFiles]
 def runSim():
     cores = 1
     sliding_its = 55
     bilateral_its= 55
     time.mktime
-    [dT, angle1,angle2, lw, numlayers, gamma, read] = getPars()
+    [dT, angle1,angle2, lw, numlayers, gamma, read, csvFiles] = getPars()
     
     #break if len(angle1) != len(angle2)
     if(len(angle1)!=len(angle2)):
         sys.exit("error in simRunPars, angle inputs are not equal in length")
-    #set depVar to something just in case first 2 
-    if (len(angle1)>len(lw)):
-        depVar=angle1
-    elif (len(lw)>len(angle1)):
-        depVar=lw
-    elif (read[0]==1): #this param takes priority
-        depVar=gamma
-    else:#this may change if I add another type of parameter
-        depVar=gamma
+       
+    depVar = angle1
+    # #set depVar to something just in case first 2 
+    # if (len(angle1)>len(lw)):
+        # depVar=angle1
+    # elif (len(lw)>len(angle1)):
+        # depVar=lw
+    # elif (read[0]==1): #this param takes priority
+        # depVar=gamma
+    # else:#this may change if I add another type of parameter
+        # depVar=gamma  
+    # if (depVar==angle1):
+        # lw = lw*len(depVar)
+        # numlayers = numlayers*len(depVar)
+        # gamma = gamma*len(depVar)
+    # elif (depVar==lw): #will define numlayers explicitly in this case
+        # angle1 = angle1*len(depVar)
+        # angle2 = angle2*len(depVar)
+        # gamma = gamma*len(depVar)
+    # elif (depVar==gamma):
+        # angle1 = angle1*len(depVar)
+        # angle2 = angle2*len(depVar)
+        # lw = lw*len(depVar)
+        # numlayers = numlayers*len(depVar)
         
         
-    if (depVar==angle1):
-        lw = lw*len(depVar)
-        numlayers = numlayers*len(depVar)
-        gamma = gamma*len(depVar)
-    elif (depVar==lw): #will define numlayers explicitly in this case
-        angle1 = angle1*len(depVar)
-        angle2 = angle2*len(depVar)
-        gamma = gamma*len(depVar)
-    elif (depVar==gamma):
-        angle1 = angle1*len(depVar)
-        angle2 = angle2*len(depVar)
-        lw = lw*len(depVar)
-        numlayers = numlayers*len(depVar)
     #make file
     print read
     for i in range(0,len(depVar)):
@@ -109,7 +113,14 @@ def runSim():
         print dirpath
         makePath(dirpath)
         if read[0]==1:
-            shutil.copyfile(chooseParLoc(compName)+"\..\smarticles.csv", dirpath+"\smarticles.csv")
+            exists = os.path.isfile(chooseParLoc(compName)+"\..\smarticles.csv")
+            if exists:
+                os.remove(chooseParLoc(compName)+"\..\smarticles.csv") #remove previous smarticles.csv
+                shutil.copyfile(csvFiles, dirpath+"\smarticles.csv")#copy file to be read to proper location, and name it smarticles.csv
+                shutil.copyfile(chooseParLoc(compName)+"\..\smarticles.csv", dirpath+"\smarticles.csv")#copy smarticles.csv
+            else:
+                shutil.copyfile(csvFiles, dirpath+"\smarticles.csv")#copy file to be read to proper location, and name it smarticles.csv
+                shutil.copyfile(chooseParLoc(compName)+"\..\smarticles.csv", dirpath+"\smarticles.csv")#copy smarticles.csv
         os.chdir(dirpath)
         tBegin = time.time()
         
