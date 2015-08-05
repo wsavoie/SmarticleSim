@@ -114,7 +114,7 @@ ChSharedPtr<ChBody> bucket;
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	double bucket_rad = sizeScale*0.022*3;
+	double bucket_rad = sizeScale*0.022;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .010);
 
 	
@@ -126,8 +126,8 @@ ChSharedPtr<ChBody> bucket;
 	// smarticle geometry//
 	double w_smarticle 	= sizeScale * 0.0117;
 	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	double t_smarticle 	= sizeScale * .00127*3;
-	double t2_smarticle	= sizeScale * .0005*3;
+	double t_smarticle 	= sizeScale * .00127;
+	double t2_smarticle	= sizeScale * .0005;
 	double m_smarticle = (t_smarticle)* (t2_smarticle)* (w_smarticle + 2 * l_smarticle);
 	double collisionEnvelope = .4 * t2_smarticle;
 
