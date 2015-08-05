@@ -128,7 +128,7 @@ def runSim():
         x= "%s %f %g %g %g %g %g %g %g %g %g"%(fileloc,lw[i], dT,numlayers[i],angle1[i],angle2[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
         x2= "%f %g %g %g %g %g %g %g %g %g"%(lw[i], dT,numlayers[i],angle1[i],angle2[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
         title= "%g %g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle1[i],angle2[i],gamma[i], read[0],cores,sliding_its,bilateral_its)
-        # ctypes.windll.kernel32.SetConsoleTitleA(title)
+        ctypes.windll.kernel32.SetConsoleTitleA(title)
         print 'hi'
         print x
         print 'hi'
@@ -141,7 +141,7 @@ def runSim():
         print "######################"
         print strftime("%H:%M:%S",gmtime())
         print "######################"
-        # winsound.Beep(1000,300)
+        winsound.Beep(1000,300)
         tElapsed = time.time()-tBegin
         os.chdir("../../")
         

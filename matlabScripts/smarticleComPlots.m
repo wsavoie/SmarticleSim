@@ -1,7 +1,7 @@
-plotType=2;
+plotType=3;
 PON = 0;
 switch plotType
-    case 1 %gamma
+    case 1 %gamma 
         dvunits = '';
         dvlabel = '\Gamma';
         dvaxis =[0,1.4,0.05,0.40]
@@ -13,7 +13,13 @@ switch plotType
         dvlabel = 'Angle (\circ)';
         ptype= 'angle';
         dvaxis =[0,120,0.05,.45]
-    case 3 %diff angles, NOT IMPLEMENTED
+    case 3 %reading in different angles at different gamma
+        dv='ang1';
+        dvunits = '\circ';
+        dvlabel = 'Angle (\circ)';
+        ptype= 'angle';
+        dvaxis =[0,120,0.05,.45]
+    case 4 %diff angles, NOT IMPLEMENTED
         dv='gamma';
         dvunits= ''; %technically should be (kgm/s^2)
         dvlabel = '\Gamma';
@@ -26,22 +32,25 @@ end
  
 close all
 % directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
-directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\Results\Shake with Diff Angles');
+directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\Results\Shake const=lw var=angle gamma');
 directory_name(length(directory_name)+1)='\';
 
 files = dir(horzcat(directory_name,'2015*'));
 figure(1);
 hold on;
 
-depVar = zeros(length(files),1);
+depVar = zeros(length(files),2);
 depVarLegend= cell(length(depVar),1);
 for j= 1:length(files)
     
     fname = files(j).name;
     pattern = horzcat(dv,'=([0-9.]*)');
-    pars= regexp(fname, pattern, 'tokens'); 
+    pars= regexp(fname, pattern, 'tokens');
+    pattern2 = horzcat(' g','=([0-9.]*)');
+    gams= regexp(fname, pattern2, 'tokens'); 
     try
-    depVar(j)= str2double(cell2mat(pars{1})); %lw info for that fileoar
+    depVar(j,1)= str2double(cell2mat(pars{1})); %lw info for that fileoar
+    depVar(j,2)= str2double(cell2mat(gams{1}));
     catch err
         pts('plottype=',plotType);
         error(horzcat('Try switching plotType! You''re plotting with depvar==',ptype));
@@ -58,7 +67,7 @@ for j= 1:length(files)
     hold on;
 end
 for i=1:length(depVar)
-    depVarLegend{i}=horzcat(num2str(depVar(i)),dvunits);
+    depVarLegend{i}=horzcat(num2str(depVar(i,1)),dvunits);
 end
 % legend(depVarLegend);
 set(gca, 'XScale', 'log')
@@ -83,64 +92,85 @@ legend(depVarLegend);
 
 %% start of determining beta and delta
 delta=15;
-beta = 1.48;
+beta = .68;
 parsin = [delta,beta];
 
 % fitStretched(parsin,c,xdat,ydat,PON)
-deltaFit = zeros(length(files),1);
-betaFit = zeros(length(files),1);
+deltaFit = zeros(length(files),3);
+betaFit = zeros(length(files),3);
 
-for i= 1:length(files)
+for i= 1:length(files) %PUT IN ABOVE FOR LOOP AT SOME POINT
     fname = files(i).name;
     pattern = horzcat(dv,'=([0-9.]*)');
     pars= regexp(fname, pattern, 'tokens');  %find amp and frequency from filename
     
-    if(plotType ~=1)
-        
+    if(plotType ~=1)%same sort of thing as above
         pattern2 = horzcat(' g','=([0-9.]*)'); 
         gammaPars= regexp(fname, pattern2, 'tokens');  %find amp and frequency from filename
     else
         gammaPars = pars;
     end
    
-    depVar(i)= str2double(cell2mat(pars{1})); %lw info for that fileoar
-    gammaVal(i) = str2double(cell2mat(gammaPars{1}));
+    depVar(i,1)= str2double(cell2mat(pars{1})); %lw info for that fileoar
+    depVar(i,2) = str2double(cell2mat(gammaPars{1}));
     data=importdata(horzcat(directory_name,files(i).name,'\PostProcess\volumeFraction.txt'));
     t_0idx=find(data(:,1)>.35,1); %shaking starts at .5
     t_0=data(t_0idx,1);
     h_0=data(t_0idx,5);
     xdat =data(t_0idx:end,1)-t_0;
     ydat = data(t_0idx:end,5)/h_0;
-    out =fitStretched(parsin,gammaVal(i),xdat,ydat,PON);
-    deltaFit(i)=out(1,1);
-    betaFit(i)=out(1,2);
+    gg = gammaPars{1};
+    gg =gg{1};
+    gg= str2num(gg);
+    out =fitStretched(parsin,gg,xdat,ydat,PON);
+    deltaFit(i,:)=[depVar(i,1:2),out(1,1)];
+    betaFit(i,:)=[depVar(i,1:2),out(1,2)];
 %          plot(xdat,ydat);
 %     hold on;
 end
-
-
-figure(44)
-betaPlot = errBarCalc(depVar,betaFit);
-hold on;
-% plot(depVar,betaFit,'.b-','MarkerSize',25);
-errorbar(betaPlot(:,1),betaPlot(:,2),betaPlot(:,3),'o-');
-xlabel(dvlabel)
-ylabel('\beta')
+deltaFit=sortrows(deltaFit,1);
+betaFit=sortrows(betaFit,1);
+if plotType~=3 && plotType ~=2
+    figure(44)
+    betaPlot = errBarCalc(betaFit(:,1),betaFit(:,3));
+    hold on;
+    % plot(depVar,betaFit,'.b-','MarkerSize',25);
+    errorbar(betaPlot(:,1),betaPlot(:,2),betaPlot(:,3),'o-');
+    xlabel(dvlabel)
+    ylabel('\beta')
+end
 
 figure(45)
 hold on;
-deltaPlot = errBarCalc(depVar,deltaFit);
+deltaPlot = errBarCalc(deltaFit(:,1),deltaFit(:,3));
 % plot(depVar,deltaFit,'.b-','MarkerSize',25);
 errorbar(deltaPlot(:,1),deltaPlot(:,2),deltaPlot(:,3),'o-');
 xlabel(dvlabel)
 ylabel('\Delta')
-
-if(plotType==1)%only works for gamma varied runs
-    
+tauLeg= {};
+if(plotType==1 || plotType==3)%tau vs gamma^-1 only works for gamma varied runs
     figure(10)
-    lntauvgamma=errBarCalc(1./depVar,log(1/30*exp(deltaFit./depVar)));
-    errorbar(lntauvgamma(:,1),lntauvgamma(:,2),lntauvgamma(:,3),'o-');
     hold on;
-    ylabel('ln(\tau/\tau_0)')
-    xlabel('\Gamma^{-1}');
+    uniDepVar =unique(depVar(:,1));
+    for i=1:length(uniDepVar)
+        [rI,cI]=find(deltaFit(:,1)==uniDepVar(i));%find all gammas used for each depVar
+        gams = deltaFit(rI,2);
+        %next line could be written more arbitrarily where make sure
+        %unidepvar is equal to the indice used in deltaPlot but it works
+        %for now
+        lntauvgamma = errBarCalc(1./gams,log(1/30*exp(deltaFit(rI,3)./gams)));
+        errorbar(lntauvgamma(:,1),3*i+lntauvgamma(:,2),lntauvgamma(:,3),'o-');
+        tauLeg{length(tauLeg)+1}=horzcat(num2str(uniDepVar(i)),dvunits);
+    end
+        ylabel('ln(\tau/\tau_0)+const')
+        xlabel('\Gamma^{-1}');
+        legend(tauLeg);
+        figText(gcf,13);
+        
+        
+%     lntauvgamma=errBarCalc(1./depVar,log(1/30*exp(deltaFit./depVar)));
+%     end
+%     lntauvgamma=errBarCalc(1./depVar(:,1),log(1/30*exp(deltaFit./depVar(:,1))));
+%     errorbar(lntauvgamma(:,1),lntauvgamma(:,2),lntauvgamma(:,3),'o-');
+
 end
