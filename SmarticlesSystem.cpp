@@ -86,7 +86,7 @@ void SetEnvelopeForObject(ChSystem& mphysicalSystem, ChSharedPtr<chrono::ChBody>
 	double gravity = -9.81 * sizeScale;
 	
 	double vibration_freq = 30;
-	bool rread = true;
+	bool read_from_file = true;
 	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 	//double vibration_amp = sizeScale * 0.00055;
 	double mGamma = 1.23 * gravity;
@@ -198,8 +198,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	int dummyNumber0;
 	int dummyNumber1;
 	int dummyNumber2;
-  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle1,armAngle2,mGamma,rread);
-
+	SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT, numLayers, armAngle1, armAngle2, mGamma, read_from_file);
 	simParams << std::endl <<
 		" l_smarticle: " << l_smarticle << std::endl <<
 		" l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
@@ -208,7 +207,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 		" vibrate start: " << vibrateStart << std::endl <<
 		" Gamma: " << mGamma << std::endl <<
 		" numlayers: " << numLayers << std::endl <<
-		" read from file: " << rread << std::endl <<
+		" read from file: " << read_from_file << std::endl <<
 		" arm angle 1 and 2: " << armAngle1 << " " << armAngle2 << std::endl << std::endl;
   // ---------------------
   // Edit mphysicalSystem settings.
@@ -242,8 +241,8 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // ----------------------
   // Set params from input
   // ----------------------
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle1,armAngle2,mGamma,read_from_file);
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle1,armAngle2,mGamma,rread);
 
   // ----------------------
   // Set number of threads.
@@ -276,7 +275,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 		" vibrate start: " << vibrateStart << std::endl <<
 		" Gamma: " << mGamma << std::endl <<
 		" numlayers: " << numLayers << std::endl <<
-		" read from file: " << rread << std::endl << 
+		" read from file: " << read_from_file << std::endl << 
 		" arm angle 1 and 2: " << armAngle1<< " " << armAngle2 << std::endl << std::endl;
 	
 
@@ -467,7 +466,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 
 	//Add ground piece
 	//
-	if (!rread)	{
+	if (!read_from_file)	{
 		//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 		utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad+t, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
 	}
@@ -525,6 +524,8 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	} else {
 		bucket = ChSharedPtr<ChBody>(new ChBody);
 	}
+
+
 	// 1: create bucket
 		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
 	if (bucketType == BOX){
@@ -540,6 +541,72 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	bucket->SetCollide(true);
 	bucket->GetCollisionModel()->SetFamily(1);
 	bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+
+	// 2: create plate
+	//	bucket->SetMaterialSurface(mat_g);
+	//	bucket->SetBodyFixed(true);
+	//	bucket->SetCollide(true);
+	//	bucket->GetCollisionModel()->ClearModel();
+	//	utils::AddBoxGeometry(bucket.get_ptr(), ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, bucket_half_thick), bucket_ctr - ChVector<>(0, 0, bucket_interior_halfDim.z));
+	//	bucket->GetCollisionModel()->BuildModel();
+	//	mphysicalSystem.AddBody(bucket);
+
+
+
+	//	//	/////////////////
+	//	// Smarticle body
+	//	/////////////////
+	//
+	//	MySeed(964);
+	//	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
+	//	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, 2 * smarticleLengths.z);
+	//
+	//	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
+	//	int nX = bucket_interior_halfDim.x / maxDim;
+	//	int nY = bucket_interior_halfDim.y / maxDim;
+	//	// test one smarticle
+	//
+	//	ChQuaternion<> myRot = Q_from_AngAxis(CH_C_PI / 2, VECT_X);// ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+	//	myRot.Normalize();
+	//	ChVector<> myPos = ChVector<>(nX / 2 * maxDim, nY / 2 * maxDim , 2 * maxDim);
+	//	SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
+	//	smarticle0->Properties( 3 /* 1 and 2 are the first two objects */,
+	//					  rho_smarticle, mat_g, l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
+	//					  myPos,
+	//					  myRot);
+	//	smarticle0->Create();
+	//
+	//	ChVector<> inertiaS =1e6 * smarticle0->GetSmarticleBodyPointer()->GetInertiaXX();
+	//	printf("e inertia %f %f %f \n",inertiaS.x, inertiaS.y, inertiaS.z );
+	//
+	//	mySmarticlesVec.push_back(smarticle0);
+	//
+	//////*** stuff needed to be printed
+	////	ChVector<> IXX = smarticle0->GetSmarticleBodyPointer()->GetInertiaXX();
+	////	ChVector<> IXY = smarticle0->GetSmarticleBodyPointer()->GetInertiaXY();
+	////	ChVector<> posB = smarticle0->GetSmarticleBodyPointer()->GetPos();
+	////	ChVector<> posS = smarticle0->Get_InitPos();
+	////	double mass = smarticle0->GetSmarticleBodyPointer()->GetMass();
+
+
+
+
+
+
+	/////////////////////////////////////////////
+	//    ChSharedPtr<ChLinkLockRevolute> bucketGroundPrismatic(new ChLinkLockRevolute);
+	//    bucketGroundPrismatic->Initialize(
+	//    		smarticle0.GetArm(0), ground, true, ChCoordsys<>(ChVector<>(0, l/2, 0)), ChCoordsys<>(posRel + ChVector<>(0, l/2, 0)));
+	//    bucketGroundPrismatic->SetName("ship_ground_prismatic");
+	//    mphysicalSystem.AddLink(bucketGroundPrismatic);
+
+
+	//  ChSharedPtr<ChLinkLockRevolute> bucketGroundPrismatic(new ChLinkLockRevolute);
+	//  bucketGroundPrismatic->Initialize(
+	//  		smarticle0.GetArm(0), smarticle0.GetArm(1), true, ChCoordsys<>(ChVector<>(0, l/2, 0)), ChCoordsys<>(posRel + ChVector<>(0, l/2, 0)));
+	//  bucketGroundPrismatic->SetName("ship_ground_prismatic");
+	//  mphysicalSystem.AddLink(bucketGroundPrismatic);
+
 }
 // =============================================================================
 
@@ -697,7 +764,7 @@ void PrintFractionsAndCOM(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Sma
 			
 			double rad = bucket_rad; 
 			
-			if (rread){
+			if (read_from_file){
 				rad = 6 * bucket_rad+2*bucket_half_thick;//allows for larger region to test for com in when column collapses
 			}
 
@@ -953,6 +1020,8 @@ int main(int argc, char* argv[]) {
 	char appTitle[240];
 	sprintf(appTitle,"Smarticle: lw: %g, angs: %g,%g, numlayers: %d, dT: %g, gamma: %g", l_smarticle / w_smarticle, armAngle1,armAngle2, numLayers, dT,mGamma);
 	gl_window.Initialize(1280, 720, appTitle, &mphysicalSystem);
+	gl_window.viewer->contact_renderer.SetPointSize(.001);
+	gl_window.viewer->cloud.SetPointSize(0.001);
 
 	
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
@@ -1013,7 +1082,7 @@ int main(int argc, char* argv[]) {
 	}
 	
 
-	if (rread)
+	if (read_from_file)
 	{ 
 		CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec); 
 		
@@ -1037,14 +1106,14 @@ int main(int argc, char* argv[]) {
 		double t = mphysicalSystem.GetChTime();
 
 		int sSize1 = mySmarticlesVec.size();
-		if (rread)
+		if (read_from_file)
 		{	
 			if (t > removeWallStart){
 			
 					//bucket_bott->SetBodyFixed(false);
 					//vibrate_bucket(t,bucket_bott);
 					if (bucket_exist){
-						mphysicalSystem.RemoveBody(bucket);
+						bucket->SetPos(ChVector<>(100, 0, 0));
 						bucket_exist = false;
 					}
 					if (t >collapseStart)
@@ -1144,10 +1213,11 @@ int main(int argc, char* argv[]) {
 		//screenshot(filename);
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
+	  printf("num contacts %d, time %f\n", mphysicalSystem.GetNcontacts(), mphysicalSystem.GetChTime());
 
 
 		FixBodies(mphysicalSystem, tStep);
-		if (rread)
+		if (read_from_file)
 		{
 			PrintFractionsAndCOM(mphysicalSystem, tStep, mySmarticlesVec);
 		}
