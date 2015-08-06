@@ -718,7 +718,7 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> my
 }
 
 // =============================================================================
-void PrintFractionsAndCOM(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) 
+void PrintFractionsAndCOM(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec,ChVector<> bucketMin) 
 {
 	double zCom = 0;
 	const std::string vol_frac = out_dir + "/volumeFraction.txt";
@@ -734,7 +734,7 @@ void PrintFractionsAndCOM(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Sma
 	}
 
 	double zMax = Find_Max_Z(mphysicalSystem);
-	ChVector<> bucketMin = bucket->GetPos();
+//	ChVector<> bucketMin = bucket->GetPos();
 
 	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
 
@@ -1108,7 +1108,7 @@ int main(int argc, char* argv[]) {
 		int sSize1 = mySmarticlesVec.size();
 		if (read_from_file)
 		{	
-			if (t > removeWallStart){
+			if (t >= removeWallStart){
 			
 					//bucket_bott->SetBodyFixed(false);
 					//vibrate_bucket(t,bucket_bott);
@@ -1219,7 +1219,11 @@ int main(int argc, char* argv[]) {
 		FixBodies(mphysicalSystem, tStep);
 		if (read_from_file)
 		{
-			PrintFractionsAndCOM(mphysicalSystem, tStep, mySmarticlesVec);
+			if (bucket_exist)
+				PrintFractionsAndCOM(mphysicalSystem, tStep, mySmarticlesVec, bucket->GetPos());
+			else
+				PrintFractionsAndCOM(mphysicalSystem, tStep, mySmarticlesVec, bucket_bott->GetPos());
+				
 		}
 		else{
 			PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
