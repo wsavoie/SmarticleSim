@@ -3,6 +3,7 @@ import time, datetime
 from time import gmtime, strftime
 from datetime import date
 import ctypes
+import winsound
 
 compName = platform.node()
 
@@ -26,12 +27,38 @@ def chooseParLoc(name): #add your computer name in the dictionary here and the c
     'PHYS32164':'D:\LabDropbox\Dropbox\WillSmarticles\Smarticles\pythonrunscripts\simRunPars.txt',
     'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
     'euler.wacc.wisc.edu':'/home/wsavoie/ChronoSrc/Smarticles/pythonrunscripts/simRunPars.txt'}[name]
+def chooseScriptFolder(name): #add your computer name in the dictionary here and the corresponding location of the exe file
+    return{
+    'PHYS32240':'D:\ChronoCode\chronoPkgs\Smarticles\pythonrunscripts',
+    'PHYS32164':'D:\LabDropbox\Dropbox\WillSmarticles\Smarticles\pythonrunscripts',
+    'WS':'"C:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem.exe"',
+    'euler.wacc.wisc.edu':'/home/wsavoie/ChronoSrc/Smarticles/pythonrunscripts'}[name]
 def makePath(path):
+    if os.path.isdir(path):
+        return False
     try:
         os.makedirs(path)
     except OSError as exception:
         if exception.errno != errno.EEXIST:
             raise Exception('path error problem')
+    return True
+def isFileRunning(path):
+    try:
+        os.remove(path)
+        return False
+    except OSError as exception:
+        return True
+def getNewFilename(path,add): #add parameter for extra filename difference
+    # origPath = path
+    origPath = path+add
+    count = 1
+    while True:
+        path = origPath+' '+str(count)
+        if os.path.isdir(path):
+            print 'path' + path + ' exists trying to rename again'
+            count+=1
+        else:
+            return path
             
 def getFileNum():
     x =os.path.basename(__file__)
@@ -65,7 +92,9 @@ def getPars():
     read = [int(x) for x in read.split('\t')]
     
     csvFiles = read_data[fnum+26]
-    csvFiles = [str(x) for x in csvFiles.split('\t')]   
+    csvFiles = [str(x) for x in csvFiles.split('\t')]
+    for i in range(0,len(csvFiles)):
+        csvFiles[i]=csvFiles[i].replace('\n','')
     return [dt, angle1,angle2, lw, numlayer, gamma, read,csvFiles]
 def runSim():
     cores = 1
@@ -110,17 +139,29 @@ def runSim():
         t = d.strftime("%Y%m%d")
         dirn = "%s lw=%g ang1=%g ang2=%g g=%g "%(t, lw[i], angle1[i],angle2[i],gamma[i])+read[0]*"r"
         dirpath = chooseDir(compName)+dirn
+        odirpath = dirpath
         print dirpath
-        makePath(dirpath)
-        if read[0]==1:
-            exists = os.path.isfile(chooseParLoc(compName)+"\..\smarticles.csv")
-            if exists:
-                os.remove(chooseParLoc(compName)+"\..\smarticles.csv") #remove previous smarticles.csv
-                shutil.copyfile(csvFiles, dirpath+"\smarticles.csv")#copy file to be read to proper location, and name it smarticles.csv
-                shutil.copyfile(chooseParLoc(compName)+"\..\smarticles.csv", dirpath+"\smarticles.csv")#copy smarticles.csv
+        #check if okay to overwrite, if not being written to in simPars, then it is okay to overwrite
+        if (not makePath(dirpath)):
+            if(not isFileRunning(dirpath)): #if can delete
+                print 'got here!'
+                makePath(dirpath)   #then created here
             else:
-                shutil.copyfile(csvFiles, dirpath+"\smarticles.csv")#copy file to be read to proper location, and name it smarticles.csv
-                shutil.copyfile(chooseParLoc(compName)+"\..\smarticles.csv", dirpath+"\smarticles.csv")#copy smarticles.csv
+                newDirPath=getNewFilename(dirpath,'t'+str(getFileNum())) #so no possible problems with already running sims from other smarticle run files
+                dirpath=newDirPath
+                print dirpath
+                makePath(dirpath)
+        if read[0]==1:
+            exists = os.path.isfile(chooseScriptFolder(compName)+"\smarticles.csv")
+            if exists:
+                os.remove(chooseScriptFolder(compName)+"\smarticles.csv") #remove previous smarticles.csv
+                shutil.copyfile(csvFiles[i], dirpath+"\smarticles.csv")#copy file to be read to proper location, and name it smarticles.csv
+                # shutil.copyfile(chooseScriptFolder(compName)+"\smarticles.csv", dirpath+"\smarticles.csv")#copy smarticles.csv
+                shutil.copyfile(csvFiles[i],chooseScriptFolder(compName)+"\smarticles.csv")#copy smarticles.csv
+            else:
+                shutil.copyfile(csvFiles[i], dirpath+"\smarticles.csv")#copy file to be read to proper location, and name it smarticles.csv
+                shutil.copyfile(csvFiles[i],chooseScriptFolder(compName)+"\smarticles.csv")#copy smarticles.csv
+                # shutil.copyfile(chooseScriptFolder(compName)+"\smarticles.csv", dirpath+"\smarticles.csv")#copy smarticles.csv
         os.chdir(dirpath)
         tBegin = time.time()
         
@@ -129,36 +170,19 @@ def runSim():
         x2= "%f %g %g %g %g %g %g %g %g %g"%(lw[i], dT,numlayers[i],angle1[i],angle2[i], gamma[i], read[0], cores,sliding_its,bilateral_its)
         title= "%g %g %g %g %g %g %g %g %g %g %g"%(getFileNum()+1,lw[i], dT,numlayers[i],angle1[i],angle2[i],gamma[i], read[0],cores,sliding_its,bilateral_its)
         ctypes.windll.kernel32.SetConsoleTitleA(title)
-        print 'hi'
         print x
-        print 'hi'
         if sys.platform != 'win32':
             os.system('qsub /home/wsavoie/ChronoSrc/Smarticles/pythonrunscripts/bash_Smarticle.sh -F "'+x2+'"')
         else:
             os.system(x)
         
         endSimt = time.time()-simT
-        print "######################"
-        print strftime("%H:%M:%S",gmtime())
-        print "######################"
         winsound.Beep(1000,300)
-        tElapsed = time.time()-tBegin
         os.chdir("../../")
+        newPath = getNewFilename(odirpath,'')
+        print newPath
+        os.rename(dirPath,newPath)
         
-        # renaming folder upon completion doesnt work
-        ofpath = dirpath
-        fpath = dirpath
-        count = 1
-        while True:
-            try:
-                # split=os.path.splitext(fpath)
-                # fpath= split[0]+'b'+split[1]
-                fpath = ofpath+' '+str(count)
-                os.rename(ofpath,fpath)
-                break
-            except (NameError,WindowsError):
-                print 'trying rename again'
-                count+=1
 fileloc=chooseRunLoc(compName)
 runSim()
 
