@@ -528,6 +528,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	if (bucketType == CYLINDER){
 		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 		bucket = create_cylinder_from_blocks(25, 1, true, &mphysicalSystem, mat_g);
+//		utils::CreateCylindricalContainerFromBoxes(&mphysicalSystem, 1, mat_g, ChVector<>(bucket_interior_halfDim.x, bucket_interior_halfDim.y, 2 * bucket_interior_halfDim.z), bucket_half_thick, 25, rho_cylinder, collisionEnvelope, bucket_ctr, QUNIT, true, true, false, true);
 		mat_g->SetFriction(0.5); //steel - steel
 	}
 
@@ -1053,20 +1054,20 @@ int main(int argc, char* argv[]) {
 
 	if (read_from_file)
 	{ 
-		CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec); 
-		
+		CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
+
 		bucket_bott->GetCollisionModel()->ClearModel();
-	
+
 		utils::AddBoxGeometry(bucket_bott.get_ptr(), Vector(bucket_rad+2*bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
 		//utils::AddCylinderGeometry(bucket_bott.get_ptr(), bucket_rad*6 +2*bucket_half_thick, bucket_half_thick, bucket->GetPos() + ChVector<>(0, 0, -bucket_half_thick), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 		bucket_bott->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 		bucket_bott->GetCollisionModel()->BuildModel();
-		
+
 		bucket_bott->SetCollide(true);
 		bucket_bott->SetBodyFixed(true);
 		bucket_bott->GetCollisionModel()->SetFamily(1);
 		bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-		
+
 		mphysicalSystem.AddBody(bucket_bott);
 	}
 	bool bucket_exist = true;
