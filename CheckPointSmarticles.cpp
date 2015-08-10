@@ -7,6 +7,7 @@
 #include "CheckPointSmarticles.h"
 #include <fstream>
 #include <string>
+#include "SmarticleU.h"
 
 namespace chrono {
 
@@ -20,7 +21,9 @@ void CheckPointSmarticles_Write(
 		double t_smarticle,
 		double t2_smarticle,
 		double collisionEnvelop,
-		double rho_smarticle) {
+		double rho_smarticle,
+		double angle1,
+		double angle2) {
 
 
 	//*******************************************************************
@@ -55,13 +58,15 @@ void CheckPointSmarticles_Write(
 	outSmarticles.open(nameCheckPoint);
 
 	outSmarticles <<
-			l_smarticle << std::endl <<
-			w_smarticle << std::endl <<
-			t_smarticle << std::endl <<
-			t2_smarticle << std::endl <<
-			collisionEnvelop << std::endl <<
-			rho_smarticle << std::endl <<
-			mat_g->GetKfriction() << std::endl <<
+		l_smarticle << std::endl <<
+		w_smarticle << std::endl <<
+		t_smarticle << std::endl <<
+		t2_smarticle << std::endl <<
+		collisionEnvelop << std::endl <<
+		rho_smarticle << std::endl <<
+		mat_g->GetKfriction() << std::endl <<
+		angle1 << std::endl <<
+		angle2 << std::endl<<
 			'#' << std::endl;
 
 	for (int i = 0; i < mySmarticlesVec.size(); i ++) {
@@ -83,11 +88,11 @@ void CheckPointSmarticles_Write(
 //====================================================================================
 // note : for now, this is only for smarticleU and only for ChSystemParallelDVI
 void CheckPointSmarticles_Read(
-		ChSystemParallelDVI & mphysicalSystem,
+		CH_SYSTEM& mphysicalSystem,
 		std::vector<Smarticle*> & mySmarticlesVec) {
 	std::ifstream inSmarticles;
 	inSmarticles.open("smarticles.csv");
-	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction;
+	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction,angle1,angle2;
 	double rho_smarticle;
 	ChSharedPtr<ChMaterialSurface> mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
 	char ddCh;
@@ -98,9 +103,11 @@ void CheckPointSmarticles_Read(
 	t2_smarticle >>
 	collisionEnvelop >>
 	rho_smarticle >>
-	friction;
-	printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f",
-			l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticle, friction);
+	friction>>
+	angle1>>
+	angle2;
+	printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f angle1 %f angle2 %f",
+			l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticle, friction, angle1, angle2);
 	mat_g->SetFriction(friction);
 
 	ddCh = '!';
@@ -118,9 +125,12 @@ void CheckPointSmarticles_Read(
 	while (inSmarticles.good()) {
 		SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
 		smarticle0->Properties(smarticleCount,
-						  rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+						  rho_smarticle, mat_g,
+						  collisionEnvelop,
+						  l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						  p3,
 						  q4);
+		smarticle0->SetAngle(angle1, angle2, true);
 		smarticle0->Create();
 		mySmarticlesVec.push_back(smarticle0);
 

@@ -28,7 +28,6 @@ Smarticle::Smarticle(
 	r2 = .01;
 	initPos = ChVector<>(0);
 	rotation = QUNIT;
-
 	jointClearance = .05 * r2;
 	volume = GetVolume();
 }
@@ -40,13 +39,15 @@ void Smarticle::Properties(
 		int sID,
 		double other_density,
 		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+		double other_envelop,
 		double other_l,
 		double other_w,
 		double other_r,
 		double other_r2,
 		ChVector<> pos,
 		ChQuaternion<> rot,
-		double other_angle) {
+		double other_angle,
+		double other_angle2){
 
 	smarticleID = sID;
 	density = other_density;
@@ -55,9 +56,11 @@ void Smarticle::Properties(
 	w = other_w;
 	r = other_r;
 	r2 = other_r2;
+	collisionEnvelop = other_envelop;
 	initPos = pos;
 	rotation = rot;
-	angle = other_angle;
+	angle1 = other_angle;
+	angle2 = other_angle2;
 
 	jointClearance = .05 * r2;
 	volume = GetVolume();
@@ -97,6 +100,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	arm->GetCollisionModel()->ClearModel();
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+	arm->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
     arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
 
     // change mass and inertia property
@@ -157,7 +161,6 @@ ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
 	}
 	return link;
 }
-
 
 void Smarticle::CreateJoints() {
 	// link 1
@@ -283,19 +286,59 @@ ChVector<> Smarticle::Get_InitPos() {
 	return initPos;
 }
 
-void Smarticle::SetAngle(double mangle, bool degrees = false)
-{
-	if (degrees) { angle = mangle*CH_C_PI / 180.0; }
-	else{ angle = mangle; }
-}
-double Smarticle::GetAngle(bool degrees = false)
+void Smarticle::SetAngle(double mangle1, double mangle2, bool degrees = false)
 {
 	if (degrees)
-		return angle*180.0 / CH_C_PI;
+	{
+		angle1 = mangle1*CH_C_PI / 180.0;
+		angle2 = mangle2*CH_C_PI / 180.0;
+	}
 	else
-		return angle;
+	{
+		angle1 = mangle1;
+		angle2 = mangle2;
+	}
+}
+void Smarticle::SetAngle(double mangle, bool degrees = false)
+{
+	if (degrees)
+	{
+		angle1 = mangle*CH_C_PI / 180.0;
+		angle2 = mangle*CH_C_PI / 180.0;
+	}
+	else
+	{
+		angle1 = mangle;
+		angle2 = mangle;
+	}
+}
+void Smarticle::SetAngle1(double mangle1, bool degrees = false)
+{
+	if (degrees) { angle1 = mangle1*CH_C_PI / 180.0; }
+	else{ angle1 = mangle1; }
+}
+void Smarticle::SetAngle2(double mangle2, bool degrees = false)
+{
+	if (degrees) { angle2 = mangle2*CH_C_PI / 180.0; }
+	else{ angle2 = mangle2; }
 }
 
+double Smarticle::GetAngle1(bool degrees = true)
+{
+	if (degrees)
+		return angle1*180.0 / CH_C_PI;
+	else
+		return angle1;
+}
+double Smarticle::GetAngle2(bool degrees = true)
+{
+	if (degrees)
+		return angle2*180.0 / CH_C_PI;
+	else
+		return angle2;
+}
+
+<<<<<<< HEAD
 void Smarticle::AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece) {
 	int numAddedMotions = motion_vector.size();
 	if (numAddedMotions == 0) {
@@ -426,5 +469,13 @@ ChSharedPtr<SmarticleMotionPiece> Smarticle::Get_Current_Motion() {
 }
 
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
+=======
+>>>>>>> develop
 
+void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 
+void Smarticle::SetBodyFixed(bool mev){
+	arm0->SetBodyFixed(mev);
+	arm1->SetBodyFixed(mev);
+	arm2->SetBodyFixed(mev);
+}

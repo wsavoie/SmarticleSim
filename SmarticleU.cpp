@@ -25,19 +25,19 @@ void SmarticleU::Create() {
 	
 	
 	ChVector<> box2_loc = ChVector<>(
-		(-w / 2.0 + r2) - (l / 2.0+r2)*cos(angle),
+		(-w / 2.0 + r2) - (l / 2.0+r2)*cos(angle1),
 		0,
-		(l / 2.0 + r2)*sin(angle));
+		(l / 2.0 + r2)*sin(angle1));
 	
 	
 	ChVector<> box3_loc = ChVector<>(
-		(w / 2.0 - r2) + (l / 2.0+r2)*cos(angle),
+		(w / 2.0 - r2) + (l / 2.0+r2)*cos(angle2),
 		0,
-		(l / 2.0 + r2)*sin(angle));
+		(l / 2.0 + r2)*sin(angle2));
 
 	// relative location of the boxes wrt smarticle initPos,
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle +CH_C_PI/2.0, 0));
-	ChQuaternion<> quat3 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle -CH_C_PI / 2.0, 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1 +CH_C_PI/2.0, 0));
+	ChQuaternion<> quat3 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2 -CH_C_PI / 2.0, 0));
 
 
 	ChVector<> gyr1 = utils::CalcBoxGyration(box1_dim,box1_loc).Get_Diag();
@@ -72,7 +72,7 @@ void SmarticleU::Create() {
 			m1 * (gyr1.z + ChVector<>(rel_loc1.x, rel_loc1.y, 0).Length2()) +
 			m2 * (gyr2.z + ChVector<>(rel_loc2.x, rel_loc2.y, 0).Length2()) +
 			m3 * (gyr3.z + ChVector<>(rel_loc3.x, rel_loc3.y, 0).Length2()) ;
-
+			
 	// create body, set initPos and rotation, add surface property, and clear/make collision model
 	if (USE_PARALLEL) {
 		smarticleU = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
@@ -90,11 +90,15 @@ void SmarticleU::Create() {
 	smarticleU->SetMaterialSurface(mat_g);
 
 	smarticleU->GetCollisionModel()->ClearModel();
+	//smarticleU->GetCollisionModel()->SetDefaultSuggestedEnvelope(.4*r2);
 	// initialize collision geometry wrt cm
+	
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box1_dim, rel_loc1);
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box2_dim, rel_loc2,quat2);
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box3_dim, rel_loc3,quat3);
 	smarticleU->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+
+	smarticleU->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
     smarticleU->GetCollisionModel()->BuildModel();  // this function overwrites the intertia
 
     // change mass and inertia property
@@ -112,15 +116,54 @@ ChVector<> SmarticleU::Get_cm() {
 double SmarticleU::GetVolume() {
 	return (2 * r) * (2 * r2 )* (w + 2 * l);
 }
-void SmarticleU::SetAngle(double mangle, bool degrees = false)
-{
-	if (degrees) { angle = mangle*CH_C_PI / 180.0; }
-	else{ angle = mangle; }
-}
-double SmarticleU::GetAngle(bool degrees = false)
+void SmarticleU::SetAngle(double mangle1, double mangle2, bool degrees = false)
 {
 	if (degrees)
-		return angle*180.0 / CH_C_PI;
+	{
+		angle1 = mangle1*CH_C_PI / 180.0;
+		angle2 = mangle2*CH_C_PI / 180.0;
+	}
 	else
-		return angle;
+	{
+		angle1 = mangle1;
+		angle2 = mangle2;
+	}
+}
+void SmarticleU::SetAngle(double mangle, bool degrees = false)
+{
+	if (degrees)
+	{
+		angle1 = mangle*CH_C_PI / 180.0;
+		angle2 = mangle*CH_C_PI / 180.0;
+	}
+	else
+	{
+		angle1 = mangle;
+		angle2 = mangle;
+	}
+}
+void SmarticleU::SetAngle1(double mangle1, bool degrees = false)
+{
+	if (degrees) { angle1 = mangle1*CH_C_PI / 180.0; }
+	else{ angle1 = mangle1; }
+}
+void SmarticleU::SetAngle2(double mangle2, bool degrees = false)
+{
+	if (degrees) { angle2 = mangle2*CH_C_PI / 180.0; }
+	else{ angle2 = mangle2; }
+}
+
+double SmarticleU::GetAngle1(bool degrees = true)
+{
+	if (degrees)
+		return angle1*180.0 / CH_C_PI;
+	else
+		return angle1;
+}
+double SmarticleU::GetAngle2(bool degrees = true)
+{
+	if (degrees)
+		return angle2*180.0 / CH_C_PI;
+	else
+		return angle2;
 }

@@ -13,6 +13,14 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include <memory>
 
+#ifndef true 
+#define true 1
+#endif
+
+#ifndef false 
+#define false 0
+#endif
+
 #define USE_PARALLEL true
 
 namespace chrono {
@@ -69,13 +77,15 @@ public:
 			int sID,
 			double other_density,
 			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+			double other_envelop,
 			double other_l,
 			double other_w,
 			double other_r,
 			double other_r2 = 0,
 			ChVector<> pos = ChVector<>(0, 0, 0),
 			ChQuaternion<> rot = QUNIT,
-			double angle = CH_C_PI/2);
+			double angle1= CH_C_PI/2,
+			double angle2= CH_C_PI/2);
 
   // create the smarticle by creating arms, adding joint between them, and functions
   virtual void Create();
@@ -110,11 +120,20 @@ public:
 
 
 	//smarticle arm angle
+	virtual void SetAngle(double mangle1, double mangle2, bool degrees);
 	virtual void SetAngle(double mangle, bool degrees);
-	virtual double GetAngle(bool degrees);
+	virtual void SetAngle1(double mangle1, bool degrees);
+	virtual void SetAngle2(double mangle2, bool degrees);
 
+<<<<<<< HEAD
 	virtual ChSharedPtr<SmarticleMotionPiece> Get_Current_Motion();
 
+=======
+	virtual double GetAngle1(bool degrees);
+	virtual double GetAngle2(bool degrees);
+	//body fixing
+	virtual void SetBodyFixed(bool mev);
+>>>>>>> develop
 private:
   // create smarticle arm, set collision, surface, and mass property.
   // armID = 0 (left arm), 1 (middle arm), 2 (right arm)
@@ -140,9 +159,11 @@ protected:
   double w;  // mid-segment length including thickness
   double r;  // in-plane half-thickness of arm
   double r2;  // off-plane  half-thickness of arm, i.e. prependicular to the object
-	double angle; //angle between center segment and outer segments
+	double angle1; //angle between center segment and outer segments
+	double angle2; //angle between center segment and outer segments
   double volume;
   double mass;
+  double collisionEnvelop;
 
   // material property
   double density;
