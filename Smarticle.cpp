@@ -39,6 +39,7 @@ void Smarticle::Properties(
 		int sID,
 		double other_density,
 		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+		double other_envelop,
 		double other_l,
 		double other_w,
 		double other_r,
@@ -55,6 +56,7 @@ void Smarticle::Properties(
 	w = other_w;
 	r = other_r;
 	r2 = other_r2;
+	collisionEnvelop = other_envelop;
 	initPos = pos;
 	rotation = rot;
 	angle1 = other_angle;
@@ -98,6 +100,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	arm->GetCollisionModel()->ClearModel();
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+	arm->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
     arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
 
     // change mass and inertia property

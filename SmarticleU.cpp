@@ -97,7 +97,9 @@ void SmarticleU::Create() {
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box2_dim, rel_loc2,quat2);
 	utils::AddBoxGeometry(smarticleU.get_ptr(), box3_dim, rel_loc3,quat3);
 	smarticleU->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
-  smarticleU->GetCollisionModel()->BuildModel();  // this function overwrites the intertia
+
+	smarticleU->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
+    smarticleU->GetCollisionModel()->BuildModel();  // this function overwrites the intertia
 
     // change mass and inertia property
     smarticleU->SetMass(mass);
