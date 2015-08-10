@@ -107,7 +107,7 @@ ChSharedPtr<ChBody> bucket;
 	double armAngle2 = 90;
 	
 
-	bool povray_output = false;
+	bool povray_output = true;
 	int out_fps = 120;
 	const std::string out_dir = "PostProcess";
 	const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
