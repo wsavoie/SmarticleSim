@@ -125,15 +125,12 @@ public:
 	virtual void SetAngle1(double mangle1, bool degrees);
 	virtual void SetAngle2(double mangle2, bool degrees);
 
-<<<<<<< HEAD
 	virtual ChSharedPtr<SmarticleMotionPiece> Get_Current_Motion();
 
-=======
 	virtual double GetAngle1(bool degrees);
 	virtual double GetAngle2(bool degrees);
 	//body fixing
 	virtual void SetBodyFixed(bool mev);
->>>>>>> develop
 private:
   // create smarticle arm, set collision, surface, and mass property.
   // armID = 0 (left arm), 1 (middle arm), 2 (right arm)

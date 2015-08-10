@@ -338,7 +338,6 @@ double Smarticle::GetAngle2(bool degrees = true)
 		return angle2;
 }
 
-<<<<<<< HEAD
 void Smarticle::AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece) {
 	int numAddedMotions = motion_vector.size();
 	if (numAddedMotions == 0) {
@@ -469,8 +468,6 @@ ChSharedPtr<SmarticleMotionPiece> Smarticle::Get_Current_Motion() {
 }
 
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
-=======
->>>>>>> develop
 
 void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 

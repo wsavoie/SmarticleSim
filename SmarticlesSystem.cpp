@@ -42,12 +42,8 @@
 #include "Smarticle.h"
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
-<<<<<<< HEAD
 
-#include <memory>
-=======
 //#include "D:\ChronoCode\libs\pngwriter-release-0.5.5\src\pngwriter.h"
->>>>>>> develop
 
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
