@@ -9,7 +9,7 @@ compName = platform.node()
 
 def chooseDir(name): #add your computer name in the dictionary here and the corresponding location where the program output will be placed
      return{
-     'PHYS32240':'D:\\SimResults\\Chrono\\SmarticleU\\Results\\',       #lab computer
+     'PHYS32240':'D:\\SimResults\\Chrono\\SmarticleU\\Results\\ALL CURRENT RUNS\\',       #lab computer
      'PHYS32164':'D:\\LabDropbox\\Dropbox\\WillSmarticles\\Results\\',    #goldman2
      'WS':'C:\\SimResults\\Chrono\\SmarticleU\\Results\\',              #laptop
      'euler.wacc.wisc.edu':'/home/wsavoie/SmarticleResults/'            #Wisc server
@@ -136,14 +136,14 @@ def runSim():
     print read
     for i in range(0,len(depVar)):
         d=date.fromtimestamp(time.time())
-        t = d.strftime("%Y%m%d")
+        t = d.strftime("%Y%m")
         dirn = "%s lw=%g ang1=%g ang2=%g g=%g "%(t, lw[i], angle1[i],angle2[i],gamma[i])+read[0]*"r"
         dirpath = chooseDir(compName)+dirn
         odirpath = dirpath
         print dirpath
         #check if okay to overwrite, if not being written to in simPars, then it is okay to overwrite
         if (not makePath(dirpath)):
-            if(not isFileRunning(dirpath)): #if can delete
+            if(~isFileRunning(dirpath)): #if can delete
                 print 'got here!'
                 makePath(dirpath)   #then created here
             else:
@@ -156,12 +156,10 @@ def runSim():
             if exists:
                 os.remove(chooseScriptFolder(compName)+"\smarticles.csv") #remove previous smarticles.csv
                 shutil.copyfile(csvFiles[i], dirpath+"\smarticles.csv")#copy file to be read to proper location, and name it smarticles.csv
-                # shutil.copyfile(chooseScriptFolder(compName)+"\smarticles.csv", dirpath+"\smarticles.csv")#copy smarticles.csv
                 shutil.copyfile(csvFiles[i],chooseScriptFolder(compName)+"\smarticles.csv")#copy smarticles.csv
             else:
                 shutil.copyfile(csvFiles[i], dirpath+"\smarticles.csv")#copy file to be read to proper location, and name it smarticles.csv
                 shutil.copyfile(csvFiles[i],chooseScriptFolder(compName)+"\smarticles.csv")#copy smarticles.csv
-                # shutil.copyfile(chooseScriptFolder(compName)+"\smarticles.csv", dirpath+"\smarticles.csv")#copy smarticles.csv
         os.chdir(dirpath)
         tBegin = time.time()
         
@@ -181,7 +179,7 @@ def runSim():
         os.chdir("../../")
         newPath = getNewFilename(odirpath,'')
         print newPath
-        os.rename(dirPath,newPath)
+        os.rename(dirpath,newPath)
         
 fileloc=chooseRunLoc(compName)
 runSim()

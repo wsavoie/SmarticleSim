@@ -1,5 +1,6 @@
 plotType=3;
 PON = 0;
+cutoff = .05;
 switch plotType
     case 1 %gamma 
         dvunits = '';
@@ -30,7 +31,7 @@ end
 %volumeFraction.text
 %time,   SmarticleInContainer,   phi,   height,   COM.z in container   
  
-close all
+% close all
 % directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\Results\Shake const=lw var=angle gamma');
 directory_name(length(directory_name)+1)='\';
@@ -56,18 +57,21 @@ for j= 1:length(files)
         error(horzcat('Try switching plotType! You''re plotting with depvar==',ptype));
     end
     data=importdata(horzcat(directory_name,files(j).name,'\PostProcess\volumeFraction.txt'));
-    t_0idx=find(data(:,1)>.35,1); %shaking starts at .5
+    t_0idx=find(data(:,1)>cutoff,1); %shaking starts at .5
     t_0=data(t_0idx,1);
     h_0=data(t_0idx,5);
     
     xdat =data(t_0idx:end,1)-t_0;
     ydat = data(t_0idx:end,5)/h_0;
+%     ydat
 %     plot(data(t_0idx:end,1)-t_0,data(t_0idx:end,5)*2/h_0-1);
      plot(xdat,ydat);
     hold on;
 end
-for i=1:length(depVar)
-    depVarLegend{i}=horzcat(num2str(depVar(i,1)),dvunits);
+a = gams{1};
+figText(gcf,16)
+for i=1:size(depVar,1)
+    depVarLegend{i}=horzcat(num2str(depVar(i,1)),dvunits, ' \Gamma=',num2str(depVar(i,2)));
 end
 % legend(depVarLegend);
 set(gca, 'XScale', 'log')
@@ -89,6 +93,7 @@ for i=1:length(gamma)
     plot(t,htho)
 end
 legend(depVarLegend);
+
 
 %% start of determining beta and delta
 delta=15;
@@ -114,7 +119,7 @@ for i= 1:length(files) %PUT IN ABOVE FOR LOOP AT SOME POINT
     depVar(i,1)= str2double(cell2mat(pars{1})); %lw info for that fileoar
     depVar(i,2) = str2double(cell2mat(gammaPars{1}));
     data=importdata(horzcat(directory_name,files(i).name,'\PostProcess\volumeFraction.txt'));
-    t_0idx=find(data(:,1)>.35,1); %shaking starts at .5
+    t_0idx=find(data(:,1)>cutoff,1); %shaking starts at .5
     t_0=data(t_0idx,1);
     h_0=data(t_0idx,5);
     xdat =data(t_0idx:end,1)-t_0;
@@ -173,4 +178,7 @@ if(plotType==1 || plotType==3)%tau vs gamma^-1 only works for gamma varied runs
 %     lntauvgamma=errBarCalc(1./depVar(:,1),log(1/30*exp(deltaFit./depVar(:,1))));
 %     errorbar(lntauvgamma(:,1),lntauvgamma(:,2),lntauvgamma(:,3),'o-');
 
+end
+if(plotType==4)
+    
 end

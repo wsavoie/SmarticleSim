@@ -902,53 +902,53 @@ void vibrate_bucket(double t,ChSharedPtr<chrono::ChBody> body) {
 //}
 //image.write("rgb.png");
 //}
-bool screenshot(char *fileName){
-	int Xres = 1280;
-	int Yres = 720;
-	static unsigned char header[54] = {
-		0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-	unsigned char *pixels = (unsigned char *)malloc(Xres * Yres * 3);
-	((unsigned __int16 *)header)[9] = Xres;
-	((unsigned __int16 *)header)[11] = Yres;
-
-	glReadPixels(0, 0, Xres, Yres, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-
-	unsigned char temp;
-	for (unsigned int i = 0; i < Xres * Yres * 3; i += 3){
-		temp = pixels[i];
-		pixels[i] = pixels[i + 2];
-		pixels[i + 2] = temp;
-	}
-
-	HANDLE FileHandle;
-	unsigned long Size;
-
-	if (fileName == NULL){
-		char file[256];
-		unsigned int i = 0;
-		do {
-			sprintf(file, "Screenshot%d.bmp", i);
-			FileHandle = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-			i++;
-		} while (FileHandle == INVALID_HANDLE_VALUE);
-	}
-	else {
-		FileHandle = CreateFile(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (FileHandle == INVALID_HANDLE_VALUE)	return false;
-	}
-	DWORD NumberOfBytesWritten;
-	WriteFile(FileHandle, header, sizeof(header), &NumberOfBytesWritten, NULL);
-	WriteFile(FileHandle, pixels, Xres * Yres * 3, &NumberOfBytesWritten, NULL);
-
-	CloseHandle(FileHandle);
-
-	free(pixels);
-	return true;
-}
+//bool screenshot(char *fileName){
+//	int Xres = 1280;
+//	int Yres = 720;
+//	static unsigned char header[54] = {
+//		0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
+//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
+//		0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
+//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+//
+//	unsigned char *pixels = (unsigned char *)malloc(Xres * Yres * 3);
+//	((unsigned __int16 *)header)[9] = Xres;
+//	((unsigned __int16 *)header)[11] = Yres;
+//
+//	glReadPixels(0, 0, Xres, Yres, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+//
+//	unsigned char temp;
+//	for (unsigned int i = 0; i < Xres * Yres * 3; i += 3){
+//		temp = pixels[i];
+//		pixels[i] = pixels[i + 2];
+//		pixels[i + 2] = temp;
+//	}
+//
+//	HANDLE FileHandle;
+//	unsigned long Size;
+//
+//	if (fileName == NULL){
+//		char file[256];
+//		unsigned int i = 0;
+//		do {
+//			sprintf(file, "Screenshot%d.bmp", i);
+//			FileHandle = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+//			i++;
+//		} while (FileHandle == INVALID_HANDLE_VALUE);
+//	}
+//	else {
+//		FileHandle = CreateFile(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+//		if (FileHandle == INVALID_HANDLE_VALUE)	return false;
+//	}
+//	DWORD NumberOfBytesWritten;
+//	WriteFile(FileHandle, header, sizeof(header), &NumberOfBytesWritten, NULL);
+//	WriteFile(FileHandle, pixels, Xres * Yres * 3, &NumberOfBytesWritten, NULL);
+//
+//	CloseHandle(FileHandle);
+//
+//	free(pixels);
+//	return true;
+//}
 // =============================================================================
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
