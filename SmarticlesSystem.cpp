@@ -1167,6 +1167,7 @@ int main(int argc, char* argv[]) {
 //	  } break;
 //	  }
 	  SavePovFilesMBD(mphysicalSystem, tStep);
+	  step_timer.Reset();
 	  step_timer.start("step time");
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
     if (gl_window.Active()) {
