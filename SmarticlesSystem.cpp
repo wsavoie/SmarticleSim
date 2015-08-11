@@ -206,7 +206,14 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 		" Gamma: " << mGamma << std::endl <<
 		" numlayers: " << numLayers << std::endl <<
 		" read from file: " << read_from_file << std::endl <<
-		" arm angle 1 and 2: " << armAngle1 << " " << armAngle2 << std::endl << std::endl;
+		" arm angle 1 and 2: " << armAngle1 << " " << armAngle2 << std::endl <<
+		"	non-parallel" << std::endl;
+
+	if (argc > 7)
+	{
+		simParams << argv[0] << " " << argv[1] << " " << argv[2] << " " << argv[3] << " " << argv[4] << " " << argv[5] << " " << argv[6] << " " << argv[7] << std::endl;
+	}
+
   // ---------------------
   // Edit mphysicalSystem settings.
   // ---------------------
@@ -273,8 +280,13 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 		" Gamma: " << mGamma << std::endl <<
 		" numlayers: " << numLayers << std::endl <<
 		" read from file: " << read_from_file << std::endl << 
-		" arm angle 1 and 2: " << armAngle1<< " " << armAngle2 << std::endl << std::endl;
-	
+		" arm angle 1 and 2: " << armAngle1<< " " << armAngle2 << std::endl << 
+		" parallel" << std::endl << std::endl;
+
+	if (argc > 10)
+	{
+		simParams << argv[0] << " " << argv[1] << " " << argv[2] << " " << argv[3] << " " << argv[4] << " " << argv[5] << " " << argv[6] << " " << argv[7] << " " << argv[8] << " " << argv[9] << " " << argv[10] << std::endl;
+	}
 
   // ---------------------
   // Edit mphysicalSystem settings.
