@@ -101,6 +101,7 @@ ChSharedPtr<ChBody> bucket;
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 100;
 	double armAngle = 90;
+	double sOmega = 10;  // smarticle omega
 	
 
 	bool povray_output = true;
@@ -319,27 +320,42 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 
 
 
+				ChSharedPtr<SmarticleMotionPiece> myMotionDefault(new SmarticleMotionPiece);
+				myMotionDefault->joint_01.theta1 = -.00001;
+				myMotionDefault->joint_01.theta2 =  .00001;
+				myMotionDefault->joint_01.omega = 0;
+				myMotionDefault->joint_12.theta1 = -.00001;
+				myMotionDefault->joint_12.theta2 =  .00001;
+				myMotionDefault->joint_12.omega = 0;
+				myMotionDefault->timeInterval = 0.5;
+				myMotionDefault->startTime = 0;
+				myMotionDefault->SetMotionType(RELEASE_G);
+
 
 				ChSharedPtr<SmarticleMotionPiece> myMotion(new SmarticleMotionPiece);
 				myMotion->joint_01.theta1 = -0.5 * CH_C_PI;
 				myMotion->joint_01.theta2 =  0.5 * CH_C_PI;
-				myMotion->joint_01.omega = 10;
+				myMotion->joint_01.omega = sOmega;
 				myMotion->joint_12.theta1 = -0.5 * CH_C_PI;
 				myMotion->joint_12.theta2 =  0.5 * CH_C_PI;
-				myMotion->joint_12.omega = 0;
+				myMotion->joint_12.omega = sOmega;
 				myMotion->timeInterval = 0.5;
 				myMotion->startTime = 0;
-
 				myMotion->SetMotionType(SQUARE_G);
 
 
 				if (smarticleType == SMART_ARMS) {
 					Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 					smarticle0->Properties(smarticleCount,
-						rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+						rho_smarticle, mat_g,
+						collisionEnvelope,
+						l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						myPos,
 						myRot);
+
+
 					smarticle0->Create();
+					smarticle0->AddMotion(myMotionDefault);
 					smarticle0->AddMotion(myMotion);
 					mySmarticlesVec.push_back((Smarticle*)smarticle0);
 
@@ -347,7 +363,9 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				else if (smarticleType == SMART_U) {
 					SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
 					smarticle0->Properties(smarticleCount,
-						rho_smarticle, mat_g, l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+						rho_smarticle, mat_g,
+						collisionEnvelope,
+						l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						myPos,
 						myRot);
 					smarticle0->Create();
@@ -751,7 +769,8 @@ void vibrate_bucket(double t) {
 // =============================================================================
 void UpdateSmarticles(std::vector<Smarticle*> mySmarticlesVec) {
 	for (int i = 0; i < mySmarticlesVec.size(); i++) {
-		mySmarticlesVec[i]->UpdateSmarticleMotionLoop();
+//		mySmarticlesVec[i]->UpdateSmarticleMotionLoop();
+		mySmarticlesVec[i]->UpdateMySmarticleMotion();
 	}
 }
 // =============================================================================

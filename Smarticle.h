@@ -87,6 +87,24 @@ public:
 			double angle1= CH_C_PI/2,
 			double angle2= CH_C_PI/2);
 
+  virtual void Properties(
+			int sID,
+			double other_density,
+			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+			double other_envelop,
+			double other_l,
+			double other_w,
+			double other_r,
+			double other_r2 = 0,
+			double other_omega = 0,
+			ChVector<> pos = ChVector<>(0, 0, 0),
+			ChQuaternion<> rot = QUNIT,
+			double angle1= CH_C_PI/2,
+			double angle2= CH_C_PI/2);
+
+  virtual void SetDefaultOmega(double omega);
+
+
   // create the smarticle by creating arms, adding joint between them, and functions
   virtual void Create();
 
@@ -174,6 +192,7 @@ protected:
   // ID
   int smarticleID;			// smarticleID is not bodyID. smarticle is composed of 3 bodies.
   double jointClearance; // space at joint
+  double defaultOmega;
 
 
   // bodies
@@ -195,6 +214,7 @@ protected:
 
   std::vector<ChSharedPtr<SmarticleMotionPiece>> motion_vector;
   ChSharedPtr<SmarticleMotionPiece> current_motion;
+
 
 
 

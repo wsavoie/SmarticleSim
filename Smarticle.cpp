@@ -64,8 +64,33 @@ void Smarticle::Properties(
 
 	jointClearance = .05 * r2;
 	volume = GetVolume();
+}
+
+void Smarticle::Properties(
+		int sID,
+		double other_density,
+		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+		double other_envelop,
+		double other_l,
+		double other_w,
+		double other_r,
+		double other_r2,
+		double other_omega,
+		ChVector<> pos,
+		ChQuaternion<> rot,
+		double other_angle,
+		double other_angle2){
+
+	Properties(sID, other_density, surfaceMaterial, other_envelop, other_l, other_w, other_r, other_r2, pos, rot, other_angle, other_angle2);
+	SetDefaultOmega(other_omega);
 
 }
+
+void Smarticle::SetDefaultOmega(double omega) {
+	defaultOmega = omega;
+}
+
+
 void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
@@ -204,18 +229,17 @@ void Smarticle::CreateActuators() {
 
 
 void Smarticle::Create() {
-	// Create Arms
-//	// straight smarticle
-//	double jointClearance = 1.3 * r2; // space betwen to connected arms at joint, when they are straight
-//	CreateArm(0, l, ChVector<>(-w/2 - l/2 - jointClearance, 0, 0));
-//	CreateArm(1, w, ChVector<>(0, 0, 0));
-//	CreateArm(2, l, ChVector<>(w/2 + l/2 + jointClearance, 0, 0));
-
-	// U smarticle
 	double l_mod = l - jointClearance;
-	CreateArm(0, l_mod, ChVector<>(-w/2 + r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+
+	// ** initialize U
+//	CreateArm(0, l_mod, ChVector<>(-w/2 + r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+//	CreateArm(1, w, ChVector<>(0, 0, 0));
+//	CreateArm(2, l_mod, ChVector<>(w/2 - r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+
+	// ** initialize straight
+	CreateArm(0, l_mod, ChVector<>(-w/2 - jointClearance - r2 - l_mod/2, 0, 0));
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(2, l_mod, ChVector<>(w/2 - r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+	CreateArm(2, l_mod, ChVector<>(w/2 + jointClearance + r2 + l_mod/2, 0, 0));
 
 	CreateJoints();
 	CreateActuators();
@@ -421,29 +445,30 @@ void Smarticle::MoveSquare() {
 void Smarticle::UpdateMySmarticleMotion() {
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
-	double omega1 = 0.1 * (current_motion->joint_01.theta2 - current_motion->joint_01.theta1) / dT;  // some omega to move back the ams angles into range
-	double omega2 = 0.1 * (current_motion->joint_12.theta2 - current_motion->joint_12.theta1) / dT;	 // some omega to move back the ams angles into range
+
+	printf("theta1 min %f max %f and theta 2 min %f max %f \n", current_motion->joint_01.theta1, current_motion->joint_01.theta2, current_motion->joint_12.theta1, current_motion->joint_12.theta2);
 
 	bool inRange = true;
 
 	if (ang01 < current_motion->joint_01.theta1) {
-		current_motion->joint_01.omega = omega1;
+		current_motion->joint_01.omega = defaultOmega;
 		inRange = false;
 	}
 	if (ang01 > current_motion->joint_01.theta2) {
-		current_motion->joint_01.omega = -omega1;
+		current_motion->joint_01.omega = -defaultOmega;
 		inRange = false;
 	}
 	if (ang12 < current_motion->joint_12.theta1) {
-		current_motion->joint_12.omega = omega2;
+		current_motion->joint_12.omega = defaultOmega;
 		inRange = false;
 	}
 	if (ang12 > current_motion->joint_12.theta2) {
-		current_motion->joint_12.omega = -omega2;
+		current_motion->joint_12.omega = -defaultOmega;
 		inRange = false;
 	}
 
 	if (!inRange) {
+		printf("yoyoyuoyoyuoyoy\n");
 		return;
 	}
 
@@ -453,10 +478,10 @@ void Smarticle::UpdateMySmarticleMotion() {
 		MoveSquare();
 		break;
 	case CIRCLE_G:
-		MoveCircle();
+//		MoveCircle();
 		break;
 	case RELEASE_G:
-		MoveRelease();
+//		MoveRelease();
 		break;
 	default:
 		break;
