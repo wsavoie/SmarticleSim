@@ -55,6 +55,8 @@ public:
 
 	virtual void SetMotionType(MotionType myMotion) {motionType = myMotion;}
 	virtual MotionType GetMotionType() {return motionType;}
+
+	int motionSubSegment;
 private:
 	int motionSegment;
 	MotionType motionType;

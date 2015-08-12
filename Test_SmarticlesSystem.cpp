@@ -350,6 +350,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 						rho_smarticle, mat_g,
 						collisionEnvelope,
 						l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+						sOmega,
 						myPos,
 						myRot);
 
