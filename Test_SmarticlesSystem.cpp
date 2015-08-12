@@ -361,6 +361,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 					mySmarticlesVec.push_back((Smarticle*)smarticle0);
 
 				}
+
 				else if (smarticleType == SMART_U) {
 					SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
 					smarticle0->Properties(smarticleCount,

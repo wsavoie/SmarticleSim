@@ -164,7 +164,9 @@ private:
   void CreateJoints();
   void CreateActuators();
 
+  bool MoveToRange();
   void MoveSquare();
+  void MoveCircle();
 
 protected:
   // location and orientation (location of the center of the middle arm)
