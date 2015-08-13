@@ -574,7 +574,9 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	// 1: create bucket
 		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
 	if (bucketType == BOX){
-		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+		//bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+		bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z,  true);
+
 	}
 	if (bucketType == CYLINDER){
 		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
