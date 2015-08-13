@@ -560,7 +560,6 @@ void Smarticle::MoveToAngle(double theta1, double theta2) {
 		omega2 = -defaultOmega;
 	}
 
-	printf("omega 1 and 2 %f %f\n", omega1, omega2);
 	this->SetActuatorFunction(0, omega1);
 	this->SetActuatorFunction(1, omega2);
 }
