@@ -341,7 +341,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				myMotion->joint_12.omega = sOmega;
 				myMotion->timeInterval = 0.5;
 				myMotion->startTime = 0;
-				myMotion->SetMotionType(CIRCLE_G);
+				myMotion->SetMotionType(SQUARE_G);
 
 
 				if (smarticleType == SMART_ARMS) {
@@ -769,11 +769,27 @@ void vibrate_bucket(double t) {
 	bucket->SetRot(QUNIT);
 }
 // =============================================================================
-void UpdateSmarticles(std::vector<Smarticle*> mySmarticlesVec) {
+void UpdateSmarticles(
+		CH_SYSTEM& mphysicalSystem,
+		std::vector<Smarticle*> mySmarticlesVec) {
+
+	double current_time = mphysicalSystem.GetChTime();
 	for (int i = 0; i < mySmarticlesVec.size(); i++) {
 //		mySmarticlesVec[i]->UpdateSmarticleMotionLoop();
-//		mySmarticlesVec[i]->UpdateMySmarticleMotion();
-		mySmarticlesVec[i]->MoveToAngle(CH_C_PI/2, CH_C_PI/3);
+		mySmarticlesVec[i]->UpdateMySmarticleMotion();
+
+		if (current_time > 0.4 && current_time < 0.8) {
+					mySmarticlesVec[i]->MoveToAngle(CH_C_PI/3, -CH_C_PI/3);
+		} else if (current_time > 0.8 && current_time < 1.2) {
+			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/2, CH_C_PI/2);
+		} else if (current_time >= 1.2 && current_time < 2.0) {
+			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/2, -CH_C_PI/2);
+		} else if (current_time >= 2.0 && current_time < 2.4) {
+			mySmarticlesVec[i]->MoveToAngle(0, 0);
+		} else {
+			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/3, CH_C_PI/3);
+		}
+
 	}
 }
 // =============================================================================
@@ -970,7 +986,7 @@ int main(int argc, char* argv[]) {
     mphysicalSystem.DoStepDynamics(dT);
 #endif
 
-    UpdateSmarticles(mySmarticlesVec);
+    UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
 
