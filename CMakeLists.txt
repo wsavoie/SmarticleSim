@@ -64,7 +64,8 @@ SET(DEMOS "")
 
 
 SET(DEMOS ${DEMOS}
-	SmarticlesSystem
+	#SmarticlesSystem
+	Test_SmarticlesSystem
 
 	#smarticleParallel
 #icePar	

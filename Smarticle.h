@@ -11,6 +11,7 @@
 #include "core/ChVector.h"
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
+#include <memory>
 
 #ifndef true 
 #define true 1
@@ -23,6 +24,45 @@
 #define USE_PARALLEL true
 
 namespace chrono {
+
+enum MotionType {SQUARE_G, CIRCLE_G, RELEASE_G};
+
+
+// structs to attach motion to smarticles
+class JointMotion : public ChShared {
+public:
+	double theta1;			// lower limit of the motion
+	double theta2;			// upper limit of the motion
+	double omega;			// joint angular velocity
+
+	JointMotion() {}
+	~JointMotion() {}
+};
+
+class SmarticleMotionPiece : public ChShared{
+
+public:
+	JointMotion joint_01;	// joint 1 motion,
+	JointMotion joint_12;	// joint 1 motion
+	double timeInterval;	// time of action
+	double startTime;		// start time of the motion
+	double dT;
+	SmarticleMotionPiece() {}
+	~SmarticleMotionPiece() {}
+
+	virtual void SetMotionSegment(int s) {motionSegment = s;}
+	virtual int GetMotionSegment() {return motionSegment;}
+
+	virtual void SetMotionType(MotionType myMotion) {motionType = myMotion;}
+	virtual MotionType GetMotionType() {return motionType;}
+
+	int motionSubSegment;
+private:
+	int motionSegment;
+	MotionType motionType;
+};
+
+
 
 class Smarticle {
 public:
@@ -49,6 +89,24 @@ public:
 			double angle1= CH_C_PI/2,
 			double angle2= CH_C_PI/2);
 
+  virtual void Properties(
+			int sID,
+			double other_density,
+			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+			double other_envelop,
+			double other_l,
+			double other_w,
+			double other_r,
+			double other_r2 = 0,
+			double other_omega = 0,
+			ChVector<> pos = ChVector<>(0, 0, 0),
+			ChQuaternion<> rot = QUNIT,
+			double angle1= CH_C_PI/2,
+			double angle2= CH_C_PI/2);
+
+  virtual void SetDefaultOmega(double omega);
+
+
   // create the smarticle by creating arms, adding joint between them, and functions
   virtual void Create();
 
@@ -64,12 +122,22 @@ public:
   virtual ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
   virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
   virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
+  virtual void SetActuatorFunction(int actuatorID, double omega);
+
 
   // Smarticle volume
   virtual double GetVolume();
   virtual ChVector<> Get_cm();
   virtual ChVector<> Get_InitPos();
   virtual double GetDensity() {return density;};
+  virtual void AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece);
+  //	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented
+  //	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
+
+  virtual void UpdateSmarticleMotion();
+  virtual void UpdateSmarticleMotionLoop();
+  virtual void UpdateMySmarticleMotion();
+
 
 	//smarticle arm angle
 	virtual void SetAngle(double mangle1, double mangle2, bool degrees);
@@ -77,10 +145,15 @@ public:
 	virtual void SetAngle1(double mangle1, bool degrees);
 	virtual void SetAngle2(double mangle2, bool degrees);
 
+	virtual ChSharedPtr<SmarticleMotionPiece> Get_Current_Motion();
+
 	virtual double GetAngle1(bool degrees);
 	virtual double GetAngle2(bool degrees);
 	//body fixing
 	virtual void SetBodyFixed(bool mev);
+
+	void MoveToAngle(double, double);
+
 private:
   // create smarticle arm, set collision, surface, and mass property.
   // armID = 0 (left arm), 1 (middle arm), 2 (right arm)
@@ -93,6 +166,10 @@ private:
 		  );
   void CreateJoints();
   void CreateActuators();
+
+  bool MoveToRange();
+  void MoveSquare();
+  void MoveCircle();
 
 protected:
   // location and orientation (location of the center of the middle arm)
@@ -122,6 +199,7 @@ protected:
   // ID
   int smarticleID;			// smarticleID is not bodyID. smarticle is composed of 3 bodies.
   double jointClearance; // space at joint
+  double defaultOmega;
 
 
   // bodies
@@ -140,6 +218,12 @@ protected:
   // joints functions
   ChSharedPtr<ChFunction> function01;
   ChSharedPtr<ChFunction> function12;
+
+  std::vector<ChSharedPtr<SmarticleMotionPiece>> motion_vector;
+  ChSharedPtr<SmarticleMotionPiece> current_motion;
+
+
+
 
 };
 }
