@@ -341,7 +341,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				myMotion->joint_12.omega = sOmega;
 				myMotion->timeInterval = 0.5;
 				myMotion->startTime = 0;
-				myMotion->SetMotionType(SQUARE_G);
+				myMotion->SetMotionType(CIRCLE_G);
 
 
 				if (smarticleType == SMART_ARMS) {
@@ -772,7 +772,8 @@ void vibrate_bucket(double t) {
 void UpdateSmarticles(std::vector<Smarticle*> mySmarticlesVec) {
 	for (int i = 0; i < mySmarticlesVec.size(); i++) {
 //		mySmarticlesVec[i]->UpdateSmarticleMotionLoop();
-		mySmarticlesVec[i]->UpdateMySmarticleMotion();
+//		mySmarticlesVec[i]->UpdateMySmarticleMotion();
+		mySmarticlesVec[i]->MoveToAngle(CH_C_PI/2, CH_C_PI/3);
 	}
 }
 // =============================================================================

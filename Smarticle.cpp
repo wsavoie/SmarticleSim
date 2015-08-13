@@ -500,16 +500,67 @@ void Smarticle::MoveCircle() {
 	} else if (ang01 < -r1) {
 		ang01 = -r1;
 	}
-	double gamma = asin(ang01 / r1);
+
+//	double gamma = asin(ang01 / r1);
+	double gamma = atan2(ang01, ang12);
+
+//	while (fabs(gamma) < .01 * CH_C_PI) {
+//		gamma += .01 * CH_C_PI;
+//	}
 	double gammaDot = defaultOmega / r1;
 
 	// make sure the initial configuration is on the sphere (up to a tolerance)
 
 	double omega1 = r1 * cos(gamma) * gammaDot;
+//	double omega2 = -ang01 * omega1 / (ang12);
 	double omega2 = -r2 * sin(gamma) * gammaDot;
+
+	double smallOmega = .001 * defaultOmega;
+	if (fabs(omega1) < smallOmega) {
+		if (ang01 < 0) {
+			omega1 = smallOmega;
+		} else {
+			omega1 = -smallOmega;
+		}
+	}
+	if (fabs(omega2) < smallOmega) {
+		if (ang12 < 0) {
+			omega2 = smallOmega;
+		} else {
+			omega2 = -smallOmega;
+		}
+	}
 
 	printf(" omega1 %f omega2 %f\n", omega1, omega2);
 
+	this->SetActuatorFunction(0, omega1);
+	this->SetActuatorFunction(1, omega2);
+}
+
+void Smarticle::MoveToAngle(double theta1, double theta2) {
+	double ang01 = link_actuator01->Get_mot_rot();
+	double ang12 = link_actuator12->Get_mot_rot();
+
+	double omega1;
+	double omega2;
+
+	if (fabs(ang01 - theta1) < .01 * CH_C_PI) {
+		omega1 = 0;
+	} else if (ang01 < theta1) {
+		omega1 = defaultOmega;
+	} else {
+		omega1 = -defaultOmega;
+	}
+
+	if (fabs(ang12 - theta2) < .01 * CH_C_PI) {
+		omega2 = 0;
+	} else if (ang12 < theta2) {
+		omega2 = defaultOmega;
+	} else {
+		omega2 = -defaultOmega;
+	}
+
+	printf("omega 1 and 2 %f %f\n", omega1, omega2);
 	this->SetActuatorFunction(0, omega1);
 	this->SetActuatorFunction(1, omega2);
 }
