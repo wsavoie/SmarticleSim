@@ -369,22 +369,10 @@ void Smarticle::AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece) {
 	if (numAddedMotions == 0) {
 		current_motion = s_motionPiece;
 	}
-	s_motionPiece->SetMotionSegment(numAddedMotions);
 	motion_vector.push_back(s_motionPiece);
 }
 
-void Smarticle::UpdateSmarticleMotion() {
-	double currentTime = m_system->GetChTime();
-	int currentSegment = current_motion->GetMotionSegment();
-	double t_in = current_motion->startTime - currentTime;
-	if (  (t_in >= 0 && t_in < current_motion->timeInterval) &&
-			(currentSegment < motion_vector.size() - 1) ) {
-		current_motion = motion_vector[currentSegment + 1];
-	}
-}
-
 void Smarticle::MoveLoop() {
-	int currentSegment = current_motion->GetMotionSegment();
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
 	double omega1 = current_motion->joint_01.omega;
@@ -608,7 +596,23 @@ void Smarticle::UpdateMySmarticleMotion() {
 //	}
 //	printf("bw\n");
 
+	static int count_segment = 0;
 	current_motion = motion_vector[1];
+	if (motion_vector.size() < 2) {
+		return;
+	} else {
+		count_segment = 1;
+		current_motion = motion_vector[count_segment]; // 0 is reserved for release
+	}
+	if (count_segment < motion_vector.size() - 1) {
+		if (motion_vector[count_segment + 1]->startTime < m_system->GetChTime()) {
+			count_segment ++;
+			current_motion = motion_vector[count_segment];
+		}
+	}
+
+
+
 	MotionType sMotion = current_motion->GetMotionType();
 	switch (current_motion->GetMotionType()) {
 	case SQUARE_G:
@@ -619,6 +623,9 @@ void Smarticle::UpdateMySmarticleMotion() {
 		break;
 	case RELEASE_G:
 		MoveRelease();
+		break;
+	case LOOP_G:
+		MoveLoop();
 		break;
 	default:
 		break;
