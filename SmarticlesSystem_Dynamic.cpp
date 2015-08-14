@@ -101,7 +101,7 @@ ChSharedPtr<ChBody> bucket;
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 100;
 	double armAngle = 90;
-	double sOmega = 10;  // smarticle omega
+	double sOmega = .1;  // smarticle omega
 	
 
 	bool povray_output = true;
@@ -574,8 +574,8 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	// 1: create bucket
 		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
 	if (bucketType == BOX){
-		//bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
-		bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z,  true);
+		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+//		bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z,  true);
 
 	}
 	if (bucketType == CYLINDER){
@@ -833,20 +833,20 @@ void UpdateSmarticles(
 
 	double current_time = mphysicalSystem.GetChTime();
 	for (int i = 0; i < mySmarticlesVec.size(); i++) {
-//		mySmarticlesVec[i]->MoveLoop();
-		mySmarticlesVec[i]->UpdateMySmarticleMotion();
-
-		if (current_time > 0.4 && current_time < 0.8) {
-					mySmarticlesVec[i]->MoveToAngle(CH_C_PI/3, -CH_C_PI/3);
-		} else if (current_time > 0.8 && current_time < 1.2) {
-			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/2, CH_C_PI/2);
-		} else if (current_time >= 1.2 && current_time < 2.0) {
-			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/2, -CH_C_PI/2);
-		} else if (current_time >= 2.0 && current_time < 2.4) {
-			mySmarticlesVec[i]->MoveToAngle(0, 0);
-		} else {
-			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/3, CH_C_PI/3);
-		}
+		mySmarticlesVec[i]->MoveLoop();
+//		mySmarticlesVec[i]->UpdateMySmarticleMotion();
+//
+//		if (current_time > 0.4 && current_time < 0.8) {
+//					mySmarticlesVec[i]->MoveToAngle(CH_C_PI/3, -CH_C_PI/3);
+//		} else if (current_time > 0.8 && current_time < 1.2) {
+//			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/2, CH_C_PI/2);
+//		} else if (current_time >= 1.2 && current_time < 2.0) {
+//			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/2, -CH_C_PI/2);
+//		} else if (current_time >= 2.0 && current_time < 2.4) {
+//			mySmarticlesVec[i]->MoveToAngle(0, 0);
+//		} else {
+//			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/3, CH_C_PI/3);
+//		}
 
 	}
 }
@@ -960,11 +960,11 @@ int main(int argc, char* argv[]) {
 	int numGeneratedLayers = 0;
 
 	  int sSize1 = mySmarticlesVec.size();
-//	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-//			  (numGeneratedLayers < numLayers) ){
-//		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-//		  numGeneratedLayers ++;
-//	  }
+	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+			  (numGeneratedLayers < numLayers) ){
+		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+		  numGeneratedLayers ++;
+	  }
 
 //  CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
 

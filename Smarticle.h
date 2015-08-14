@@ -50,9 +50,6 @@ public:
 	SmarticleMotionPiece() {}
 	~SmarticleMotionPiece() {}
 
-	virtual void SetMotionSegment(int s) {motionSegment = s;}
-	virtual int GetMotionSegment() {return motionSegment;}
-
 	virtual void SetMotionType(MotionType myMotion) {motionType = myMotion;}
 	virtual MotionType GetMotionType() {return motionType;}
 
@@ -134,7 +131,6 @@ public:
   //	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented
   //	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
 
-  virtual void UpdateSmarticleMotion();
   virtual void UpdateMySmarticleMotion();
 
 
