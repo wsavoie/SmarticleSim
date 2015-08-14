@@ -1,5 +1,5 @@
 plotType=3;
-PON = 0;
+PON = 1;
 cutoff = .05;
 switch plotType
     case 1 %gamma 
