@@ -25,7 +25,7 @@
 
 namespace chrono {
 
-enum MotionType {SQUARE_G, CIRCLE_G, RELEASE_G};
+enum MotionType {SQUARE_G, CIRCLE_G, RELEASE_G, LOOP_G};
 
 
 // structs to attach motion to smarticles
@@ -135,7 +135,6 @@ public:
   //	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
 
   virtual void UpdateSmarticleMotion();
-  virtual void UpdateSmarticleMotionLoop();
   virtual void UpdateMySmarticleMotion();
 
 
@@ -153,6 +152,11 @@ public:
 	virtual void SetBodyFixed(bool mev);
 
 	void MoveToAngle(double, double);
+	void MoveLoop();
+	bool MoveToRange();
+	void MoveSquare();
+	void MoveCircle();
+	void MoveRelease();
 
 private:
   // create smarticle arm, set collision, surface, and mass property.
@@ -167,9 +171,6 @@ private:
   void CreateJoints();
   void CreateActuators();
 
-  bool MoveToRange();
-  void MoveSquare();
-  void MoveCircle();
 
 protected:
   // location and orientation (location of the center of the middle arm)

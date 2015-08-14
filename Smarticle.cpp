@@ -383,7 +383,7 @@ void Smarticle::UpdateSmarticleMotion() {
 	}
 }
 
-void Smarticle::UpdateSmarticleMotionLoop() {
+void Smarticle::MoveLoop() {
 	int currentSegment = current_motion->GetMotionSegment();
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
@@ -564,6 +564,10 @@ void Smarticle::MoveToAngle(double theta1, double theta2) {
 	this->SetActuatorFunction(1, omega2);
 }
 
+void Smarticle::MoveRelease() {
+	this->MoveToAngle(0, 0);
+}
+
 void Smarticle::UpdateMySmarticleMotion() {
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
@@ -614,7 +618,7 @@ void Smarticle::UpdateMySmarticleMotion() {
 		MoveCircle();
 		break;
 	case RELEASE_G:
-//		MoveRelease();
+		MoveRelease();
 		break;
 	default:
 		break;
