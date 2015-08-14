@@ -93,7 +93,7 @@ ChSharedPtr<ChBody> bucket;
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.2 * sizeScale;
-	double tFinal = 10;
+	double tFinal = 1000;
 	double vibrateStart= tFinal-5.0;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
@@ -480,6 +480,62 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 }
 
 // =============================================================================
+//creates an approximate cylinder from a n-sided regular polygon
+//num_boxes = number of boxes to use
+//bucket_rad = radius of cylinder, center point to midpoint of side a side
+ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat, double w1, double w2, double w3, double h1, double h2,  bool overlap)
+{
+	ChSharedPtr<ChBody> cyl_container;
+	if (USE_PARALLEL) {
+		cyl_container = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	}
+	else {
+		cyl_container = ChSharedPtr<ChBody>(new ChBody);
+	}
+
+
+	double hw1 = 0.5 * w1;
+	double hw2 = 0.5 * w2;
+	double hw3 = 0.5 * w3;
+	double hh1 = 0.5 * h1;
+	double hh2 = 0.5 * h2;
+	double ht = bucket_half_thick;
+
+	//cyl_container->SetIdentifier(id);
+	//cyl_container->SetMass(mass);
+	cyl_container->SetPos(bucket_ctr);
+	cyl_container->SetRot(QUNIT);
+	cyl_container->SetBodyFixed(true);
+	cyl_container->SetCollide(true);
+
+
+	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
+	double o_lap = 0;
+	if (overlap){ o_lap = 2 * t; }
+
+	cyl_container->GetCollisionModel()->ClearModel();
+	cyl_container->SetMaterialSurface(wallMat);
+
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(hw1 + ht, 0, h1 + hh2), QUNIT, true); // uppper part, max_x plate
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(-hw1 - ht, 0, h1 + hh2), QUNIT, true); // uppper part, min_x plate
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, hw2 + ht, h1 + hh2), QUNIT, true); // uppper part, min_x plate
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, -hw2 - ht, h1 + hh2), QUNIT, true); // uppper part, min_x plate
+
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, -hw2 - ht, hh1), QUNIT, true); // uppper part, min_x plate
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, hw2 + ht, hh1), QUNIT, true); // uppper part, min_x plate
+	double mtheta = atan((hw1 - hw3) / h1);
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(mtheta, VECT_Y), true); // uppper part, min_x plate
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(-mtheta, VECT_Y), true); // uppper part, min_x plate
+
+	double estimated_volume = 8 * (w1 * t * h1); // Arman : fix this
+	cyl_container->SetMass(rho_cylinder*estimated_volume);
+	cyl_container->GetCollisionModel()->BuildModel();
+
+	mphysicalSystem->AddBody(cyl_container);
+	return cyl_container;
+}
+
+// =============================================================================
 void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 	/////////////////
 	// Ground body
@@ -518,7 +574,9 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	// 1: create bucket
 		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
 	if (bucketType == BOX){
-		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+		//bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+		bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z,  true);
+
 	}
 	if (bucketType == CYLINDER){
 		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
@@ -902,11 +960,11 @@ int main(int argc, char* argv[]) {
 	int numGeneratedLayers = 0;
 
 	  int sSize1 = mySmarticlesVec.size();
-	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-			  (numGeneratedLayers < numLayers) ){
-		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-		  numGeneratedLayers ++;
-	  }
+//	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+//			  (numGeneratedLayers < numLayers) ){
+//		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+//		  numGeneratedLayers ++;
+//	  }
 
 //  CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
 
