@@ -833,7 +833,7 @@ void UpdateSmarticles(
 
 	double current_time = mphysicalSystem.GetChTime();
 	for (int i = 0; i < mySmarticlesVec.size(); i++) {
-//		mySmarticlesVec[i]->UpdateSmarticleMotionLoop();
+//		mySmarticlesVec[i]->MoveLoop();
 		mySmarticlesVec[i]->UpdateMySmarticleMotion();
 
 		if (current_time > 0.4 && current_time < 0.8) {
