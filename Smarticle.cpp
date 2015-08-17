@@ -32,6 +32,7 @@ Smarticle::Smarticle(
 	rotation = QUNIT;
 	jointClearance = .05 * r2;
 	volume = GetVolume();
+	distThresh = .01*CH_C_PI;
 }
 
 Smarticle::~Smarticle() {}
@@ -66,6 +67,7 @@ void Smarticle::Properties(
 
 	jointClearance = .05 * r2;
 	volume = GetVolume();
+
 }
 
 void Smarticle::Properties(
@@ -87,7 +89,47 @@ void Smarticle::Properties(
 	SetDefaultOmega(other_omega);
 
 }
+/////Will added Smarticle properties///////
+void Smarticle::Properties(
+	int sID,
+	double other_density,
+	ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+	double other_envelop,
+	double other_l,
+	double other_w,
+	double other_r,
+	double other_r2,
+	double other_omega,
+	bool willVersion,
+	ChVector<> pos,
+	ChQuaternion<> rot,
+	double other_angle,
+	double other_angle2,
+	double other_torThresh2,
+	double other_angLow,
+	double other_angHigh){
 
+	Properties(sID, other_density, surfaceMaterial, other_envelop, other_l, other_w, other_r, other_r2, pos, rot, other_angle, other_angle2);
+	SetDefaultOmega(other_omega);
+	
+	moveType = MoveType::GLOBAL;
+	prevMoveType = MoveType::GLOBAL;
+	moveTypeIdxs.resize(MoveType::OT, 0);
+	double x = .3*CH_C_PI;
+	global.push_back(std::pair<double, double>(x, x));
+	global.push_back(std::pair<double, double>(2*x, 2*x));
+	global.push_back(std::pair<double, double>(3*x, 3*x));
+	global.push_back(std::pair<double, double>(4*x, 4*x));
+	global.push_back(std::pair<double, double>(3*x, 3*x));
+	global.push_back(std::pair<double, double>(2*x,2*x));
+	global.push_back(std::pair<double, double>(x, x));
+	torqueThresh2 = 10000;
+	angLow = 0; //TODO: should these be in radians?
+	angHigh = 120;
+	Smarticle::distThresh = .01*CH_C_PI; //TODO this threshold should be calculated from timestep and default omega rather than being a magic number maybe 1/2 momega*dt?
+
+}
+//////////////////////////////////////////////	
 void Smarticle::SetDefaultOmega(double omega) {
 	defaultOmega = omega;
 }
@@ -398,7 +440,188 @@ void Smarticle::MoveLoop() {
 	this->SetActuatorFunction(1, omega2);
 
 }
+void Smarticle::populateMoveVector(std::vector<std::pair<double,double>> *moveVector, MoveType moveVectorType)
+{
+	switch (moveVectorType)
+	{
+		case GLOBAL:
+			global	= *moveVector;
+			break;
+		case OT:
+			ot			= *moveVector;
+			break;
+		case GUI1:
+			gui1		= *moveVector;
+			break;
+		case GUI2:
+			gui2		= *moveVector;
+			break;
+		case GUI3:
+			gui3		= *moveVector;
+			break;
+	}
+}
 
+double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng)
+{//TODO make sure to determine if omega is greater than angHigh or angLow too!!!!
+	if (fabs(destAng - currAng) > distThresh)
+	{
+		//if destAng is larger, move with positive momega else
+		if (destAng > currAng){return momega;}
+		else{ return -1 * momega; }
+	}
+	//if <= distThresh dont move, let omega = 0;
+	return 0;
+}
+bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega,MoveType mtype)
+{	
+	//real ang01 and ang12
+	double ang01 = link_actuator01->Get_mot_rot();
+	double ang12 = link_actuator12->Get_mot_rot();
+
+	//expected ang01 and ang12
+	double expAng01 = v->at(moveTypeIdxs.at(mtype)).first;
+	double expAng12 = v->at(moveTypeIdxs.at(mtype)).second;
+
+	//next ang01 and ang12
+	double nextAng01 = v->at((moveTypeIdxs.at(moveType) + 1) % v->size()).first;
+	double nextAng12 = v->at((moveTypeIdxs.at(moveType) + 1) % v->size()).second;
+
+	//different real - expected
+	double ang01Diff = ang01-expAng01;
+	double ang12Diff = ang12-expAng12;
+	
+	double omega01 = ChooseOmegaAmount(momega, ang01, expAng01);
+	double omega12 = ChooseOmegaAmount(momega, ang12, expAng12);
+	//if within some threshold distance to where curr angle is supposed to be:
+	if (omega01==0)
+	{
+		if (omega12 == 0)
+		{
+			//arm01=right, arm12=right
+			this->SetActuatorFunction(0, ChooseOmegaAmount(momega, ang01, nextAng01));
+			this->SetActuatorFunction(1, ChooseOmegaAmount(momega, ang12, nextAng12));
+			return true;//was able to successfully move to next index
+		}
+		else
+		{
+			//arm01=right, arm12=wrong
+			this->SetActuatorFunction(0, 0);
+			this->SetActuatorFunction(1, omega12);
+			return false;
+		}	
+	}
+	// from this point we know arm01 is wrong
+	if (ChooseOmegaAmount(momega, ang12, expAng12) == 0)
+	{
+			//arm01=wrong, arm12=right
+		this->SetActuatorFunction(0, omega01);
+		this->SetActuatorFunction(1,0);
+		return false;
+	}
+	else
+	{
+			//arm01=wrong, arm12=wrong
+		this->SetActuatorFunction(0, omega01);
+		this->SetActuatorFunction(1, omega12);
+		return false;
+	}
+
+		
+}
+void Smarticle::MoveLoop2(int guiState = 0)
+{
+	//initialize boolean describing same moveType as last step
+	bool sameMoveType = false;
+	bool successfulMotion = false;
+	//this pointer will point to the correct moveType vector
+	std::vector<std::pair<double, double>> *v;
+	
+	//set prevMoveType to previous value
+	this->prevMoveType = this->moveType;
+
+	//get previous values from last timestep
+	double ang01 = link_actuator01->Get_mot_rot();
+	double ang12 = link_actuator12->Get_mot_rot();
+	double omega1 = current_motion->joint_01.omega;
+	double omega2 = current_motion->joint_12.omega;
+	double torque01 = link_actuator01->Get_react_torque().Length2(); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
+	double torque12 = link_actuator12->Get_react_torque().Length2();
+
+	//determine moveType
+	switch (guiState)
+	{
+	case 0:
+		this->setCurrentMoveType(GLOBAL);
+		v = &global;
+		break;
+	case 1:
+		this->setCurrentMoveType(GUI1);
+		v = &gui1;
+		break;
+	case 2:
+		this->setCurrentMoveType(GUI2);
+		v = &gui2;
+		break;
+	case 3:
+		this->setCurrentMoveType(GUI3);
+		v = &gui3;
+		break;
+	}
+	//overTorque takes priority!
+	if (torque01 > torqueThresh2 || torque12 > torqueThresh2){
+		this->setCurrentMoveType(OT);
+		v = &ot;
+	}
+
+	if (this->moveType == this->prevMoveType){
+		sameMoveType = true;
+	}
+	
+
+	switch (this->moveType) //TODO finish move type case statements
+	{
+		case GLOBAL://TODO implement different case if sameMoveType was wrong
+			//TODO finish global move case
+			successfulMotion = MoveToAngle2(v, this->defaultOmega,moveType);
+			break;
+		case OT:
+			//TODO finish ot move case
+			if (sameMoveType)
+			{
+			}
+			break;
+		case GUI1:
+			//TODO finish gui1 move case
+			if (sameMoveType)
+			{
+			}
+			break;
+		case GUI2:
+			//TODO finish gui2 move case
+			if (sameMoveType)
+			{
+			}
+			break;
+		case GUI3:
+			//TODO finish gui3 move case
+			if (sameMoveType)
+			{
+			}
+			break;
+	}
+	//add 1 to size if
+	if (successfulMotion)
+	{
+		moveTypeIdxs.at(moveType) = ((moveTypeIdxs.at(moveType) + 1) % v->size());
+	}
+	
+	return;
+}
+void Smarticle::setCurrentMoveType(MoveType newMoveType)
+{
+	this->moveType = newMoveType;
+}
 bool Smarticle::MoveToRange() {
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();

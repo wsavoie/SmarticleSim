@@ -45,7 +45,7 @@
 
 #include <memory>
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
@@ -101,7 +101,7 @@ ChSharedPtr<ChBody> bucket;
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 100;
 	double armAngle = 90;
-	double sOmega = .1;  // smarticle omega
+	double sOmega = 2;  // smarticle omega
 	
 
 	bool povray_output = true;
@@ -351,6 +351,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 						collisionEnvelope,
 						l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						sOmega,
+						true,
 						myPos,
 						myRot);
 
@@ -359,7 +360,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 					smarticle0->AddMotion(myMotionDefault);
 					smarticle0->AddMotion(myMotion);
 					mySmarticlesVec.push_back((Smarticle*)smarticle0);
-
+					
 				}
 
 				else if (smarticleType == SMART_U) {
@@ -833,7 +834,10 @@ void UpdateSmarticles(
 
 	double current_time = mphysicalSystem.GetChTime();
 	for (int i = 0; i < mySmarticlesVec.size(); i++) {
-		mySmarticlesVec[i]->MoveLoop();
+		//mySmarticlesVec[i]->MoveLoop();
+
+		mySmarticlesVec[i]->MoveLoop2(0);
+		//TODO moveloop2(guistate)
 //		mySmarticlesVec[i]->UpdateMySmarticleMotion();
 //
 //		if (current_time > 0.4 && current_time < 0.8) {
@@ -851,6 +855,10 @@ void UpdateSmarticles(
 	}
 }
 // =============================================================================
+//TODO write gui (dont forget ifopengl in it)
+
+
+
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
 	  struct tm* timeinfo;
@@ -895,6 +903,8 @@ int main(int argc, char* argv[]) {
 		mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
 		mat_g->SetFriction(0.5); // .6 for wall to staple using tan (theta) tested on 7/20
 
+		//TODO create readMoveValsFromCSV in checkPoint
+		//TODO run populateMoveVector
 
   // Create a ChronoENGINE physical system
   CH_SYSTEM mphysicalSystem;
@@ -910,9 +920,8 @@ int main(int argc, char* argv[]) {
   SetEnvelopeForSystemObjects(mphysicalSystem);
 #endif
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
-
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
 	ChVector<> CameraLocation = sizeScale * ChVector<>(-.1, -.06, .1);
@@ -922,6 +931,7 @@ int main(int argc, char* argv[]) {
 	gl_window.viewer->render_camera.camera_scale = 2.0/(1000.0)*sizeScale;
 	gl_window.viewer->render_camera.near_clip = .001;
 	gl_window.SetRenderMode(opengl::WIREFRAME);
+	//TODO study ChOpenGlWindow.cpp to figure out how to make buttons
 
 // Uncomment the following two lines for the OpenGL manager to automatically
 // run the simulation in an infinite loop.
@@ -959,12 +969,12 @@ int main(int argc, char* argv[]) {
  
 	int numGeneratedLayers = 0;
 
-	  int sSize1 = mySmarticlesVec.size();
-	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-			  (numGeneratedLayers < numLayers) ){
-		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-		  numGeneratedLayers ++;
-	  }
+	  //int sSize1 = mySmarticlesVec.size();
+	  //if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+			//  (numGeneratedLayers < numLayers) ){
+		 // AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+		 // numGeneratedLayers ++;
+	  //}
 
 //  CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
 
@@ -974,12 +984,12 @@ int main(int argc, char* argv[]) {
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 	  double t = mphysicalSystem.GetChTime();
 
-//	  int sSize1 = mySmarticlesVec.size();
-//	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-//			  (numGeneratedLayers < numLayers) ){
-//		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-//		  numGeneratedLayers ++;
-//	  }
+	  int sSize1 = mySmarticlesVec.size();
+	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
+			  (numGeneratedLayers < numLayers) ){
+		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+		  numGeneratedLayers ++;
+	  }
 		//if (numGeneratedLayers == numLayers)
 		//{
 		//	//start shaking
@@ -1035,7 +1045,7 @@ int main(int argc, char* argv[]) {
 //	  }
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.start("step time");
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(dT);
       gl_window.Render();

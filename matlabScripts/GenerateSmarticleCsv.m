@@ -10,7 +10,9 @@ function []=GenerateSmarticleCsv(fileloc, dt,omega, torqueThresh, angLow, angHig
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
 fid = fopen(fileloc,'wt');
 %add in all initial values to top of file
-fprintf(fid,'%s\n%f\n%f\n%f\n%f\n',dt,omega,torqueThresh,angLow,angHigh);
+%square torque so that we can use the square in the program so we can avoid
+%having to use sqrts in the code at each timestep!
+fprintf(fid,'%s\n%f\n%f\n%f\n%f\n',dt,omega,torqueThresh^2,angLow,angHigh);
 %add #1 to denote end of first section
 fprintf(fid,'#1\n');
 
