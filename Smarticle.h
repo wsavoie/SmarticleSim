@@ -11,6 +11,7 @@
 #include "core/ChVector.h"
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
+#include <memory>
 
 #ifndef true 
 #define true 1
@@ -23,6 +24,43 @@
 #define USE_PARALLEL false
 
 namespace chrono {
+
+enum MotionType {SQUARE_G, CIRCLE_G, RELEASE_G};
+
+
+// structs to attach motion to smarticles
+class JointMotion : public ChShared {
+public:
+	double theta1;			// lower limit of the motion
+	double theta2;			// upper limit of the motion
+	double omega;			// joint angular velocity
+
+	JointMotion() {}
+	~JointMotion() {}
+};
+
+class SmarticleMotionPiece : public ChShared{
+
+public:
+	JointMotion joint_01;	// joint 1 motion,
+	JointMotion joint_12;	// joint 1 motion
+	double timeInterval;	// time of action
+	double startTime;		// start time of the motion
+	double dT;
+	SmarticleMotionPiece() {}
+	~SmarticleMotionPiece() {}
+
+	virtual void SetMotionSegment(int s) {motionSegment = s;}
+	virtual int GetMotionSegment() {return motionSegment;}
+
+	virtual void SetMotionType(MotionType myMotion) {motionType = myMotion;}
+	virtual MotionType GetMotionType() {return motionType;}
+private:
+	int motionSegment;
+	MotionType motionType;
+};
+
+
 
 class Smarticle {
 public:
@@ -64,18 +102,30 @@ public:
   virtual ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
   virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
   virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
+  virtual void SetActuatorFunction(int actuatorID, double omega);
+
 
   // Smarticle volume
   virtual double GetVolume();
   virtual ChVector<> Get_cm();
   virtual ChVector<> Get_InitPos();
   virtual double GetDensity() {return density;};
+  virtual void AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece);
+  //	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented
+  //	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
+
+  virtual void UpdateSmarticleMotion();
+  virtual void UpdateSmarticleMotionLoop();
+  virtual void UpdateMySmarticleMotion();
+
 
 	//smarticle arm angle
 	virtual void SetAngle(double mangle1, double mangle2, bool degrees);
 	virtual void SetAngle(double mangle, bool degrees);
 	virtual void SetAngle1(double mangle1, bool degrees);
 	virtual void SetAngle2(double mangle2, bool degrees);
+
+	virtual ChSharedPtr<SmarticleMotionPiece> Get_Current_Motion();
 
 	virtual double GetAngle1(bool degrees);
 	virtual double GetAngle2(bool degrees);
@@ -93,6 +143,8 @@ private:
 		  );
   void CreateJoints();
   void CreateActuators();
+
+  void MoveSquare();
 
 protected:
   // location and orientation (location of the center of the middle arm)
@@ -140,6 +192,11 @@ protected:
   // joints functions
   ChSharedPtr<ChFunction> function01;
   ChSharedPtr<ChFunction> function12;
+
+  std::vector<ChSharedPtr<SmarticleMotionPiece>> motion_vector;
+  ChSharedPtr<SmarticleMotionPiece> current_motion;
+
+
 
 };
 }
