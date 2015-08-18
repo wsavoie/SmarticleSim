@@ -424,10 +424,7 @@ void Smarticle::AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece) {
 void Smarticle::MoveLoop() {
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
-	if (ang01 < 0)
-		ang01 = CH_C_PI + ang01;
-	if (ang12 < 0)
-		ang01 = CH_C_PI + ang01;
+	
 	double omega1 = current_motion->joint_01.omega;
 	double omega2 = current_motion->joint_12.omega;
 
