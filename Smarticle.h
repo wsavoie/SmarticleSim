@@ -193,7 +193,7 @@ namespace chrono {
 		double distThresh;
 		///////////////////////////////////////////////////////////
 
-		void populateMoveVector(std::vector<std::pair<double, double>> *moveVector, MoveType moveVectorType);
+		void populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
 		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double omega, MoveType mtype);
 		double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng);
 		virtual void setCurrentMoveType(MoveType newMoveType);

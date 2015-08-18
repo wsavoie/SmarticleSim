@@ -92,7 +92,7 @@ ChSharedPtr<ChBody> bucket;
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double contact_recovery_speed = 0.2 * sizeScale;
+	double contact_recovery_speed = 0.5 * sizeScale;
 	double tFinal = 1000;
 	double vibrateStart= tFinal-5.0;
 
@@ -101,7 +101,7 @@ ChSharedPtr<ChBody> bucket;
 	ChSharedPtr<ChMaterialSurface> mat_g;
 	int numLayers = 100;
 	double armAngle = 90;
-	double sOmega = 2;  // smarticle omega
+	double sOmega = 5;  // smarticle omega
 	
 
 	bool povray_output = true;
@@ -112,7 +112,7 @@ ChSharedPtr<ChBody> bucket;
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	double bucket_rad = sizeScale*0.044;
-	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .010);
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad/1.6, bucket_rad/1.1, .010);
 
 	
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
@@ -343,7 +343,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				myMotion->startTime = 0;
 				myMotion->SetMotionType(SQUARE_G);
 
-
+				
 				if (smarticleType == SMART_ARMS) {
 					Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 					smarticle0->Properties(smarticleCount,
@@ -354,11 +354,13 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 						true,
 						myPos,
 						myRot);
+					smarticle0->populateMoveVector(smarticle0->global, smarticle0->ot, smarticle0->gui1);
 
 
 					smarticle0->Create();
-					smarticle0->AddMotion(myMotionDefault);
-					smarticle0->AddMotion(myMotion);
+					
+					//smarticle0->AddMotion(myMotionDefault);
+					//smarticle0->AddMotion(myMotion);
 					mySmarticlesVec.push_back((Smarticle*)smarticle0);
 					
 				}

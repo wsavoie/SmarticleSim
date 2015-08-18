@@ -32,7 +32,6 @@ Smarticle::Smarticle(
 	rotation = QUNIT;
 	jointClearance = .05 * r2;
 	volume = GetVolume();
-	distThresh = .01*CH_C_PI;
 }
 
 Smarticle::~Smarticle() {}
@@ -115,18 +114,26 @@ void Smarticle::Properties(
 	moveType = MoveType::GLOBAL;
 	prevMoveType = MoveType::GLOBAL;
 	moveTypeIdxs.resize(MoveType::OT, 0);
-	double x = .3*CH_C_PI;
-	global.push_back(std::pair<double, double>(x, x));
-	global.push_back(std::pair<double, double>(2*x, 2*x));
-	global.push_back(std::pair<double, double>(3*x, 3*x));
-	global.push_back(std::pair<double, double>(4*x, 4*x));
-	global.push_back(std::pair<double, double>(3*x, 3*x));
-	global.push_back(std::pair<double, double>(2*x,2*x));
-	global.push_back(std::pair<double, double>(x, x));
+	double x = CH_C_PI/2;
+	double y = x /10;
+	//global.push_back(std::pair<double, double>(x + 0 * y, x + 0 * y));
+	//global.push_back(std::pair<double, double>(x + 1 * y, x + 1 * y));
+	//global.push_back(std::pair<double, double>(x + 2 * y, x + 2 * y));
+	//global.push_back(std::pair<double, double>(x + 3 * y, x + 3 * y));
+	//global.push_back(std::pair<double, double>(x + 2 * y, x + 2 * y));
+	//global.push_back(std::pair<double, double>(x + 1 * y, x + 1 * y));
+	//global.push_back(std::pair<double, double>(x - 0 * y, x - 0 * y));
+	//global.push_back(std::pair<double, double>(x - 1 * y, x - 1 * y));
+	//global.push_back(std::pair<double, double>(x - 2 * y, x - 2 * y));
+	//global.push_back(std::pair<double, double>(x - 3 * y, x - 3 * y));
+	//global.push_back(std::pair<double, double>(x - 2 * y, x - 2 * y));
+	//global.push_back(std::pair<double, double>(x - 1 * y, x - 1 * y));
+	//global.push_back(std::pair<double, double>(x + 0 * y, x + 0 * y));
+
 	torqueThresh2 = 10000;
 	angLow = 0; //TODO: should these be in radians?
 	angHigh = 120;
-	Smarticle::distThresh = .01*CH_C_PI; //TODO this threshold should be calculated from timestep and default omega rather than being a magic number maybe 1/2 momega*dt?
+	Smarticle::distThresh = .001*CH_C_PI; //TODO this threshold should be calculated from timestep and default omega rather than being a magic number maybe 1/2 momega*dt?
 
 }
 //////////////////////////////////////////////	
@@ -417,6 +424,10 @@ void Smarticle::AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece) {
 void Smarticle::MoveLoop() {
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
+	if (ang01 < 0)
+		ang01 = CH_C_PI + ang01;
+	if (ang12 < 0)
+		ang01 = CH_C_PI + ang01;
 	double omega1 = current_motion->joint_01.omega;
 	double omega2 = current_motion->joint_12.omega;
 
@@ -440,26 +451,43 @@ void Smarticle::MoveLoop() {
 	this->SetActuatorFunction(1, omega2);
 
 }
-void Smarticle::populateMoveVector(std::vector<std::pair<double,double>> *moveVector, MoveType moveVectorType)
+void Smarticle::populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1)
 {
-	switch (moveVectorType)
-	{
-		case GLOBAL:
-			global	= *moveVector;
-			break;
-		case OT:
-			ot			= *moveVector;
-			break;
-		case GUI1:
-			gui1		= *moveVector;
-			break;
-		case GUI2:
-			gui2		= *moveVector;
-			break;
-		case GUI3:
-			gui3		= *moveVector;
-			break;
+
+	std::ifstream smarticleMoves;
+	smarticleMoves.open("smarticleMoves.csv");
+	double mdt, momega, mtorqueThresh2, mangLow, mangHigh;
+	smarticleMoves >>
+		mdt >>
+		momega >>
+		mtorqueThresh2 >>
+		mangLow >>
+		mangHigh;
+		printf("dt %f omega %f torqueThresh2 %f angLow %f angHigh %f",mdt, momega, mtorqueThresh2, mangLow, mangHigh);
+		this->SetDefaultOmega(momega);
+		char ddCh;
+	ddCh = '!';
+	while (ddCh != '#') {
+		smarticleMoves >> ddCh;
 	}
+	std::string ddSt;
+	getline(smarticleMoves, ddSt);
+
+	int smarticleCount = 0;
+	std::pair<double, double> angPair;
+	double ang1;
+	double ang2;
+		smarticleMoves >> ang1 >> ddCh >> ang2 >> ddCh >> ddCh;
+	this->SetAngle(angPair.first, angPair.second);
+	while (smarticleMoves.good()) {
+		angPair.second = ang1;
+		angPair.first = ang2;
+		mglobal.push_back(angPair);
+		smarticleMoves >> ang1 >> ddCh >> ang2 >> ddCh >> ddCh;
+	}
+	this->angHigh = mangHigh;
+	this->angLow = mangLow;
+	//TODO set distThresh here using omega and dt read from file!
 }
 
 double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng)
@@ -548,6 +576,8 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	double torque01 = link_actuator01->Get_react_torque().Length2(); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
 	double torque12 = link_actuator12->Get_react_torque().Length2();
 
+	GetLog() << ang01 << " " << ang12 << "\n";
+
 	//determine moveType
 	switch (guiState)
 	{
@@ -570,8 +600,11 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	}
 	//overTorque takes priority!
 	if (torque01 > torqueThresh2 || torque12 > torqueThresh2){
-		this->setCurrentMoveType(OT);
-		v = &ot;
+		//this->setCurrentMoveType(OT);
+		//v = &ot;
+		GetLog() << "*************************\n";
+		GetLog() << "Torque overload!\n";
+		GetLog() << "*************************\n";
 	}
 
 	if (this->moveType == this->prevMoveType){
