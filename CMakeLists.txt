@@ -10,6 +10,11 @@ if (${BUILD_OPENGL})
 	find_package(ChronoEngine   COMPONENTS unit_OPENGL )
 endif()
 
+OPTION(BUILD_IRRLICHT "Build the ChronoEngine_Irrlicht library" on)
+if (${BUILD_IRRLICHT})
+	find_package(ChronoEngine   COMPONENTS unit_IRRLICHT )
+endif()
+
 include(cmake/SBELUtils.cmake)
 enable_openmp_support()
 enable_cuda_support()
