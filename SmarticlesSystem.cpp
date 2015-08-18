@@ -43,9 +43,7 @@
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
 //#include "D:/ChronoCode/libs/png++-0.2.7/png.hpp";
-
 //#include "D:\ChronoCode\libs\pngwriter-release-0.5.5\src\pngwriter.h"
-
 #ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
@@ -109,7 +107,7 @@ ChSharedPtr<ChBody> bucket;
 	double armAngle2 = 90;
 	
 
-	bool povray_output = true;
+	bool povray_output = false;
 	int out_fps = 120;
 	const std::string out_dir = "PostProcess";
 	const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
@@ -117,7 +115,7 @@ ChSharedPtr<ChBody> bucket;
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	double bucket_rad = sizeScale*0.022;
-	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .010);
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .030);
 
 	
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
@@ -338,7 +336,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 
 			ChVector<> myPos = ChVector<>(bucket_ctr.x + MyRand()*bucket_interior_halfDim.x - MyRand()*bucket_interior_halfDim.x / 2.0,
 				bucket_ctr.y + MyRand()*bucket_interior_halfDim.y - MyRand()*bucket_interior_halfDim.y / 2.0,
-				std::min(9*bucket_interior_halfDim.z ,z)+i*w_smarticle/4);
+				std::min(4*bucket_interior_halfDim.z ,z)+i*w_smarticle/4);
 
 			if (smarticleType == SMART_ARMS) {
 				Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
@@ -441,6 +439,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	cyl_container->SetBodyFixed(false);
 	cyl_container->SetCollide(true);
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
+	double wallt = t / 5; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
 	double half_height = bucket_interior_halfDim.z;
 	double box_side = bucket_rad * 2.0 * tan(CH_C_PI / num_boxes);//side length of cyl
 	double o_lap = 0;
@@ -454,13 +453,13 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	for (int i = 0; i < num_boxes; i++)
 	{
 
-		box_size = ChVector<>((box_side + t) / 2.0,
-			t,
-			2 * half_height + o_lap);
+		box_size = ChVector<>((box_side + wallt) / 2.0,
+			wallt,
+			half_height + o_lap);
 
-		pPos = bucket_ctr + ChVector<>(sin(ang * i) * (t + bucket_rad),
-			cos(ang*i)*(t + bucket_rad),
-			2 * half_height);
+		pPos = bucket_ctr + ChVector<>(sin(ang * i) * (wallt + bucket_rad),
+			cos(ang*i)*(wallt + bucket_rad),
+			half_height);
 
 		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
 
@@ -489,7 +488,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	//utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
 
 	//checks top,bottom, and middle location
-	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos() + Vector(0,0,2 * bucket_interior_halfDim.z + 2 * bucket_half_thick), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos() + Vector(0,0,2 * bucket_interior_halfDim.z+2*t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos(), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos() + Vector(0, 0, bucket_interior_halfDim.z), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	
@@ -659,7 +658,7 @@ double Find_Max_Z(CH_SYSTEM& mphysicalSystem) {
 		if ( strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0 ) {
 			if (zMax < bodyPtr->GetPos().z) {
 				//zMax = bodyPtr->GetPos().z;
-				zMax = bodyPtr->GetPos().z + bucket->GetPos().z;
+				zMax = bodyPtr->GetPos().z - bucket->GetPos().z;
 			}
 		}
 	}
@@ -785,7 +784,7 @@ void PrintFractionsAndCOM(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Sma
 			}
 
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
-			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(rad, bucketMin.z, bucketMin.z + 2 * bucket_interior_halfDim.z))) {
+			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(rad, bucketMin.z, bucketMin.z + 2 * bucket_interior_halfDim.z))) { 
 				countInside2++;
 				totalVolume2 += sPtr->GetVolume();
 				zCom += sPtr->Get_cm().z*m_smarticle;
@@ -960,6 +959,7 @@ int main(int argc, char* argv[]) {
 
 	  time_t rawtimeCurrent;
 	  struct tm* timeinfoDiff;
+
 	  // --------------------------
 	  // Create output directories.
 	  // --------------------------

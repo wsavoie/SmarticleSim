@@ -61,7 +61,7 @@ for j= 1:length(files)
     angs= regexp(fname, angPatt, 'tokens');
     
     gamPatt = horzcat(' g','=([0-9.]*)');
-    gams= regexp(fname, pattern2, 'tokens'); 
+    gams= regexp(fname, gamPatt, 'tokens'); 
     
     depVar(j,1)= str2double(cell2mat(lws{1})); %lw info for that fileoar
     depVar(j,2)= str2double(cell2mat(angs{1}));
@@ -148,8 +148,8 @@ if (plotType==1 || plotType==3)%tau vs gamma^-1 only works for gamma varied runs
     for i=1:length(uniLws) %change this to unique(depVar(:,dv))
         [ri,ci] = find(depVar(:,1)==uniLws(i));
         
-%         lntauvgamma = errBarCalc(1./depVar(ri,3),log(1/30*exp(depVar(ri,4)./depVar(ri,3))));
-        lntauvgamma = errBarCalc(1./depVar(ri,3),1/30*exp(depVar(ri,4)./depVar(ri,3)));
+        lntauvgamma = errBarCalc(1./depVar(ri,3),log(1/30*exp(depVar(ri,4)./depVar(ri,3))));
+%         lntauvgamma = errBarCalc(1./depVar(ri,3),1/30*exp(depVar(ri,4)./depVar(ri,3)));
         errorbar(lntauvgamma(:,1),3*i+lntauvgamma(:,2),lntauvgamma(:,3),'o-');
         tauLeg{length(tauLeg)+1}=horzcat('l/w=',num2str(uniLws(i)),'');
         
@@ -164,13 +164,13 @@ if (plotType==1 || plotType==3)%tau vs gamma^-1 only works for gamma varied runs
 %         tauLeg{length(tauLeg)+1}=horzcat(num2str(uniDepVar(i)),dvunits);
 %     end
     end
-%         ylabel('ln(\tau/\tau_0)+const')
-        ylabel('\tau/\tau_0+const')
+        ylabel('ln(\tau/\tau_0)+const')
+%         ylabel('\tau/\tau_0+const')
         xlabel('\Gamma^{-1}');
         legend(tauLeg);
         figText(gcf,13);
         title('Angle=60\circ')
-        set(gca, 'YScale', 'log')
+%         set(gca, 'YScale', 'log')
         
 %     lntauvgamma=errBarCalc(1./depVar,log(1/30*exp(deltaFit./depVar)));
 %     end
