@@ -9,6 +9,8 @@
 #include "chrono_utils/ChUtilsGeometry.h"
 #include "chrono_utils/ChUtilsCreators.h"
 
+#include <math.h>  /* asin */
+
 
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
@@ -64,8 +66,33 @@ void Smarticle::Properties(
 
 	jointClearance = .05 * r2;
 	volume = GetVolume();
+}
+
+void Smarticle::Properties(
+		int sID,
+		double other_density,
+		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+		double other_envelop,
+		double other_l,
+		double other_w,
+		double other_r,
+		double other_r2,
+		double other_omega,
+		ChVector<> pos,
+		ChQuaternion<> rot,
+		double other_angle,
+		double other_angle2){
+
+	Properties(sID, other_density, surfaceMaterial, other_envelop, other_l, other_w, other_r, other_r2, pos, rot, other_angle, other_angle2);
+	SetDefaultOmega(other_omega);
 
 }
+
+void Smarticle::SetDefaultOmega(double omega) {
+	defaultOmega = omega;
+}
+
+
 void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
@@ -204,18 +231,17 @@ void Smarticle::CreateActuators() {
 
 
 void Smarticle::Create() {
-	// Create Arms
-//	// straight smarticle
-//	double jointClearance = 1.3 * r2; // space betwen to connected arms at joint, when they are straight
-//	CreateArm(0, l, ChVector<>(-w/2 - l/2 - jointClearance, 0, 0));
-//	CreateArm(1, w, ChVector<>(0, 0, 0));
-//	CreateArm(2, l, ChVector<>(w/2 + l/2 + jointClearance, 0, 0));
-
-	// U smarticle
 	double l_mod = l - jointClearance;
-	CreateArm(0, l_mod, ChVector<>(-w/2 + r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+
+	// ** initialize U
+//	CreateArm(0, l_mod, ChVector<>(-w/2 + r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+//	CreateArm(1, w, ChVector<>(0, 0, 0));
+//	CreateArm(2, l_mod, ChVector<>(w/2 - r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+
+	// ** initialize straight
+	CreateArm(0, l_mod, ChVector<>(-w/2 - jointClearance - r2 - l_mod/2, 0, 0));
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(2, l_mod, ChVector<>(w/2 - r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
+	CreateArm(2, l_mod, ChVector<>(w/2 + jointClearance + r2 + l_mod/2, 0, 0));
 
 	CreateJoints();
 	CreateActuators();
@@ -343,22 +369,10 @@ void Smarticle::AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece) {
 	if (numAddedMotions == 0) {
 		current_motion = s_motionPiece;
 	}
-	s_motionPiece->SetMotionSegment(numAddedMotions);
 	motion_vector.push_back(s_motionPiece);
 }
 
-void Smarticle::UpdateSmarticleMotion() {
-	double currentTime = m_system->GetChTime();
-	int currentSegment = current_motion->GetMotionSegment();
-	double t_in = current_motion->startTime - currentTime;
-	if (  (t_in >= 0 && t_in < current_motion->timeInterval) &&
-			(currentSegment < motion_vector.size() - 1) ) {
-		current_motion = motion_vector[currentSegment + 1];
-	}
-}
-
-void Smarticle::UpdateSmarticleMotionLoop() {
-	int currentSegment = current_motion->GetMotionSegment();
+void Smarticle::MoveLoop() {
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
 	double omega1 = current_motion->joint_01.omega;
@@ -383,69 +397,221 @@ void Smarticle::UpdateSmarticleMotionLoop() {
 	this->SetActuatorFunction(0, omega1);
 	this->SetActuatorFunction(1, omega2);
 
+}
+
+bool Smarticle::MoveToRange() {
+	double ang01 = link_actuator01->Get_mot_rot();
+	double ang12 = link_actuator12->Get_mot_rot();
+	double omega1 = current_motion->joint_01.omega;
+	double omega2 = current_motion->joint_12.omega;
+
+	int low1 = ang01 < current_motion->joint_01.theta1;
+	int high1 = ang01 > current_motion->joint_01.theta2;
+	int low2 = ang12 < current_motion->joint_12.theta1;
+	int high2 = ang12 > current_motion->joint_12.theta2;
+
+	bool isInRange = (!low1) && (!high1) && (!low2) && (!high2);
+
+	if (low1) {
+		this->SetActuatorFunction(0, defaultOmega);
+	} else if (high1) {
+		this->SetActuatorFunction(0, -defaultOmega);
+	}
+
+	if (low2) {
+		this->SetActuatorFunction(1, defaultOmega);
+	} else if (high2) {
+		this->SetActuatorFunction(1, -defaultOmega);
+	}
+
+	return isInRange;
 }
 
 void Smarticle::MoveSquare() {
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
-	double omega1 = current_motion->joint_01.omega;
-	double omega2 = current_motion->joint_12.omega;
 
-	if (
-			ang01 > current_motion->joint_01.theta1 &&
-			ang01 < current_motion->joint_01.theta2 &&
-			ang12 > current_motion->joint_12.theta1 &&
-			ang12 < current_motion->joint_12.theta2)
+	int low1 = ang01 < current_motion->joint_01.theta1;
+	int high1 = ang01 > current_motion->joint_01.theta2;
+	int low2 = ang12 < current_motion->joint_12.theta1;
+	int high2 = ang12 > current_motion->joint_12.theta2;
 
-	if ((ang01 < current_motion->joint_01.theta1) && (omega1 < 0)) {
-		omega1 *= -1;
-	}
-	if ((ang01 > current_motion->joint_01.theta2) && (omega1 > 0)) {
-		omega1 *= -1;
-	}
-	if ((ang12 < current_motion->joint_12.theta1) && (omega2 < 0)) {
-		omega2 *= -1;
-	}
-	if ((ang12 > current_motion->joint_12.theta2) && (omega2 > 0)) {
-		omega2 *= -1;
+	if (low2 && !low1) {
+		current_motion->motionSubSegment = 2;
+	} else if (low1 && !high2) {
+		current_motion->motionSubSegment = 3;
+	} else if (high2 && !high1) {
+		current_motion->motionSubSegment = 0;
+	} else if (high1 && !low2) {
+		current_motion->motionSubSegment = 1;
+	} else {
+		current_motion->motionSubSegment = 0;
 	}
 
-	current_motion->joint_01.omega = omega1;
-	current_motion->joint_12.omega = omega2;
+	switch (current_motion->motionSubSegment) {
+	case 0:
+		current_motion->joint_01.omega = defaultOmega;
+		current_motion->joint_12.omega = 0;
+		break;
+	case 1:
+		current_motion->joint_01.omega = 0;
+		current_motion->joint_12.omega = -defaultOmega;
+		break;
+	case 2:
+		current_motion->joint_01.omega = -defaultOmega;
+		current_motion->joint_12.omega = 0;
+		break;
+	case 3:
+		current_motion->joint_01.omega = 0;
+		current_motion->joint_12.omega = defaultOmega;
+		break;
+	}
+
+	this->SetActuatorFunction(0, current_motion->joint_01.omega);
+	this->SetActuatorFunction(1, current_motion->joint_12.omega);
+}
+
+void Smarticle::MoveCircle() {
+	double ang01 = link_actuator01->Get_mot_rot();
+	double ang12 = link_actuator12->Get_mot_rot();
+
+	double th1_low = current_motion->joint_01.theta1;
+	double th1_hig = current_motion->joint_01.theta2;
+	double th2_low = current_motion->joint_12.theta1;
+	double th2_hig = current_motion->joint_12.theta2;
+
+	double r1 = 0.5 * (th1_hig - th1_low);
+	double r2 = 0.5 * (th2_hig - th2_low);
+
+	if (ang01 > r1) {
+		ang01 = r1;
+	} else if (ang01 < -r1) {
+		ang01 = -r1;
+	}
+
+//	double gamma = asin(ang01 / r1);
+	double gamma = atan2(ang01, ang12);
+
+//	while (fabs(gamma) < .01 * CH_C_PI) {
+//		gamma += .01 * CH_C_PI;
+//	}
+	double gammaDot = defaultOmega / r1;
+
+	// make sure the initial configuration is on the sphere (up to a tolerance)
+
+	double omega1 = r1 * cos(gamma) * gammaDot;
+//	double omega2 = -ang01 * omega1 / (ang12);
+	double omega2 = -r2 * sin(gamma) * gammaDot;
+
+	double smallOmega = .001 * defaultOmega;
+	if (fabs(omega1) < smallOmega) {
+		if (ang01 < 0) {
+			omega1 = smallOmega;
+		} else {
+			omega1 = -smallOmega;
+		}
+	}
+	if (fabs(omega2) < smallOmega) {
+		if (ang12 < 0) {
+			omega2 = smallOmega;
+		} else {
+			omega2 = -smallOmega;
+		}
+	}
+
+	printf(" omega1 %f omega2 %f\n", omega1, omega2);
 
 	this->SetActuatorFunction(0, omega1);
 	this->SetActuatorFunction(1, omega2);
+}
 
+void Smarticle::MoveToAngle(double theta1, double theta2) {
+	double ang01 = link_actuator01->Get_mot_rot();
+	double ang12 = link_actuator12->Get_mot_rot();
+
+	double omega1;
+	double omega2;
+
+	if (fabs(ang01 - theta1) < .01 * CH_C_PI) {
+		omega1 = 0;
+	} else if (ang01 < theta1) {
+		omega1 = defaultOmega;
+	} else {
+		omega1 = -defaultOmega;
+	}
+
+	if (fabs(ang12 - theta2) < .01 * CH_C_PI) {
+		omega2 = 0;
+	} else if (ang12 < theta2) {
+		omega2 = defaultOmega;
+	} else {
+		omega2 = -defaultOmega;
+	}
+
+	this->SetActuatorFunction(0, omega1);
+	this->SetActuatorFunction(1, omega2);
+}
+
+void Smarticle::MoveRelease() {
+	this->MoveToAngle(0, 0);
 }
 
 void Smarticle::UpdateMySmarticleMotion() {
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
-	double omega1 = 0.1 * (current_motion->joint_01.theta2 - current_motion->joint_01.theta1) / dT;  // some omega to move back the ams angles into range
-	double omega2 = 0.1 * (current_motion->joint_12.theta2 - current_motion->joint_12.theta1) / dT;	 // some omega to move back the ams angles into range
 
-	bool inRange = true;
+//	printf("theta1 min %f max %f and theta 2 min %f max %f \n", current_motion->joint_01.theta1, current_motion->joint_01.theta2, current_motion->joint_12.theta1, current_motion->joint_12.theta2);
+//
+//	bool inRange = true;
+//
+//	if (ang01 < current_motion->joint_01.theta1) {
+//		this->SetActuatorFunction(0, defaultOmega);
+////		current_motion->joint_01.omega = defaultOmega;
+//		printf("1 ang01 %f joint_01.theta1 %f omega %f\n", ang01, current_motion->joint_01.theta1, defaultOmega);
+//		inRange = false;
+//	}
+//	if (ang01 > current_motion->joint_01.theta2) {
+//		this->SetActuatorFunction(0, -defaultOmega);
+////		current_motion->joint_01.omega = -defaultOmega;
+//		printf("2 ang01 %f joint_01.theta2 %f omega %f\n", ang01, current_motion->joint_01.theta2, -defaultOmega);
+//		inRange = false;
+//	}
+//	if (ang12 < current_motion->joint_12.theta1) {
+//		this->SetActuatorFunction(1, defaultOmega);
+////		current_motion->joint_12.omega = defaultOmega;
+//		printf("3 ang12 %f joint_12.theta1 %f omega %f\n", ang12, current_motion->joint_12.theta1, defaultOmega);
+//		inRange = false;
+//	}
+//	if (ang12 > current_motion->joint_12.theta2) {
+//		this->SetActuatorFunction(1, -defaultOmega);
+////		current_motion->joint_12.omega = -defaultOmega;
+//		printf("4 ang12 %f joint_12.theta1 %f omega %f\n", ang12, current_motion->joint_12.theta2, -defaultOmega);
+//
+//		inRange = false;
+//	}
+//
+//	if (!inRange) {
+//		printf("yoyoyuoyoyuoyoy\n");
+//		return;
+//	}
+//	printf("bw\n");
 
-	if (ang01 < current_motion->joint_01.theta1) {
-		current_motion->joint_01.omega = omega1;
-		inRange = false;
-	}
-	if (ang01 > current_motion->joint_01.theta2) {
-		current_motion->joint_01.omega = -omega1;
-		inRange = false;
-	}
-	if (ang12 < current_motion->joint_12.theta1) {
-		current_motion->joint_12.omega = omega2;
-		inRange = false;
-	}
-	if (ang12 > current_motion->joint_12.theta2) {
-		current_motion->joint_12.omega = -omega2;
-		inRange = false;
-	}
-
-	if (!inRange) {
+	static int count_segment = 0;
+	current_motion = motion_vector[1];
+	if (motion_vector.size() < 2) {
 		return;
+	} else {
+		count_segment = 1;
+		current_motion = motion_vector[count_segment]; // 0 is reserved for release
 	}
+	if (count_segment < motion_vector.size() - 1) {
+		if (motion_vector[count_segment + 1]->startTime < m_system->GetChTime()) {
+			count_segment ++;
+			current_motion = motion_vector[count_segment];
+		}
+	}
+
+
 
 	MotionType sMotion = current_motion->GetMotionType();
 	switch (current_motion->GetMotionType()) {
@@ -457,6 +623,9 @@ void Smarticle::UpdateMySmarticleMotion() {
 		break;
 	case RELEASE_G:
 		MoveRelease();
+		break;
+	case LOOP_G:
+		MoveLoop();
 		break;
 	default:
 		break;

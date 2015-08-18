@@ -25,7 +25,7 @@
 
 namespace chrono {
 
-enum MotionType {SQUARE_G, CIRCLE_G, RELEASE_G};
+enum MotionType {SQUARE_G, CIRCLE_G, RELEASE_G, LOOP_G};
 
 
 // structs to attach motion to smarticles
@@ -50,11 +50,10 @@ public:
 	SmarticleMotionPiece() {}
 	~SmarticleMotionPiece() {}
 
-	virtual void SetMotionSegment(int s) {motionSegment = s;}
-	virtual int GetMotionSegment() {return motionSegment;}
-
 	virtual void SetMotionType(MotionType myMotion) {motionType = myMotion;}
 	virtual MotionType GetMotionType() {return motionType;}
+
+	int motionSubSegment;
 private:
 	int motionSegment;
 	MotionType motionType;
@@ -87,6 +86,24 @@ public:
 			double angle1= CH_C_PI/2,
 			double angle2= CH_C_PI/2);
 
+  virtual void Properties(
+			int sID,
+			double other_density,
+			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+			double other_envelop,
+			double other_l,
+			double other_w,
+			double other_r,
+			double other_r2 = 0,
+			double other_omega = 0,
+			ChVector<> pos = ChVector<>(0, 0, 0),
+			ChQuaternion<> rot = QUNIT,
+			double angle1= CH_C_PI/2,
+			double angle2= CH_C_PI/2);
+
+  virtual void SetDefaultOmega(double omega);
+
+
   // create the smarticle by creating arms, adding joint between them, and functions
   virtual void Create();
 
@@ -114,8 +131,6 @@ public:
   //	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented
   //	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
 
-  virtual void UpdateSmarticleMotion();
-  virtual void UpdateSmarticleMotionLoop();
   virtual void UpdateMySmarticleMotion();
 
 
@@ -131,6 +146,14 @@ public:
 	virtual double GetAngle2(bool degrees);
 	//body fixing
 	virtual void SetBodyFixed(bool mev);
+
+	void MoveToAngle(double, double);
+	void MoveLoop();
+	bool MoveToRange();
+	void MoveSquare();
+	void MoveCircle();
+	void MoveRelease();
+
 private:
   // create smarticle arm, set collision, surface, and mass property.
   // armID = 0 (left arm), 1 (middle arm), 2 (right arm)
@@ -144,7 +167,6 @@ private:
   void CreateJoints();
   void CreateActuators();
 
-  void MoveSquare();
 
 protected:
   // location and orientation (location of the center of the middle arm)
@@ -174,6 +196,7 @@ protected:
   // ID
   int smarticleID;			// smarticleID is not bodyID. smarticle is composed of 3 bodies.
   double jointClearance; // space at joint
+  double defaultOmega;
 
 
   // bodies
@@ -195,6 +218,7 @@ protected:
 
   std::vector<ChSharedPtr<SmarticleMotionPiece>> motion_vector;
   ChSharedPtr<SmarticleMotionPiece> current_motion;
+
 
 
 
