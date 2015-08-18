@@ -195,7 +195,7 @@ namespace chrono {
 
 		void populateMoveVector(std::vector<std::pair<double, double>> *moveVector, MoveType moveVectorType);
 		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double omega, MoveType mtype);
-		double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng);
+		double ChooseOmegaAmount(double momega, double currAng, double destAng);
 		virtual void setCurrentMoveType(MoveType newMoveType);
 		void MoveLoop2(int guiState);
 		//////////////////////////////////////////////////////
