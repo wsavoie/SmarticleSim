@@ -636,10 +636,6 @@ ChSharedPtr<SmarticleMotionPiece> Smarticle::Get_Current_Motion() {
 	return current_motion;
 }
 
-void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
-
-void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
-
 void Smarticle::SetBodyFixed(bool mev){
 	arm0->SetBodyFixed(mev);
 	arm1->SetBodyFixed(mev);
