@@ -356,6 +356,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 						myRot
 						);
 					smarticle0->populateMoveVector(smarticle0->global, smarticle0->ot, smarticle0->gui1);
+					//TODO figure out why I cannot start at initial position of input file(doesn't move correctly if done)
 					smarticle0->SetAngle(0,0, true);
 					smarticle0->Create();
 					

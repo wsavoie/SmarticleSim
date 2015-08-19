@@ -19,11 +19,24 @@ fprintf(fid,'#\n');
 
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
-ang = 0:.01:2*pi;
-r=pi/2;
-phi = pi/2;
-global_theta_2Pos=r*cos(ang-pi/2);
-global_theta_1Pos=r*sin(ang-pi/2);
+gait= 1
+switch gait
+    case 1% circle gait
+        ang = 0:.01:2*pi;
+        r=pi/2;
+        phi = 0;
+        global_theta_1Pos=r*cos(ang-phi);
+        global_theta_2Pos=r*sin(ang-phi);
+        
+    case 2% square gait
+        %not implemented yet!
+        ang = 0:.01:2*pi;
+        r=pi/2;
+        phi = 0;
+        global_theta_1Pos=r*cos(ang-phi);
+        global_theta_2Pos=r*sin(ang-phi);
+        
+end
 
 %convert the distance between the points to the proper amount
 %using dt and omega

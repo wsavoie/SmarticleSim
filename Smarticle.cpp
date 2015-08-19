@@ -86,7 +86,7 @@ void Smarticle::Properties(
 
 	Properties(sID, other_density, surfaceMaterial, other_envelop, other_l, other_w, other_r, other_r2, pos, rot, other_angle, other_angle2);
 	SetDefaultOmega(other_omega);
-	SetOmega(other_omega);
+	//SetOmega(other_omega, true);
 }
 /////Will added Smarticle properties///////
 void Smarticle::Properties(
@@ -110,8 +110,9 @@ void Smarticle::Properties(
 
 	Properties(sID, other_density, surfaceMaterial, other_envelop, other_l, other_w, other_r, other_r2, pos, rot, other_angle, other_angle2);
 	SetDefaultOmega(other_omega);
+	//SetOmega1(other_omega);
+	//SetOmega2(other_omega);
 	SetOmega(other_omega);
-
 	moveType = MoveType::GLOBAL;
 	prevMoveType = MoveType::GLOBAL;
 	moveTypeIdxs.resize(MoveType::OT, 0);
@@ -141,43 +142,48 @@ void Smarticle::Properties(
 void Smarticle::SetDefaultOmega(double omega) {
 	defaultOmega = omega;
 }
-void Smarticle::SetOmega(double momega, bool angularFreq = true)
+void Smarticle::SetOmega(double momega, bool angularFreq)
 {
+
 	if (angularFreq)
 	{
 		omega1 = momega;
 		omega2 = momega;
+		return;
 	}
 	omega1 = (2 * CH_C_PI)*momega;
 	omega2 = (2 * CH_C_PI)*momega;
 }
-void Smarticle::SetOmega(double momega1, double momega2, bool angularFreq = true)
+void Smarticle::SetOmega(double momega1, double momega2, bool angularFreq)
 {
 	if (angularFreq)
 	{
 		omega1 = momega1;
 		omega2 = momega2;
+		return;
 	}
 	omega1 = (2 * CH_C_PI)*momega1;
 	omega2 = (2 * CH_C_PI)*momega2;
 }
-void Smarticle::SetOmega1(double momega1, bool angularFreq = true)
+void Smarticle::SetOmega1(double momega1, bool angularFreq)
 {
 	if (angularFreq)
 	{
 		omega1 = momega1;
+		return;
 	}
 	omega1 = (2 * CH_C_PI)*momega1;
 }
-void Smarticle::SetOmega2(double momega2, bool angularFreq = true)
+void Smarticle::SetOmega2(double momega2, bool angularFreq)
 {
 	if (angularFreq)
 	{
 		omega2=momega2;
+		return;
 	}
 	omega2 = (2 * CH_C_PI)*momega2;
 }
-double Smarticle::GetOmega1(bool angularFreq= true)
+double Smarticle::GetOmega1(bool angularFreq)
 {
 	if (angularFreq)
 	{
@@ -186,7 +192,7 @@ double Smarticle::GetOmega1(bool angularFreq= true)
 	return omega1 / (2 * CH_C_PI);
 }
 
-double Smarticle::GetOmega2(bool angularFreq = true)
+double Smarticle::GetOmega2(bool angularFreq)
 {
 	if (angularFreq)
 	{
@@ -344,7 +350,7 @@ void Smarticle::Create() {
 
 	
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));	
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2, 0));	
 
 	CreateArm(1, w, ChVector<>(0, 0, 0));
 	CreateArm(0, l_mod, ChVector<>(-w / 2.0 - jointClearance- (r2 + l_mod / 2.0)*cos(angle1), 0, -(l_mod / 2.0 +jointClearance+ r2)*sin(angle1)),quat0);
@@ -424,16 +430,17 @@ ChVector<> Smarticle::Get_cm() {
 ChVector<> Smarticle::Get_InitPos() {
 	return initPos;
 }
-void Smarticle::SetAngle(std::pair<double, double> mangles, bool degrees = false)
+void Smarticle::SetAngle(std::pair<double, double> mangles, bool degrees)
 {
 	SetAngle(mangles.first, mangles.second, degrees);
 }
-void Smarticle::SetAngle(double mangle1, double mangle2, bool degrees = false)
+void Smarticle::SetAngle(double mangle1, double mangle2, bool degrees)
 {
 	if (degrees)
 	{
 		angle1 = mangle1*CH_C_PI / 180.0;
 		angle2 = mangle2*CH_C_PI / 180.0;
+		return;
 	}
 	else
 	{
@@ -441,7 +448,7 @@ void Smarticle::SetAngle(double mangle1, double mangle2, bool degrees = false)
 		angle2 = mangle2;
 	}
 }
-void Smarticle::SetAngle(double mangle, bool degrees = false)
+void Smarticle::SetAngle(double mangle, bool degrees)
 {
 	if (degrees)
 	{
@@ -454,25 +461,25 @@ void Smarticle::SetAngle(double mangle, bool degrees = false)
 		angle2 = mangle;
 	}
 }
-void Smarticle::SetAngle1(double mangle1, bool degrees = false)
+void Smarticle::SetAngle1(double mangle1, bool degrees)
 {
 	if (degrees) { angle1 = mangle1*CH_C_PI / 180.0; }
 	else{ angle1 = mangle1; }
 }
-void Smarticle::SetAngle2(double mangle2, bool degrees = false)
+void Smarticle::SetAngle2(double mangle2, bool degrees)
 {
 	if (degrees) { angle2 = mangle2*CH_C_PI / 180.0; }
 	else{ angle2 = mangle2; }
 }
 
-double Smarticle::GetAngle1(bool degrees = true)
+double Smarticle::GetAngle1(bool degrees)
 {
 	if (degrees)
 		return angle1*180.0 / CH_C_PI;
 	else
 		return angle1;
 }
-double Smarticle::GetAngle2(bool degrees = true)
+double Smarticle::GetAngle2(bool degrees)
 {
 	if (degrees)
 		return angle2*180.0 / CH_C_PI;
@@ -530,7 +537,10 @@ std::pair<double, double > Smarticle::populateMoveVector(std::vector<std::pair<d
 		printf("dt %f omega %f torqueThresh2 %f angLow %f angHigh %f",mdt, momega, mtorqueThresh2, mangLow, mangHigh);
 		this->SetDefaultOmega(momega);
 		this->SetOmega(momega);
+		//this->SetOmega(momega);
 		char ddCh;
+		char ddCh1;
+		char ddCh2;
 	ddCh = '!';
 	while (ddCh != '#') {
 		smarticleMoves >> ddCh;
@@ -551,31 +561,37 @@ std::pair<double, double > Smarticle::populateMoveVector(std::vector<std::pair<d
 	//this->SetAngle1(ang1);
 	//this->SetAngle2(ang2);
 	GetLog() << "\n";
-	smarticleMoves >> ang1 >> ddCh >> ang2 >> ddCh >> ddCh;
-
-	angPair.first = ang1;
-	angPair.second = ang2;
-	firstAngPair.first = ang1;
-	firstAngPair.second = ang2;
+	//for some reason it only works with vectors?
+	ChVector<> angVals;
+	smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+	angPair.first = angVals.x;
+	angPair.second = angVals.y;
+	firstAngPair.first = angVals.x;
+	firstAngPair.second = angVals.y;
 	mglobal.push_back(angPair);
 	this->SetAngle(ang1, ang2);
-	//GetLog() << "*****Ang Pair:" << angPair.first << ", " << angPair.second << "\n";
 	while (smarticleMoves.good()) {
-		smarticleMoves >> ang1 >> ddCh >> ang2 >> ddCh >> ddCh;
-		angPair.first = ang1;
-		angPair.second = ang2;
+		smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+		angPair.first = angVals.x;
+		angPair.second = angVals.y;
 		mglobal.push_back(angPair);
-		//GetLog() << "*****Ang Pair:" << angPair.first << ", " << angPair.second << "\n";
 		
 	}
 	this->angHigh = mangHigh;
 	this->angLow = mangLow;
+	
+	SetAngle(firstAngPair);
+	//returning first ang pair but can be set here
 	return firstAngPair;
 	//TODO set distThresh here using omega and dt read from file!
 }
 
 double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng)
 {//TODO make sure to determine if omega is greater than angHigh or angLow too!!!!
+	//since going from -pi to pi:
+	currAng = CH_C_PI + currAng;
+	destAng = CH_C_PI + destAng;
+	
 	if (fabs(destAng - currAng) > distThresh)
 	{
 		//if destAng is larger, move with positive momega else
@@ -591,6 +607,7 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
 
+	
 	//expected ang01 and ang12
 	double expAng01 = v->at(moveTypeIdxs.at(mtype)).first;
 	double expAng12 = v->at(moveTypeIdxs.at(mtype)).second;
@@ -599,6 +616,8 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 	double nextAng01 = v->at((moveTypeIdxs.at(moveType) + 1) % v->size()).first;
 	double nextAng12 = v->at((moveTypeIdxs.at(moveType) + 1) % v->size()).second;
 
+	//GetLog() << "(ang1,ang2)=(" << ang01 * 180 / CH_C_PI << "," << ang12 * 180 / CH_C_PI << ") (nextang1,nextang2)=(" << nextAng01 << ","<< nextAng12<<")\n";
+	//exit(-1);
 	//different real - expected
 	double ang01Diff = ang01-expAng01;
 	double ang12Diff = ang12-expAng12;
@@ -659,7 +678,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	double torque01 = link_actuator01->Get_react_torque().Length2(); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
 	double torque12 = link_actuator12->Get_react_torque().Length2();
 
-	GetLog() << ang01 << " " << ang12 << "\n";
+
 
 	//determine moveType
 	switch (guiState)
@@ -699,7 +718,9 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	{
 		case GLOBAL://TODO implement different case if sameMoveType was wrong
 			//TODO finish global move case
+
 			successfulMotion = MoveToAngle2(v, omega1, omega2,moveType);
+
 			break;
 		case OT:
 			//TODO finish ot move case

@@ -121,13 +121,12 @@ namespace chrono {
 			double other_angHigh=120);
 
 		virtual void SetDefaultOmega(double omega);
-		virtual void SetOmega(double momega, bool angularFreq);
-		virtual void SetOmega(double momega1, double momega2, bool angularFreq);
-		virtual void SetOmega1(double momega1, bool angularFreq);
-		virtual void SetOmega2(double momega2, bool angularFreq);
-		virtual void SetOmega(double omega, bool angularFreq);
-		virtual double GetOmega1(bool angularFreq);
-		virtual double GetOmega2(bool angularFreq);
+		virtual void SetOmega(double momega1, double momega2, bool angularFreq = true);
+		virtual void SetOmega(double momega, bool angularFreq = true);
+		virtual void SetOmega1(double momega1, bool angularFreq = true);
+		virtual void SetOmega2(double momega2, bool angularFreq = true);
+		virtual double GetOmega1(bool angularFreq = true);
+		virtual double GetOmega2(bool angularFreq = true);
 		// create the smarticle by creating arms, adding joint between them, and functions
 		virtual void Create();
 
@@ -158,16 +157,16 @@ namespace chrono {
 
 
 		//smarticle arm angle
-		virtual void SetAngle(double mangle1, double mangle2, bool degrees);
-		virtual void SetAngle(std::pair<double,double> mangles, bool degrees);
-		virtual void SetAngle(double mangle, bool degrees);
-		virtual void SetAngle1(double mangle1, bool degrees);
-		virtual void SetAngle2(double mangle2, bool degrees);
+		virtual void SetAngle(double mangle1, double mangle2, bool degrees = false);
+		virtual void SetAngle(std::pair<double, double> mangles, bool degrees = false);
+		virtual void SetAngle(double mangle, bool degrees = false);
+		virtual void SetAngle1(double mangle1, bool degrees = false);
+		virtual void SetAngle2(double mangle2, bool degrees = false);
 
 		virtual ChSharedPtr<SmarticleMotionPiece> Get_Current_Motion();
 
-		virtual double GetAngle1(bool degrees);
-		virtual double GetAngle2(bool degrees);
+		virtual double GetAngle1(bool degrees = false);
+		virtual double GetAngle2(bool degrees = false);
 		//body fixing
 		virtual void SetBodyFixed(bool mev);
 
@@ -202,7 +201,7 @@ namespace chrono {
 		std::pair<double, double> populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
 		//populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
 		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1,double momega2, MoveType mtype);
-		double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng);
+		double ChooseOmegaAmount(double momega, double currAng, double destAng);
 		virtual void setCurrentMoveType(MoveType newMoveType);
 		void MoveLoop2(int guiState);
 		//////////////////////////////////////////////////////
