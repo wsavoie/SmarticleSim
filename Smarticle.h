@@ -9,6 +9,8 @@
 #define SMARTICLE_H_
 
 #include "core/ChVector.h"
+#include "assets/ChTexture.h"
+
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include <memory>
@@ -22,7 +24,7 @@
 #endif
 
 #define USE_PARALLEL false
-
+#define irrlichtVisualization true
 namespace chrono {
 
 	enum MotionType {SQUARE_G, CIRCLE_G, RELEASE_G, LOOP_G};

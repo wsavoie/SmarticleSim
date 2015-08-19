@@ -243,16 +243,32 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     arm->SetDensity(density);
 
     m_system->AddBody(arm);
-
+		ChSharedPtr<ChTexture> mtexture(new ChTexture());
+		ChSharedPtr<ChBoxShape> box1(new ChBoxShape);
+		
+		box1->GetBoxGeometry().Size = ChVector<>(len / 2.0, r, r2);// upper part, max_x plate
+		box1->Pos = posArm;
+		box1->Rot = rotation*armRelativeRot;
+		
 	switch (armID) {
 	case 0: {
+			
+		mtexture->SetTextureFilename(GetChronoDataFile("blu.png"));
 		arm0 = arm;
+		arm0->GetAssets().push_back(box1);
+		arm0->AddAsset(mtexture);
 	} break;
 	case 1: {
+		mtexture->SetTextureFilename(GetChronoDataFile("pink.png"));		
 		arm1 = arm;
+		arm1->GetAssets().push_back(box1);
+		arm1->AddAsset(mtexture);
 	} break;
 	case 2: {
+		mtexture->SetTextureFilename(GetChronoDataFile("blu.png"));
 		arm2 = arm;
+		arm2->GetAssets().push_back(box1);
+		arm2->AddAsset(mtexture);
 	} break;
 	default:
 		std::cout << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;

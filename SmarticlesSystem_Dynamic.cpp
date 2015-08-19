@@ -45,13 +45,13 @@
 
 #include <memory>
 
-#define irrlichtVisualization false
+
 
 #if irrlichtVisualization
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
-#undef CHRONO_PARALLEL_HAS_OPENGL
-#endif
 
+#ifdef CHRONO_OPENGL
+#undef CHRONO_OPENGL
+#endif
 #include "unit_IRRLICHT/ChIrrApp.h"
 #include "unit_IRRLICHT/ChBodySceneNode.h"
 #include "unit_IRRLICHT/ChBodySceneNodeTools.h"
@@ -59,6 +59,7 @@
 #include "unit_IRRLICHT/ChIrrWizard.h"
 #include "core/ChRealtimeStep.h"
 #include <irrlicht.h>
+#include "assets/ChTexture.h"
 
 using namespace irr;
 using namespace core;
@@ -66,12 +67,14 @@ using namespace scene;
 using namespace video;
 using namespace io;
 using namespace gui;
-
 #endif
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#if defined(CHRONO_OPENGL) || defined(CHRONO_PARALLEL_HAS_OPENGL) 
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
+
+	using namespace chrono;
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 #pragma comment(lib, "opengl32.lib")
@@ -93,7 +96,7 @@ using namespace gui;
 
 //***********************************
 // Use the namespace of Chrono
-using namespace chrono;
+
 enum SmarticleType {SMART_ARMS , SMART_U};
 enum BucketType { CYLINDER, BOX };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
@@ -549,7 +552,80 @@ ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMate
 
 	cyl_container->GetCollisionModel()->ClearModel();
 	cyl_container->SetMaterialSurface(wallMat);
+	double mtheta = atan((hw1 - hw3) / h1);
+#if irrlichtVisualization
+	ChSharedPtr<ChTexture> mtexturewall(new ChTexture());
+	mtexturewall->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+	ChSharedPtr<ChBoxShape> box1(new ChBoxShape);
+	ChSharedPtr<ChBoxShape> box2(new ChBoxShape);
+	ChSharedPtr<ChBoxShape> box3(new ChBoxShape);
+	ChSharedPtr<ChBoxShape> box4(new ChBoxShape);
+	ChSharedPtr<ChBoxShape> box5(new ChBoxShape);
+	ChSharedPtr<ChBoxShape> box6(new ChBoxShape);
+	ChSharedPtr<ChBoxShape> box7(new ChBoxShape);
+	ChSharedPtr<ChBoxShape> box8(new ChBoxShape);
 
+		box1->GetBoxGeometry().Size = ChVector<>(ht, hw2 + o_lap, hh2 + o_lap);// upper part, max_x plate
+		box1->Pos = ChVector<>(hw1 + ht, 0, h1 + hh2);
+		box1->Rot = QUNIT;
+		cyl_container->GetCollisionModel()->AddBox(box1->GetBoxGeometry().Size.x, box1->GetBoxGeometry().Size.y, box1->GetBoxGeometry().Size.z, box1->Pos, box1->Rot);
+		cyl_container->GetAssets().push_back(box1);
+		cyl_container->AddAsset(mtexturewall);
+
+		box2->GetBoxGeometry().Size = ChVector<>(ht, hw2 + o_lap, hh2 + o_lap);// upper part, max_x platesssssss
+		box2->Pos = ChVector<>(-hw1 - ht, 0, h1 + hh2);
+		box2->Rot = QUNIT;
+		cyl_container->GetCollisionModel()->AddBox(box2->GetBoxGeometry().Size.x, box2->GetBoxGeometry().Size.y, box2->GetBoxGeometry().Size.z, box2->Pos, box2->Rot);
+		cyl_container->GetAssets().push_back(box2);
+		cyl_container->AddAsset(mtexturewall);
+
+		box3->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh2 + o_lap);// upper part, max_x plate
+		box3->Pos = ChVector<>(0, hw2 + ht, h1 + hh2);
+		box3->Rot = QUNIT;
+		cyl_container->GetCollisionModel()->AddBox(box3->GetBoxGeometry().Size.x, box3->GetBoxGeometry().Size.y, box3->GetBoxGeometry().Size.z, box3->Pos, box3->Rot);
+		cyl_container->GetAssets().push_back(box3);
+		cyl_container->AddAsset(mtexturewall);
+
+		box4->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh2 + o_lap);// upper part, max_x plate
+		box4->Pos = ChVector<>(0, -hw2 - ht, h1 + hh2);
+		box4->Rot = QUNIT;
+		cyl_container->GetCollisionModel()->AddBox(box4->GetBoxGeometry().Size.x, box4->GetBoxGeometry().Size.y, box4->GetBoxGeometry().Size.z, box4->Pos, box4->Rot);
+		cyl_container->GetAssets().push_back(box4);
+		cyl_container->AddAsset(mtexturewall);
+
+		box5->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh1);// upper part, max_x plate
+		box5->Pos = ChVector<>(0, -hw2 - ht, hh1);
+		box5->Rot = QUNIT;
+		cyl_container->GetCollisionModel()->AddBox(box5->GetBoxGeometry().Size.x, box5->GetBoxGeometry().Size.y, box5->GetBoxGeometry().Size.z, box5->Pos, box5->Rot);
+		cyl_container->GetAssets().push_back(box5);
+		cyl_container->AddAsset(mtexturewall);
+
+		box6->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh1);// upper part, max_x plate
+		box6->Pos = ChVector<>(0, hw2 + ht, hh1);
+		box6->Rot = QUNIT;
+		cyl_container->GetCollisionModel()->AddBox(box6->GetBoxGeometry().Size.x, box6->GetBoxGeometry().Size.y, box6->GetBoxGeometry().Size.z, box6->Pos, box6->Rot);
+		cyl_container->GetAssets().push_back(box6);
+		cyl_container->AddAsset(mtexturewall);
+
+		
+
+		box7->GetBoxGeometry().Size = ChVector<>(ht, hw2, hh1 / cos(mtheta));// upper part, max_x plate
+		box7->Pos = ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta));
+		box7->Rot = Q_from_AngAxis(mtheta, VECT_Y);
+		cyl_container->GetCollisionModel()->AddBox(box7->GetBoxGeometry().Size.x, box7->GetBoxGeometry().Size.y, box7->GetBoxGeometry().Size.z, box7->Pos, box7->Rot);
+		cyl_container->GetAssets().push_back(box7);
+		//cyl_container->AddAsset(mtexturewall);
+
+
+		box8->GetBoxGeometry().Size = ChVector<>(ht, hw2, hh1 / cos(mtheta));// upper part, max_x plate
+		box8->Pos = ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta));
+		box8->Rot = Q_from_AngAxis(-mtheta, VECT_Y);
+		cyl_container->GetCollisionModel()->AddBox(box8->GetBoxGeometry().Size.x, box8->GetBoxGeometry().Size.y, box8->GetBoxGeometry().Size.z, box8->Pos, box8->Rot);
+		cyl_container->GetAssets().push_back(box8);
+		//cyl_container->AddAsset(mtexturewall);
+
+
+#else
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(hw1 + ht, 0, h1 + hh2), QUNIT, true); // uppper part, max_x plate
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(-hw1 - ht, 0, h1 + hh2), QUNIT, true); // uppper part, min_x plate
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, hw2 + ht, h1 + hh2), QUNIT, true); // uppper part, min_x plate
@@ -557,14 +633,15 @@ ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMate
 
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, -hw2 - ht, hh1), QUNIT, true); // uppper part, min_x plate
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, hw2 + ht, hh1), QUNIT, true); // uppper part, min_x plate
-	double mtheta = atan((hw1 - hw3) / h1);
+	//double mtheta = atan((hw1 - hw3) / h1);
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(mtheta, VECT_Y), true); // uppper part, min_x plate
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(-mtheta, VECT_Y), true); // uppper part, min_x plate
 
+
+#endif
 	double estimated_volume = 8 * (w1 * t * h1); // Arman : fix this
 	cyl_container->SetMass(rho_cylinder*estimated_volume);
 	cyl_container->GetCollisionModel()->BuildModel();
-
 	mphysicalSystem->AddBody(cyl_container);
 	return cyl_container;
 }
@@ -581,8 +658,10 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ChSharedPtr<ChBody> ground;
 	if (USE_PARALLEL) {
 		ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+		bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	} else {
 		ground = ChSharedPtr<ChBody>(new ChBody);
+		bucket = ChSharedPtr<ChBody>(new ChBody);
 	}
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
@@ -592,24 +671,25 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ground->SetCollide(true);
 
 	ground->GetCollisionModel()->ClearModel();
+
 	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	ground->GetCollisionModel()->SetFamily(1);
 	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	ground->GetCollisionModel()->BuildModel();
 	mphysicalSystem.AddBody(ground);
-
-	// bucket
-	if (USE_PARALLEL) {
-		bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-	} else {
-		bucket = ChSharedPtr<ChBody>(new ChBody);
-	}
+	
+	ChSharedPtr<ChTexture> mtexture(new ChTexture());
+	mtexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
+	ground->AddAsset(mtexture);
 
 	// 1: create bucket
 		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
 	if (bucketType == BOX){
-		bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
-//		bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z,  true);
+	//	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+		ChSharedPtr<ChTexture> mtexture(new ChTexture());
+		//mtexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+		//bucket->AddAsset(mtexture);
+		bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z,  true);
 
 	}
 	if (bucketType == CYLINDER){
@@ -999,13 +1079,13 @@ int main(int argc, char* argv[]) {
   SetEnvelopeForSystemObjects(mphysicalSystem);
 #endif
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#if defined(CHRONO_PARALLEL_HAS_OPENGL) || defined(CHRONO_OPENGL)
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
 	ChVector<> CameraLocation = sizeScale * ChVector<>(-.1, -.06, .1);
 	ChVector<> CameraLookAt = sizeScale * ChVector<>(0, 0, -.01);
-	gl_window.Initialize(1280, 720, "Smarticles", &mphysicalSystem);
+	gl_window.Initialize(1280, 720, "Dynamic Smarticles", &mphysicalSystem);
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
 	gl_window.viewer->render_camera.camera_scale = 2.0/(1000.0)*sizeScale;
 	gl_window.viewer->render_camera.near_clip = .001;
@@ -1022,17 +1102,31 @@ int main(int argc, char* argv[]) {
   std::cout << "@@@@@@@@@@@@@@@@  irrlicht stuff  @@@@@@@@@@@@@@@@" << std::endl;
   // Create the Irrlicht visualization (open the Irrlicht device,
   // bind a simple user interface, etc. etc.)
-  ChIrrApp application(&mphysicalSystem, L"Bricks test",
+
+  ChIrrApp application(&mphysicalSystem, L"Dynamic Smarticles",
                        core::dimension2d<u32>(800, 600), false, true);
   // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
   ChIrrWizard::add_typical_Logo(application.GetDevice());
   ChIrrWizard::add_typical_Sky(application.GetDevice());
   ChIrrWizard::add_typical_Lights(application.GetDevice(),
-                                  core::vector3df(-.1, -.06, .1,
-                                  core::vector3df(0, 0, -.01), 59, 40);
+                                  core::vector3df(-.1, -.06, .1),
+                                  core::vector3df(0, 0, -.01));
+	ChIrrWizard::add_typical_Lights(application.GetDevice());
   ChIrrWizard::add_typical_Camera(
-      application.GetDevice(), core::vector3df(0.5, 3, 7),
-      core::vector3df(2, 1, 5));  //   (7.2,30,0) :  (-3,12,-8)
+      application.GetDevice(), core::vector3df(-.1, -.06, .1),
+			core::vector3df(0, 0, -.01));  //   (7.2,30,0) :  (-3,12,-8)
+
+	scene::RTSCamera* camera = new scene::RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
+		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
+
+	// camera->bindTargetAndRotation(true);
+	camera->setPosition(core::vector3df(-.1, -.06, .1));
+	camera->setTarget(core::vector3df(0, 0, -.01));
+
+	camera->setNearValue(0.01f);
+	camera->setMinZoom(0.6f);
+
+
   // Use this function for adding a ChIrrNodeAsset to all items
   // If you need a finer control on which item really needs a visualization
   // proxy in
@@ -1045,6 +1139,8 @@ int main(int argc, char* argv[]) {
   application.SetStepManage(true);
   application.SetTimestep(dT);  // Arman modify
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+	
+
 #endif
 
 
@@ -1153,7 +1249,7 @@ int main(int argc, char* argv[]) {
 //	  }
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.start("step time");
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#if defined(CHRONO_PARALLEL_HAS_OPENGL) || defined(CHRONO_OPENGL)
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(dT);
       gl_window.Render();
@@ -1183,7 +1279,7 @@ int main(int argc, char* argv[]) {
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
 		char filename[100];
 		sprintf(filename, "screenshot%d.bmp", tStep);
-		screenshot(filename);
+		//screenshot(filename);
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
 
