@@ -45,7 +45,31 @@
 
 #include <memory>
 
-#ifdef CHRONO_OPENGL
+#define irrlichtVisualization false
+
+#if irrlichtVisualization
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#undef CHRONO_PARALLEL_HAS_OPENGL
+#endif
+
+#include "unit_IRRLICHT/ChIrrApp.h"
+#include "unit_IRRLICHT/ChBodySceneNode.h"
+#include "unit_IRRLICHT/ChBodySceneNodeTools.h"
+#include "unit_IRRLICHT/ChIrrTools.h"
+#include "unit_IRRLICHT/ChIrrWizard.h"
+#include "core/ChRealtimeStep.h"
+#include <irrlicht.h>
+
+using namespace irr;
+using namespace core;
+using namespace scene;
+using namespace video;
+using namespace io;
+using namespace gui;
+
+#endif
+
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 #define GLEW_STATIC
@@ -75,6 +99,9 @@ enum BucketType { CYLINDER, BOX };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
 BucketType bucketType = BOX;
 // =============================================================================
+
+
+
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
@@ -972,7 +999,7 @@ int main(int argc, char* argv[]) {
   SetEnvelopeForSystemObjects(mphysicalSystem);
 #endif
 
-#ifdef CHRONO_OPENGL
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
@@ -989,6 +1016,35 @@ int main(int argc, char* argv[]) {
 // run the simulation in an infinite loop.
 // gl_window.StartDrawLoop(time_step);
 // return 0;
+#endif
+
+#if irrlichtVisualization
+  std::cout << "@@@@@@@@@@@@@@@@  irrlicht stuff  @@@@@@@@@@@@@@@@" << std::endl;
+  // Create the Irrlicht visualization (open the Irrlicht device,
+  // bind a simple user interface, etc. etc.)
+  ChIrrApp application(&mphysicalSystem, L"Bricks test",
+                       core::dimension2d<u32>(800, 600), false, true);
+  // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
+  ChIrrWizard::add_typical_Logo(application.GetDevice());
+  ChIrrWizard::add_typical_Sky(application.GetDevice());
+  ChIrrWizard::add_typical_Lights(application.GetDevice(),
+                                  core::vector3df(-.1, -.06, .1,
+                                  core::vector3df(0, 0, -.01), 59, 40);
+  ChIrrWizard::add_typical_Camera(
+      application.GetDevice(), core::vector3df(0.5, 3, 7),
+      core::vector3df(2, 1, 5));  //   (7.2,30,0) :  (-3,12,-8)
+  // Use this function for adding a ChIrrNodeAsset to all items
+  // If you need a finer control on which item really needs a visualization
+  // proxy in
+  // Irrlicht, just use application.AssetBind(myitem); on a per-item basis.
+  application.AssetBindAll();
+  // Use this function for 'converting' into Irrlicht meshes the assets
+  // into Irrlicht-visualizable meshes
+  application.AssetUpdateAll();
+
+  application.SetStepManage(true);
+  application.SetTimestep(dT);  // Arman modify
+  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 #endif
 
 
@@ -1097,14 +1153,30 @@ int main(int argc, char* argv[]) {
 //	  }
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.start("step time");
-#ifdef CHRONO_OPENGL
+#ifdef CHRONO_PARALLEL_HAS_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(dT);
       gl_window.Render();
     }
 #else
+#if irrlichtVisualization
+    if (!(application.GetDevice()->run())) break;
+    application.GetVideoDriver()->beginScene(true, true,
+    		video::SColor(255, 140, 161, 192));
+//    ChIrrTools::drawGrid(
+//        application.GetVideoDriver(), .2, .2, 150, 150,
+//        ChCoordsys<>(ChVector<>(0.5 * hdim.x, boxMin.y, 0.5 * hdim.z),
+//                     Q_from_AngAxis(CH_C_PI / 2, VECT_X)),
+//        video::SColor(50, 90, 90, 150), true);
+    application.DrawAll();
+    application.DoStep();
+    application.GetVideoDriver()->endScene();
+#else
     mphysicalSystem.DoStepDynamics(dT);
 #endif
+#endif
+
+
 
     UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	  time(&rawtimeCurrent);
