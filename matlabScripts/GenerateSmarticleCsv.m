@@ -19,23 +19,46 @@ fprintf(fid,'#\n');
 
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
-gait= 1
+ss= dt*omega; %step size
+gait= 2;
+figure(1);
+hold on;
 switch gait
     case 1% circle gait
-        ang = 0:.01:2*pi;
+        ang = 0:ss:2*pi;
         r=pi/2;
         phi = 0;
         global_theta_1Pos=r*cos(ang-phi);
         global_theta_2Pos=r*sin(ang-phi);
-        
+        plot(global_theta_1Pos,global_theta_2Pos,'.k');
+        xlabel('\theta_1');
+        ylabel('\theta_2');
+        axis square
+        title('Circle Gait');
+        figText(gcf,15);
     case 2% square gait
         %not implemented yet!
-        ang = 0:.01:2*pi;
-        r=pi/2;
-        phi = 0;
-        global_theta_1Pos=r*cos(ang-phi);
-        global_theta_2Pos=r*sin(ang-phi);
+        sL = pi/2; %square gait side length
+        %theta1
+        t1 = sL/2:-ss:-sL/2;
+        l1 = -sL/2*ones(1,length(t1));
+        b1 = -sL/2:ss:sL/2;
+        r1 = sL/2*ones(1,length(t1));
+%       theta2
+        t2 = sL/2*ones(1,length(t1));
+        l2 = sL/2:-ss:-sL/2;
+        b2 = -sL/2*ones(1,length(t1));
+        r2 = -sL/2:ss:sL/2;
         
+        global_theta_1Pos=[t1,l1,b1,r1];
+        global_theta_2Pos=[t2,l2,b2,r2];
+        plot(global_theta_1Pos,global_theta_2Pos,'.k');
+        xlabel('\theta_1');
+        ylabel('\theta_2');
+        axis([-sL sL -sL sL])
+        axis square
+        title('Square Gait');
+        figText(gcf,15);
 end
 
 %convert the distance between the points to the proper amount

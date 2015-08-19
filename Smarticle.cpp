@@ -582,6 +582,10 @@ std::pair<double, double > Smarticle::populateMoveVector(std::vector<std::pair<d
 	
 	SetAngle(firstAngPair);
 	//returning first ang pair but can be set here
+
+
+	this->distThresh = mdt*omega1;
+
 	return firstAngPair;
 	//TODO set distThresh here using omega and dt read from file!
 }
@@ -591,7 +595,6 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 	//since going from -pi to pi:
 	currAng = CH_C_PI + currAng;
 	destAng = CH_C_PI + destAng;
-	
 	if (fabs(destAng - currAng) > distThresh)
 	{
 		//if destAng is larger, move with positive momega else
