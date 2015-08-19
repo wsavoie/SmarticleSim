@@ -20,10 +20,10 @@ fprintf(fid,'#\n');
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
 ang = 0:.01:2*pi;
-r=pi/5;
+r=pi/2;
 phi = pi/2;
-global_theta_1Pos=r*cos(ang+phi);
-global_theta_2Pos=r*sin(ang+phi);
+global_theta_2Pos=r*cos(ang-pi/2);
+global_theta_1Pos=r*sin(ang-pi/2);
 
 %convert the distance between the points to the proper amount
 %using dt and omega
@@ -74,4 +74,4 @@ end
 % %add #4 to denote end of 4th section
 % fprintf(fid,'#4\n');
 
-fclose(fid);
+fclose('all');

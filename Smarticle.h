@@ -121,8 +121,13 @@ namespace chrono {
 			double other_angHigh=120);
 
 		virtual void SetDefaultOmega(double omega);
-
-
+		virtual void SetOmega(double momega, bool angularFreq);
+		virtual void SetOmega(double momega1, double momega2, bool angularFreq);
+		virtual void SetOmega1(double momega1, bool angularFreq);
+		virtual void SetOmega2(double momega2, bool angularFreq);
+		virtual void SetOmega(double omega, bool angularFreq);
+		virtual double GetOmega1(bool angularFreq);
+		virtual double GetOmega2(bool angularFreq);
 		// create the smarticle by creating arms, adding joint between them, and functions
 		virtual void Create();
 
@@ -154,6 +159,7 @@ namespace chrono {
 
 		//smarticle arm angle
 		virtual void SetAngle(double mangle1, double mangle2, bool degrees);
+		virtual void SetAngle(std::pair<double,double> mangles, bool degrees);
 		virtual void SetAngle(double mangle, bool degrees);
 		virtual void SetAngle1(double mangle1, bool degrees);
 		virtual void SetAngle2(double mangle2, bool degrees);
@@ -193,8 +199,9 @@ namespace chrono {
 		double distThresh;
 		///////////////////////////////////////////////////////////
 
-		void populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
-		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double omega, MoveType mtype);
+		std::pair<double, double> populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
+		//populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
+		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1,double momega2, MoveType mtype);
 		double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng);
 		virtual void setCurrentMoveType(MoveType newMoveType);
 		void MoveLoop2(int guiState);
@@ -209,9 +216,12 @@ namespace chrono {
 									// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
 				ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
 				);
-		void CreateJoints();
-		void CreateActuators();
 
+		//void CreateArm1(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot=QUNIT);
+		void CreateJoints();
+		//void CreateJoints1(ChQuaternion<>, ChQuaternion<>);
+		void CreateActuators();
+		//void CreateActuators1(ChQuaternion<>, ChQuaternion<>);
 
 	protected:
 		// location and orientation (location of the center of the middle arm)
@@ -244,6 +254,8 @@ namespace chrono {
 		int smarticleID;			// smarticleID is not bodyID. smarticle is composed of 3 bodies.
 		double jointClearance; // space at joint
 		double defaultOmega;
+		double omega1;
+		double omega2;
 
 
 		// bodies

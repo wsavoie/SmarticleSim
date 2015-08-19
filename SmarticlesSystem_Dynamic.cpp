@@ -175,7 +175,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 // =============================================================================
 void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc, char* argv[]) {
 	// initializd random seeder
-	MySeed();
+	MySeed(923);
 
 
   // ---------------------
@@ -320,7 +320,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 
 
 
-				ChSharedPtr<SmarticleMotionPiece> myMotionDefault(new SmarticleMotionPiece);
+				/*ChSharedPtr<SmarticleMotionPiece> myMotionDefault(new SmarticleMotionPiece);
 				myMotionDefault->joint_01.theta1 = -.00001;
 				myMotionDefault->joint_01.theta2 =  .00001;
 				myMotionDefault->joint_01.omega = 0;
@@ -341,7 +341,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				myMotion->joint_12.omega = sOmega;
 				myMotion->timeInterval = 0.5;
 				myMotion->startTime = 0;
-				myMotion->SetMotionType(SQUARE_G);
+				myMotion->SetMotionType(SQUARE_G);*/
 
 				
 				if (smarticleType == SMART_ARMS) {
@@ -353,16 +353,16 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 						sOmega,
 						true,
 						myPos,
-						myRot);
+						myRot
+						);
 					smarticle0->populateMoveVector(smarticle0->global, smarticle0->ot, smarticle0->gui1);
-
-
+					smarticle0->SetAngle(0,0, true);
 					smarticle0->Create();
 					
 					//smarticle0->AddMotion(myMotionDefault);
 					//smarticle0->AddMotion(myMotion);
 					mySmarticlesVec.push_back((Smarticle*)smarticle0);
-					
+					//TODO ask arman about  setting default collision envelope here!
 				}
 
 				else if (smarticleType == SMART_U) {
