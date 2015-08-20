@@ -10,7 +10,9 @@
 
 #include "core/ChVector.h"
 #include "assets/ChTexture.h"
-
+#include "unit_IRRLICHT/ChIrrApp.h"
+#include "unit_IRRLICHT/ChIrrTools.h"
+#include <irrlicht.h>
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include <memory>
@@ -61,10 +63,12 @@ namespace chrono {
 		MotionType motionType;
 	};
 
-
+	
 
 	class Smarticle {
 	public:
+		
+		
 		// Construct a smarticle and add it to ChSystem.
 		Smarticle(
 				ChSystem* otherSystem
@@ -129,6 +133,7 @@ namespace chrono {
 		virtual void SetOmega2(double momega2, bool angularFreq = true);
 		virtual double GetOmega1(bool angularFreq = true);
 		virtual double GetOmega2(bool angularFreq = true);
+		
 		// create the smarticle by creating arms, adding joint between them, and functions
 		virtual void Create();
 
@@ -183,6 +188,7 @@ namespace chrono {
 		////////////Will smarticle implementation////////////
 		////vectors containing move instructions, these will be read in from a csv file, tried to make these static but wont compile...
 		//TODO figure out how to make these static vars, all smarticles dont need their own copies if all share the same one
+		//std::vector<std::pair<double, double>> global;
 		std::vector<std::pair<double, double>> global;
 		std::vector<std::pair<double, double>> gui1;//gui option 1
 		std::vector<std::pair<double, double>> gui2;//gui option 2
@@ -200,13 +206,14 @@ namespace chrono {
 		double distThresh;
 		///////////////////////////////////////////////////////////
 
-		std::pair<double, double> populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
+		std::pair<double, double> populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1, std::vector<std::pair<double, double>> &mGUI2);
 		//populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
 		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1,double momega2, MoveType mtype);
 
 		double ChooseOmegaAmount(double momega, double currAng, double destAng);
 		virtual void setCurrentMoveType(MoveType newMoveType);
 		void MoveLoop2(int guiState);
+			
 		//////////////////////////////////////////////////////
 	private:
 		// create smarticle arm, set collision, surface, and mass property.
@@ -224,6 +231,7 @@ namespace chrono {
 		//void CreateJoints1(ChQuaternion<>, ChQuaternion<>);
 		void CreateActuators();
 		//void CreateActuators1(ChQuaternion<>, ChQuaternion<>);
+
 
 	protected:
 		// location and orientation (location of the center of the middle arm)
@@ -284,8 +292,8 @@ namespace chrono {
 
 
 
-
 	};
+	
 }
 
 #endif /* SMARTICLE_H_ */

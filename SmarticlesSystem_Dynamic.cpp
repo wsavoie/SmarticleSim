@@ -52,13 +52,13 @@
 #ifdef CHRONO_OPENGL
 #undef CHRONO_OPENGL
 #endif
-#include "unit_IRRLICHT/ChIrrApp.h"
+//#include "unit_IRRLICHT/ChIrrApp.h"
 #include "unit_IRRLICHT/ChBodySceneNode.h"
 #include "unit_IRRLICHT/ChBodySceneNodeTools.h"
-#include "unit_IRRLICHT/ChIrrTools.h"
+//#include "unit_IRRLICHT/ChIrrTools.h"
 #include "unit_IRRLICHT/ChIrrWizard.h"
 #include "core/ChRealtimeStep.h"
-#include <irrlicht.h>
+//#include <irrlicht.h>
 #include "assets/ChTexture.h"
 
 using namespace irr;
@@ -100,7 +100,7 @@ using namespace gui;
 enum SmarticleType {SMART_ARMS , SMART_U};
 enum BucketType { CYLINDER, BOX };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = BOX;
+BucketType bucketType = CYLINDER;
 // =============================================================================
 
 
@@ -110,7 +110,8 @@ std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
 
 
-
+	int appWidth = 1280;
+	int appHeight = 720;
 	double sizeScale = 1;
 	double gravity = -9.81 * sizeScale;
 	
@@ -144,8 +145,8 @@ ChSharedPtr<ChBody> bucket;
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	double bucket_rad = sizeScale*0.044;
-	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad/1.6, bucket_rad/1.1, .010);
+	double bucket_rad = sizeScale*0.034;
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .030);
 
 	
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
@@ -162,10 +163,86 @@ ChSharedPtr<ChBody> bucket;
 	double t2_smarticle	= sizeScale * .001;
 
 	double collisionEnvelope = .4 * t2_smarticle;
+	int global_GUI_value = 0;
 
 
+// =============================================================================
+#if irrlichtVisualization
+	class MyEventReceiver : public IEventReceiver {
+	public:
 
+		MyEventReceiver(ChIrrAppInterface* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
+			sV = mySmarticlesVec;
+			// store pointer applicaiton
+			app = myapp;
+			// ..add a GUI slider to control friction
+			text_Q = app->GetIGUIEnvironment()->addStaticText(L"Press Q to activate GUI1",
+				rect<s32>(650, 85, 850, 100), true);
+			text_W = app->GetIGUIEnvironment()->addStaticText(L"Press W to activate GUI2",
+				rect<s32>(650, 105, 850, 120), true);
+		}
 
+		bool OnEvent(const SEvent& event) {
+			// check if user moved the sliders with mouse..
+			
+			if (event.EventType == irr::EET_KEY_INPUT_EVENT && !event.KeyInput.PressedDown) {
+				switch (event.KeyInput.Key) {
+				case irr::KEY_KEY_Q:
+					if (global_GUI_value != 1)
+						global_GUI_value = 1;
+					else
+						global_GUI_value = 0;
+						return true;
+				
+				case irr::KEY_KEY_W:
+					if (global_GUI_value != 2)
+						global_GUI_value = 2;
+					else
+						global_GUI_value = 0;
+					return true;
+			}
+
+			}
+			if (event.EventType == EET_GUI_EVENT) {
+				s32 id = event.GUIEvent.Caller->getID();
+				IGUIEnvironment* env = app->GetIGUIEnvironment();
+
+				switch (event.GUIEvent.EventType) {
+				case irr::gui::EGET_SCROLL_BAR_CHANGED:
+					if (id == 101)  // id of 'flow' slider..
+					{
+						s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
+						//GLOBAL_friction = (float)pos / 100;
+					}
+					if (id == 102)  // id of 'speed' slider..
+					{
+						s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
+						//GLOBAL_cohesion = (((float)pos) / 100) * 200000.0f;
+					}
+					if (id == 103)  // id of 'compliance' slider..
+					{
+						s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
+						//GLOBAL_compliance = (((float)pos) / 100) / 1000000.0f;
+					}
+					break;
+				}
+			}
+
+			return false;
+		}
+	private:
+		std::vector<Smarticle*> *sV;
+		ChIrrAppInterface* app;
+		static bool q_val;
+		IGUIScrollBar* scrollbar_friction;
+		IGUIStaticText* text_Q;
+		IGUIStaticText* text_W;
+		IGUIScrollBar* scrollbar_cohesion;
+		IGUIStaticText* text_cohesion;
+		IGUIScrollBar* scrollbar_compliance;
+		IGUIStaticText* text_compliance;
+	};
+#endif
 // =============================================================================
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
@@ -314,7 +391,12 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 }
 
 // =============================================================================
+#if irrlichtVisualization
+void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application) {
+#else
 void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
+#endif
+
 	/////////////////
 	// Smarticle body
 	/////////////////
@@ -388,15 +470,20 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 						myPos,
 						myRot
 						);
-					smarticle0->populateMoveVector(smarticle0->global, smarticle0->ot, smarticle0->gui1);
+
+					smarticle0->populateMoveVector(smarticle0->global, smarticle0->ot, smarticle0->gui1, smarticle0->gui2);
+					
 					//TODO figure out why I cannot start at initial position of input file(doesn't move correctly if done)
 					smarticle0->SetAngle(0,0, true);
 					smarticle0->Create();
-					
 					//smarticle0->AddMotion(myMotionDefault);
 					//smarticle0->AddMotion(myMotion);
 					mySmarticlesVec.push_back((Smarticle*)smarticle0);
 					//TODO ask arman about  setting default collision envelope here!
+					#if irrlichtVisualization
+										application.AssetBindAll();
+										application.AssetUpdateAll();
+					#endif
 				}
 
 				else if (smarticleType == SMART_U) {
@@ -412,6 +499,11 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 					if (!USE_PARALLEL) {
 						smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 					}
+
+					#if irrlichtVisualization
+										application.AssetBindAll();
+										application.AssetUpdateAll();
+					#endif
 				}
 				else {
 					std::cout << "Error! Smarticle type is not set correctly" << std::endl;
@@ -441,6 +533,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	cyl_container->SetBodyFixed(false);
 	cyl_container->SetCollide(true);
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
+	double wallt = t / 5; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
 	double half_height = bucket_interior_halfDim.z;
 	double box_side = bucket_rad * 2.0 * tan(CH_C_PI / num_boxes);//side length of cyl
 	double o_lap = 0;
@@ -449,18 +542,20 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	ChVector<> box_size = (0,0,0); //size of plates
 	ChVector<> pPos = (0,0,0);  //position of each plate
 	ChQuaternion<> quat=QUNIT; //rotation of each plate
-	
+	ChSharedPtr<ChBoxShape> box(new ChBoxShape);
 	cyl_container->GetCollisionModel()->ClearModel();
 	cyl_container->SetMaterialSurface(wallMat);
+	ChSharedPtr<ChTexture> mtexturewall(new ChTexture());
+	mtexturewall->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
 	for (int i = 0; i < num_boxes; i++)
 	{
 
-		box_size= ChVector<>((box_side + t) / 2.0,
-			t,
-			4*half_height + o_lap);
+		box_size = ChVector<>((box_side + wallt) / 2.0,
+			wallt,
+			half_height + o_lap);
 
-		pPos = bucket_ctr + ChVector<>(sin(ang * i) * (t + bucket_rad),
-			cos(ang*i)*(t + bucket_rad),
+		pPos = bucket_ctr + ChVector<>(sin(ang * i) * (wallt + bucket_rad),
+			cos(ang*i)*(wallt + bucket_rad),
 			half_height);
 
 		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
@@ -470,15 +565,19 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 		if (ang*i < CH_C_PI  || ang*i > 3.0 * CH_C_PI / 2.0) 
 		{
 			m_visualization = true;
+			cyl_container->AddAsset(mtexturewall);
 		}
-		utils::AddBoxGeometry(cyl_container.get_ptr(), box_size, pPos, quat, m_visualization);
 
+		utils::AddBoxGeometry(cyl_container.get_ptr(), box_size, pPos, quat, m_visualization);
+		
 	}
 	//Add ground piece
 	//
 
+	utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad + t, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
+	cyl_container->AddAsset(mtexturewall);
 	
-	utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	//add up volume of bucket and multiply by rho to get mass;
 	double cyl_volume = CH_C_PI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * bucket_rad + 2 * t)*(2 * bucket_rad + 2 * t) - bucket_rad*bucket_rad) + (CH_C_PI)*(bucket_rad + 2 * t)*(bucket_rad + 2 * t) * 2 * t;
 	cyl_container->SetMass(rho_cylinder*cyl_volume);
@@ -553,92 +652,93 @@ ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMate
 	cyl_container->GetCollisionModel()->ClearModel();
 	cyl_container->SetMaterialSurface(wallMat);
 	double mtheta = atan((hw1 - hw3) / h1);
-#if irrlichtVisualization
+//#if irrlichtVisualization //TODO CLEAN THIS UP look at cylinder code for example
 	ChSharedPtr<ChTexture> mtexturewall(new ChTexture());
 	mtexturewall->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-	ChSharedPtr<ChBoxShape> box1(new ChBoxShape);
-	ChSharedPtr<ChBoxShape> box2(new ChBoxShape);
-	ChSharedPtr<ChBoxShape> box3(new ChBoxShape);
-	ChSharedPtr<ChBoxShape> box4(new ChBoxShape);
-	ChSharedPtr<ChBoxShape> box5(new ChBoxShape);
-	ChSharedPtr<ChBoxShape> box6(new ChBoxShape);
-	ChSharedPtr<ChBoxShape> box7(new ChBoxShape);
-	ChSharedPtr<ChBoxShape> box8(new ChBoxShape);
+	//ChSharedPtr<ChBoxShape> box1(new ChBoxShape);
+	//ChSharedPtr<ChBoxShape> box2(new ChBoxShape);
+	//ChSharedPtr<ChBoxShape> box3(new ChBoxShape);
+	//ChSharedPtr<ChBoxShape> box4(new ChBoxShape);
+	//ChSharedPtr<ChBoxShape> box5(new ChBoxShape);
+	//ChSharedPtr<ChBoxShape> box6(new ChBoxShape);
+	//ChSharedPtr<ChBoxShape> box7(new ChBoxShape);
+	//ChSharedPtr<ChBoxShape> box8(new ChBoxShape);
 
-		box1->GetBoxGeometry().Size = ChVector<>(ht, hw2 + o_lap, hh2 + o_lap);// upper part, max_x plate
-		box1->Pos = ChVector<>(hw1 + ht, 0, h1 + hh2);
-		box1->Rot = QUNIT;
-		cyl_container->GetCollisionModel()->AddBox(box1->GetBoxGeometry().Size.x, box1->GetBoxGeometry().Size.y, box1->GetBoxGeometry().Size.z, box1->Pos, box1->Rot);
-		cyl_container->GetAssets().push_back(box1);
-		cyl_container->AddAsset(mtexturewall);
+	//	box1->GetBoxGeometry().Size = ChVector<>(ht, hw2 + o_lap, hh2 + o_lap);// upper part, max_x plate
+	//	box1->Pos = ChVector<>(hw1 + ht, 0, h1 + hh2);
+	//	box1->Rot = QUNIT;
+	//	cyl_container->GetCollisionModel()->AddBox(box1->GetBoxGeometry().Size.x, box1->GetBoxGeometry().Size.y, box1->GetBoxGeometry().Size.z, box1->Pos, box1->Rot);
+	//	cyl_container->GetAssets().push_back(box1);
+	//	cyl_container->AddAsset(mtexturewall);
 
-		box2->GetBoxGeometry().Size = ChVector<>(ht, hw2 + o_lap, hh2 + o_lap);// upper part, max_x platesssssss
-		box2->Pos = ChVector<>(-hw1 - ht, 0, h1 + hh2);
-		box2->Rot = QUNIT;
-		cyl_container->GetCollisionModel()->AddBox(box2->GetBoxGeometry().Size.x, box2->GetBoxGeometry().Size.y, box2->GetBoxGeometry().Size.z, box2->Pos, box2->Rot);
-		cyl_container->GetAssets().push_back(box2);
-		cyl_container->AddAsset(mtexturewall);
+	//	box2->GetBoxGeometry().Size = ChVector<>(ht, hw2 + o_lap, hh2 + o_lap);// upper part, min_x plate
+	//	box2->Pos = ChVector<>(-hw1 - ht, 0, h1 + hh2);
+	//	box2->Rot = QUNIT;
+	//	cyl_container->GetCollisionModel()->AddBox(box2->GetBoxGeometry().Size.x, box2->GetBoxGeometry().Size.y, box2->GetBoxGeometry().Size.z, box2->Pos, box2->Rot);
+	//	cyl_container->GetAssets().push_back(box2);
+	//	cyl_container->AddAsset(mtexturewall);
 
-		box3->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh2 + o_lap);// upper part, max_x plate
-		box3->Pos = ChVector<>(0, hw2 + ht, h1 + hh2);
-		box3->Rot = QUNIT;
-		cyl_container->GetCollisionModel()->AddBox(box3->GetBoxGeometry().Size.x, box3->GetBoxGeometry().Size.y, box3->GetBoxGeometry().Size.z, box3->Pos, box3->Rot);
-		cyl_container->GetAssets().push_back(box3);
-		cyl_container->AddAsset(mtexturewall);
+	//	box3->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh2 + o_lap);
+	//	box3->Pos = ChVector<>(0, hw2 + ht, h1 + hh2);
+	//	box3->Rot = QUNIT;
+	//	cyl_container->GetCollisionModel()->AddBox(box3->GetBoxGeometry().Size.x, box3->GetBoxGeometry().Size.y, box3->GetBoxGeometry().Size.z, box3->Pos, box3->Rot);
+	//	cyl_container->GetAssets().push_back(box3);
+	//	cyl_container->AddAsset(mtexturewall);
 
-		box4->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh2 + o_lap);// upper part, max_x plate
-		box4->Pos = ChVector<>(0, -hw2 - ht, h1 + hh2);
-		box4->Rot = QUNIT;
-		cyl_container->GetCollisionModel()->AddBox(box4->GetBoxGeometry().Size.x, box4->GetBoxGeometry().Size.y, box4->GetBoxGeometry().Size.z, box4->Pos, box4->Rot);
-		cyl_container->GetAssets().push_back(box4);
-		cyl_container->AddAsset(mtexturewall);
+	//	box4->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh2 + o_lap);
+	//	box4->Pos = ChVector<>(0, -hw2 - ht, h1 + hh2);
+	//	box4->Rot = QUNIT;
+	//	cyl_container->GetCollisionModel()->AddBox(box4->GetBoxGeometry().Size.x, box4->GetBoxGeometry().Size.y, box4->GetBoxGeometry().Size.z, box4->Pos, box4->Rot);
+	//	cyl_container->GetAssets().push_back(box4);
+	//	cyl_container->AddAsset(mtexturewall);
 
-		box5->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh1);// upper part, max_x plate
-		box5->Pos = ChVector<>(0, -hw2 - ht, hh1);
-		box5->Rot = QUNIT;
-		cyl_container->GetCollisionModel()->AddBox(box5->GetBoxGeometry().Size.x, box5->GetBoxGeometry().Size.y, box5->GetBoxGeometry().Size.z, box5->Pos, box5->Rot);
-		cyl_container->GetAssets().push_back(box5);
-		cyl_container->AddAsset(mtexturewall);
+	//	box5->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh1);
+	//	box5->Pos = ChVector<>(0, -hw2 - ht, hh1);
+	//	box5->Rot = QUNIT;
+	//	cyl_container->GetCollisionModel()->AddBox(box5->GetBoxGeometry().Size.x, box5->GetBoxGeometry().Size.y, box5->GetBoxGeometry().Size.z, box5->Pos, box5->Rot);
+	//	cyl_container->GetAssets().push_back(box5);
+	//	cyl_container->AddAsset(mtexturewall);
 
-		box6->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh1);// upper part, max_x plate
-		box6->Pos = ChVector<>(0, hw2 + ht, hh1);
-		box6->Rot = QUNIT;
-		cyl_container->GetCollisionModel()->AddBox(box6->GetBoxGeometry().Size.x, box6->GetBoxGeometry().Size.y, box6->GetBoxGeometry().Size.z, box6->Pos, box6->Rot);
-		cyl_container->GetAssets().push_back(box6);
-		cyl_container->AddAsset(mtexturewall);
+	//	box6->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh1);
+	//	box6->Pos = ChVector<>(0, hw2 + ht, hh1);
+	//	box6->Rot = QUNIT;
+	//	cyl_container->GetCollisionModel()->AddBox(box6->GetBoxGeometry().Size.x, box6->GetBoxGeometry().Size.y, box6->GetBoxGeometry().Size.z, box6->Pos, box6->Rot);
+	//	cyl_container->GetAssets().push_back(box6);
+	//	cyl_container->AddAsset(mtexturewall);
 
-		
+	//	
 
-		box7->GetBoxGeometry().Size = ChVector<>(ht, hw2, hh1 / cos(mtheta));// upper part, max_x plate
-		box7->Pos = ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta));
-		box7->Rot = Q_from_AngAxis(mtheta, VECT_Y);
-		cyl_container->GetCollisionModel()->AddBox(box7->GetBoxGeometry().Size.x, box7->GetBoxGeometry().Size.y, box7->GetBoxGeometry().Size.z, box7->Pos, box7->Rot);
-		cyl_container->GetAssets().push_back(box7);
-		//cyl_container->AddAsset(mtexturewall);
-
-
-		box8->GetBoxGeometry().Size = ChVector<>(ht, hw2, hh1 / cos(mtheta));// upper part, max_x plate
-		box8->Pos = ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta));
-		box8->Rot = Q_from_AngAxis(-mtheta, VECT_Y);
-		cyl_container->GetCollisionModel()->AddBox(box8->GetBoxGeometry().Size.x, box8->GetBoxGeometry().Size.y, box8->GetBoxGeometry().Size.z, box8->Pos, box8->Rot);
-		cyl_container->GetAssets().push_back(box8);
-		//cyl_container->AddAsset(mtexturewall);
+	//	box7->GetBoxGeometry().Size = ChVector<>(ht, hw2, hh1 / cos(mtheta));
+	//	box7->Pos = ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta));
+	//	box7->Rot = Q_from_AngAxis(mtheta, VECT_Y);
+	//	cyl_container->GetCollisionModel()->AddBox(box7->GetBoxGeometry().Size.x, box7->GetBoxGeometry().Size.y, box7->GetBoxGeometry().Size.z, box7->Pos, box7->Rot);
+	//	cyl_container->GetAssets().push_back(box7);
+	//	cyl_container->AddAsset(mtexturewall);
 
 
-#else
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(hw1 + ht, 0, h1 + hh2), QUNIT, true); // uppper part, max_x plate
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(-hw1 - ht, 0, h1 + hh2), QUNIT, true); // uppper part, min_x plate
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, hw2 + ht, h1 + hh2), QUNIT, true); // uppper part, min_x plate
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, -hw2 - ht, h1 + hh2), QUNIT, true); // uppper part, min_x plate
+	//	box8->GetBoxGeometry().Size = ChVector<>(ht, hw2, hh1 / cos(mtheta));// upper part, max_x plate
+	//	box8->Pos = ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta));
+	//	box8->Rot = Q_from_AngAxis(CH_C_PI/2, VECT_Y);
+	//	cyl_container->GetCollisionModel()->AddBox(box8->GetBoxGeometry().Size.x, box8->GetBoxGeometry().Size.y, box8->GetBoxGeometry().Size.z, box8->Pos, box8->Rot);
+	//	cyl_container->GetAssets().push_back(box8);
+	//	cyl_container->AddAsset(mtexturewall);
 
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, -hw2 - ht, hh1), QUNIT, true); // uppper part, min_x plate
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, hw2 + ht, hh1), QUNIT, true); // uppper part, min_x plate
+
+//#else
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(hw1 + ht, 0, h1 + hh2), QUNIT, true); // upper part, max_x plate
+
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(-hw1 - ht, 0, h1 + hh2), QUNIT, true); // upper part, min_x plate
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, hw2 + ht, h1 + hh2), QUNIT, true); // upper part, min_x plate
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, -hw2 - ht, h1 + hh2), QUNIT, true); // upper part, min_x plate
+
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, -hw2 - ht, hh1), QUNIT, true); // upper part, min_x plate
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, hw2 + ht, hh1), QUNIT, true); // upper part, min_x plate
 	//double mtheta = atan((hw1 - hw3) / h1);
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(mtheta, VECT_Y), true); // uppper part, min_x plate
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(-mtheta, VECT_Y), true); // uppper part, min_x plate
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(mtheta, VECT_Y), true); // upper part, min_x plate
+	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(-mtheta, VECT_Y), true); // upper part, min_x plate
 
 
-#endif
+//#endif
 	double estimated_volume = 8 * (w1 * t * h1); // Arman : fix this
 	cyl_container->SetMass(rho_cylinder*estimated_volume);
 	cyl_container->GetCollisionModel()->BuildModel();
@@ -654,7 +754,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 
 	// ground
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
-	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -bucket_interior_halfDim.z - boxDim.z*5); // 1.1 to add 10% clearance between bucket and ground
+	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*bucket_interior_halfDim.z);
 	ChSharedPtr<ChBody> ground;
 	if (USE_PARALLEL) {
 		ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
@@ -949,7 +1049,7 @@ void UpdateSmarticles(
 	for (int i = 0; i < mySmarticlesVec.size(); i++) {
 		//mySmarticlesVec[i]->MoveLoop();
 
-		mySmarticlesVec[i]->MoveLoop2(0);
+		mySmarticlesVec[i]->MoveLoop2(global_GUI_value);
 		//TODO moveloop2(guistate)
 //		mySmarticlesVec[i]->UpdateMySmarticleMotion();
 //
@@ -1085,7 +1185,7 @@ int main(int argc, char* argv[]) {
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
 	ChVector<> CameraLocation = sizeScale * ChVector<>(-.1, -.06, .1);
 	ChVector<> CameraLookAt = sizeScale * ChVector<>(0, 0, -.01);
-	gl_window.Initialize(1280, 720, "Dynamic Smarticles", &mphysicalSystem);
+	gl_window.Initialize(appWidth, appHeight, "Dynamic Smarticles", &mphysicalSystem);
 	gl_window.SetCamera(CameraLocation, CameraLookAt, ChVector<>(0, 0, 1)); //camera
 	gl_window.viewer->render_camera.camera_scale = 2.0/(1000.0)*sizeScale;
 	gl_window.viewer->render_camera.near_clip = .001;
@@ -1102,9 +1202,9 @@ int main(int argc, char* argv[]) {
   std::cout << "@@@@@@@@@@@@@@@@  irrlicht stuff  @@@@@@@@@@@@@@@@" << std::endl;
   // Create the Irrlicht visualization (open the Irrlicht device,
   // bind a simple user interface, etc. etc.)
-
-  ChIrrApp application(&mphysicalSystem, L"Dynamic Smarticles",
-                       core::dimension2d<u32>(800, 600), false, true);
+	ChIrrApp application(&mphysicalSystem, L"Dynamic Smarticles",
+		core::dimension2d<u32>(appWidth, appHeight), false, true);
+  
   // Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
   ChIrrWizard::add_typical_Logo(application.GetDevice());
   ChIrrWizard::add_typical_Sky(application.GetDevice());
@@ -1112,19 +1212,20 @@ int main(int argc, char* argv[]) {
                                   core::vector3df(-.1, -.06, .1),
                                   core::vector3df(0, 0, -.01));
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
-  ChIrrWizard::add_typical_Camera(
-      application.GetDevice(), core::vector3df(-.1, -.06, .1),
-			core::vector3df(0, 0, -.01));  //   (7.2,30,0) :  (-3,12,-8)
 
 	scene::RTSCamera* camera = new scene::RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
-
-	// camera->bindTargetAndRotation(true);
 	camera->setPosition(core::vector3df(-.1, -.06, .1));
 	camera->setTarget(core::vector3df(0, 0, -.01));
-
 	camera->setNearValue(0.01f);
 	camera->setMinZoom(0.6f);
+
+	//camera->set
+	//GetLog() << camera->get().X << " " << camera->getUpVector().Y << " " << camera->getUpVector().Z;
+	//exit(-1);
+	
+
+
 
 
   // Use this function for adding a ChIrrNodeAsset to all items
@@ -1139,7 +1240,9 @@ int main(int argc, char* argv[]) {
   application.SetStepManage(true);
   application.SetTimestep(dT);  // Arman modify
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
-	
+	MyEventReceiver receiver(&application,&mySmarticlesVec);
+	// note how to add the custom event receiver to the default interface:
+	application.SetUserEventReceiver(&receiver);
 
 #endif
 
@@ -1191,7 +1294,14 @@ int main(int argc, char* argv[]) {
 	  int sSize1 = mySmarticlesVec.size();
 	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
 			  (numGeneratedLayers < numLayers) ){
-		  AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+#if irrlichtVisualization
+			AddParticlesLayer(mphysicalSystem, mySmarticlesVec,application);
+#else
+			AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+#endif 
+
+			
+
 		  numGeneratedLayers ++;
 	  }
 		//if (numGeneratedLayers == numLayers)
@@ -1264,7 +1374,9 @@ int main(int argc, char* argv[]) {
 //        ChCoordsys<>(ChVector<>(0.5 * hdim.x, boxMin.y, 0.5 * hdim.z),
 //                     Q_from_AngAxis(CH_C_PI / 2, VECT_X)),
 //        video::SColor(50, 90, 90, 150), true);
-    application.DrawAll();
+		//application.AssetBindAll();
+		//application.AssetUpdateAll();
+		application.DrawAll();
     application.DoStep();
     application.GetVideoDriver()->endScene();
 #else

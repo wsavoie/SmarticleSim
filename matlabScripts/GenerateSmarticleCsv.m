@@ -1,4 +1,4 @@
-function []=GenerateSmarticleCsv(dt,omega, torqueThresh, angLow, angHigh)
+%function []=GenerateSmarticleCsv(dt,omega, torqueThresh, angLow, angHigh)
 % GENERATESMARTICLECSV generates file containing all instructions
 % for the different movement types, global, GUI, overTorque, etc.
 %   dt          = timestep to be used in simulation
@@ -7,8 +7,23 @@ function []=GenerateSmarticleCsv(dt,omega, torqueThresh, angLow, angHigh)
 %   angLow      = lowest angle smarticle is allowed to move to
 %   angHigh     = highest angle smarticle is allowed to move to
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
+
+dt=.0005;
+omega = 20;
+torqueThresh=1000;
+angLow=60;
+angHigh=120;
+
+global_gait= 2;
+gui1_gait = 1;
+gui2_gait = 1;
+PON= 0;
+if PON
+    figure(1)
+end
+
 directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
-fileloc = horzcat(directory_name,'\','smarticleMoves.csv')
+fileloc = horzcat(directory_name,'\','smarticleMoves.csv');
 fid = fopen(fileloc,'wt');
 %add in all initial values to top of file
 %square torque so that we can use the square in the program so we can avoid
@@ -20,22 +35,24 @@ fprintf(fid,'#\n');
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
 ss= dt*omega; %step size
-gait= 2;
-figure(1);
+
+
 hold on;
-switch gait
+switch global_gait
     case 1% circle gait
         ang = 0:ss:2*pi;
         r=pi/2;
         phi = 0;
         global_theta_1Pos=r*cos(ang-phi);
         global_theta_2Pos=r*sin(ang-phi);
-        plot(global_theta_1Pos,global_theta_2Pos,'.k');
-        xlabel('\theta_1');
-        ylabel('\theta_2');
-        axis square
-        title('Circle Gait');
-        figText(gcf,15);
+        if PON
+            plot(global_theta_1Pos,global_theta_2Pos,'.k');
+            xlabel('\theta_1');
+            ylabel('\theta_2');
+            axis square
+            title('Circle Gait');
+            figText(gcf,15);
+        end
     case 2% square gait
         %not implemented yet!
         sL = pi/2; %square gait side length
@@ -52,13 +69,15 @@ switch gait
         
         global_theta_1Pos=[t1,l1,b1,r1];
         global_theta_2Pos=[t2,l2,b2,r2];
-        plot(global_theta_1Pos,global_theta_2Pos,'.k');
-        xlabel('\theta_1');
-        ylabel('\theta_2');
-        axis([-sL sL -sL sL])
-        axis square
-        title('Square Gait');
-        figText(gcf,15);
+        if PON
+            plot(global_theta_1Pos,global_theta_2Pos,'.k');
+            xlabel('\theta_1');
+            ylabel('\theta_2');
+            axis([-sL sL -sL sL])
+            axis square
+            title('Square Gait');
+            figText(gcf,15);
+        end
 end
 
 %convert the distance between the points to the proper amount
@@ -69,10 +88,14 @@ if(length(global_theta_1Pos)~=length(global_theta_2Pos))
 end
 
 for i=1:length(global_theta_1Pos)
-    fprintf(fid,'%f, %f, \n',global_theta_1Pos(i),global_theta_2Pos(i));
+    fprintf(fid,'%f, %f',global_theta_1Pos(i),global_theta_2Pos(i));
+    %denote next area with a # as last char
+    if i == length(global_theta_1Pos)
+        fprintf(fid,'#\n',global_theta_1Pos(i),global_theta_2Pos(i));
+    else
+        fprintf(fid,', \n',global_theta_1Pos(i),global_theta_2Pos(i));
+    end
 end
-%add #2 to denote end of 2nd section
-% fprintf(fid,'#2\n');
 
 % %% over-torque function position definition
 % % define some positions in the angular phase space (TO BE CHANGED)
@@ -92,22 +115,49 @@ end
 % %add #3 to denote end of 3rd section
 % fprintf(fid,'#3\n');
 % 
-% %% GUI function position definition
-% % define some positions in the angular phase space (TO BE CHANGED)
-% GUI_theta_1Pos = sin(dt*omega+20);
-% GUI_theta_2Pos = sin(dt*omega+20);
-% 
-% %convert the distance between the points to the proper amount
-% %using dt and omega
-% 
-% if(length(GUI_theta_1Pos)~=length(GUI_theta_2Pos))
-%     error('global positions have inequal lengths for the arm position arrays!');
-% end
-% 
-% for i=1:length(GUI_theta_1Pos)
-%     fprintf(fid,'%f\t%f\n',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
-% end
-% %add #4 to denote end of 4th section
-% fprintf(fid,'#4\n');
+%% GUI function position definition
+% define some positions in the angular phase space (TO BE CHANGED)
+
+switch gui1_gait
+    case 1% circle gait
+        GUI_theta_1Pos = [pi/2];
+        GUI_theta_2Pos = [pi/2];
+end
+
+if(length(GUI_theta_1Pos)~=length(GUI_theta_2Pos))
+    error('global positions have inequal lengths for the arm position arrays!');
+end
+
+for i=1:length(GUI_theta_1Pos)
+    fprintf(fid,'%f, %f',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
+    %denote next area with a # as last char
+    if i == length(GUI_theta_1Pos)
+        fprintf(fid,'#\n',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
+    else
+        fprintf(fid,', \n',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
+    end
+end
+%% GUI function position definition
+% define some positions in the angular phase space (TO BE CHANGED)
+
+switch gui2_gait
+    case 1% circle gait
+        GUI2_theta_1Pos = [0];
+        GUI2_theta_2Pos = [0];
+end
+
+if(length(GUI2_theta_1Pos)~=length(GUI2_theta_2Pos))
+    error('global positions have inequal lengths for the arm position arrays!');
+end
+
+for i=1:length(GUI2_theta_1Pos)
+    fprintf(fid,'%f, %f',GUI2_theta_1Pos(i),GUI2_theta_2Pos(i));
+    %denote next area with a # as last char
+    if i == length(GUI2_theta_1Pos)
+        fprintf(fid,'#\n',GUI2_theta_1Pos(i),GUI2_theta_2Pos(i));
+    else
+        fprintf(fid,', \n',GUI2_theta_1Pos(i),GUI2_theta_2Pos(i));
+    end
+end
 
 fclose('all');

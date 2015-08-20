@@ -9,6 +9,7 @@
 #include "chrono_utils/ChUtilsGeometry.h"
 #include "chrono_utils/ChUtilsCreators.h"
 
+
 #include <math.h>  /* asin */
 
 
@@ -136,7 +137,6 @@ void Smarticle::Properties(
 	angLow = 0; //TODO: should these be in radians?
 	angHigh = 120;
 	Smarticle::distThresh = .001*CH_C_PI; //TODO this threshold should be calculated from timestep and default omega rather than being a magic number maybe 1/2 momega*dt?
-
 }
 //////////////////////////////////////////////	
 void Smarticle::SetDefaultOmega(double omega) {
@@ -223,7 +223,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     arm->SetCollide(true);
     arm->SetBodyFixed(false);
     if (armID == 1)
-    	arm->SetBodyFixed(true);
+    	arm->SetBodyFixed(false);
     else
     	arm->SetBodyFixed(false);
 
@@ -232,7 +232,25 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	double mass = density * vol;
 
 	arm->GetCollisionModel()->ClearModel();
-	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len/2.0, r, r2), ChVector<>(0, 0, 0));
+
+#if irrlichtVisualization
+	ChSharedPtr<ChTexture> mtexture(new ChTexture());
+	ChSharedPtr<ChBoxShape> box1(new ChBoxShape);
+	box1->GetBoxGeometry().Size = ChVector<>(len / 2.0, r, r2);// upper part, max_x plate
+
+	if (armID==1) 
+		mtexture->SetTextureFilename(GetChronoDataFile("blu.png"));
+	else 
+		mtexture->SetTextureFilename(GetChronoDataFile("pink.png"));
+	arm->GetCollisionModel()->AddBox(box1->GetBoxGeometry().Size.x, box1->GetBoxGeometry().Size.y, box1->GetBoxGeometry().Size.z, box1->Pos, box1->Rot);
+	arm->GetAssets().push_back(box1);
+	arm->AddAsset(mtexture);
+
+#else
+	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0));
+	
+#endif
+	
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 	arm->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
     arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
@@ -243,32 +261,18 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     arm->SetDensity(density);
 
     m_system->AddBody(arm);
-		ChSharedPtr<ChTexture> mtexture(new ChTexture());
-		ChSharedPtr<ChBoxShape> box1(new ChBoxShape);
+
 		
-		box1->GetBoxGeometry().Size = ChVector<>(len / 2.0, r, r2);// upper part, max_x plate
-		box1->Pos = posArm;
-		box1->Rot = rotation*armRelativeRot;
 		
 	switch (armID) {
 	case 0: {
-			
-		mtexture->SetTextureFilename(GetChronoDataFile("blu.png"));
 		arm0 = arm;
-		arm0->GetAssets().push_back(box1);
-		arm0->AddAsset(mtexture);
 	} break;
 	case 1: {
-		mtexture->SetTextureFilename(GetChronoDataFile("pink.png"));		
 		arm1 = arm;
-		arm1->GetAssets().push_back(box1);
-		arm1->AddAsset(mtexture);
 	} break;
 	case 2: {
-		mtexture->SetTextureFilename(GetChronoDataFile("blu.png"));
 		arm2 = arm;
-		arm2->GetAssets().push_back(box1);
-		arm2->AddAsset(mtexture);
 	} break;
 	default:
 		std::cout << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
@@ -538,7 +542,7 @@ void Smarticle::MoveLoop() {
 	this->SetActuatorFunction(1, omega2);
 
 }
-std::pair<double, double > Smarticle::populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1)
+std::pair<double, double> Smarticle::populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1, std::vector<std::pair<double, double>> &mGUI2)
 {
 
 	std::ifstream smarticleMoves;
@@ -557,6 +561,9 @@ std::pair<double, double > Smarticle::populateMoveVector(std::vector<std::pair<d
 		char ddCh;
 		char ddCh1;
 		char ddCh2;
+		this->angHigh = mangHigh;
+		this->angLow = mangLow;
+		this->distThresh = mdt*omega1;
 	ddCh = '!';
 	while (ddCh != '#') {
 		smarticleMoves >> ddCh;
@@ -585,25 +592,51 @@ std::pair<double, double > Smarticle::populateMoveVector(std::vector<std::pair<d
 	firstAngPair.first = angVals.x;
 	firstAngPair.second = angVals.y;
 	mglobal.push_back(angPair);
+	//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
 	this->SetAngle(ang1, ang2);
+	//Global
 	while (smarticleMoves.good()) {
 		smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
 		angPair.first = angVals.x;
 		angPair.second = angVals.y;
-		mglobal.push_back(angPair);
 		
+		mglobal.push_back(angPair);
+		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+		if (ddCh == '#')
+			break;
 	}
-	this->angHigh = mangHigh;
-	this->angLow = mangLow;
 	
+	//GUI1
+	while (smarticleMoves.good()) {
+		smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+		angPair.first = angVals.x;
+		angPair.second = angVals.y;
+		
+		mGUI1.push_back(angPair);
+		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+		if (ddCh == '#')
+			break;
+	}
+	//GUI2
+	while (smarticleMoves.good()) {
+		smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+		angPair.first = angVals.x;
+		angPair.second = angVals.y;
+
+		mGUI2.push_back(angPair);
+		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+		//exit(-1);
+		if (ddCh == '#')
+			break;
+	}
+
 	SetAngle(firstAngPair);
 	//returning first ang pair but can be set here
 
 
-	this->distThresh = mdt*omega1;
-
+	//exit(-1);
 	return firstAngPair;
-	//TODO set distThresh here using omega and dt read from file!
+
 }
 
 double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng)
@@ -731,7 +764,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	if (this->moveType == this->prevMoveType){
 		sameMoveType = true;
 	}
-	
+	static bool x = false;
 
 	switch (this->moveType) //TODO finish move type case statements
 	{
@@ -739,7 +772,6 @@ void Smarticle::MoveLoop2(int guiState = 0)
 			//TODO finish global move case
 
 			successfulMotion = MoveToAngle2(v, omega1, omega2,moveType);
-
 			break;
 		case OT:
 			//TODO finish ot move case
@@ -751,13 +783,17 @@ void Smarticle::MoveLoop2(int guiState = 0)
 			//TODO finish gui1 move case
 			if (sameMoveType)
 			{
+				x = true;
 			}
+			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+
 			break;
 		case GUI2:
 			//TODO finish gui2 move case
 			if (sameMoveType)
 			{
 			}
+			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
 			break;
 		case GUI3:
 			//TODO finish gui3 move case
