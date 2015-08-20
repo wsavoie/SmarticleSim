@@ -411,17 +411,23 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 	int smarticleCount = mySmarticlesVec.size();
 	if (smarticleCount < 9){ z = 0; }
 	else{ z = Find_Max_Z(mphysicalSystem); }
-	int numPerLayer = 9;
+	int numPerLayer = 5;
 	//this filling method works better for smaller diameter where diameter < 3*width of staple	
-		for (int i = -nX + 1; i < nX; i++) {
-			for (int j = -nY + 1; j < nY; j++) {
+		//for (int i = -nX + 1; i < nX; i++) {
+			//for (int j = -nY + 1; j < nY; j++) {
+		for (int i = 0; i < numPerLayer; i++)
+		{
 				ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 				myRot.Normalize();
 
 
-				ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + MyRand()*w_smarticle - 0.5 * w_smarticle
-					, j * maxDim + bucket_ctr.y + MyRand() * w_smarticle - 0.5 * w_smarticle
-					, z + maxDim);
+				//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + MyRand()*w_smarticle - 0.5 * w_smarticle
+				//	, j * maxDim + bucket_ctr.y + MyRand() * w_smarticle - 0.5 * w_smarticle
+				//	, z + maxDim);
+
+				ChVector<> myPos = ChVector<>(bucket_ctr.x + MyRand()* (bucket_interior_halfDim.x - MyRand()*bucket_interior_halfDim.x / 2.0)/1.2,
+					bucket_ctr.y + (MyRand()*bucket_interior_halfDim.y - MyRand()*bucket_interior_halfDim.y / 2.0)/1.2,
+					std::min(4 * bucket_interior_halfDim.z, z) + i*w_smarticle / 4);
 
 				//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 
@@ -509,7 +515,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 					std::cout << "Error! Smarticle type is not set correctly" << std::endl;
 				}
 				smarticleCount++;
-			}
+			//}
 		}
 }
 // =============================================================================
