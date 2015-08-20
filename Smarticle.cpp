@@ -6,8 +6,8 @@
  */
 
 #include "Smarticle.h"
-#include "chrono_utils/ChUtilsGeometry.h"
-#include "chrono_utils/ChUtilsCreators.h"
+#include "utils/ChUtilsGeometry.h"
+#include "utils/ChUtilsCreators.h"
 
 
 #include <math.h>  /* asin */

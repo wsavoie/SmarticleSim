@@ -32,9 +32,9 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
-#include "chrono_utils/ChUtilsCreators.h"     //Arman: why is this
-#include "chrono_utils/ChUtilsInputOutput.h"  //Arman: Why is this
-#include "chrono_utils/ChUtilsGenerators.h"
+#include "utils/ChUtilsCreators.h"     //Arman: why is this
+#include "utils/ChUtilsInputOutput.h"  //Arman: Why is this
+#include "utils/ChUtilsGenerators.h"
 
 #include <ctime>
 #include <stdlib.h>  // system, rand, srand, RAND_MAX
@@ -52,6 +52,7 @@
 #ifdef CHRONO_OPENGL
 #undef CHRONO_OPENGL
 #endif
+
 //#include "unit_IRRLICHT/ChIrrApp.h"
 #include "unit_IRRLICHT/ChBodySceneNode.h"
 #include "unit_IRRLICHT/ChBodySceneNodeTools.h"
@@ -69,7 +70,9 @@ using namespace io;
 using namespace gui;
 #endif
 
-#if defined(CHRONO_OPENGL) || defined(CHRONO_PARALLEL_HAS_OPENGL) 
+
+#ifdef CHRONO_OPENGL
+
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
@@ -1185,7 +1188,8 @@ int main(int argc, char* argv[]) {
   SetEnvelopeForSystemObjects(mphysicalSystem);
 #endif
 
-#if defined(CHRONO_PARALLEL_HAS_OPENGL) || defined(CHRONO_OPENGL)
+
+#ifdef CHRONO_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
@@ -1365,7 +1369,8 @@ int main(int argc, char* argv[]) {
 //	  }
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.start("step time");
-#if defined(CHRONO_PARALLEL_HAS_OPENGL) || defined(CHRONO_OPENGL)
+
+#ifdef CHRONO_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(dT);
       gl_window.Render();
