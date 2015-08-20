@@ -48,8 +48,8 @@
 #define irrlichtVisualization false
 
 #if irrlichtVisualization
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
-#undef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
+#undef CHRONO_OPENGL
 #endif
 
 #include "unit_IRRLICHT/ChIrrApp.h"
@@ -69,7 +69,7 @@ using namespace gui;
 
 #endif
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
@@ -947,7 +947,7 @@ int main(int argc, char* argv[]) {
   SetEnvelopeForSystemObjects(mphysicalSystem);
 #endif
 
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
 //	ChVector<> CameraLookAt = ChVector<>(0, 0, -1);
@@ -1101,7 +1101,7 @@ int main(int argc, char* argv[]) {
 //	  }
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.start("step time");
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(dT);
       gl_window.Render();

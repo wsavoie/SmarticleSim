@@ -44,7 +44,7 @@
 #include "CheckPointSmarticles.h"
 //#include "D:/ChronoCode/libs/png++-0.2.7/png.hpp";
 //#include "D:\ChronoCode\libs\pngwriter-release-0.5.5\src\pngwriter.h"
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 #define GLEW_STATIC
@@ -1007,7 +1007,7 @@ int main(int argc, char* argv[]) {
   std::vector<Smarticle*> mySmarticlesVec;
   CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
 	
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
   opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
 	
 //	ChVector<> CameraLocation = ChVector<>(0, -10, 4);
@@ -1196,7 +1196,7 @@ int main(int argc, char* argv[]) {
 	  SavePovFilesMBD(mphysicalSystem, tStep);
 	  step_timer.Reset();
 	  step_timer.start("step time");
-#ifdef CHRONO_PARALLEL_HAS_OPENGL
+#ifdef CHRONO_OPENGL
     if (gl_window.Active()) {
       gl_window.DoStepDynamics(dT);
       gl_window.Render();
