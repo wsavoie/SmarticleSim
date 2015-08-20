@@ -6,8 +6,8 @@
  */
 
 #include "SmarticleU.h"
-#include "chrono_utils/ChUtilsGeometry.h"
-#include "chrono_utils/ChUtilsCreators.h"
+#include "utils/ChUtilsGeometry.h"
+#include "utils/ChUtilsCreators.h"
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
 
