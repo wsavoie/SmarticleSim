@@ -75,6 +75,7 @@ set(DEMOS
 find_package(Chrono
              COMPONENTS Parallel
              OPTIONAL_COMPONENTS OpenGL
+             COMPONENTS Irrlicht
              CONFIG
 )
 
