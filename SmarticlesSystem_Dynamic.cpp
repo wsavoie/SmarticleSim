@@ -32,9 +32,9 @@
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
-#include "chrono_utils/ChUtilsCreators.h"     //Arman: why is this
-#include "chrono_utils/ChUtilsInputOutput.h"  //Arman: Why is this
-#include "chrono_utils/ChUtilsGenerators.h"
+#include "utils/ChUtilsCreators.h"     //Arman: why is this
+#include "utils/ChUtilsInputOutput.h"  //Arman: Why is this
+#include "utils/ChUtilsGenerators.h"
 
 #include <ctime>
 #include <stdlib.h>  // system, rand, srand, RAND_MAX
