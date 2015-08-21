@@ -31,7 +31,7 @@ namespace chrono {
 
 	enum MotionType {SQUARE_G, CIRCLE_G, RELEASE_G, LOOP_G};
 
-	enum MoveType { GLOBAL=0, GUI1=1, GUI2=2, GUI3=3,OT=4}; //IF ADDING MORE ALWAYS KEEP OT AS LAST INDEX!!!!
+	enum MoveType { GLOBAL=0, GUI1=1, GUI2=2, GUI3=3, VIB=4, OT=5}; //IF ADDING MORE ALWAYS KEEP OT AS LAST INDEX!!!!
 	// structs to attach motion to smarticles
 	class JointMotion : public ChShared {
 	public:
@@ -195,7 +195,7 @@ namespace chrono {
 		std::vector<std::pair<double, double>> gui3;//gui option 3
 		std::vector<std::pair<double, double>> ot; //over torque
 		std::vector<std::pair<double, double>> oa; //over angle
-
+		std::vector<std::pair<double, double>> vib; //vibrate this HAS to be particle specific so cannot be static?
 		
 		std::vector<int> moveTypeIdxs;//this vector keeps the current values of the move types
 		MoveType moveType;
@@ -206,7 +206,7 @@ namespace chrono {
 		double distThresh;
 		///////////////////////////////////////////////////////////
 
-		std::pair<double, double> populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1, std::vector<std::pair<double, double>> &mGUI2);
+		std::pair<double, double> populateMoveVector();
 		//populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
 		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1,double momega2, MoveType mtype);
 

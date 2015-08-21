@@ -17,6 +17,9 @@ angHigh=120;
 global_gait= 2;
 gui1_gait = 1;
 gui2_gait = 1;
+gui3_gait = 1;
+
+
 PON= 0;
 if PON
     figure(1)
@@ -115,49 +118,55 @@ end
 % %add #3 to denote end of 3rd section
 % fprintf(fid,'#3\n');
 % 
-%% GUI function position definition
+%% GUI function position definitions
 % define some positions in the angular phase space (TO BE CHANGED)
+% 
+% switch gui1_gait
+%     case 1% circle gait
+%         GUI_theta_1Pos = [pi/2];
+%         GUI_theta_2Pos = [pi/2];
+% end
+% 
+% switch gui2_gait
+%     case 1% circle gait
+%         GUI_theta_1Pos = [0];
+%         GUI_theta_2Pos = [0];
+% end
+% switch gui3_gait
+%     case 1% circle gait
+%         GUI_theta_1Pos = [-pi/2];
+%         GUI_theta_2Pos = [pi/2];
+% end
 
-switch gui1_gait
-    case 1% circle gait
-        GUI_theta_1Pos = [pi/2];
-        GUI_theta_2Pos = [pi/2];
-end
 
-if(length(GUI_theta_1Pos)~=length(GUI_theta_2Pos))
-    error('global positions have inequal lengths for the arm position arrays!');
-end
-
-for i=1:length(GUI_theta_1Pos)
-    fprintf(fid,'%f, %f',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
-    %denote next area with a # as last char
-    if i == length(GUI_theta_1Pos)
-        fprintf(fid,'#\n',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
-    else
-        fprintf(fid,', \n',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
+guiSize = 3;
+for i=1:guiSize
+    switch(i)
+        case 1 %gui1
+            GUI_theta_1Pos = [pi/2];
+            GUI_theta_2Pos = [pi/2];
+        case 2 %gui2
+            GUI_theta_1Pos = [0];
+            GUI_theta_2Pos = [0];
+        case 3 %gui3
+            GUI_theta_1Pos = [pi/2];
+            GUI_theta_2Pos = [-pi/2];
+    end
+    
+    if(length(GUI_theta_1Pos)~=length(GUI_theta_2Pos))
+        error('global positions have inequal lengths for the arm position arrays!');
+    end
+    
+    for i=1:length(GUI_theta_1Pos)
+        fprintf(fid,'%f, %f',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
+        %denote next area with a # as last char
+        if i == length(GUI_theta_1Pos)
+            fprintf(fid,'#\n',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
+        else
+            fprintf(fid,', \n',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
+        end
     end
 end
-%% GUI function position definition
-% define some positions in the angular phase space (TO BE CHANGED)
 
-switch gui2_gait
-    case 1% circle gait
-        GUI2_theta_1Pos = [0];
-        GUI2_theta_2Pos = [0];
-end
-
-if(length(GUI2_theta_1Pos)~=length(GUI2_theta_2Pos))
-    error('global positions have inequal lengths for the arm position arrays!');
-end
-
-for i=1:length(GUI2_theta_1Pos)
-    fprintf(fid,'%f, %f',GUI2_theta_1Pos(i),GUI2_theta_2Pos(i));
-    %denote next area with a # as last char
-    if i == length(GUI2_theta_1Pos)
-        fprintf(fid,'#\n',GUI2_theta_1Pos(i),GUI2_theta_2Pos(i));
-    else
-        fprintf(fid,', \n',GUI2_theta_1Pos(i),GUI2_theta_2Pos(i));
-    end
-end
 
 fclose('all');

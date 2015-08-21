@@ -31,7 +31,7 @@ Smarticle::Smarticle(
 	r2 = .01;
 	initPos = ChVector<>(0);
 	rotation = QUNIT;
-	jointClearance = 1.3 * r2;
+	jointClearance = 1 * r2;
 	volume = GetVolume();
 }
 
@@ -65,7 +65,7 @@ void Smarticle::Properties(
 	angle1 = other_angle;
 	angle2 = other_angle2;
 
-	jointClearance = 1.3 * r2;
+	jointClearance = 1 * r2;
 	volume = GetVolume();
 
 }
@@ -119,19 +119,6 @@ void Smarticle::Properties(
 	moveTypeIdxs.resize(MoveType::OT, 0);
 	double x = CH_C_PI/2;
 	double y = x /10;
-	//global.push_back(std::pair<double, double>(x + 0 * y, x + 0 * y));
-	//global.push_back(std::pair<double, double>(x + 1 * y, x + 1 * y));
-	//global.push_back(std::pair<double, double>(x + 2 * y, x + 2 * y));
-	//global.push_back(std::pair<double, double>(x + 3 * y, x + 3 * y));
-	//global.push_back(std::pair<double, double>(x + 2 * y, x + 2 * y));
-	//global.push_back(std::pair<double, double>(x + 1 * y, x + 1 * y));
-	//global.push_back(std::pair<double, double>(x - 0 * y, x - 0 * y));
-	//global.push_back(std::pair<double, double>(x - 1 * y, x - 1 * y));
-	//global.push_back(std::pair<double, double>(x - 2 * y, x - 2 * y));
-	//global.push_back(std::pair<double, double>(x - 3 * y, x - 3 * y));
-	//global.push_back(std::pair<double, double>(x - 2 * y, x - 2 * y));
-	//global.push_back(std::pair<double, double>(x - 1 * y, x - 1 * y));
-	//global.push_back(std::pair<double, double>(x + 0 * y, x + 0 * y));
 
 	torqueThresh2 = 10000;
 	angLow = 0; //TODO: should these be in radians?
@@ -352,7 +339,7 @@ void Smarticle::CreateActuators() {
 }
 
 void Smarticle::Create() {
-	jointClearance = 1.3*r2;
+	jointClearance =1*r2;
 	double l_mod = l - jointClearance;
 
 	// ** initialize U
@@ -364,6 +351,7 @@ void Smarticle::Create() {
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2, 0));	
 
+	//TODO allow self collisions of smarticle arms with itself
 	CreateArm(1, w, ChVector<>(0, 0, 0));
 	CreateArm(0, l_mod, ChVector<>(-w / 2.0 - jointClearance- (r2 + l_mod / 2.0)*cos(angle1), 0, -(l_mod / 2.0 +jointClearance+ r2)*sin(angle1)),quat0);
 	CreateArm(2, l_mod, ChVector<>(w / 2.0 + jointClearance + (r2 + l_mod / 2.0)*cos(angle2), 0, -(l_mod / 2.0 +jointClearance+ r2)*sin(angle2)),quat2);
@@ -534,7 +522,7 @@ void Smarticle::MoveLoop() {
 	this->SetActuatorFunction(1, omega2);
 
 }
-std::pair<double, double> Smarticle::populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1, std::vector<std::pair<double, double>> &mGUI2)
+std::pair<double, double> Smarticle::populateMoveVector()
 {
 
 	std::ifstream smarticleMoves;
@@ -547,15 +535,14 @@ std::pair<double, double> Smarticle::populateMoveVector(std::vector<std::pair<do
 		mangLow >>
 		mangHigh;
 		printf("dt %f omega %f torqueThresh2 %f angLow %f angHigh %f",mdt, momega, mtorqueThresh2, mangLow, mangHigh);
-		this->SetDefaultOmega(momega);
-		this->SetOmega(momega);
-		//this->SetOmega(momega);
+		SetDefaultOmega(momega);
+		SetOmega(momega);
 		char ddCh;
 		char ddCh1;
 		char ddCh2;
-		this->angHigh = mangHigh;
-		this->angLow = mangLow;
-		this->distThresh = mdt*omega1;
+		angHigh = mangHigh;
+		angLow = mangLow;
+		distThresh = mdt*omega1;
 	ddCh = '!';
 	while (ddCh != '#') {
 		smarticleMoves >> ddCh;
@@ -583,16 +570,17 @@ std::pair<double, double> Smarticle::populateMoveVector(std::vector<std::pair<do
 	angPair.second = angVals.y;
 	firstAngPair.first = angVals.x;
 	firstAngPair.second = angVals.y;
-	mglobal.push_back(angPair);
+	global.push_back(angPair);
 	//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
-	this->SetAngle(ang1, ang2);
+	//TODO need to rewrite the below way of reading file, very ugly!
+	SetAngle(ang1, ang2);
 	//Global
 	while (smarticleMoves.good()) {
 		smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
 		angPair.first = angVals.x;
 		angPair.second = angVals.y;
 		
-		mglobal.push_back(angPair);
+		global.push_back(angPair);
 		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
 		if (ddCh == '#')
 			break;
@@ -604,7 +592,7 @@ std::pair<double, double> Smarticle::populateMoveVector(std::vector<std::pair<do
 		angPair.first = angVals.x;
 		angPair.second = angVals.y;
 		
-		mGUI1.push_back(angPair);
+		gui1.push_back(angPair);
 		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
 		if (ddCh == '#')
 			break;
@@ -615,7 +603,20 @@ std::pair<double, double> Smarticle::populateMoveVector(std::vector<std::pair<do
 		angPair.first = angVals.x;
 		angPair.second = angVals.y;
 
-		mGUI2.push_back(angPair);
+		gui2.push_back(angPair);
+		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+		//exit(-1);
+		if (ddCh == '#')
+			break;
+	}
+
+	//GUI3
+	while (smarticleMoves.good()) {
+		smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+		angPair.first = angVals.x;
+		angPair.second = angVals.y;
+
+		gui3.push_back(angPair);
 		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
 		//exit(-1);
 		if (ddCh == '#')
@@ -743,6 +744,18 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		this->setCurrentMoveType(GUI3);
 		v = &gui3;
 		break;
+	case 4:
+		this->setCurrentMoveType(VIB);
+		v = &vib;
+		break;
+	case 5:
+		this->setCurrentMoveType(VIB);
+		v = &vib;
+		break;
+	default:
+		this->setCurrentMoveType(GLOBAL);
+		v = &global;
+		break;
 	}
 	//overTorque takes priority!
 	if (torque01 > torqueThresh2 || torque12 > torqueThresh2){
@@ -758,43 +771,38 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	}
 	static bool x = false;
 
-	switch (this->moveType) //TODO finish move type case statements
+	switch (this->moveType) //have this in case I want to add different action based on move type
 	{
 		case GLOBAL://TODO implement different case if sameMoveType was wrong
 			//TODO finish global move case
-
 			successfulMotion = MoveToAngle2(v, omega1, omega2,moveType);
 			break;
 		case OT:
 			//TODO finish ot move case
-			if (sameMoveType)
-			{
-			}
+			if (sameMoveType){}
 			break;
 		case GUI1:
 			//TODO finish gui1 move case
-			if (sameMoveType)
-			{
-				x = true;
-			}
+			if (sameMoveType){x = true;}
 			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
-
 			break;
 		case GUI2:
 			//TODO finish gui2 move case
-			if (sameMoveType)
-			{
-			}
+			if (sameMoveType){}
 			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
 			break;
 		case GUI3:
 			//TODO finish gui3 move case
-			if (sameMoveType)
-			{
-			}
+			if (sameMoveType){}
+			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
 			break;
-	}
-	//add 1 to size if
+		case VIB:
+			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+			//GetLog() << "(0,1,2):" << v->at(0).first << "," << v->at(1).first << "," << v->at(2).first;
+			//exit(-1);
+			break;
+		}
+	//add 1 to size if move was successful (i.e. can move on to next move index if reached previous one)
 	if (successfulMotion)
 	{
 		moveTypeIdxs.at(moveType) = ((moveTypeIdxs.at(moveType) + 1) % v->size());

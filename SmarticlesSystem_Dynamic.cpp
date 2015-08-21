@@ -175,7 +175,7 @@ ChSharedPtr<ChBody> bucket;
 	public:
 
 		MyEventReceiver(ChIrrAppInterface* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
-			sV = mySmarticlesVec;
+			sv = mySmarticlesVec;
 			// store pointer applicaiton
 			app = myapp;
 			// ..add a GUI slider to control friction
@@ -183,19 +183,30 @@ ChSharedPtr<ChBody> bucket;
 				rect<s32>(650, 85, 850, 100), true);
 			text_W = app->GetIGUIEnvironment()->addStaticText(L"Press W to activate GUI2",
 				rect<s32>(650, 105, 850, 120), true);
+			text_E = app->GetIGUIEnvironment()->addStaticText(L"Press E to activate GUI3",
+				rect<s32>(650, 125, 850, 140), true);
+			text_R = app->GetIGUIEnvironment()->addStaticText(L"Press R to vibrate around current angle",
+				rect<s32>(650, 145, 850, 160), true);
+			text_T = app->GetIGUIEnvironment()->addStaticText(L"Press T to vibrate around specified angles",
+				rect<s32>(650, 165, 850, 180), true);
+			angle1Input = app->GetIGUIEnvironment()->addEditBox(L"75",
+				rect<s32>(850, 165, 900, 180), true);
+			angle2Input = app->GetIGUIEnvironment()->addEditBox(L"75",
+				rect<s32>(900, 165, 950, 180), true);
 		}
 
 		bool OnEvent(const SEvent& event) {
 			// check if user moved the sliders with mouse..
 			
 			if (event.EventType == irr::EET_KEY_INPUT_EVENT && !event.KeyInput.PressedDown) {
-				switch (event.KeyInput.Key) {
+				switch (event.KeyInput.Key) 
+				{
 				case irr::KEY_KEY_Q:
 					if (global_GUI_value != 1)
 						global_GUI_value = 1;
 					else
 						global_GUI_value = 0;
-						return true;
+					return true;
 				
 				case irr::KEY_KEY_W:
 					if (global_GUI_value != 2)
@@ -203,47 +214,160 @@ ChSharedPtr<ChBody> bucket;
 					else
 						global_GUI_value = 0;
 					return true;
-			}
+				case irr::KEY_KEY_E:
+					if (global_GUI_value != 3)
+						global_GUI_value = 3;
+					else
+						global_GUI_value = 0;
+					return true;
+				case irr::KEY_KEY_R: //vibrate around current theta
+					if (global_GUI_value != 4)
+					{
+						double CurrTheta01;
+						double CurrTheta12;
+						global_GUI_value = 4;
+						std::pair<double, double> angPair;
+						for (int i = 0; i < sv->size(); i++) //get each particles current theta
+						{ 
+							Smarticle* sPtr = sv->at(i);
+							
+							MoveType currMoveType = sPtr->moveType;
+							std::vector<std::pair<double, double>> *v;
+							
+							
+							
+							switch (currMoveType) //TODO fix this and put this in a function inside smarticle class
+							{
+								case 0:
+									v = &sPtr->global;
+									break;
+								case 1:
+									v = &sPtr->gui1;
+									break;
+								case 2:
+									v = &sPtr->gui2;
+									break;
+								case 3:
+									v = &sPtr->gui3;
+									break;
+								case 4:
+									v = &sPtr->vib;
+									break;
+								case 5:
+									v = &sPtr->ot;
+									break;
+								default:
+									v = &sPtr->global;
+									break;
+							}
+							
+							CurrTheta01 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).first;
+							CurrTheta12 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).second;
+							sPtr->vib.clear();
+							
+							
+							angPair.first = CurrTheta01;
+							angPair.second = CurrTheta12;
+							sPtr->vib.push_back(angPair);
+							
+							angPair.first = CurrTheta01 - vibAmp;
+							angPair.second = CurrTheta12 - vibAmp;
+							sPtr->vib.push_back(angPair);
 
-			}
-			if (event.EventType == EET_GUI_EVENT) {
-				s32 id = event.GUIEvent.Caller->getID();
-				IGUIEnvironment* env = app->GetIGUIEnvironment();
+							angPair.first = CurrTheta01;
+							angPair.second = CurrTheta12;
+							sPtr->vib.push_back(angPair);
 
-				switch (event.GUIEvent.EventType) {
-				case irr::gui::EGET_SCROLL_BAR_CHANGED:
-					if (id == 101)  // id of 'flow' slider..
-					{
-						s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
-						//GLOBAL_friction = (float)pos / 100;
+							angPair.first = CurrTheta01 + vibAmp;
+							angPair.second = CurrTheta12 + vibAmp;
+							sPtr->vib.push_back(angPair);
+						}
+
 					}
-					if (id == 102)  // id of 'speed' slider..
+					else
+						global_GUI_value = 0;
+					return true;
+
+				case irr::KEY_KEY_T: //TODO vibrate around theta specified in boxes  
+					if (global_GUI_value != 5)
 					{
-						s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
-						//GLOBAL_cohesion = (((float)pos) / 100) * 200000.0f;
+						
+						std::pair<double, double> angPair;
+						double ang1;
+						double ang2;
+						global_GUI_value = 5;
+						for (int i = 0; i < sv->size(); i++) //get each particles current theta
+						{
+							Smarticle* sPtr = sv->at(i);
+							
+							ang1 = wcstod(angle1Input->getText(), NULL)*CH_C_PI/180;
+							ang2 = wcstod(angle2Input->getText(), NULL)*CH_C_PI/180;
+							sPtr->vib.clear();
+
+							//in case strange values are written
+							if (ang2>CH_C_PI || ang2<-CH_C_PI)
+							{
+								global_GUI_value = 0;
+								return true;
+							}
+							if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
+							{
+								global_GUI_value = 0;
+								return true;
+							}
+
+							angPair.first = ang1;
+							angPair.second = ang2;
+							sPtr->vib.push_back(angPair);
+							//sPtr->vib.assign(0, angPair);
+							
+
+							angPair.first = ang1 - vibAmp;
+							angPair.second = ang2 - vibAmp;
+							sPtr->vib.push_back(angPair);
+							//sPtr->vib.assign(1, angPair);
+
+							angPair.first = ang1;
+							angPair.second = ang2;
+							sPtr->vib.push_back(angPair);
+							//sPtr->vib.assign(2, angPair);
+							
+							angPair.first = ang1 + vibAmp;
+							angPair.second = ang2 + vibAmp;
+							sPtr->vib.push_back(angPair);
+							//sPtr->vib.assign(3, angPair);
+
+
+						}
 					}
-					if (id == 103)  // id of 'compliance' slider..
-					{
-						s32 pos = ((IGUIScrollBar*)event.GUIEvent.Caller)->getPos();
-						//GLOBAL_compliance = (((float)pos) / 100) / 1000000.0f;
-					}
-					break;
+					else
+						global_GUI_value = 0;
+					return true;
 				}
-			}
 
+
+			}
 			return false;
 		}
 	private:
-		std::vector<Smarticle*> *sV;
+		double vibAmp = 2 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
+		std::vector<Smarticle*> *sv;
 		ChIrrAppInterface* app;
-		static bool q_val;
 		IGUIScrollBar* scrollbar_friction;
 		IGUIStaticText* text_Q;
 		IGUIStaticText* text_W;
+		IGUIStaticText* text_E;
+		IGUIStaticText* text_R;
+		IGUIStaticText* text_T;
 		IGUIScrollBar* scrollbar_cohesion;
 		IGUIStaticText* text_cohesion;
 		IGUIScrollBar* scrollbar_compliance;
 		IGUIStaticText* text_compliance;
+		IGUIStaticText* text_angle1;
+		IGUIStaticText* text_angle2;
+		IGUIEditBox* angle1Input;
+		IGUIEditBox* angle2Input;
+
 	};
 #endif
 // =============================================================================
@@ -313,7 +437,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR); // LCP_ITERATIVE_SOR_MULTITHREAD , LCP_ITERATIVE_SOR  (LCP_ITERATIVE_SOR_MULTITHREAD does not work)
   mphysicalSystem.SetIterLCPmaxItersSpeed(50);
   mphysicalSystem.SetIterLCPmaxItersStab(5);   // unuseful for Anitescu, only Tasora uses this
-  mphysicalSystem.SetParallelThreadNumber(1);
+  mphysicalSystem.SetParallelThreadNumber(1);  //TODO figure out if this can increase speed
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   mphysicalSystem.SetIterLCPwarmStarting(true);
   mphysicalSystem.SetUseSleeping(false);
@@ -480,7 +604,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 						myRot
 						);
 
-					smarticle0->populateMoveVector(smarticle0->global, smarticle0->ot, smarticle0->gui1, smarticle0->gui2);
+					smarticle0->populateMoveVector();
 					
 					//TODO figure out why I cannot start at initial position of input file(doesn't move correctly if done)
 					smarticle0->SetAngle(0,0, true);
@@ -1149,7 +1273,6 @@ int main(int argc, char* argv[]) {
   // Use this function for 'converting' into Irrlicht meshes the assets
   // into Irrlicht-visualizable meshes
   application.AssetUpdateAll();
-	application.GetSystem()->SetParallelThreadNumber(6);
   application.SetStepManage(true);
   application.SetTimestep(dT);  // Arman modify
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
