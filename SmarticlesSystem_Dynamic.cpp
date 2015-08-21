@@ -661,79 +661,10 @@ ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMate
 	cyl_container->GetCollisionModel()->ClearModel();
 	cyl_container->SetMaterialSurface(wallMat);
 	double mtheta = atan((hw1 - hw3) / h1);
-//#if irrlichtVisualization //TODO CLEAN THIS UP look at cylinder code for example
+
 	ChSharedPtr<ChTexture> mtexturewall(new ChTexture());
 	mtexturewall->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-	//ChSharedPtr<ChBoxShape> box1(new ChBoxShape);
-	//ChSharedPtr<ChBoxShape> box2(new ChBoxShape);
-	//ChSharedPtr<ChBoxShape> box3(new ChBoxShape);
-	//ChSharedPtr<ChBoxShape> box4(new ChBoxShape);
-	//ChSharedPtr<ChBoxShape> box5(new ChBoxShape);
-	//ChSharedPtr<ChBoxShape> box6(new ChBoxShape);
-	//ChSharedPtr<ChBoxShape> box7(new ChBoxShape);
-	//ChSharedPtr<ChBoxShape> box8(new ChBoxShape);
-
-	//	box1->GetBoxGeometry().Size = ChVector<>(ht, hw2 + o_lap, hh2 + o_lap);// upper part, max_x plate
-	//	box1->Pos = ChVector<>(hw1 + ht, 0, h1 + hh2);
-	//	box1->Rot = QUNIT;
-	//	cyl_container->GetCollisionModel()->AddBox(box1->GetBoxGeometry().Size.x, box1->GetBoxGeometry().Size.y, box1->GetBoxGeometry().Size.z, box1->Pos, box1->Rot);
-	//	cyl_container->GetAssets().push_back(box1);
-	//	cyl_container->AddAsset(mtexturewall);
-
-	//	box2->GetBoxGeometry().Size = ChVector<>(ht, hw2 + o_lap, hh2 + o_lap);// upper part, min_x plate
-	//	box2->Pos = ChVector<>(-hw1 - ht, 0, h1 + hh2);
-	//	box2->Rot = QUNIT;
-	//	cyl_container->GetCollisionModel()->AddBox(box2->GetBoxGeometry().Size.x, box2->GetBoxGeometry().Size.y, box2->GetBoxGeometry().Size.z, box2->Pos, box2->Rot);
-	//	cyl_container->GetAssets().push_back(box2);
-	//	cyl_container->AddAsset(mtexturewall);
-
-	//	box3->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh2 + o_lap);
-	//	box3->Pos = ChVector<>(0, hw2 + ht, h1 + hh2);
-	//	box3->Rot = QUNIT;
-	//	cyl_container->GetCollisionModel()->AddBox(box3->GetBoxGeometry().Size.x, box3->GetBoxGeometry().Size.y, box3->GetBoxGeometry().Size.z, box3->Pos, box3->Rot);
-	//	cyl_container->GetAssets().push_back(box3);
-	//	cyl_container->AddAsset(mtexturewall);
-
-	//	box4->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh2 + o_lap);
-	//	box4->Pos = ChVector<>(0, -hw2 - ht, h1 + hh2);
-	//	box4->Rot = QUNIT;
-	//	cyl_container->GetCollisionModel()->AddBox(box4->GetBoxGeometry().Size.x, box4->GetBoxGeometry().Size.y, box4->GetBoxGeometry().Size.z, box4->Pos, box4->Rot);
-	//	cyl_container->GetAssets().push_back(box4);
-	//	cyl_container->AddAsset(mtexturewall);
-
-	//	box5->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh1);
-	//	box5->Pos = ChVector<>(0, -hw2 - ht, hh1);
-	//	box5->Rot = QUNIT;
-	//	cyl_container->GetCollisionModel()->AddBox(box5->GetBoxGeometry().Size.x, box5->GetBoxGeometry().Size.y, box5->GetBoxGeometry().Size.z, box5->Pos, box5->Rot);
-	//	cyl_container->GetAssets().push_back(box5);
-	//	cyl_container->AddAsset(mtexturewall);
-
-	//	box6->GetBoxGeometry().Size = ChVector<>(hw1 + o_lap, ht, hh1);
-	//	box6->Pos = ChVector<>(0, hw2 + ht, hh1);
-	//	box6->Rot = QUNIT;
-	//	cyl_container->GetCollisionModel()->AddBox(box6->GetBoxGeometry().Size.x, box6->GetBoxGeometry().Size.y, box6->GetBoxGeometry().Size.z, box6->Pos, box6->Rot);
-	//	cyl_container->GetAssets().push_back(box6);
-	//	cyl_container->AddAsset(mtexturewall);
-
-	//	
-
-	//	box7->GetBoxGeometry().Size = ChVector<>(ht, hw2, hh1 / cos(mtheta));
-	//	box7->Pos = ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta));
-	//	box7->Rot = Q_from_AngAxis(mtheta, VECT_Y);
-	//	cyl_container->GetCollisionModel()->AddBox(box7->GetBoxGeometry().Size.x, box7->GetBoxGeometry().Size.y, box7->GetBoxGeometry().Size.z, box7->Pos, box7->Rot);
-	//	cyl_container->GetAssets().push_back(box7);
-	//	cyl_container->AddAsset(mtexturewall);
-
-
-	//	box8->GetBoxGeometry().Size = ChVector<>(ht, hw2, hh1 / cos(mtheta));// upper part, max_x plate
-	//	box8->Pos = ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta));
-	//	box8->Rot = Q_from_AngAxis(CH_C_PI/2, VECT_Y);
-	//	cyl_container->GetCollisionModel()->AddBox(box8->GetBoxGeometry().Size.x, box8->GetBoxGeometry().Size.y, box8->GetBoxGeometry().Size.z, box8->Pos, box8->Rot);
-	//	cyl_container->GetAssets().push_back(box8);
-	//	cyl_container->AddAsset(mtexturewall);
-
-
-//#else
+	
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(hw1 + ht, 0, h1 + hh2), QUNIT, true); // upper part, max_x plate
 
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(-hw1 - ht, 0, h1 + hh2), QUNIT, true); // upper part, min_x plate
@@ -742,12 +673,11 @@ ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMate
 
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, -hw2 - ht, hh1), QUNIT, true); // upper part, min_x plate
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, hw2 + ht, hh1), QUNIT, true); // upper part, min_x plate
-	//double mtheta = atan((hw1 - hw3) / h1);
+
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(mtheta, VECT_Y), true); // upper part, min_x plate
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(-mtheta, VECT_Y), true); // upper part, min_x plate
+	cyl_container->AddAsset(mtexturewall);
 
-
-//#endif
 	double estimated_volume = 8 * (w1 * t * h1); // Arman : fix this
 	cyl_container->SetMass(rho_cylinder*estimated_volume);
 	cyl_container->GetCollisionModel()->BuildModel();
@@ -1171,9 +1101,6 @@ int main(int argc, char* argv[]) {
 		mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
 		mat_g->SetFriction(0.5); // .6 for wall to staple using tan (theta) tested on 7/20
 
-		//TODO create readMoveValsFromCSV in checkPoint
-		//TODO run populateMoveVector
-
   // Create a ChronoENGINE physical system
   CH_SYSTEM mphysicalSystem;
 #if (USE_PARALLEL)
@@ -1229,13 +1156,7 @@ int main(int argc, char* argv[]) {
 	camera->setTarget(core::vector3df(0, 0, -.01));
 	camera->setNearValue(0.01f);
 	camera->setMinZoom(0.6f);
-
-	//camera->set
-	//GetLog() << camera->get().X << " " << camera->getUpVector().Y << " " << camera->getUpVector().Z;
-	//exit(-1);
-	
-
-
+	camera->setUpVector(core::vector3df(0, 0, 1));//TODO ask arman why up vector isn't changing camera orientation at beginning
 
 
   // Use this function for adding a ChIrrNodeAsset to all items

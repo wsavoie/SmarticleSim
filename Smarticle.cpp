@@ -232,25 +232,17 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	double mass = density * vol;
 
 	arm->GetCollisionModel()->ClearModel();
-
-#if irrlichtVisualization
+	
+	
 	ChSharedPtr<ChTexture> mtexture(new ChTexture());
-	ChSharedPtr<ChBoxShape> box1(new ChBoxShape);
-	box1->GetBoxGeometry().Size = ChVector<>(len / 2.0, r, r2);// upper part, max_x plate
-
-	if (armID==1) 
+	if (armID == 1)
 		mtexture->SetTextureFilename(GetChronoDataFile("blu.png"));
-	else 
+	else
 		mtexture->SetTextureFilename(GetChronoDataFile("pink.png"));
-	arm->GetCollisionModel()->AddBox(box1->GetBoxGeometry().Size.x, box1->GetBoxGeometry().Size.y, box1->GetBoxGeometry().Size.z, box1->Pos, box1->Rot);
-	arm->GetAssets().push_back(box1);
 	arm->AddAsset(mtexture);
 
-#else
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0));
-	
-#endif
-	
+
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 	arm->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
     arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
