@@ -225,7 +225,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	if (armID == 1)
 		mtexture->SetTextureFilename(GetChronoDataFile("blu.png"));
 	else
-		mtexture->SetTextureFilename(GetChronoDataFile("pink.png"));
+		mtexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 	arm->AddAsset(mtexture);
 
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0));

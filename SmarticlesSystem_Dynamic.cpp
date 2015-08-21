@@ -78,10 +78,10 @@ using namespace gui;
 
 	using namespace chrono;
 
-#define GLEW_STATIC
-#include <GL/glew.h>
-#pragma comment(lib, "opengl32.lib")
-#pragma comment(lib, "glu32.lib")
+//#define GLEW_STATIC
+//#include <GL/glew.h>
+//#pragma comment(lib, "opengl32.lib")
+//#pragma comment(lib, "glu32.lib")
 #ifndef true 
 #define true 1
 #endif
@@ -180,19 +180,19 @@ ChSharedPtr<ChBody> bucket;
 			app = myapp;
 			// ..add a GUI slider to control friction
 			text_Q = app->GetIGUIEnvironment()->addStaticText(L"Press Q to activate GUI1",
-				rect<s32>(650, 85, 850, 100), true);
+				rect<s32>(850, 85, 1050, 100), true);
 			text_W = app->GetIGUIEnvironment()->addStaticText(L"Press W to activate GUI2",
-				rect<s32>(650, 105, 850, 120), true);
+				rect<s32>(850, 105, 1050, 120), true);
 			text_E = app->GetIGUIEnvironment()->addStaticText(L"Press E to activate GUI3",
-				rect<s32>(650, 125, 850, 140), true);
+				rect<s32>(850, 125, 1050, 140), true);
 			text_R = app->GetIGUIEnvironment()->addStaticText(L"Press R to vibrate around current angle",
-				rect<s32>(650, 145, 850, 160), true);
+				rect<s32>(850, 145, 1050, 160), true);
 			text_T = app->GetIGUIEnvironment()->addStaticText(L"Press T to vibrate around specified angles",
-				rect<s32>(650, 165, 850, 180), true);
+				rect<s32>(850, 165, 1050, 180), true);
 			angle1Input = app->GetIGUIEnvironment()->addEditBox(L"75",
-				rect<s32>(850, 165, 900, 180), true);
+				rect<s32>(1050, 165, 1100, 180), true);
 			angle2Input = app->GetIGUIEnvironment()->addEditBox(L"75",
-				rect<s32>(900, 165, 950, 180), true);
+				rect<s32>(1100, 165, 1150, 180), true);
 		}
 
 		bool OnEvent(const SEvent& event) {
@@ -516,7 +516,56 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   mphysicalSystem.GetSettings()->collision.collision_envelope = collisionEnvelope;
   mphysicalSystem.GetSettings()->collision.bins_per_axis = _make_int3(40, 40, 40);  // Arman check
 }
+#if irrlichtVisualization
+void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application) {
+#else
+void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
+#endif
+	double z;
+	int numPerLayer =4;
+	int smarticleCount = mySmarticlesVec.size();
+	double ang = 2*CH_C_PI / numPerLayer;
+	double w = w_smarticle;
+	if (smarticleCount < numPerLayer){ z = 0; }
+	else{ z = Find_Max_Z(mphysicalSystem); }
+	double phase = MyRand()*CH_C_PI / 2;
+	for (int i = 0; i < numPerLayer; i++)
+	{
+		phase = MyRand()*CH_C_PI / 2;
+		ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i+phase) *(bucket_rad/2 + w*MyRand()-w/2),
+			cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2),
+			std::min(4 * bucket_interior_halfDim.z, z) + (i + 1)*w_smarticle / 4);
+			
+		ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+			myRot.Normalize();
+		
+			Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
+			smarticle0->Properties(smarticleCount,
+				rho_smarticle, mat_g,
+				collisionEnvelope,
+				l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+				sOmega,
+				true,
+				myPos,
+				myRot
+				);
 
+			smarticle0->populateMoveVector();
+
+			//TODO figure out why I cannot start at initial position of input file(doesn't move correctly if done)
+			smarticle0->SetAngle(0, 0, true);
+			smarticle0->Create();
+			//smarticle0->AddMotion(myMotionDefault);
+			//smarticle0->AddMotion(myMotion);
+			mySmarticlesVec.push_back((Smarticle*)smarticle0);
+#if irrlichtVisualization
+			application.AssetBindAll();
+			application.AssetUpdateAll();
+#endif
+	}
+
+
+}
 // =============================================================================
 #if irrlichtVisualization
 void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application) {
@@ -1116,53 +1165,53 @@ void UpdateSmarticles(
 //TODO write gui (dont forget ifopengl in it)
 
 
-bool screenshot(char *fileName){
-	int Xres = 1280;
-	int Yres = 720;
-	static unsigned char header[54] = {
-		0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-	unsigned char *pixels = (unsigned char *)malloc(Xres * Yres * 3);
-	((unsigned __int16 *)header)[9] = Xres;
-	((unsigned __int16 *)header)[11] = Yres;
-
-	glReadPixels(0, 0, Xres, Yres, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-
-	unsigned char temp;
-	for (unsigned int i = 0; i < Xres * Yres * 3; i += 3){
-		temp = pixels[i];
-		pixels[i] = pixels[i + 2];
-		pixels[i + 2] = temp;
-	}
-
-	HANDLE FileHandle;
-	unsigned long Size;
-
-	if (fileName == NULL){
-		char file[256];
-		unsigned int i = 0;
-		do {
-			sprintf(file, "Screenshot%d.bmp", i);
-			FileHandle = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-			i++;
-		} while (FileHandle == INVALID_HANDLE_VALUE);
-	}
-	else {
-		FileHandle = CreateFile(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (FileHandle == INVALID_HANDLE_VALUE)	return false;
-	}
-	DWORD NumberOfBytesWritten;
-	WriteFile(FileHandle, header, sizeof(header), &NumberOfBytesWritten, NULL);
-	WriteFile(FileHandle, pixels, Xres * Yres * 3, &NumberOfBytesWritten, NULL);
-
-	CloseHandle(FileHandle);
-
-	free(pixels);
-	return true;
-}
+//bool screenshot(char *fileName){
+//	int Xres = 1280;
+//	int Yres = 720;
+//	static unsigned char header[54] = {
+//		0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
+//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
+//		0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
+//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+//
+//	unsigned char *pixels = (unsigned char *)malloc(Xres * Yres * 3);
+//	((unsigned __int16 *)header)[9] = Xres;
+//	((unsigned __int16 *)header)[11] = Yres;
+//
+//	glReadPixels(0, 0, Xres, Yres, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+//
+//	unsigned char temp;
+//	for (unsigned int i = 0; i < Xres * Yres * 3; i += 3){
+//		temp = pixels[i];
+//		pixels[i] = pixels[i + 2];
+//		pixels[i + 2] = temp;
+//	}
+//
+//	HANDLE FileHandle;
+//	unsigned long Size;
+//
+//	if (fileName == NULL){
+//		char file[256];
+//		unsigned int i = 0;
+//		do {
+//			sprintf(file, "Screenshot%d.bmp", i);
+//			FileHandle = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+//			i++;
+//		} while (FileHandle == INVALID_HANDLE_VALUE);
+//	}
+//	else {
+//		FileHandle = CreateFile(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+//		if (FileHandle == INVALID_HANDLE_VALUE)	return false;
+//	}
+//	DWORD NumberOfBytesWritten;
+//	WriteFile(FileHandle, header, sizeof(header), &NumberOfBytesWritten, NULL);
+//	WriteFile(FileHandle, pixels, Xres * Yres * 3, &NumberOfBytesWritten, NULL);
+//
+//	CloseHandle(FileHandle);
+//
+//	free(pixels);
+//	return true;
+//}
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
 	  struct tm* timeinfo;
@@ -1331,9 +1380,11 @@ int main(int argc, char* argv[]) {
 	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
 			  (numGeneratedLayers < numLayers) ){
 #if irrlichtVisualization
-			AddParticlesLayer(mphysicalSystem, mySmarticlesVec,application);
+			//AddParticlesLayer(mphysicalSystem, mySmarticlesVec,application);
+			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec,application);
 #else
-			AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+			//AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application);
 #endif 
 
 			
