@@ -414,7 +414,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 	int smarticleCount = mySmarticlesVec.size();
 	if (smarticleCount < 9){ z = 0; }
 	else{ z = Find_Max_Z(mphysicalSystem); }
-	int numPerLayer = 5;
+	int numPerLayer = 4;
 	//this filling method works better for smaller diameter where diameter < 3*width of staple	
 		//for (int i = -nX + 1; i < nX; i++) {
 			//for (int j = -nY + 1; j < nY; j++) {
@@ -428,9 +428,9 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				//	, j * maxDim + bucket_ctr.y + MyRand() * w_smarticle - 0.5 * w_smarticle
 				//	, z + maxDim);
 
-				ChVector<> myPos = ChVector<>(bucket_ctr.x + MyRand()* (bucket_interior_halfDim.x - MyRand()*bucket_interior_halfDim.x / 2.0)/1.2,
-					bucket_ctr.y + (MyRand()*bucket_interior_halfDim.y - MyRand()*bucket_interior_halfDim.y / 2.0)/1.2,
-					std::min(4 * bucket_interior_halfDim.z, z) + i*w_smarticle / 4);
+				ChVector<> myPos = ChVector<>(bucket_ctr.x + MyRand()* (bucket_interior_halfDim.x - MyRand()*bucket_interior_halfDim.x / 2.0),
+					bucket_ctr.y + (MyRand()*bucket_interior_halfDim.y - MyRand()*bucket_interior_halfDim.y / 2.0),
+					std::min(4 * bucket_interior_halfDim.z, z) + (i+1)*w_smarticle / 4);
 
 				//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
 
@@ -488,7 +488,6 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 					//smarticle0->AddMotion(myMotionDefault);
 					//smarticle0->AddMotion(myMotion);
 					mySmarticlesVec.push_back((Smarticle*)smarticle0);
-					//TODO ask arman about  setting default collision envelope here!
 					#if irrlichtVisualization
 										application.AssetBindAll();
 										application.AssetUpdateAll();
@@ -505,9 +504,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 						myRot);
 					smarticle0->Create();
 					mySmarticlesVec.push_back(smarticle0);
-					if (!USE_PARALLEL) {
-						smarticle0->GetSmarticleBodyPointer()->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-					}
+
 
 					#if irrlichtVisualization
 										application.AssetBindAll();
@@ -600,24 +597,8 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	//ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
 	
 	
-	
-	/*bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
-	{
-		bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_half_thick))
-			ChVector<> dist = pt - centralPt;
-		double xydist = (std::sqrt(dist.x * dist.x + dist.y + dist.y));
 
-		if ((xydist < rad.x) && ((pt.z > rad.y) && (pt.z < rad.z))) {
-			return true;
-		}*/
-	
-	
-	
-	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos(), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
-		
-		//, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_half_thick
-		//z, bucketMin.z + 2 * bucket_interior_halfDim.z + 2 * bucket_half_thick
-
+		cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	cyl_container->GetCollisionModel()->BuildModel();
 
 	mphysicalSystem->AddBody(cyl_container);
@@ -714,6 +695,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	ground->GetCollisionModel()->SetFamily(1);
 	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	ground->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	ground->GetCollisionModel()->BuildModel();
 	mphysicalSystem.AddBody(ground);
 	
@@ -861,11 +843,11 @@ bool IsIn(ChVector<> pt, ChVector<> min, ChVector<> max) {
 }
 // =============================================================================
 //used for now cylinder
-//rad is (radius from center, , max z)
+// isinradial rad parameter is Vector(bucketrad, zmin, zmax)
 bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 {
 	ChVector<> dist = pt - centralPt;
-	double xydist = (std::sqrt(dist.x * dist.x + dist.y + dist.y));
+	double xydist = (std::sqrt(dist.x * dist.x + dist.y * dist.y));
 	xydist = (std::sqrt((pt.x - centralPt.x)*(pt.x - centralPt.x) + (pt.y - centralPt.y)*(pt.y - centralPt.y)));
 //	if ((xydist < rad.x) && (pt.z >= rad.y) && (pt.z < rad.z)) {
 //		return true;
@@ -960,14 +942,14 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	vol_frac_of.close();
 }
 // =============================================================================
-void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
-	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
-	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
-		(*myIter)->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-		myIter++;
-	}
-
-}
+//void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
+//	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+//	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+//		(*myIter)->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+//		myIter++;
+//	}
+//
+//}
 // =============================================================================
 // move bucket
 void vibrate_bucket(double t) {
@@ -1112,7 +1094,7 @@ int main(int argc, char* argv[]) {
   std::vector<Smarticle*> mySmarticlesVec;
   CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
 #if(!USE_PARALLEL)
-  SetEnvelopeForSystemObjects(mphysicalSystem);
+  //SetEnvelopeForSystemObjects(mphysicalSystem);
 #endif
 
 
@@ -1167,7 +1149,7 @@ int main(int argc, char* argv[]) {
   // Use this function for 'converting' into Irrlicht meshes the assets
   // into Irrlicht-visualizable meshes
   application.AssetUpdateAll();
-
+	application.GetSystem()->SetParallelThreadNumber(6);
   application.SetStepManage(true);
   application.SetTimestep(dT);  // Arman modify
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;

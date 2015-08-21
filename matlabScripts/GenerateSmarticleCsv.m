@@ -9,7 +9,7 @@
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
 
 dt=.0005;
-omega = 10;
+omega = 20;
 torqueThresh=1000;
 angLow=60;
 angHigh=120;
