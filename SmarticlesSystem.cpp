@@ -418,6 +418,57 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 		}
 	}
 }
+
+#if irrlichtVisualization
+void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application) {
+#else
+void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
+#endif
+	double z;
+	int numPerLayer = 4;
+	int smarticleCount = mySmarticlesVec.size();
+	double ang = 2 * CH_C_PI / numPerLayer;
+	double w = w_smarticle;
+	if (smarticleCount < numPerLayer){ z = 0; }
+	else{ z = Find_Max_Z(mphysicalSystem); }
+	double phase = MyRand()*CH_C_PI / 2;
+	for (int i = 0; i < numPerLayer; i++)
+	{
+		phase = MyRand()*CH_C_PI / 2;
+		ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand() - w / 2),
+			cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2),
+			std::min(4 * bucket_interior_halfDim.z, z) + (i + 1)*w_smarticle / 4);
+
+		ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+		myRot.Normalize();
+
+		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
+		smarticle0->Properties(smarticleCount,
+			rho_smarticle, mat_g,
+			collisionEnvelope,
+			l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+			sOmega,
+			true,
+			myPos,
+			myRot
+			);
+
+		smarticle0->populateMoveVector();
+
+		//TODO figure out why I cannot start at initial position of input file(doesn't move correctly if done)
+		smarticle0->SetAngle(0, 0, true);
+		smarticle0->Create();
+		//smarticle0->AddMotion(myMotionDefault);
+		//smarticle0->AddMotion(myMotion);
+		mySmarticlesVec.push_back((Smarticle*)smarticle0);
+#if irrlichtVisualization
+		application.AssetBindAll();
+		application.AssetUpdateAll();
+#endif
+	}
+
+
+}
 // =============================================================================
 //creates an approximate cylinder from a n-sided regular polygon
 //num_boxes = number of boxes to use
@@ -475,8 +526,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	//Add ground piece
 	//
 	if (!read_from_file)	{
-		//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
-		utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad+t, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
+		utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad + 2 * t, bucket_rad + 2 * t, t), Vector(0, 0, -t), QUNIT, true);
 	}
 	else{
 		cyl_container->SetPos(cyl_container->GetPos() + Vector(0, 0, vibration_amp*sin(CH_C_PI / 2.0)));//to place box in way which is maximum downward so upon creation it has no chance of starting particles inside
@@ -1085,9 +1135,9 @@ int main(int argc, char* argv[]) {
 
 		bucket_bott->GetCollisionModel()->ClearModel();
 
+		bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 		utils::AddBoxGeometry(bucket_bott.get_ptr(), Vector(bucket_rad+2*bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
 		//utils::AddCylinderGeometry(bucket_bott.get_ptr(), bucket_rad*6 +2*bucket_half_thick, bucket_half_thick, bucket->GetPos() + ChVector<>(0, 0, -bucket_half_thick), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
-		bucket_bott->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 		bucket_bott->GetCollisionModel()->BuildModel();
 
 		bucket_bott->SetCollide(true);

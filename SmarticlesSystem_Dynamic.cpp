@@ -111,7 +111,7 @@ BucketType bucketType = CYLINDER;
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
-
+ChSharedPtr<ChBody> bucket_bott;
 
 	int appWidth = 1280;
 	int appHeight = 720;
@@ -165,8 +165,9 @@ ChSharedPtr<ChBody> bucket;
 	double t_smarticle 	= sizeScale * .00254;
 	double t2_smarticle	= sizeScale * .001;
 
-	double collisionEnvelope = .4 * t2_smarticle;
+	double collisionEnvelope = .1 * t2_smarticle;
 	int global_GUI_value = 0;
+	bool bucket_exist = true;
 
 
 // =============================================================================
@@ -343,6 +344,16 @@ ChSharedPtr<ChBody> bucket;
 					else
 						global_GUI_value = 0;
 					return true;
+
+				case irr::KEY_KEY_Y:
+					if (bucket_exist)
+					{
+						bucket->SetPos(ChVector<>(100, 0, 0));
+						bucket_exist = false;
+					}
+					
+					return true;
+
 				}
 
 
@@ -367,6 +378,7 @@ ChSharedPtr<ChBody> bucket;
 		IGUIStaticText* text_angle2;
 		IGUIEditBox* angle1Input;
 		IGUIEditBox* angle2Input;
+		
 
 	};
 #endif
@@ -752,14 +764,6 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	}
 	//Add ground piece
 	//
-
-	utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad + t, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
-	cyl_container->AddAsset(mtexturewall);
-	
-	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
-	//add up volume of bucket and multiply by rho to get mass;
-	double cyl_volume = CH_C_PI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * bucket_rad + 2 * t)*(2 * bucket_rad + 2 * t) - bucket_rad*bucket_rad) + (CH_C_PI)*(bucket_rad + 2 * t)*(bucket_rad + 2 * t) * 2 * t;
-	cyl_container->SetMass(rho_cylinder*cyl_volume);
 	//utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
 
 	//checks top,bottom, and middle location
@@ -770,8 +774,12 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	//ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
 	
 	
+	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad + 2 * t, t, ChVector<>(0, 0, -t), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	//add up volume of bucket and multiply by rho to get mass;
+	double cyl_volume = CH_C_PI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * bucket_rad + 2 * t)*(2 * bucket_rad + 2 * t) - bucket_rad*bucket_rad) + (CH_C_PI)*(bucket_rad + 2 * t)*(bucket_rad + 2 * t) * 2 * t;
+	cyl_container->SetMass(rho_cylinder*cyl_volume);
 
-		cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+	cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	cyl_container->GetCollisionModel()->BuildModel();
 
 	mphysicalSystem->AddBody(cyl_container);
@@ -852,9 +860,11 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	if (USE_PARALLEL) {
 		ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 		bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+		bucket_bott = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	} else {
 		ground = ChSharedPtr<ChBody>(new ChBody);
 		bucket = ChSharedPtr<ChBody>(new ChBody);
+		bucket_bott = ChSharedPtr<ChBody>(new ChBody);
 	}
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
@@ -870,7 +880,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	ground->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	ground->GetCollisionModel()->BuildModel();
-	mphysicalSystem.AddBody(ground);
+	//mphysicalSystem.AddBody(ground);
 	
 	ChSharedPtr<ChTexture> mtexture(new ChTexture());
 	mtexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
@@ -890,6 +900,28 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 
 		bucket = create_cylinder_from_blocks(25, 1, true, &mphysicalSystem, mat_g);
+		
+
+		bucket_bott->SetBodyFixed(true);
+		bucket_bott->SetCollide(true);
+		bucket_bott->GetCollisionModel()->ClearModel();
+		bucket_bott->SetPos(bucket_ctr);
+		bucket_bott->SetMaterialSurface(mat_g);
+		mtexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));//custom file
+		bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+		utils::AddBoxGeometry(bucket_bott.get_ptr(), Vector(bucket_rad + 2 * bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
+		bucket_bott->AddAsset(mtexture);
+		bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+		
+		bucket_bott->GetCollisionModel()->BuildModel();
+
+
+
+	
+	
+		
+	
+		mphysicalSystem.AddBody(bucket_bott);
 		mat_g->SetFriction(0.5); //steel - steel
 	}
 
@@ -1266,9 +1298,6 @@ int main(int argc, char* argv[]) {
 
   std::vector<Smarticle*> mySmarticlesVec;
   CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
-#if(!USE_PARALLEL)
-  //SetEnvelopeForSystemObjects(mphysicalSystem);
-#endif
 
 
 #ifdef CHRONO_OPENGL
@@ -1305,13 +1334,15 @@ int main(int argc, char* argv[]) {
                                   core::vector3df(0, 0, -.01));
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
 
+
 	scene::RTSCamera* camera = new scene::RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
+	camera->setUpVector(core::vector3df(0, 0, 1));//TODO ask arman why up vector isn't changing camera orientation at beginning
 	camera->setPosition(core::vector3df(-.1, -.06, .1));
 	camera->setTarget(core::vector3df(0, 0, -.01));
 	camera->setNearValue(0.01f);
 	camera->setMinZoom(0.6f);
-	camera->setUpVector(core::vector3df(0, 0, 1));//TODO ask arman why up vector isn't changing camera orientation at beginning
+
 
 
   // Use this function for adding a ChIrrNodeAsset to all items
@@ -1384,7 +1415,7 @@ int main(int argc, char* argv[]) {
 			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec,application);
 #else
 			//AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application);
+			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec);
 #endif 
 
 			
