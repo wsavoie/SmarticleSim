@@ -1219,6 +1219,15 @@ int main(int argc, char* argv[]) {
 	  timeinfo = localtime(&rawtime);
 	  ChTimerParallel step_timer;
 
+<<<<<<< Updated upstream
+=======
+		//set chrono dataPath to data folder placed in smarticle directory so we can share created files
+		std::string fp = "\\..\\data\\";
+		fp = __FILE__ + fp;
+//		SetChronoDataPath(fp);
+
+
+>>>>>>> Stashed changes
 	  time_t rawtimeCurrent;
 	  struct tm* timeinfoDiff;
 	  // --------------------------
