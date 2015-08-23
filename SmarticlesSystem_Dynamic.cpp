@@ -174,9 +174,10 @@ ChSharedPtr<ChBody> bucket_bott;
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 	double bucket_half_thick = sizeScale * .005;
 
-
-
-
+	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
+	
+	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
+	ChSharedPtr<ChTexture> floorTexture(new ChTexture());
 
 // =============================================================================
 #if irrlichtVisualization
@@ -744,8 +745,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	ChSharedPtr<ChBoxShape> box(new ChBoxShape);
 	cyl_container->GetCollisionModel()->ClearModel();
 	cyl_container->SetMaterialSurface(wallMat);
-	ChSharedPtr<ChTexture> mtexturewall(new ChTexture());
-	mtexturewall->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
+	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
 	for (int i = 0; i < num_boxes; i++)
 	{
 
@@ -764,7 +764,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 		if (ang*i < CH_C_PI  || ang*i > 3.0 * CH_C_PI / 2.0) 
 		{
 			m_visualization = true;
-			cyl_container->AddAsset(mtexturewall);
+			cyl_container->AddAsset(bucketTexture);
 		}
 
 		utils::AddBoxGeometry(cyl_container.get_ptr(), box_size, pPos, quat, m_visualization);
@@ -832,8 +832,8 @@ ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMate
 	cyl_container->SetMaterialSurface(wallMat);
 	double mtheta = atan((hw1 - hw3) / h1);
 
-	ChSharedPtr<ChTexture> mtexturewall(new ChTexture());
-	mtexturewall->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+
+	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 	
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(hw1 + ht, 0, h1 + hh2), QUNIT, true); // upper part, max_x plate
 
@@ -846,7 +846,7 @@ ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMate
 
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(mtheta, VECT_Y), true); // upper part, min_x plate
 	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(-mtheta, VECT_Y), true); // upper part, min_x plate
-	cyl_container->AddAsset(mtexturewall);
+	cyl_container->AddAsset(bucketTexture);
 
 	double estimated_volume = 8 * (w1 * t * h1); // Arman : fix this
 	cyl_container->SetMass(rho_cylinder*estimated_volume);
@@ -890,16 +890,14 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ground->GetCollisionModel()->BuildModel();
 	//mphysicalSystem.AddBody(ground);
 	
-	ChSharedPtr<ChTexture> mtexture(new ChTexture());
-	mtexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
-	ground->AddAsset(mtexture);
+	floorTexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
+	ground->AddAsset(floorTexture);
 
 	// 1: create bucket
 		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
 	if (bucketType == BOX){
 	//	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
-		ChSharedPtr<ChTexture> mtexture(new ChTexture());
-		//mtexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 		//bucket->AddAsset(mtexture);
 		bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z,  true);
 
@@ -915,10 +913,10 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		bucket_bott->GetCollisionModel()->ClearModel();
 		bucket_bott->SetPos(bucket_ctr);
 		bucket_bott->SetMaterialSurface(mat_g);
-		mtexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));//custom file
+		floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));//custom file
 		bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 		utils::AddBoxGeometry(bucket_bott.get_ptr(), Vector(bucket_rad + 2 * bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
-		bucket_bott->AddAsset(mtexture);
+		bucket_bott->AddAsset(floorTexture);
 		bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 		
 		bucket_bott->GetCollisionModel()->BuildModel();
@@ -1259,11 +1257,18 @@ int main(int argc, char* argv[]) {
 	  timeinfo = localtime(&rawtime);
 	  ChTimerParallel step_timer;
 
+		//set chrono dataPath to data folder placed in smarticle directory so we can share created files
+		std::string fp = "\\..\\data\\";
+		fp = __FILE__ + fp;
+		SetChronoDataPath(fp);
+
+
 	  time_t rawtimeCurrent;
 	  struct tm* timeinfoDiff;
 	  // --------------------------
 	  // Create output directories.
 	  // --------------------------
+
 
 	  if (ChFileutils::MakeDirectory(out_dir.c_str()) < 0) {
 		  std::cout << "Error creating directory " << out_dir << std::endl;
@@ -1431,15 +1436,6 @@ int main(int argc, char* argv[]) {
 		  numGeneratedLayers ++;
 	  }
 
-		////visualization of overtorque
-		//for (int i = 0; i < mySmarticlesVec.size(); i++) //get each particles current theta
-		//{
-		//		application.AssetBind(mySmarticlesVec.at(i)->GetArm(0));
-		//		application.AssetUpdate(mySmarticlesVec.at(i)->GetArm(0));
-
-		//		application.AssetBind(mySmarticlesVec.at(i)->GetArm(2));
-		//		application.AssetUpdate(mySmarticlesVec.at(i)->GetArm(2));
-		//}
 
 
 		//if (numGeneratedLayers == numLayers)

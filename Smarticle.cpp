@@ -74,7 +74,7 @@ void Smarticle::Properties(
 	mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 
 	mtextureMid = ChSharedPtr<ChTexture>(new ChTexture());
-	mtextureMid->SetTextureFilename(GetChronoDataFile("blu.png"));
+	mtextureMid->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlue.png"));
 }
 
 void Smarticle::Properties(
