@@ -141,6 +141,25 @@ ChSharedPtr<ChBody> bucket_bott;
 	double sOmega = 5;  // smarticle omega
 	
 
+		// staple smarticle geometry
+		double w_smarticle 	= sizeScale * 0.0117;
+		double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+	//	double t_smarticle 	= sizeScale * .00127;
+	//	double t2_smarticle	= sizeScale * .0005;
+		double t_smarticle 	= sizeScale * .00254;
+		double t2_smarticle	= sizeScale * .001;
+
+	////robot smarticle geometry
+	//double w_smarticle = 0.046; //4.6cm
+	//double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+	//double t_smarticle = .03;
+	//double t2_smarticle = .021;
+
+	double collisionEnvelope = .1 * t2_smarticle;
+	int global_GUI_value = 0;
+	bool bucket_exist = true;
+
+
 	bool povray_output = true;
 	int out_fps = 120;
 	const std::string out_dir = "PostProcess";
@@ -154,20 +173,9 @@ ChSharedPtr<ChBody> bucket_bott;
 	
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 	double bucket_half_thick = sizeScale * .005;
-	double h = bucket_interior_halfDim.z * 2 + 2*bucket_half_thick; //from entangled paper height of available volume for smarticles in bucket
-	double d = bucket_interior_halfDim.y * 2; //from entangled paper width of availble volume for smarticles in bucket
 
-	// smarticle geometry
-	double w_smarticle 	= sizeScale * 0.0117;
-	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-//	double t_smarticle 	= sizeScale * .00127;
-//	double t2_smarticle	= sizeScale * .0005;
-	double t_smarticle 	= sizeScale * .00254;
-	double t2_smarticle	= sizeScale * .001;
 
-	double collisionEnvelope = .1 * t2_smarticle;
-	int global_GUI_value = 0;
-	bool bucket_exist = true;
+
 
 
 // =============================================================================
@@ -534,7 +542,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 #endif
 	double z;
-	int numPerLayer =4;
+	int numPerLayer =6;
 	int smarticleCount = mySmarticlesVec.size();
 	double ang = 2*CH_C_PI / numPerLayer;
 	double w = w_smarticle;
@@ -1422,6 +1430,18 @@ int main(int argc, char* argv[]) {
 
 		  numGeneratedLayers ++;
 	  }
+
+		////visualization of overtorque
+		//for (int i = 0; i < mySmarticlesVec.size(); i++) //get each particles current theta
+		//{
+		//		application.AssetBind(mySmarticlesVec.at(i)->GetArm(0));
+		//		application.AssetUpdate(mySmarticlesVec.at(i)->GetArm(0));
+
+		//		application.AssetBind(mySmarticlesVec.at(i)->GetArm(2));
+		//		application.AssetUpdate(mySmarticlesVec.at(i)->GetArm(2));
+		//}
+
+
 		//if (numGeneratedLayers == numLayers)
 		//{
 		//	//start shaking

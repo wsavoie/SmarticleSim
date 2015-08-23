@@ -31,7 +31,7 @@ Smarticle::Smarticle(
 	r2 = .01;
 	initPos = ChVector<>(0);
 	rotation = QUNIT;
-	jointClearance = 1 * r2;
+	jointClearance = 1.0 / 3.0*r2;
 	volume = GetVolume();
 }
 
@@ -65,9 +65,16 @@ void Smarticle::Properties(
 	angle1 = other_angle;
 	angle2 = other_angle2;
 
-	jointClearance = 1 * r2;
+	jointClearance = 1.0 / 3.0*r2;
 	volume = GetVolume();
+	mtextureOT = ChSharedPtr<ChTexture>(new ChTexture());
+	mtextureOT->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
 
+	mtextureArm = ChSharedPtr<ChTexture>(new ChTexture());
+	mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+
+	mtextureMid = ChSharedPtr<ChTexture>(new ChTexture());
+	mtextureMid->SetTextureFilename(GetChronoDataFile("blu.png"));
 }
 
 void Smarticle::Properties(
@@ -216,17 +223,15 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 
 	arm->SetMaterialSurface(mat_g);
 
-	double mass = density * vol;
-
+	//double mass = density * vol;
+	double mass = .043/3.0; //robot weight 43 grams
 	arm->GetCollisionModel()->ClearModel();
 	
 	
-	ChSharedPtr<ChTexture> mtexture(new ChTexture());
 	if (armID == 1)
-		mtexture->SetTextureFilename(GetChronoDataFile("blu.png"));
+		arm->AddAsset(mtextureMid);
 	else
-		mtexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-	arm->AddAsset(mtexture);
+		arm->AddAsset(mtextureArm);
 
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0));
 
@@ -237,7 +242,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     // change mass and inertia property
     arm->SetMass(mass);
     arm->SetInertiaXX(mass * gyr);
-    arm->SetDensity(density);
+    //arm->SetDensity(density);
 
     m_system->AddBody(arm);
 
@@ -339,7 +344,7 @@ void Smarticle::CreateActuators() {
 }
 
 void Smarticle::Create() {
-	jointClearance =1*r2;
+	jointClearance =1.0/3.0*r2;
 	double l_mod = l - jointClearance;
 
 	// ** initialize U
@@ -543,6 +548,7 @@ std::pair<double, double> Smarticle::populateMoveVector()
 		angHigh = mangHigh;
 		angLow = mangLow;
 		distThresh = mdt*omega1;
+		torqueThresh2= mtorqueThresh2;
 	ddCh = '!';
 	while (ddCh != '#') {
 		smarticleMoves >> ddCh;
@@ -722,7 +728,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	//double omega01 = li
 	double torque01 = link_actuator01->Get_react_torque().Length2(); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
 	double torque12 = link_actuator12->Get_react_torque().Length2();
-
+	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
 
 
 	//determine moveType
@@ -758,13 +764,29 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		break;
 	}
 	//overTorque takes priority!
-	if (torque01 > torqueThresh2 || torque12 > torqueThresh2){
-		//this->setCurrentMoveType(OT);
-		//v = &ot;
-		GetLog() << "*************************\n";
-		GetLog() << "Torque overload!\n";
-		GetLog() << "*************************\n";
-	}
+	//arm0->AddAsset(mtextureArm);
+	//arm2->AddAsset(mtextureArm);
+	//if (torque01 > torqueThresh2 || torque12 > torqueThresh2)
+	//{
+	//	//this->setCurrentMoveType(OT);
+	//	//v = &ot;
+	//	//GetLog() << "*************************\n";
+	//	//GetLog() << "Torque overload!\n";
+	//	//GetLog() << "*************************\n";
+
+	//	//overtorque asset
+	//	//this->setCurrentMoveType(OT);
+	//	//v = &ot;
+	//	if (torque01 > torqueThresh2)
+	//	{
+	//		arm0->AddAsset(mtextureOT);
+	//	}
+	//	if (torque12 > torqueThresh2)
+	//	{
+	//		arm2->AddAsset(mtextureOT);
+	//	}
+	//
+	//}
 
 	if (this->moveType == this->prevMoveType){
 		sameMoveType = true;
