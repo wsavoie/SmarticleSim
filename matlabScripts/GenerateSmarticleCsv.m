@@ -10,7 +10,7 @@
 
 dt=.0005;
 omega = 10;
-torqueThresh=1000;
+torqueThresh=.0001;
 angLow=60;
 angHigh=120;
 
@@ -31,7 +31,7 @@ fid = fopen(fileloc,'wt');
 %add in all initial values to top of file
 %square torque so that we can use the square in the program so we can avoid
 %having to use sqrts in the code at each timestep!
-fprintf(fid,'%s\n%f\n%f\n%f\n%f\n',dt,omega,torqueThresh^2,angLow,angHigh);
+fprintf(fid,'%s\n%f\n%f\n%f\n%f\n',dt,omega,torqueThresh,angLow,angHigh);
 %add #1 to denote end of first section
 fprintf(fid,'#\n');
 
@@ -100,44 +100,8 @@ for i=1:length(global_theta_1Pos)
     end
 end
 
-% %% over-torque function position definition
-% % define some positions in the angular phase space (TO BE CHANGED)
-% OT_theta_1Pos = sin(dt*omega+20);
-% OT_theta_2Pos = sin(dt*omega+20);
-% 
-% %convert the distance between the points to the proper amount
-% %using dt and omega
-% 
-% if(length(OT_theta_1Pos)~=length(OT_theta_2Pos))
-%     error('global positions have inequal lengths for the arm position arrays!');
-% end
-% 
-% for i=1:length(OT_theta_1Pos)
-%     fprintf(fid,'%f\t%f\n',OT_theta_1Pos(i),OT_theta_2Pos(i));
-% end
-% %add #3 to denote end of 3rd section
-% fprintf(fid,'#3\n');
-% 
-%% GUI function position definitions
-% define some positions in the angular phase space (TO BE CHANGED)
-% 
-% switch gui1_gait
-%     case 1% circle gait
-%         GUI_theta_1Pos = [pi/2];
-%         GUI_theta_2Pos = [pi/2];
-% end
-% 
-% switch gui2_gait
-%     case 1% circle gait
-%         GUI_theta_1Pos = [0];
-%         GUI_theta_2Pos = [0];
-% end
-% switch gui3_gait
-%     case 1% circle gait
-%         GUI_theta_1Pos = [-pi/2];
-%         GUI_theta_2Pos = [pi/2];
-% end
 
+%% GUI function position definitions
 
 guiSize = 3;
 for i=1:guiSize
@@ -168,5 +132,22 @@ for i=1:guiSize
     end
 end
 
-
+% %% over-torque function position definition
+% % define some positions in the angular phase space (TO BE CHANGED)
+% OT_theta_1Pos = sin(dt*omega+20);
+% OT_theta_2Pos = sin(dt*omega+20);
+% 
+% %convert the distance between the points to the proper amount
+% %using dt and omega
+% 
+% if(length(OT_theta_1Pos)~=length(OT_theta_2Pos))
+%     error('global positions have inequal lengths for the arm position arrays!');
+% end
+% 
+% for i=1:length(OT_theta_1Pos)
+%     fprintf(fid,'%f\t%f\n',OT_theta_1Pos(i),OT_theta_2Pos(i));
+% end
+% %add #3 to denote end of 3rd section
+% fprintf(fid,'#3\n');
+% 
 fclose('all');

@@ -248,7 +248,9 @@ namespace chrono {
 		double volume;
 		double mass;
 		double collisionEnvelop;
-
+		ChSharedPtr<ChTexture> mtextureOT;
+		ChSharedPtr<ChTexture> mtextureMid;
+		ChSharedPtr<ChTexture> mtextureArm;
 		// material property
 		double density;
 		ChSharedPtr<ChMaterialSurface> mat_g;
