@@ -99,6 +99,7 @@ void Smarticle::Properties(
 /////Will added Smarticle properties///////
 void Smarticle::Properties(
 	int sID,
+	int mdumID,
 	double other_density,
 	ChSharedPtr<ChMaterialSurface> surfaceMaterial,
 	double other_envelop,
@@ -131,6 +132,8 @@ void Smarticle::Properties(
 	angLow = 0; //TODO: should these be in radians?
 	angHigh = 120;
 	Smarticle::distThresh = .001*CH_C_PI; //TODO this threshold should be calculated from timestep and default omega rather than being a magic number maybe 1/2 momega*dt?
+
+	dumID = mdumID;
 }
 //////////////////////////////////////////////	
 void Smarticle::SetDefaultOmega(double omega) {
@@ -216,6 +219,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	arm->SetRot(rotation*armRelativeRot);
     arm->SetCollide(true);
     arm->SetBodyFixed(false);
+    arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
     if (armID == 1)
     	arm->SetBodyFixed(false);
     else

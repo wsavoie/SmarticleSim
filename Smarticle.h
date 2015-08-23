@@ -109,6 +109,7 @@ namespace chrono {
 
 		virtual void Properties(
 			int sID,
+			int mdumID,
 			double other_density,
 			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
 			double other_envelop,
@@ -264,6 +265,7 @@ namespace chrono {
 	 private:
 		// ID
 		int smarticleID;			// smarticleID is not bodyID. smarticle is composed of 3 bodies.
+		int dumID;
 		double jointClearance; // space at joint
 		double defaultOmega;
 		double omega1;

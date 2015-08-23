@@ -106,6 +106,19 @@ SmarticleType smarticleType = SMART_ARMS;//SMART_U;
 BucketType bucketType = CYLINDER;
 // =============================================================================
 
+class ChApi MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
+  public:
+    /// Callback used to report 'near enough' pairs of models.
+    /// This must be implemented by a child class of ChBroadPhaseCallback.
+    /// Return false to skip narrow-phase contact generation for this pair of bodies.
+    bool BroadCallback( collision::ChCollisionModel* mmodelA,  ///< pass 1st model
+    							collision::ChCollisionModel* mmodelB   ///< pass 2nd model
+                               ) {
+    	return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 3));
+    }
+};
+
+// =============================================================================
 
 
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
@@ -561,7 +574,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			myRot.Normalize();
 		
 			Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
-			smarticle0->Properties(smarticleCount,
+			smarticle0->Properties(smarticleCount, smarticleCount * 4,
 				rho_smarticle, mat_g,
 				collisionEnvelope,
 				l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
@@ -664,7 +677,7 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 				
 				if (smarticleType == SMART_ARMS) {
 					Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
-					smarticle0->Properties(smarticleCount,
+					smarticle0->Properties(smarticleCount, smarticleCount * 4,
 						rho_smarticle, mat_g,
 						collisionEnvelope,
 						l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
@@ -1307,6 +1320,10 @@ int main(int argc, char* argv[]) {
 #else
 	  InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
 #endif
+
+	  MyBroadPhaseCallback mySmarticleBroadphaseCollisionCallback;
+	  mphysicalSystem.GetCollisionSystem()->SetBroadPhaseCallback(&mySmarticleBroadphaseCollisionCallback);
+
 
   std::vector<Smarticle*> mySmarticlesVec;
   CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
