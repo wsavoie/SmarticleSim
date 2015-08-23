@@ -106,12 +106,12 @@ SmarticleType smarticleType = SMART_ARMS;//SMART_U;
 BucketType bucketType = CYLINDER;
 // =============================================================================
 
-class ChApi MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
+class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
   public:
     /// Callback used to report 'near enough' pairs of models.
     /// This must be implemented by a child class of ChBroadPhaseCallback.
     /// Return false to skip narrow-phase contact generation for this pair of bodies.
-    bool BroadCallback( collision::ChCollisionModel* mmodelA,  ///< pass 1st model
+   virtual bool BroadCallback( collision::ChCollisionModel* mmodelA,  ///< pass 1st model
     							collision::ChCollisionModel* mmodelB   ///< pass 2nd model
                                ) {
     	return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 3));
@@ -574,7 +574,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			myRot.Normalize();
 		
 			Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
-			smarticle0->Properties(smarticleCount, smarticleCount * 4,
+			smarticle0->Properties(mySmarticlesVec.size(), mySmarticlesVec.size() * 4,
 				rho_smarticle, mat_g,
 				collisionEnvelope,
 				l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
@@ -1273,7 +1273,7 @@ int main(int argc, char* argv[]) {
 		//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 		std::string fp = "\\..\\data\\";
 		fp = __FILE__ + fp;
-//		SetChronoDataPath(fp);
+		//SetChronoDataPath(fp);
 
 		time_t rawtimeCurrent;
 	  struct tm* timeinfoDiff;
