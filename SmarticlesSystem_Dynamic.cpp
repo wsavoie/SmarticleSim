@@ -216,13 +216,17 @@ ChSharedPtr<ChBody> bucket_bott;
 				rect<s32>(1050, 165, 1100, 180), true);
 			angle2Input = app->GetIGUIEnvironment()->addEditBox(L"75",
 				rect<s32>(1100, 165, 1150, 180), true);
-		}
 
+	
+			text_SmarticleAmt = app->GetIGUIEnvironment()->addStaticText(L"Layers: 0, Smarticles: 0",
+				rect<s32>(850, 65, 1050, 80), true);
+
+		}
+		
 		bool OnEvent(const SEvent& event) {
 			// check if user moved the sliders with mouse..
-			
 			if (event.EventType == irr::EET_KEY_INPUT_EVENT && !event.KeyInput.PressedDown) {
-				switch (event.KeyInput.Key) 
+				switch (event.KeyInput.Key)
 				{
 				case irr::KEY_KEY_Q:
 					if (global_GUI_value != 1)
@@ -230,7 +234,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					else
 						global_GUI_value = 0;
 					return true;
-				
+
 				case irr::KEY_KEY_W:
 					if (global_GUI_value != 2)
 						global_GUI_value = 2;
@@ -251,48 +255,48 @@ ChSharedPtr<ChBody> bucket_bott;
 						global_GUI_value = 4;
 						std::pair<double, double> angPair;
 						for (int i = 0; i < sv->size(); i++) //get each particles current theta
-						{ 
+						{
 							Smarticle* sPtr = sv->at(i);
-							
+
 							MoveType currMoveType = sPtr->moveType;
 							std::vector<std::pair<double, double>> *v;
-							
-							
-							
+
+
+
 							switch (currMoveType) //TODO fix this and put this in a function inside smarticle class
 							{
-								case 0:
-									v = &sPtr->global;
-									break;
-								case 1:
-									v = &sPtr->gui1;
-									break;
-								case 2:
-									v = &sPtr->gui2;
-									break;
-								case 3:
-									v = &sPtr->gui3;
-									break;
-								case 4:
-									v = &sPtr->vib;
-									break;
-								case 5:
-									v = &sPtr->ot;
-									break;
-								default:
-									v = &sPtr->global;
-									break;
+							case 0:
+								v = &sPtr->global;
+								break;
+							case 1:
+								v = &sPtr->gui1;
+								break;
+							case 2:
+								v = &sPtr->gui2;
+								break;
+							case 3:
+								v = &sPtr->gui3;
+								break;
+							case 4:
+								v = &sPtr->vib;
+								break;
+							case 5:
+								v = &sPtr->ot;
+								break;
+							default:
+								v = &sPtr->global;
+								break;
 							}
-							
+
 							CurrTheta01 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).first;
 							CurrTheta12 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).second;
 							sPtr->vib.clear();
-							
-							
+
+
 							angPair.first = CurrTheta01;
 							angPair.second = CurrTheta12;
 							sPtr->vib.push_back(angPair);
-							
+
 							angPair.first = CurrTheta01 - vibAmp;
 							angPair.second = CurrTheta12 - vibAmp;
 							sPtr->vib.push_back(angPair);
@@ -314,7 +318,7 @@ ChSharedPtr<ChBody> bucket_bott;
 				case irr::KEY_KEY_T: //TODO vibrate around theta specified in boxes  
 					if (global_GUI_value != 5)
 					{
-						
+
 						std::pair<double, double> angPair;
 						double ang1;
 						double ang2;
@@ -322,13 +326,13 @@ ChSharedPtr<ChBody> bucket_bott;
 						for (int i = 0; i < sv->size(); i++) //get each particles current theta
 						{
 							Smarticle* sPtr = sv->at(i);
-							
-							ang1 = wcstod(angle1Input->getText(), NULL)*CH_C_PI/180;
-							ang2 = wcstod(angle2Input->getText(), NULL)*CH_C_PI/180;
+
+							ang1 = wcstod(angle1Input->getText(), NULL)*CH_C_PI / 180;
+							ang2 = wcstod(angle2Input->getText(), NULL)*CH_C_PI / 180;
 							sPtr->vib.clear();
 
 							//in case strange values are written
-							if (ang2>CH_C_PI || ang2<-CH_C_PI)
+							if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
 							{
 								global_GUI_value = 0;
 								return true;
@@ -343,7 +347,7 @@ ChSharedPtr<ChBody> bucket_bott;
 							angPair.second = ang2;
 							sPtr->vib.push_back(angPair);
 							//sPtr->vib.assign(0, angPair);
-							
+
 
 							angPair.first = ang1 - vibAmp;
 							angPair.second = ang2 - vibAmp;
@@ -354,7 +358,7 @@ ChSharedPtr<ChBody> bucket_bott;
 							angPair.second = ang2;
 							sPtr->vib.push_back(angPair);
 							//sPtr->vib.assign(2, angPair);
-							
+
 							angPair.first = ang1 + vibAmp;
 							angPair.second = ang2 + vibAmp;
 							sPtr->vib.push_back(angPair);
@@ -373,7 +377,7 @@ ChSharedPtr<ChBody> bucket_bott;
 						bucket->SetPos(ChVector<>(100, 0, 0));
 						bucket_exist = false;
 					}
-					
+
 					return true;
 
 				}
@@ -381,6 +385,11 @@ ChSharedPtr<ChBody> bucket_bott;
 
 			}
 			return false;
+		}
+		void drawSmarticleAmt(int numLayers)
+		{
+			char message[100]; sprintf(message, "Layers: %d, Smarticles: %d", numLayers, sv->size());
+			this->text_SmarticleAmt->setText(core::stringw(message).c_str());
 		}
 	private:
 		double vibAmp = 2 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
@@ -392,6 +401,8 @@ ChSharedPtr<ChBody> bucket_bott;
 		IGUIStaticText* text_E;
 		IGUIStaticText* text_R;
 		IGUIStaticText* text_T;
+		IGUIStaticText* text_Y;
+		IGUIStaticText* text_SmarticleAmt;
 		IGUIScrollBar* scrollbar_cohesion;
 		IGUIStaticText* text_cohesion;
 		IGUIScrollBar* scrollbar_compliance;
@@ -895,11 +906,11 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ground->SetCollide(true);
 
 	ground->GetCollisionModel()->ClearModel();
-
+	ground->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	ground->GetCollisionModel()->SetFamily(1);
 	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-	ground->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+
 	ground->GetCollisionModel()->BuildModel();
 	mphysicalSystem.AddBody(ground);
 	
@@ -1316,6 +1327,7 @@ int main(int argc, char* argv[]) {
 
   // Create a ChronoENGINE physical system
   CH_SYSTEM mphysicalSystem;
+	
 #if (USE_PARALLEL)
 	  InitializeMbdPhysicalSystem_Parallel(mphysicalSystem, argc, argv);
 #else
@@ -1385,6 +1397,7 @@ int main(int argc, char* argv[]) {
   application.AssetUpdateAll();
   application.SetStepManage(true);
   application.SetTimestep(dT);  // Arman modify
+	mphysicalSystem.SetIterLCPmaxItersSpeed(120);
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 	MyEventReceiver receiver(&application,&mySmarticlesVec);
 	// note how to add the custom event receiver to the default interface:
@@ -1484,9 +1497,7 @@ int main(int argc, char* argv[]) {
 			 vibrate_bucket(t);
 		 }
 		 else{ bucket->SetBodyFixed(true);}
-		 
-
-
+		 receiver.drawSmarticleAmt(numGeneratedLayers);
 		
 	
 
