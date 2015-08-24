@@ -761,7 +761,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
 	for (int i = 0; i < num_boxes; i++)
 	{
-
+		
 		box_size = ChVector<>((box_side + wallt) / 2.0,
 			wallt,
 			half_height + o_lap);
@@ -779,7 +779,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 			m_visualization = true;
 			cyl_container->AddAsset(bucketTexture);
 		}
-
+		cyl_container->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 		utils::AddBoxGeometry(cyl_container.get_ptr(), box_size, pPos, quat, m_visualization);
 		
 	}
@@ -800,7 +800,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	double cyl_volume = CH_C_PI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * bucket_rad + 2 * t)*(2 * bucket_rad + 2 * t) - bucket_rad*bucket_rad) + (CH_C_PI)*(bucket_rad + 2 * t)*(bucket_rad + 2 * t) * 2 * t;
 	cyl_container->SetMass(rho_cylinder*cyl_volume);
 
-	cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	cyl_container->GetCollisionModel()->BuildModel();
 
 	mphysicalSystem->AddBody(cyl_container);
@@ -901,10 +901,10 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	ground->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	ground->GetCollisionModel()->BuildModel();
-	//mphysicalSystem.AddBody(ground);
+	mphysicalSystem.AddBody(ground);
 	
-	floorTexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
-	ground->AddAsset(floorTexture);
+	groundTexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
+	ground->AddAsset(groundTexture);
 
 	// 1: create bucket
 		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)

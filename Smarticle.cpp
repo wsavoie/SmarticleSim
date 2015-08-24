@@ -236,11 +236,11 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 		arm->AddAsset(mtextureMid);
 	else
 		arm->AddAsset(mtextureArm);
-
+	arm->GetCollisionModel()->SetEnvelope(collisionEnvelop);
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0));
 
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
-	arm->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
+
     arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
 
     // change mass and inertia property
