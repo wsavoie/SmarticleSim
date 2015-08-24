@@ -39,7 +39,9 @@ std::vector<std::pair<double, double>> Smarticle::global;
 std::vector<std::pair<double, double>> Smarticle::gui1;
 std::vector<std::pair<double, double>> Smarticle::gui2;
 std::vector<std::pair<double, double>> Smarticle::gui3;
-
+ChSharedPtr<ChTexture> Smarticle::mtextureOT = ChSharedPtr<ChTexture>(new ChTexture());
+ChSharedPtr<ChTexture> Smarticle::mtextureArm = ChSharedPtr<ChTexture>(new ChTexture());
+ChSharedPtr<ChTexture> Smarticle::mtextureMid = ChSharedPtr<ChTexture>(new ChTexture());
 
 Smarticle::~Smarticle() {}
 
@@ -72,13 +74,10 @@ void Smarticle::Properties(
 	angle2 = other_angle2;
 	jointClearance = 0;
 	volume = GetVolume();
-	mtextureOT = ChSharedPtr<ChTexture>(new ChTexture());
+
+
 	mtextureOT->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
-
-	mtextureArm = ChSharedPtr<ChTexture>(new ChTexture());
 	mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-
-	mtextureMid = ChSharedPtr<ChTexture>(new ChTexture());
 	mtextureMid->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlue.png"));
 }
 
@@ -132,6 +131,8 @@ void Smarticle::Properties(
 	moveTypeIdxs.resize(MoveType::OT, 0);
 	double x = CH_C_PI/2;
 	double y = x /10;
+	arm0OT = false;
+	arm2OT = false;
 
 	torqueThresh2 = 10000;
 	angLow = 0; //TODO: should these be in radians?
@@ -663,7 +664,14 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	return firstAngPair;
 
 }
-
+bool Smarticle::GetArm0OT()
+{
+	return this->arm0OT;
+}
+bool Smarticle::GetArm2OT()
+{
+	return this->arm2OT;
+}
 double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng)
 {//TODO make sure to determine if omega is greater than angHigh or angLow too!!!!
 	//since going from -pi to pi:
@@ -701,6 +709,12 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 	
 	double omega01 = ChooseOmegaAmount(momega1, ang01, expAng01);
 	double omega12 = ChooseOmegaAmount(momega2, ang12, expAng12);
+
+	if (arm0OT || arm2OT)
+	{
+		return false;
+	}
+
 	//if within some threshold distance to where curr angle is supposed to be:
 	if (omega01==0)
 	{
@@ -792,27 +806,31 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	//overTorque takes priority!
 	//arm0->AddAsset(mtextureArm);
 	//arm2->AddAsset(mtextureArm);
-	//if (torque01 > torqueThresh2 || torque12 > torqueThresh2)
-	//{
-	//	//this->setCurrentMoveType(OT);
-	//	//v = &ot;
-	//	//GetLog() << "*************************\n";
-	//	//GetLog() << "Torque overload!\n";
-	//	//GetLog() << "*************************\n";
+	arm0OT = false;
+	arm2OT = false;
+	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)
+	{
+		//this->setCurrentMoveType(OT);
+		//v = &ot;
+		//GetLog() << "*************************\n";
+		//GetLog() << "Torque overload!\n";
+		//GetLog() << "*************************\n";
 
-	//	//overtorque asset
-	//	//this->setCurrentMoveType(OT);
-	//	//v = &ot;
-	//	if (torque01 > torqueThresh2)
-	//	{
-	//		arm0->AddAsset(mtextureOT);
-	//	}
-	//	if (torque12 > torqueThresh2)
-	//	{
-	//		arm2->AddAsset(mtextureOT);
-	//	}
-	//
-	//}
+		//overtorque asset
+		//this->setCurrentMoveType(OT);
+		//v = &ot;
+		if (torque01 > torqueThresh2)
+		{
+			arm0OT = true; 
+			//arm0->AddAsset(mtextureOT);
+		}
+		if (torque12 > torqueThresh2)
+		{
+			arm2OT = true;
+			//arm2->AddAsset(mtextureOT);
+		}
+	
+	}
 
 	if (this->moveType == this->prevMoveType){
 		sameMoveType = true;

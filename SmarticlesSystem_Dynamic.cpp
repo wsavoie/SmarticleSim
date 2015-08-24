@@ -197,7 +197,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	class MyEventReceiver : public IEventReceiver {
 	public:
 
-		MyEventReceiver(ChIrrAppInterface* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
+		MyEventReceiver(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			sv = mySmarticlesVec;
 			// store pointer applicaiton
 			app = myapp;
@@ -396,10 +396,40 @@ ChSharedPtr<ChBody> bucket_bott;
 			char message[100]; sprintf(message, "Layers: %d, Smarticles: %d", numLayers, sv->size());
 			this->text_SmarticleAmt->setText(core::stringw(message).c_str());
 		}
+		void drawOTArms()
+		{
+			for (int i = 0; i < sv->size(); i++) //get each particles current theta
+			{
+				Smarticle* sPtr = sv->at(i);
+				
+				if (sPtr->GetArm0OT())
+				{
+					sPtr->GetArm(0)->AddAsset(Smarticle::mtextureOT);
+					
+				}
+				else
+				{
+					sPtr->GetArm(0)->AddAsset(Smarticle::mtextureArm);
+				}
+				if (sPtr->GetArm2OT())
+				{
+					sPtr->GetArm(2)->AddAsset(Smarticle::mtextureOT);
+				}
+				else
+				{
+					sPtr->GetArm(2)->AddAsset(Smarticle::mtextureArm);
+				}
+
+				app->AssetBind(sPtr->GetArm(0));
+				app->AssetBind(sPtr->GetArm(2));
+				app->AssetUpdate(sPtr->GetArm(0));
+				app->AssetUpdate(sPtr->GetArm(2));
+			}
+		}
 	private:
 		double vibAmp = 2 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
 		std::vector<Smarticle*> *sv;
-		ChIrrAppInterface* app;
+		ChIrrApp* app;
 		IGUIScrollBar* scrollbar_friction;
 		IGUIStaticText* text_Q;
 		IGUIStaticText* text_W;
@@ -572,7 +602,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 #endif
 	double z;
-	int numPerLayer =1;
+	int numPerLayer =4;
 	int smarticleCount = mySmarticlesVec.size();
 	double ang = 2*CH_C_PI / numPerLayer;
 	double w = w_smarticle;
@@ -1544,6 +1574,7 @@ int main(int argc, char* argv[]) {
 //        video::SColor(50, 90, 90, 150), true);
 		//application.AssetBindAll();
 		//application.AssetUpdateAll();
+		receiver.drawOTArms();
 		application.DrawAll();
     application.DoStep();
     application.GetVideoDriver()->endScene();

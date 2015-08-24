@@ -68,7 +68,9 @@ namespace chrono {
 	class Smarticle {
 	public:
 		
-		
+		static ChSharedPtr<ChTexture> mtextureOT;
+		static ChSharedPtr<ChTexture> mtextureMid;
+		static ChSharedPtr<ChTexture> mtextureArm;
 		// Construct a smarticle and add it to ChSystem.
 		Smarticle(
 				ChSystem* otherSystem
@@ -179,7 +181,8 @@ namespace chrono {
 		virtual void SetBodyFixed(bool mev);
 
 		void MoveToAngle(double, double);
-
+		virtual bool GetArm0OT();
+		virtual bool GetArm2OT();
 		void MoveLoop();
 
 		bool MoveToRange();
@@ -247,13 +250,14 @@ namespace chrono {
 		double volume;
 		double mass;
 		double collisionEnvelop;
-		ChSharedPtr<ChTexture> mtextureOT;
-		ChSharedPtr<ChTexture> mtextureMid;
-		ChSharedPtr<ChTexture> mtextureArm;
+		bool arm0OT;
+		bool arm2OT;
+
 		// material property
 		double density;
 		ChSharedPtr<ChMaterialSurface> mat_g;
 
+	
 
 
 
