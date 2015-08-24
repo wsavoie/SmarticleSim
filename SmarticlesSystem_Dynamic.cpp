@@ -320,7 +320,7 @@ ChSharedPtr<ChBody> bucket_bott;
 						global_GUI_value = 0;
 					return true;
 
-				case irr::KEY_KEY_T: //TODO vibrate around theta specified in boxes  
+				case irr::KEY_KEY_T:
 					if (global_GUI_value != 5)
 					{
 
@@ -631,8 +631,6 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				);
 
 			smarticle0->populateMoveVector();
-
-			//TODO figure out why I cannot start at initial position of input file(doesn't move correctly if done)
 			smarticle0->SetAngle(0, 0, true);
 			smarticle0->Create();
 			//smarticle0->AddMotion(myMotionDefault);
@@ -735,7 +733,6 @@ void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & myS
 
 					smarticle0->populateMoveVector();
 					
-					//TODO figure out why I cannot start at initial position of input file(doesn't move correctly if done)
 					smarticle0->SetAngle(0,0, true);
 					smarticle0->Create();
 					//smarticle0->AddMotion(myMotionDefault);
@@ -1241,7 +1238,6 @@ void UpdateSmarticles(
 		//mySmarticlesVec[i]->MoveLoop();
 
 		mySmarticlesVec[i]->MoveLoop2(global_GUI_value);
-		//TODO moveloop2(guistate)
 //		mySmarticlesVec[i]->UpdateMySmarticleMotion();
 //
 //		if (current_time > 0.4 && current_time < 0.8) {
@@ -1259,56 +1255,7 @@ void UpdateSmarticles(
 	}
 }
 // =============================================================================
-//TODO write gui (dont forget ifopengl in it)
 
-
-//bool screenshot(char *fileName){
-//	int Xres = 1280;
-//	int Yres = 720;
-//	static unsigned char header[54] = {
-//		0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
-//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
-//		0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
-//		0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-//
-//	unsigned char *pixels = (unsigned char *)malloc(Xres * Yres * 3);
-//	((unsigned __int16 *)header)[9] = Xres;
-//	((unsigned __int16 *)header)[11] = Yres;
-//
-//	glReadPixels(0, 0, Xres, Yres, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-//
-//	unsigned char temp;
-//	for (unsigned int i = 0; i < Xres * Yres * 3; i += 3){
-//		temp = pixels[i];
-//		pixels[i] = pixels[i + 2];
-//		pixels[i + 2] = temp;
-//	}
-//
-//	HANDLE FileHandle;
-//	unsigned long Size;
-//
-//	if (fileName == NULL){
-//		char file[256];
-//		unsigned int i = 0;
-//		do {
-//			sprintf(file, "Screenshot%d.bmp", i);
-//			FileHandle = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-//			i++;
-//		} while (FileHandle == INVALID_HANDLE_VALUE);
-//	}
-//	else {
-//		FileHandle = CreateFile(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-//		if (FileHandle == INVALID_HANDLE_VALUE)	return false;
-//	}
-//	DWORD NumberOfBytesWritten;
-//	WriteFile(FileHandle, header, sizeof(header), &NumberOfBytesWritten, NULL);
-//	WriteFile(FileHandle, pixels, Xres * Yres * 3, &NumberOfBytesWritten, NULL);
-//
-//	CloseHandle(FileHandle);
-//
-//	free(pixels);
-//	return true;
-//}
 int main(int argc, char* argv[]) {
 	  time_t rawtime;
 	  struct tm* timeinfo;
@@ -1317,7 +1264,7 @@ int main(int argc, char* argv[]) {
 	  ChTimerParallel step_timer;
 
 		//set chrono dataPath to data folder placed in smarticle directory so we can share created files
-		#ifdef _WIN64
+		#if defined(_WIN64) || defined(_WIN32)
 			std::string fp = "\\..\\data\\";
 			fp = __FILE__ + fp;
 			SetChronoDataPath(fp);
@@ -1388,7 +1335,6 @@ int main(int argc, char* argv[]) {
 	gl_window.viewer->render_camera.camera_scale = 2.0/(1000.0)*sizeScale;
 	gl_window.viewer->render_camera.near_clip = .001;
 	gl_window.SetRenderMode(opengl::WIREFRAME);
-	//TODO study ChOpenGlWindow.cpp to figure out how to make buttons
 
 // Uncomment the following two lines for the OpenGL manager to automatically
 // run the simulation in an infinite loop.
@@ -1414,7 +1360,7 @@ int main(int argc, char* argv[]) {
 
 	scene::RTSCamera* camera = new scene::RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
-	camera->setUpVector(core::vector3df(0, 0, 1));//TODO ask arman why up vector isn't changing camera orientation at beginning
+	camera->setUpVector(core::vector3df(0, 0, 1));
 	camera->setPosition(core::vector3df(-.1, -.06, .1));
 	camera->setTarget(core::vector3df(0, 0, -.01));
 	camera->setNearValue(0.01f);
@@ -1477,8 +1423,12 @@ int main(int argc, char* argv[]) {
 		 // numGeneratedLayers ++;
 	  //}
 
-//  CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
-
+	//if (read) //TODO figure out how I read from smarticlesSystem
+	//{
+	//	CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
+	//	application.AssetBindAll();
+	//	application.AssetUpdateAll();
+	//}
   printf("************** size sys %d \n", mySmarticlesVec.size());
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	
@@ -1533,7 +1483,7 @@ int main(int argc, char* argv[]) {
 		 }
 		 else{ bucket->SetBodyFixed(true);}
 		 receiver.drawSmarticleAmt(numGeneratedLayers);
-		
+		 receiver.drawOTArms();
 	
 
 
@@ -1574,7 +1524,7 @@ int main(int argc, char* argv[]) {
 //        video::SColor(50, 90, 90, 150), true);
 		//application.AssetBindAll();
 		//application.AssetUpdateAll();
-		receiver.drawOTArms();
+	
 		application.DrawAll();
     application.DoStep();
     application.GetVideoDriver()->endScene();
