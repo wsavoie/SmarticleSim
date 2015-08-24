@@ -188,12 +188,10 @@ namespace chrono {
 		void MoveRelease();
 		////////////Will smarticle implementation////////////
 		////vectors containing move instructions, these will be read in from a csv file, tried to make these static but wont compile...
-		//TODO figure out how to make these static vars, all smarticles dont need their own copies if all share the same one
-		//std::vector<std::pair<double, double>> global;
-		std::vector<std::pair<double, double>> global;
-		std::vector<std::pair<double, double>> gui1;//gui option 1
-		std::vector<std::pair<double, double>> gui2;//gui option 2
-		std::vector<std::pair<double, double>> gui3;//gui option 3
+		static std::vector<std::pair<double, double>> global;
+		static std::vector<std::pair<double, double>> gui1;//gui option 1
+		static std::vector<std::pair<double, double>> gui2;//gui option 2
+		static std::vector<std::pair<double, double>> gui3;//gui option 3
 		std::vector<std::pair<double, double>> ot; //over torque
 		std::vector<std::pair<double, double>> oa; //over angle
 		std::vector<std::pair<double, double>> vib; //vibrate this HAS to be particle specific so cannot be static?

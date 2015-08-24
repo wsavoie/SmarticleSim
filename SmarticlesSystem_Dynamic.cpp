@@ -202,6 +202,10 @@ ChSharedPtr<ChBody> bucket_bott;
 			// store pointer applicaiton
 			app = myapp;
 			// ..add a GUI slider to control friction
+
+			text_SmarticleAmt = app->GetIGUIEnvironment()->addStaticText(L"Layers: 0, Smarticles: 0",
+				rect<s32>(850, 65, 1050, 80), true);
+
 			text_Q = app->GetIGUIEnvironment()->addStaticText(L"Press Q to activate GUI1",
 				rect<s32>(850, 85, 1050, 100), true);
 			text_W = app->GetIGUIEnvironment()->addStaticText(L"Press W to activate GUI2",
@@ -212,14 +216,15 @@ ChSharedPtr<ChBody> bucket_bott;
 				rect<s32>(850, 145, 1050, 160), true);
 			text_T = app->GetIGUIEnvironment()->addStaticText(L"Press T to vibrate around specified angles",
 				rect<s32>(850, 165, 1050, 180), true);
+			
 			angle1Input = app->GetIGUIEnvironment()->addEditBox(L"75",
 				rect<s32>(1050, 165, 1100, 180), true);
 			angle2Input = app->GetIGUIEnvironment()->addEditBox(L"75",
 				rect<s32>(1100, 165, 1150, 180), true);
 
-	
-			text_SmarticleAmt = app->GetIGUIEnvironment()->addStaticText(L"Layers: 0, Smarticles: 0",
-				rect<s32>(850, 65, 1050, 80), true);
+			text_Y = app->GetIGUIEnvironment()->addStaticText(L"Press Y to move cylinder away",
+				rect<s32>(850, 185, 1050, 200), true);
+
 
 		}
 		
@@ -567,7 +572,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 #endif
 	double z;
-	int numPerLayer =6;
+	int numPerLayer =1;
 	int smarticleCount = mySmarticlesVec.size();
 	double ang = 2*CH_C_PI / numPerLayer;
 	double w = w_smarticle;

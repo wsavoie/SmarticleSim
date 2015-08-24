@@ -31,9 +31,15 @@ Smarticle::Smarticle(
 	r2 = .01;
 	initPos = ChVector<>(0);
 	rotation = QUNIT;
-	jointClearance = 1.0 / 3.0*r2;
+	jointClearance = 0;
 	volume = GetVolume();
+	
 }
+std::vector<std::pair<double, double>> Smarticle::global;
+std::vector<std::pair<double, double>> Smarticle::gui1;
+std::vector<std::pair<double, double>> Smarticle::gui2;
+std::vector<std::pair<double, double>> Smarticle::gui3;
+
 
 Smarticle::~Smarticle() {}
 
@@ -64,8 +70,7 @@ void Smarticle::Properties(
 	rotation = rot;
 	angle1 = other_angle;
 	angle2 = other_angle2;
-
-	jointClearance = 1.0 / 3.0*r2;
+	jointClearance = 0;
 	volume = GetVolume();
 	mtextureOT = ChSharedPtr<ChTexture>(new ChTexture());
 	mtextureOT->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
@@ -348,7 +353,8 @@ void Smarticle::CreateActuators() {
 }
 
 void Smarticle::Create() {
-	jointClearance =1.0/3.0*r2;
+	//jointClearance =1.0/3.0*r2;
+	jointClearance = 0;
 	double l_mod = l - jointClearance;
 
 	// ** initialize U
@@ -362,8 +368,8 @@ void Smarticle::Create() {
 
 	//TODO allow self collisions of smarticle arms with itself
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(0, l_mod, ChVector<>(-w / 2.0 - jointClearance- (r2 + l_mod / 2.0)*cos(angle1), 0, -(l_mod / 2.0 +jointClearance+ r2)*sin(angle1)),quat0);
-	CreateArm(2, l_mod, ChVector<>(w / 2.0 + jointClearance + (r2 + l_mod / 2.0)*cos(angle2), 0, -(l_mod / 2.0 +jointClearance+ r2)*sin(angle2)),quat2);
+	CreateArm(0, l_mod, ChVector<>(-w / 2.0 - jointClearance- (l_mod / 2.0)*cos(angle1), 0, -(l_mod / 2.0 +jointClearance+ r2)*sin(angle1)),quat0);
+	CreateArm(2, l_mod, ChVector<>(w / 2.0 + jointClearance + (l_mod / 2.0)*cos(angle2), 0, -(l_mod / 2.0 +jointClearance+ r2)*sin(angle2)),quat2);
 	////////////////////////////////////////////////////////
 	//CreateArm(1, w, ChVector<>(0, 0, 0));
 	//CreateArm(0, l_mod, ChVector<>(-w / 2 - jointClearance - r2 - l_mod / 2, 0, 0));//original
@@ -543,16 +549,16 @@ std::pair<double, double> Smarticle::populateMoveVector()
 		mtorqueThresh2 >>
 		mangLow >>
 		mangHigh;
-		printf("dt %f omega %f torqueThresh2 %f angLow %f angHigh %f",mdt, momega, mtorqueThresh2, mangLow, mangHigh);
-		SetDefaultOmega(momega);
-		SetOmega(momega);
-		char ddCh;
-		char ddCh1;
-		char ddCh2;
-		angHigh = mangHigh;
-		angLow = mangLow;
-		distThresh = mdt*omega1;
-		torqueThresh2= mtorqueThresh2;
+	printf("dt %f omega %f torqueThresh2 %f angLow %f angHigh %f", mdt, momega, mtorqueThresh2, mangLow, mangHigh);
+	SetDefaultOmega(momega);
+	SetOmega(momega);
+	char ddCh;
+	char ddCh1;
+	char ddCh2;
+	angHigh = mangHigh;
+	angLow = mangLow;
+	distThresh = mdt*omega1;
+	torqueThresh2 = mtorqueThresh2;
 	ddCh = '!';
 	while (ddCh != '#') {
 		smarticleMoves >> ddCh;
@@ -580,57 +586,73 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	angPair.second = angVals.y;
 	firstAngPair.first = angVals.x;
 	firstAngPair.second = angVals.y;
-	global.push_back(angPair);
-	//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
 	//TODO need to rewrite the below way of reading file, very ugly!
+
+	if (global.size() < 1)
+	{
+	global.push_back(angPair);
+
 	SetAngle(ang1, ang2);
 	//Global
-	while (smarticleMoves.good()) {
-		smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-		angPair.first = angVals.x;
-		angPair.second = angVals.y;
-		
-		global.push_back(angPair);
-		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
-		if (ddCh == '#')
-			break;
+
+
+		while (smarticleMoves.good()) {
+			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+			angPair.first = angVals.x;
+			angPair.second = angVals.y;
+
+			global.push_back(angPair);
+			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			if (ddCh == '#')
+				break;
+		}
 	}
 	
-	//GUI1
-	while (smarticleMoves.good()) {
-		smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-		angPair.first = angVals.x;
-		angPair.second = angVals.y;
-		
-		gui1.push_back(angPair);
-		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
-		if (ddCh == '#')
-			break;
-	}
-	//GUI2
-	while (smarticleMoves.good()) {
-		smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-		angPair.first = angVals.x;
-		angPair.second = angVals.y;
+	if (gui1.size() < 1)
+	{
+		//GUI1
+		while (smarticleMoves.good()) {
+			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+			angPair.first = angVals.x;
+			angPair.second = angVals.y;
 
-		gui2.push_back(angPair);
-		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
-		//exit(-1);
-		if (ddCh == '#')
-			break;
+			gui1.push_back(angPair);
+			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			if (ddCh == '#')
+				break;
+		}
 	}
 
-	//GUI3
-	while (smarticleMoves.good()) {
-		smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-		angPair.first = angVals.x;
-		angPair.second = angVals.y;
+	if (gui2.size() < 1)
+	{
+		//GUI2
+		while (smarticleMoves.good()) {
+			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+			angPair.first = angVals.x;
+			angPair.second = angVals.y;
 
-		gui3.push_back(angPair);
-		//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
-		//exit(-1);
-		if (ddCh == '#')
-			break;
+			gui2.push_back(angPair);
+			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//exit(-1);
+			if (ddCh == '#')
+				break;
+		}
+	}
+
+	if (gui3.size() < 1)
+	{
+		//GUI3
+		while (smarticleMoves.good()) {
+			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+			angPair.first = angVals.x;
+			angPair.second = angVals.y;
+
+			gui3.push_back(angPair);
+			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//exit(-1);
+			if (ddCh == '#')
+				break;
+		}
 	}
 
 	SetAngle(firstAngPair);
