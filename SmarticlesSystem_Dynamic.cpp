@@ -1271,10 +1271,11 @@ int main(int argc, char* argv[]) {
 	  ChTimerParallel step_timer;
 
 		//set chrono dataPath to data folder placed in smarticle directory so we can share created files
-		std::string fp = "\\..\\data\\";
-		fp = __FILE__ + fp;
-		//SetChronoDataPath(fp);
-
+		#ifdef _WIN64
+			std::string fp = "\\..\\data\\";
+			fp = __FILE__ + fp;
+			SetChronoDataPath(fp);
+		#endif
 		time_t rawtimeCurrent;
 	  struct tm* timeinfoDiff;
 	  // --------------------------
