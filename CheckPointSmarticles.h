@@ -34,7 +34,21 @@ void CheckPointSmarticles_Write(
 		double rho_smarticle,
 		double angle1,
 		double angle2);
+
+void CheckPointSmarticlesDynamic_Write(
+	std::vector<Smarticle*> & mySmarticlesVec,
+	int tStep,
+	ChSharedPtr<ChMaterialSurface> mat_g,
+	double l_smarticle,
+	double w_smarticle,
+	double t_smarticle,
+	double t2_smarticle,
+	double collisionEnvelop,
+	double rho_smarticle);
 void CheckPointSmarticles_Read(
+	CH_SYSTEM& mphysicalSystem,
+	std::vector<Smarticle*> & mySmarticlesVec);
+void CheckPointSmarticlesDynamic_Read(
 	CH_SYSTEM& mphysicalSystem,
 	std::vector<Smarticle*> & mySmarticlesVec);
 //void CheckPointSmarticles_Read(

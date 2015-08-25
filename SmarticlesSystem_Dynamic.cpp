@@ -112,15 +112,11 @@ class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
     /// This must be implemented by a child class of ChBroadPhaseCallback.
     /// Return false to skip narrow-phase contact generation for this pair of bodies.
    virtual bool BroadCallback( collision::ChCollisionModel* mmodelA,  ///< pass 1st model
-    							collision::ChCollisionModel* mmodelB   ///< pass 2nd model
-                               ) {
-    	return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 3));
-    }
+    							collision::ChCollisionModel* mmodelB)   ///< pass 2nd model
+		{return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 3));}
 };
 
 // =============================================================================
-
-
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
@@ -169,10 +165,10 @@ ChSharedPtr<ChBody> bucket_bott;
 	//double t2_smarticle = .021;
 
 	double collisionEnvelope = .1 * t2_smarticle;
-	int global_GUI_value = 0;
+	
 	bool bucket_exist = true;
 
-
+	bool read_from_file = false;
 	bool povray_output = true;
 	int out_fps = 120;
 	const std::string out_dir = "PostProcess";
@@ -225,6 +221,7 @@ ChSharedPtr<ChBody> bucket_bott;
 			text_Y = app->GetIGUIEnvironment()->addStaticText(L"Press Y to move cylinder away",
 				rect<s32>(850, 185, 1050, 200), true);
 
+			
 
 		}
 		
@@ -234,30 +231,30 @@ ChSharedPtr<ChBody> bucket_bott;
 				switch (event.KeyInput.Key)
 				{
 				case irr::KEY_KEY_Q:
-					if (global_GUI_value != 1)
-						global_GUI_value = 1;
+					if (Smarticle::global_GUI_value != 1)
+						Smarticle::global_GUI_value = 1;
 					else
-						global_GUI_value = 0;
+						Smarticle::global_GUI_value = 0;
 					return true;
 
 				case irr::KEY_KEY_W:
-					if (global_GUI_value != 2)
-						global_GUI_value = 2;
+					if (Smarticle::global_GUI_value != 2)
+						Smarticle::global_GUI_value = 2;
 					else
-						global_GUI_value = 0;
+						Smarticle::global_GUI_value = 0;
 					return true;
 				case irr::KEY_KEY_E:
-					if (global_GUI_value != 3)
-						global_GUI_value = 3;
+					if (Smarticle::global_GUI_value != 3)
+						Smarticle::global_GUI_value = 3;
 					else
-						global_GUI_value = 0;
+						Smarticle::global_GUI_value = 0;
 					return true;
 				case irr::KEY_KEY_R: //vibrate around current theta
-					if (global_GUI_value != 4)
+					if (Smarticle::global_GUI_value != 4)
 					{
 						double CurrTheta01;
 						double CurrTheta12;
-						global_GUI_value = 4;
+						Smarticle::global_GUI_value = 4;
 						std::pair<double, double> angPair;
 						for (int i = 0; i < sv->size(); i++) //get each particles current theta
 						{
@@ -317,17 +314,17 @@ ChSharedPtr<ChBody> bucket_bott;
 
 					}
 					else
-						global_GUI_value = 0;
+						Smarticle::global_GUI_value = 0;
 					return true;
 
 				case irr::KEY_KEY_T:
-					if (global_GUI_value != 5)
+					if (Smarticle::global_GUI_value != 5)
 					{
 
 						std::pair<double, double> angPair;
 						double ang1;
 						double ang2;
-						global_GUI_value = 5;
+						Smarticle::global_GUI_value = 5;
 						for (int i = 0; i < sv->size(); i++) //get each particles current theta
 						{
 							Smarticle* sPtr = sv->at(i);
@@ -339,12 +336,12 @@ ChSharedPtr<ChBody> bucket_bott;
 							//in case strange values are written
 							if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
 							{
-								global_GUI_value = 0;
+								Smarticle::global_GUI_value = 0;
 								return true;
 							}
 							if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
 							{
-								global_GUI_value = 0;
+								Smarticle::global_GUI_value = 0;
 								return true;
 							}
 
@@ -373,7 +370,7 @@ ChSharedPtr<ChBody> bucket_bott;
 						}
 					}
 					else
-						global_GUI_value = 0;
+						Smarticle::global_GUI_value = 0;
 					return true;
 
 				case irr::KEY_KEY_Y:
@@ -454,7 +451,7 @@ ChSharedPtr<ChBody> bucket_bott;
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
-void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle) {
+void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle,bool& readFile) {
   if (argc > 1) {
 	const char* text = argv[1];
 	double mult_l = atof(text);
@@ -468,9 +465,10 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[3];
 		numLayers = atoi(text);
 	}
+
 	if (argc > 4){
 		const char* text = argv[4];
-		mangle = atof(text);
+		readFile = atoi(text);
 	}
 
 	/// if parallel, get solver setting
@@ -502,11 +500,12 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	int dummyNumber0;
 	int dummyNumber1;
 	int dummyNumber2;
-  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle);
+  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle, read_from_file);
 
   simParams << std::endl <<
 		  " l_smarticle: " << l_smarticle << std::endl <<
 		  " l_smarticle mult for w (w = mult x l): " << l_smarticle /  w_smarticle << std::endl <<
+			" read from file: " << read_from_file << std::endl <<
 		  " dT: " << dT << std::endl << std::endl;
 
   // ---------------------
@@ -542,7 +541,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set params from input
   // ----------------------
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle);
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle,read_from_file);
 
   // ----------------------
   // Set number of threads.
@@ -572,6 +571,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 		" dT: " << dT << std::endl <<
 		" tFinal: " << tFinal << std::endl <<
 		" vibrate start: " << vibrateStart << std::endl <<
+		" read from file: " << read_from_file << std::endl <<
 		" arm angle: " << armAngle << std::endl << std::endl;
 	
 
@@ -602,7 +602,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 #endif
 	double z;
-	int numPerLayer =4;
+	int numPerLayer =1;
 	int smarticleCount = mySmarticlesVec.size();
 	double ang = 2*CH_C_PI / numPerLayer;
 	double w = w_smarticle;
@@ -1237,7 +1237,7 @@ void UpdateSmarticles(
 	for (int i = 0; i < mySmarticlesVec.size(); i++) {
 		//mySmarticlesVec[i]->MoveLoop();
 
-		mySmarticlesVec[i]->MoveLoop2(global_GUI_value);
+		mySmarticlesVec[i]->MoveLoop2(Smarticle::global_GUI_value);
 //		mySmarticlesVec[i]->UpdateMySmarticleMotion();
 //
 //		if (current_time > 0.4 && current_time < 0.8) {
@@ -1262,7 +1262,7 @@ int main(int argc, char* argv[]) {
 	  time(&rawtime);
 	  timeinfo = localtime(&rawtime);
 	  ChTimerParallel step_timer;
-
+		Smarticle::global_GUI_value = 0;
 		//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 		#if defined(_WIN64) || defined(_WIN32)
 			std::string fp = "\\..\\data\\";
@@ -1380,7 +1380,7 @@ int main(int argc, char* argv[]) {
   application.SetTimestep(dT);  // Arman modify
 	mphysicalSystem.SetIterLCPmaxItersSpeed(120);
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
-	MyEventReceiver receiver(&application,&mySmarticlesVec);
+	MyEventReceiver receiver(&application, &mySmarticlesVec);
 	// note how to add the custom event receiver to the default interface:
 	application.SetUserEventReceiver(&receiver);
 
@@ -1423,12 +1423,12 @@ int main(int argc, char* argv[]) {
 		 // numGeneratedLayers ++;
 	  //}
 
-	//if (read) //TODO figure out how I read from smarticlesSystem
-	//{
-	//	CheckPointSmarticles_Read(mphysicalSystem, mySmarticlesVec);
-	//	application.AssetBindAll();
-	//	application.AssetUpdateAll();
-	//}
+	if (read_from_file) //TODO figure out how I read from smarticlesSystem
+	{
+		CheckPointSmarticlesDynamic_Read(mphysicalSystem, mySmarticlesVec);
+		application.AssetBindAll();
+		application.AssetUpdateAll();
+	}
   printf("************** size sys %d \n", mySmarticlesVec.size());
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	
@@ -1436,44 +1436,47 @@ int main(int argc, char* argv[]) {
 	  double t = mphysicalSystem.GetChTime();
 
 	  int sSize1 = mySmarticlesVec.size();
-	  if (  (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT)  &&
-			  (numGeneratedLayers < numLayers) ){
+		if (!read_from_file)
+		{
+			if ((fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT) &&
+				(numGeneratedLayers < numLayers)){
 #if irrlichtVisualization
-			//AddParticlesLayer(mphysicalSystem, mySmarticlesVec,application);
-			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec,application);
+				//AddParticlesLayer(mphysicalSystem, mySmarticlesVec,application);
+				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application);
 #else
-			//AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
-			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec);
+				//AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec);
 #endif 
 
-			
-
-		  numGeneratedLayers ++;
-	  }
 
 
-
-		//if (numGeneratedLayers == numLayers)
-		//{
-		//	//start shaking
-		//}
+				numGeneratedLayers++;
+			}
 
 
-//		if (smarticleType == SMART_ARMS)
-//		{
-//
-//			for (int i = 0; i < mySmarticlesVec.size(); i++) {
-//				double omega = 10;
-//				if (tStep < 500) {
-//					mySmarticlesVec[i]->SetActuatorFunction(0, -omega, dT);
-//				}
-//				else {
-//					mySmarticlesVec[i]->SetActuatorFunction(0, omega, dT);
-//				}
-//
-//			}
-//
-//		}
+
+			//if (numGeneratedLayers == numLayers)
+			//{
+			//	//start shaking
+			//}
+
+
+			//		if (smarticleType == SMART_ARMS)
+			//		{
+			//
+			//			for (int i = 0; i < mySmarticlesVec.size(); i++) {
+			//				double omega = 10;
+			//				if (tStep < 500) {
+			//					mySmarticlesVec[i]->SetActuatorFunction(0, -omega, dT);
+			//				}
+			//				else {
+			//					mySmarticlesVec[i]->SetActuatorFunction(0, omega, dT);
+			//				}
+			//
+			//			}
+			//
+			//		}
+		}
 
 	   printf("\n");
 
@@ -1483,9 +1486,7 @@ int main(int argc, char* argv[]) {
 		 }
 		 else{ bucket->SetBodyFixed(true);}
 		 receiver.drawSmarticleAmt(numGeneratedLayers);
-		 receiver.drawOTArms();
-	
-
+		 //receiver.drawOTArms();
 
 
 //	  int stage = int(t / (CH_C_PI/2));
@@ -1550,16 +1551,16 @@ int main(int argc, char* argv[]) {
 	  std::cout.flush();
 
 
-//	  CheckPointSmarticles_Write(mySmarticlesVec,
-//	  		tStep,
-//	  		mat_g,
-//	  		l_smarticle,
-//	  		w_smarticle,
-//	  		t_smarticle,
-//	  		t2_smarticle,
-//	  		collisionEnvelope,
-//	  		rho_smarticle);
-
+		CheckPointSmarticlesDynamic_Write(mySmarticlesVec,
+	  		tStep,
+	  		mat_g,
+	  		l_smarticle,
+	  		w_smarticle,
+	  		t_smarticle,
+	  		t2_smarticle,
+	  		collisionEnvelope,
+	  		rho_smarticle);
+	
   }
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
 	  delete mySmarticlesVec[i];

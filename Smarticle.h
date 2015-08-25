@@ -136,7 +136,7 @@ namespace chrono {
 		virtual void SetOmega2(double momega2, bool angularFreq = true);
 		virtual double GetOmega1(bool angularFreq = true);
 		virtual double GetOmega2(bool angularFreq = true);
-		
+		virtual ChSharedBodyPtr GetSmarticleBodyPointer();
 		// create the smarticle by creating arms, adding joint between them, and functions
 		virtual void Create();
 
@@ -174,6 +174,7 @@ namespace chrono {
 		virtual void SetAngle2(double mangle2, bool degrees = false);
 
 		virtual ChSharedPtr<SmarticleMotionPiece> Get_Current_Motion();
+		virtual int GetID();
 
 		virtual double GetAngle1(bool degrees = false);
 		virtual double GetAngle2(bool degrees = false);
@@ -205,7 +206,8 @@ namespace chrono {
 		double torqueThresh2; //torqueThres^2 to avoid using sqrts
 		double angLow;
 		double angHigh;
-		double distThresh;
+		static double distThresh;
+		static unsigned int global_GUI_value;
 		///////////////////////////////////////////////////////////
 
 		std::pair<double, double> populateMoveVector();
@@ -278,7 +280,7 @@ namespace chrono {
 	 ChSharedBodyPtr arm0;	// left arm
 	 ChSharedBodyPtr arm1;	// middle arm
 	 ChSharedBodyPtr arm2;	// right arm
-
+	 ChSharedBodyPtr smarticle;
 		// joints
 		ChSharedPtr<ChLinkLockRevolute> link_revolute01; 	// revolute joint between arms 0 and 1
 		ChSharedPtr<ChLinkLockRevolute> link_revolute12; 	// revolute joint between arms 0 and 1

@@ -42,6 +42,8 @@ std::vector<std::pair<double, double>> Smarticle::gui3;
 ChSharedPtr<ChTexture> Smarticle::mtextureOT = ChSharedPtr<ChTexture>(new ChTexture());
 ChSharedPtr<ChTexture> Smarticle::mtextureArm = ChSharedPtr<ChTexture>(new ChTexture());
 ChSharedPtr<ChTexture> Smarticle::mtextureMid = ChSharedPtr<ChTexture>(new ChTexture());
+double Smarticle::distThresh;
+unsigned int Smarticle::global_GUI_value;
 
 Smarticle::~Smarticle() {}
 
@@ -129,16 +131,12 @@ void Smarticle::Properties(
 	moveType = MoveType::GLOBAL;
 	prevMoveType = MoveType::GLOBAL;
 	moveTypeIdxs.resize(MoveType::OT, 0);
-	double x = CH_C_PI/2;
-	double y = x /10;
 	arm0OT = false;
 	arm2OT = false;
-
+	SetAngle(other_angle, other_angle2);
 	torqueThresh2 = 10000;
 	angLow = 0;
 	angHigh = 120;
-	Smarticle::distThresh = .001*CH_C_PI;
-
 	dumID = mdumID;
 }
 //////////////////////////////////////////////	
@@ -312,11 +310,16 @@ ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
 void Smarticle::CreateJoints() {
 	// link 1
 	link_revolute01 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
+	ChVector<> pR00(0, 0, 0);
 	ChVector<> pR01(-w/2, 0, 0);
+	double a1 = this->GetAngle1();
+	double a2 = this->GetAngle2();
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, a1, 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, a2, 0));
+
 	link_revolute01->Initialize(arm0, arm1,
         ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
 	m_system->AddLink(link_revolute01);
-
 
 	// link 2
 	link_revolute12 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
@@ -332,12 +335,21 @@ void Smarticle::CreateActuators() {
 
 	// link 1
 	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+	ChVector<> pR00(0, 0, 0);
 	ChVector<> pR01(-w/2, 0, 0);
+
+	double a1 = this->GetAngle1();
+	double a2 = this->GetAngle2();
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0,a1, 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0,a2, 0));
+
+
 	link_actuator01->Initialize(arm0, arm1,
-		ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
+		ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation *  Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
+
 	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 //	SetActuatorFunction(0, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
-	link_actuator01->Get_mot_rot();
+	//link_actuator01->Get_mot_rot();
 	
 	m_system->AddLink(link_actuator01);
 
@@ -347,10 +359,15 @@ void Smarticle::CreateActuators() {
 	link_actuator12 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
 	ChVector<> pR12(w/2, 0, 0);
 	link_actuator12->Initialize(arm1, arm2,
-	        ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	  ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
+
 	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 //	SetActuatorFunction(1, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
 	m_system->AddLink(link_actuator12);
+
+	//GetLog() << "(ang1,ang2)=(" << link_actuator01->Get_mot_rot() << "," << link_actuator12->Get_mot_rot() << ")\n";
+	//exit(-1);
+
 }
 
 void Smarticle::Create() {
@@ -535,7 +552,6 @@ void Smarticle::MoveLoop() {
 
 	this->SetActuatorFunction(0, omega1);
 	this->SetActuatorFunction(1, omega2);
-
 }
 std::pair<double, double> Smarticle::populateMoveVector()
 {
@@ -655,7 +671,7 @@ std::pair<double, double> Smarticle::populateMoveVector()
 		}
 	}
 
-	SetAngle(firstAngPair);
+	//SetAngle(firstAngPair);
 	//returning first ang pair but can be set here
 
 
@@ -691,6 +707,7 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
 
+	SetAngle(ang01, ang12);
 	
 	//expected ang01 and ang12
 	double expAng01 = v->at(moveTypeIdxs.at(mtype)).first;
@@ -764,6 +781,8 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	//get previous values from last timestep
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
+
+
 	//double omega01 = li
 	double torque01 = link_actuator01->Get_react_torque().Length2(); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
 	double torque12 = link_actuator12->Get_react_torque().Length2();
@@ -874,6 +893,14 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	}
 	
 	return;
+}
+ChSharedBodyPtr Smarticle::GetSmarticleBodyPointer()
+{
+	return GetArm(0);
+}
+int	Smarticle::GetID()
+{
+	return this->GetArm(0)->GetPhysicsItem()->GetIdentifier();
 }
 void Smarticle::setCurrentMoveType(MoveType newMoveType)
 {
