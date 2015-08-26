@@ -54,10 +54,10 @@
 #endif
 
 //#include "unit_IRRLICHT/ChIrrApp.h"
-#include "unit_IRRLICHT/ChBodySceneNode.h"
-#include "unit_IRRLICHT/ChBodySceneNodeTools.h"
+#include "chrono_IRRLICHT/ChBodySceneNode.h"  //changed path from unit to chrono to reflect changes in updated chrono
+#include "chrono_IRRLICHT/ChBodySceneNodeTools.h" 
 //#include "unit_IRRLICHT/ChIrrTools.h"
-#include "unit_IRRLICHT/ChIrrWizard.h"
+#include "chrono_IRRLICHT/ChIrrWizard.h"
 #include "core/ChRealtimeStep.h"
 //#include <irrlicht.h>
 #include "assets/ChTexture.h"
@@ -631,7 +631,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				);
 
 			smarticle0->populateMoveVector();
-			smarticle0->SetAngle(0, 0, true);
+			smarticle0->SetAngle(35, 110, true);
 			smarticle0->Create();
 			//smarticle0->AddMotion(myMotionDefault);
 			//smarticle0->AddMotion(myMotion);

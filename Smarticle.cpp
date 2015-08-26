@@ -310,64 +310,43 @@ ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
 void Smarticle::CreateJoints() {
 	// link 1
 	link_revolute01 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
-	ChVector<> pR00(0, 0, 0);
-	ChVector<> pR01(-w/2, 0, 0);
-	double a1 = this->GetAngle1();
-	double a2 = this->GetAngle2();
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, a1, 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, a2, 0));
+	link_revolute12 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
+	ChVector<> pR01(-w / 2.0, 0, 0);
+	ChVector<> pR12(w / 2.0, 0, 0);
+	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
 
-	link_revolute01->Initialize(arm0, arm1,
-        ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	// link 1
+	link_revolute01->Initialize(arm0, arm1, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx));
+	link_revolute01->SetMotion_axis(ChVector<>(0, 1, 0));
 	m_system->AddLink(link_revolute01);
 
 	// link 2
-	link_revolute12 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
-	ChVector<> pR12(w/2, 0, 0);
-	link_revolute12->Initialize(arm1, arm2,
-        ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2, VECT_X)));
+	link_revolute12->Initialize(arm1, arm2, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx));
+	link_revolute12->SetMotion_axis(ChVector<>(0, 1, 0));
 	m_system->AddLink(link_revolute12);
 }
 
 void Smarticle::CreateActuators() {
-//	function01 = ChSharedPtr<ChFunction>(new ChFunction_Const(0));
-//	function12 = ChSharedPtr<ChFunction>(new ChFunction_Const(0));
+
+	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+	link_actuator12 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+	ChVector<> pR01(-w / 2.0, 0, 0);
+	ChVector<> pR12(w / 2.0, 0, 0);
+	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
+	ChQuaternion<> qy1 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle1()));
+	ChQuaternion<> qy2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle2()));
 
 	// link 1
-	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
-	ChVector<> pR00(0, 0, 0);
-	ChVector<> pR01(-w/2, 0, 0);
-
-	double a1 = this->GetAngle1();
-	double a2 = this->GetAngle2();
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0,a1, 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0,a2, 0));
-
-
-	link_actuator01->Initialize(arm0, arm1,
-		ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation *  Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
-
+	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx*qy1));
 	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-//	SetActuatorFunction(0, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
-	//link_actuator01->Get_mot_rot();
-	
+	link_actuator01->SetMotion_axis(ChVector<>(0, 1, 0));
 	m_system->AddLink(link_actuator01);
 
-	
-
 	// link 2
-	link_actuator12 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
-	ChVector<> pR12(w/2, 0, 0);
-	link_actuator12->Initialize(arm1, arm2,
-	  ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation * Q_from_AngAxis(CH_C_PI / 2.0, VECT_X)));
-
+	link_actuator12->Initialize(arm1, arm2, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx*qy2));
 	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-//	SetActuatorFunction(1, ChSharedPtr<ChFunction>(new ChFunction_Const(0)));
+	link_actuator12->SetMotion_axis(ChVector<>(0, 1, 0));
 	m_system->AddLink(link_actuator12);
-
-	//GetLog() << "(ang1,ang2)=(" << link_actuator01->Get_mot_rot() << "," << link_actuator12->Get_mot_rot() << ")\n";
-	//exit(-1);
-
 }
 
 void Smarticle::Create() {
