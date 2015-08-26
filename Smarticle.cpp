@@ -363,9 +363,9 @@ void Smarticle::Create() {
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));	
 	
-	CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2/2 - (l_mod/2.0+r2/2)*cos(angle1), 0, -(l_mod / 2.0)*sin(angle1)), quat0);
+	CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2 / 2 - (l_mod / 2.0 + r2 / 2)*cos(angle1), 0, -(l_mod / 2.0)*sin(angle1)), quat0);
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(2, l_mod, ChVector<>( w / 2.0 - r2/2 + (l_mod/2.0+r2/2)*cos(angle2), 0, -(l_mod / 2.0)*sin(angle2)), quat2);
+	CreateArm(2, l_mod, ChVector<>( w / 2.0 - r2 / 2 + (l_mod / 2.0 - r2)*cos(angle2), 0, -(l_mod / 2.0)*sin(angle2)), quat2);
 	////////////////////////////////////////////////////////
 	//CreateArm(1, w, ChVector<>(0, 0, 0));
 	//CreateArm(0, l_mod, ChVector<>(-w / 2 - jointClearance - r2 - l_mod / 2, 0, 0));//original

@@ -70,7 +70,7 @@ void CheckPointSmarticles_Write(
 		angle2 << std::endl<<
 			'#' << std::endl;
 
-	for (int i = 0; i < mySmarticlesVec.size(); i ++) {
+	for (size_t i = 0; i < mySmarticlesVec.size(); i ++) {
 		SmarticleU* mSmart = (SmarticleU*)mySmarticlesVec[i];
 		outSmarticles <<
 				mSmart->GetSmarticleBodyPointer()->GetPos().x << ", " <<
@@ -144,7 +144,7 @@ void CheckPointSmarticlesDynamic_Write(
 	//	dumId >> globalidx >> ddCh >> gui1idx >> ddCh >> gui2idx >> ddCh >>
 	//	gui3idx >> ddCh >> prevMoveType >> ddCh >> currMoveType >> ddCh;
 
-	for (int i = 0; i < mySmarticlesVec.size(); i++) {
+	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 		Smarticle* mSmart = (Smarticle*)mySmarticlesVec[i];
 		outSmarticles <<
 			mSmart->GetSmarticleBodyPointer()->GetPos().x << ", " <<
@@ -217,7 +217,7 @@ void CheckPointSmarticles_Read(
 						  q4);
 		smarticle0->SetAngle(angle1, angle2, true);
 		smarticle0->Create();
-		mySmarticlesVec.push_back(smarticle0);
+		mySmarticlesVec.emplace_back(smarticle0);
 
 		smarticleCount ++;
 		inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
@@ -294,7 +294,7 @@ void CheckPointSmarticlesDynamic_Read(
 		smarticle0->moveTypeIdxs.at(MoveType::GUI2)		= gui2idx;
 		smarticle0->moveTypeIdxs.at(MoveType::GUI3)		= gui3idx;
 		
-		mySmarticlesVec.push_back(smarticle0);
+		mySmarticlesVec.emplace_back(smarticle0);
 
 		smarticleCount++;
 		inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>

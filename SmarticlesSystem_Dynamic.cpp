@@ -294,22 +294,13 @@ ChSharedPtr<ChBody> bucket_bott;
 							CurrTheta12 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).second;
 							sPtr->vib.clear();
 
+							sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
 
-							angPair.first = CurrTheta01;
-							angPair.second = CurrTheta12;
-							sPtr->vib.push_back(angPair);
+							sPtr->vib.emplace_back(CurrTheta01 - vibAmp, CurrTheta12 - vibAmp);
 
-							angPair.first = CurrTheta01 - vibAmp;
-							angPair.second = CurrTheta12 - vibAmp;
-							sPtr->vib.push_back(angPair);
+							sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
 
-							angPair.first = CurrTheta01;
-							angPair.second = CurrTheta12;
-							sPtr->vib.push_back(angPair);
-
-							angPair.first = CurrTheta01 + vibAmp;
-							angPair.second = CurrTheta12 + vibAmp;
-							sPtr->vib.push_back(angPair);
+							sPtr->vib.emplace_back(CurrTheta01 + vibAmp, CurrTheta12 + vibAmp);
 						}
 
 					}
@@ -345,27 +336,13 @@ ChSharedPtr<ChBody> bucket_bott;
 								return true;
 							}
 
-							angPair.first = ang1;
-							angPair.second = ang2;
-							sPtr->vib.push_back(angPair);
-							//sPtr->vib.assign(0, angPair);
+							sPtr->vib.emplace_back(ang1,ang2);
 
+							sPtr->vib.emplace_back(ang1 - vibAmp, ang2 - vibAmp);
 
-							angPair.first = ang1 - vibAmp;
-							angPair.second = ang2 - vibAmp;
-							sPtr->vib.push_back(angPair);
-							//sPtr->vib.assign(1, angPair);
+							sPtr->vib.emplace_back(ang1, ang2);
 
-							angPair.first = ang1;
-							angPair.second = ang2;
-							sPtr->vib.push_back(angPair);
-							//sPtr->vib.assign(2, angPair);
-
-							angPair.first = ang1 + vibAmp;
-							angPair.second = ang2 + vibAmp;
-							sPtr->vib.push_back(angPair);
-							//sPtr->vib.assign(3, angPair);
-
+							sPtr->vib.emplace_back(ang1 + vibAmp, ang2 + vibAmp);
 
 						}
 					}
@@ -635,7 +612,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			smarticle0->Create();
 			//smarticle0->AddMotion(myMotionDefault);
 			//smarticle0->AddMotion(myMotion);
-			mySmarticlesVec.push_back((Smarticle*)smarticle0);
+			mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
 #if irrlichtVisualization
 			application.AssetBindAll();
 			application.AssetUpdateAll();
@@ -964,7 +941,7 @@ double Find_Max_Z(CH_SYSTEM& mphysicalSystem) {
 	}
 	double zMax = -999999999;
 	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
-	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 		ChBody* bodyPtr = *(myIter + i);
 		if ( strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0 ) {
 			if (zMax < bodyPtr->GetPos().z) {
@@ -1003,7 +980,7 @@ bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 // =============================================================================
 void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
-	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 		ChBody* bodyPtr = *(myIter + i);
 		if (bodyPtr->GetPos().z < -1.5 * bucket_interior_halfDim.z) {
 			bodyPtr->SetBodyFixed(true);
@@ -1056,7 +1033,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	double volumeFraction = 0;
 	if (bucketType == BOX)
 	{
-		for (int i = 0; i < mySmarticlesVec.size(); i++) {
+		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 			Smarticle* sPtr = mySmarticlesVec[i];
 			if (IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + ChVector<>(0, 0, 2 * bucket_half_thick))) {
 				countInside2++;
@@ -1068,7 +1045,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	}
 	if (bucketType == CYLINDER)
 	{
-		for (int i = 0; i < mySmarticlesVec.size(); i++) {
+		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 			Smarticle* sPtr = mySmarticlesVec[i];
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
 			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2*bucket_interior_halfDim.z))) {
@@ -1110,7 +1087,7 @@ void UpdateSmarticles(
 		std::vector<Smarticle*> mySmarticlesVec) {
 
 	double current_time = mphysicalSystem.GetChTime();
-	for (int i = 0; i < mySmarticlesVec.size(); i++) {
+	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 		//mySmarticlesVec[i]->MoveLoop();
 
 		mySmarticlesVec[i]->MoveLoop2(Smarticle::global_GUI_value);
@@ -1311,7 +1288,7 @@ int main(int argc, char* argv[]) {
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 	  double t = mphysicalSystem.GetChTime();
 
-	  int sSize1 = mySmarticlesVec.size();
+	  size_t sSize1 = mySmarticlesVec.size();
 		if (!read_from_file)
 		{
 			if ((fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT) &&
@@ -1438,7 +1415,7 @@ int main(int argc, char* argv[]) {
 	  		rho_smarticle);
 	
   }
-  for (int i = 0; i < mySmarticlesVec.size(); i++) {
+  for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 	  delete mySmarticlesVec[i];
 
   }
