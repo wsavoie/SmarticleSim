@@ -631,7 +631,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				);
 
 			smarticle0->populateMoveVector();
-			smarticle0->SetAngle(35, 110, true);
+			smarticle0->SetAngle(33, 120, true);
 			smarticle0->Create();
 			//smarticle0->AddMotion(myMotionDefault);
 			//smarticle0->AddMotion(myMotion);
@@ -643,130 +643,6 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 	}
 
 
-}
-// =============================================================================
-#if irrlichtVisualization
-void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application) {
-#else
-void AddParticlesLayer(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
-#endif
-
-	/////////////////
-	// Smarticle body
-	/////////////////
-	ChVector<> smarticleLengths(l_smarticle, w_smarticle, t_smarticle); // l, w, t
-	ChVector<> sLenghWithTol = 1.3 * ChVector<>(smarticleLengths.x, smarticleLengths.y, smarticleLengths.z);
-	ChVector<> myPos;
-	double z;
-	double maxDim = 1.3 * std::max(sLenghWithTol.x, sLenghWithTol.y);
-	int nX = bucket_interior_halfDim.x / maxDim;
-	int nY = bucket_interior_halfDim.y / maxDim;
-
-	int smarticleCount = mySmarticlesVec.size();
-	if (smarticleCount < 9){ z = 0; }
-	else{ z = Find_Max_Z(mphysicalSystem); }
-	int numPerLayer = 4;
-	//this filling method works better for smaller diameter where diameter < 3*width of staple	
-		//for (int i = -nX + 1; i < nX; i++) {
-			//for (int j = -nY + 1; j < nY; j++) {
-		for (int i = 0; i < numPerLayer; i++)
-		{
-				ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
-				myRot.Normalize();
-
-
-				//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x + MyRand()*w_smarticle - 0.5 * w_smarticle
-				//	, j * maxDim + bucket_ctr.y + MyRand() * w_smarticle - 0.5 * w_smarticle
-				//	, z + maxDim);
-
-				ChVector<> myPos = ChVector<>(bucket_ctr.x + MyRand()* (bucket_interior_halfDim.x - MyRand()*bucket_interior_halfDim.x / 2.0),
-					bucket_ctr.y + (MyRand()*bucket_interior_halfDim.y - MyRand()*bucket_interior_halfDim.y / 2.0),
-					std::min(4 * bucket_interior_halfDim.z, z) + (i+1)*w_smarticle / 4);
-
-				//ChVector<> myPos = ChVector<>(i * maxDim + bucket_ctr.x, j * maxDim + bucket_ctr.y, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
-
-
-				//ChVector<> myPos = ChVector<>(i * maxDim, j * maxDim, bucket_ctr.z + 6.0 * bucket_interior_halfDim.z + 2 * bucket_half_thick);
-				// ***  added 2*bucket_half_thick to make sure stuff are initialized above bucket. Remember, bucket is inclusive, i.e. the sizes are extende 2*t from each side
-
-
-
-//				ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-
-
-
-				/*ChSharedPtr<SmarticleMotionPiece> myMotionDefault(new SmarticleMotionPiece);
-				myMotionDefault->joint_01.theta1 = -.00001;
-				myMotionDefault->joint_01.theta2 =  .00001;
-				myMotionDefault->joint_01.omega = 0;
-				myMotionDefault->joint_12.theta1 = -.00001;
-				myMotionDefault->joint_12.theta2 =  .00001;
-				myMotionDefault->joint_12.omega = 0;
-				myMotionDefault->timeInterval = 0.5;
-				myMotionDefault->startTime = 0;
-				myMotionDefault->SetMotionType(RELEASE_G);
-
-
-				ChSharedPtr<SmarticleMotionPiece> myMotion(new SmarticleMotionPiece);
-				myMotion->joint_01.theta1 = -0.5 * CH_C_PI;
-				myMotion->joint_01.theta2 =  0.5 * CH_C_PI;
-				myMotion->joint_01.omega = sOmega;
-				myMotion->joint_12.theta1 = -0.5 * CH_C_PI;
-				myMotion->joint_12.theta2 =  0.5 * CH_C_PI;
-				myMotion->joint_12.omega = sOmega;
-				myMotion->timeInterval = 0.5;
-				myMotion->startTime = 0;
-				myMotion->SetMotionType(SQUARE_G);*/
-
-				
-				if (smarticleType == SMART_ARMS) {
-					Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
-					smarticle0->Properties(smarticleCount, smarticleCount * 4,
-						rho_smarticle, mat_g,
-						collisionEnvelope,
-						l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
-						sOmega,
-						true,
-						myPos,
-						myRot
-						);
-
-					smarticle0->populateMoveVector();
-					
-					smarticle0->SetAngle(0,0, true);
-					smarticle0->Create();
-					//smarticle0->AddMotion(myMotionDefault);
-					//smarticle0->AddMotion(myMotion);
-					mySmarticlesVec.push_back((Smarticle*)smarticle0);
-					#if irrlichtVisualization
-										application.AssetBindAll();
-										application.AssetUpdateAll();
-					#endif
-				}
-
-				else if (smarticleType == SMART_U) {
-					SmarticleU * smarticle0 = new SmarticleU(&mphysicalSystem);
-					smarticle0->Properties(smarticleCount,
-						rho_smarticle, mat_g,
-						collisionEnvelope,
-						l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
-						myPos,
-						myRot);
-					smarticle0->Create();
-					mySmarticlesVec.push_back(smarticle0);
-
-
-					#if irrlichtVisualization
-										application.AssetBindAll();
-										application.AssetUpdateAll();
-					#endif
-				}
-				else {
-					std::cout << "Error! Smarticle type is not set correctly" << std::endl;
-				}
-				smarticleCount++;
-			//}
-		}
 }
 // =============================================================================
 //creates an approximate cylinder from a n-sided regular polygon

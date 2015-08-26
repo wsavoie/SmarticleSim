@@ -224,7 +224,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     arm->SetCollide(true);
     arm->SetBodyFixed(false);
     arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
-    if (armID == 1)
+    if (armID == 1) //this was old code from when I was fixing them to fit
     	arm->SetBodyFixed(false);
     else
     	arm->SetBodyFixed(false);
@@ -361,11 +361,11 @@ void Smarticle::Create() {
 
 	
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2, 0));	
-
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));	
+	
+	CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2/2 - (l_mod/2.0+r2/2)*cos(angle1), 0, -(l_mod / 2.0)*sin(angle1)), quat0);
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(0, l_mod, ChVector<>(-w / 2.0 - jointClearance- (l_mod / 2.0)*cos(angle1), 0, -(l_mod / 2.0 +jointClearance+ r2)*sin(angle1)),quat0);
-	CreateArm(2, l_mod, ChVector<>(w / 2.0 + jointClearance + (l_mod / 2.0)*cos(angle2), 0, -(l_mod / 2.0 +jointClearance+ r2)*sin(angle2)),quat2);
+	CreateArm(2, l_mod, ChVector<>( w / 2.0 + r2/2 + (l_mod/2.0+r2/2)*cos(angle2), 0, -(l_mod / 2.0)*sin(angle2)), quat2);
 	////////////////////////////////////////////////////////
 	//CreateArm(1, w, ChVector<>(0, 0, 0));
 	//CreateArm(0, l_mod, ChVector<>(-w / 2 - jointClearance - r2 - l_mod / 2, 0, 0));//original
@@ -374,8 +374,9 @@ void Smarticle::Create() {
 
 
 	//-(w / 2.0 + jointClearance - r2) + (l_mod / 2.0 + r2)*cos(angle1)
-	CreateJoints();
 	CreateActuators();
+	CreateJoints();
+
 	// mass property
 	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
 }
@@ -875,7 +876,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 }
 ChSharedBodyPtr Smarticle::GetSmarticleBodyPointer()
 {
-	return GetArm(0);
+	return GetArm(1);
 }
 int	Smarticle::GetID()
 {
