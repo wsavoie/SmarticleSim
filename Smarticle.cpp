@@ -45,7 +45,16 @@ ChSharedPtr<ChTexture> Smarticle::mtextureMid = ChSharedPtr<ChTexture>(new ChTex
 double Smarticle::distThresh;
 unsigned int Smarticle::global_GUI_value;
 
-Smarticle::~Smarticle() {}
+Smarticle::~Smarticle() 
+{
+	m_system->RemoveLink(link_actuator01);
+	m_system->RemoveLink(link_actuator12);
+	m_system->RemoveLink(link_revolute01);
+	m_system->RemoveLink(link_revolute12);
+	m_system->RemoveBody(GetArm(0));
+	m_system->RemoveBody(GetArm(1));
+	m_system->RemoveBody(GetArm(2));
+}
 
 
 void Smarticle::Properties(
@@ -74,7 +83,6 @@ void Smarticle::Properties(
 	rotation = rot;
 	angle1 = other_angle;
 	angle2 = other_angle2;
-	jointClearance = 0;
 	volume = GetVolume();
 
 
@@ -351,7 +359,6 @@ void Smarticle::CreateActuators() {
 
 void Smarticle::Create() {
 	//jointClearance =1.0/3.0*r2;
-	jointClearance = 0;
 	double l_mod = l - jointClearance;
 
 	// ** initialize U
@@ -363,9 +370,9 @@ void Smarticle::Create() {
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));	
 	
-	CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2 / 2 - (l_mod / 2.0 + r2 / 2)*cos(angle1), 0, -(l_mod / 2.0)*sin(angle1)), quat0);
+	CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(2, l_mod, ChVector<>( w / 2.0 - r2 / 2 + (l_mod / 2.0 - r2)*cos(angle2), 0, -(l_mod / 2.0)*sin(angle2)), quat2);
+	CreateArm(2, l_mod, ChVector<>( w / 2.0 + (l_mod / 2.0 - r2)*cos(angle2), 0, -(l_mod / 2.0-r2)*sin(angle2)), quat2);
 	////////////////////////////////////////////////////////
 	//CreateArm(1, w, ChVector<>(0, 0, 0));
 	//CreateArm(0, l_mod, ChVector<>(-w / 2 - jointClearance - r2 - l_mod / 2, 0, 0));//original

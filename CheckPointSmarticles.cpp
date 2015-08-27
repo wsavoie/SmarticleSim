@@ -283,12 +283,8 @@ void CheckPointSmarticlesDynamic_Read(
 			q4,angle1,angle2);
 		
 		smarticle0->Create();
-
-		angPair.first = angle1; 
-		angPair.second = angle2;
 		smarticle0->populateMoveVector();
 
-		smarticle0->SetAngle(angPair);
 		smarticle0->moveTypeIdxs.at(MoveType::GLOBAL) = globalidx;
 		smarticle0->moveTypeIdxs.at(MoveType::GUI1)		= gui1idx;
 		smarticle0->moveTypeIdxs.at(MoveType::GUI2)		= gui2idx;

@@ -185,7 +185,7 @@ ChSharedPtr<ChBody> bucket_bott;
 
 
 	double rampAngle = 10 * CH_C_PI / 180;
-	double rampInc = 1.0;
+	double rampInc = 0.1;
 
 
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
@@ -443,7 +443,7 @@ ChSharedPtr<ChBody> bucket_bott;
 			}
 		}
 	private:
-		double vibAmp = 2 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
+		double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
 		std::vector<Smarticle*> *sv;
 		ChIrrApp* app;
 		IGUIScrollBar* scrollbar_friction;
@@ -650,8 +650,9 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				myRot
 				);
 
+
 			smarticle0->populateMoveVector();
-			smarticle0->SetAngle(33, 120, true);
+			smarticle0->SetAngle(90, 90, true);
 			smarticle0->Create();
 			//smarticle0->AddMotion(myMotionDefault);
 			//smarticle0->AddMotion(myMotion);
@@ -664,7 +665,35 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 
 
 }
+ChSharedPtr<ChBody> create_complex_convex_hull(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat) //TODO finish this method, currently not being used
+{
+	ChSharedPtr<ChBody> convexShape;
+	if (USE_PARALLEL) { convexShape = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel)); }
+	else{ convexShape = ChSharedPtr<ChBody>(new ChBody); }
+	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 
+	//cyl_container->SetMass(mass);
+	convexShape->SetPos(bucket_ctr);
+	convexShape->SetRot(QUNIT);
+	convexShape->SetBodyFixed(false);
+	convexShape->SetCollide(true);
+
+	std::vector<ChVector<>> points;
+
+
+	convexShape->GetCollisionModel()->ClearModel();
+	convexShape->SetMaterialSurface(wallMat);
+	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+	convexShape->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	ChVector<> rampSize(w_smarticle * 5, w_smarticle * 5, t);
+	ChVector<> rampPos(0, 0, -sin(rampAngle)*rampSize.x - t);
+
+	utils::AddBoxGeometry(convexShape.get_ptr(), rampSize, rampPos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)), true);
+	convexShape->GetCollisionModel()->BuildModel();
+	convexShape->AddAsset(floorTexture);
+	mphysicalSystem->AddBody(convexShape);
+	return convexShape;
+}
 ChSharedPtr<ChBody> create_ramp(int id, CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
 {
 	ChSharedPtr<ChBody> ramp;
@@ -815,9 +844,9 @@ ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMate
 
 	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(-hw1 - ht, 0, h1 + hh2), QUNIT, true); // upper part, min_x plate
 	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, hw2 + ht, h1 + hh2), QUNIT, true); // upper part, min_x plate
-	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, -hw2 - ht, h1 + hh2), QUNIT, true); // upper part, min_x plate
+	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, -hw2 - ht, h1 + hh2), QUNIT, false); // upper part, min_x plate
 
-	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, -hw2 - ht, hh1), QUNIT, true); // upper part, min_x plate
+	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, -hw2 - ht, hh1), QUNIT, false); // upper part, min_x plate
 	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, hw2 + ht, hh1), QUNIT, true); // upper part, min_x plate
 
 	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(mtheta, VECT_Y), true); // upper part, min_x plate
@@ -865,24 +894,24 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		bucket = ChSharedPtr<ChBody>(new ChBody);
 		bucket_bott = ChSharedPtr<ChBody>(new ChBody);
 	}
-	//ground->SetMaterialSurface(mat_g);
-	//ground->SetPos(boxLoc);
+	ground->SetMaterialSurface(mat_g);
+	ground->SetPos(boxLoc);
 
-	//// ground->SetIdentifier(-1);
-	//ground->SetBodyFixed(true);
-	//ground->SetCollide(true);
+	// ground->SetIdentifier(-1);
+	ground->SetBodyFixed(true);
+	ground->SetCollide(true);
 
-	//ground->GetCollisionModel()->ClearModel();
-	//ground->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	//utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
-	//ground->GetCollisionModel()->SetFamily(1);
-	//ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	ground->GetCollisionModel()->ClearModel();
+	ground->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	ground->GetCollisionModel()->SetFamily(1);
+	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
-	//ground->GetCollisionModel()->BuildModel();
-	//mphysicalSystem.AddBody(ground);
-	//
-	//groundTexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
-	//ground->AddAsset(groundTexture);
+	ground->GetCollisionModel()->BuildModel();
+	mphysicalSystem.AddBody(ground);
+	
+	groundTexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
+	ground->AddAsset(groundTexture);
 
 	// 1: create bucket
 		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
@@ -1060,6 +1089,20 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 	}
 }
 // =============================================================================
+void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec) { ///remove all traces of smarticle from system
+	
+	std::vector<Smarticle*>::iterator myIter;
+	for (myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end();)
+	{
+		Smarticle* sPtr = *(myIter);
+		if (sPtr->GetArm(1)->GetPos().z < -3.0*bucket_interior_halfDim.z) 
+		{
+			sPtr->~Smarticle();
+			myIter = mySmarticlesVec.erase(myIter);
+		}
+		else{++myIter;}
+	}
+}
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
 	const std::string vol_frac = out_dir + "/volumeFraction.txt";
 	int stepSave = 10;
@@ -1303,7 +1346,7 @@ int main(int argc, char* argv[]) {
   application.AssetUpdateAll();
   application.SetStepManage(true);
   application.SetTimestep(dT);  // Arman modify
-	mphysicalSystem.SetIterLCPmaxItersSpeed(120);
+	mphysicalSystem.SetIterLCPmaxItersSpeed(50);
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 	MyEventReceiver receiver(&application, &mySmarticlesVec);
 	// note how to add the custom event receiver to the default interface:
@@ -1470,9 +1513,9 @@ int main(int argc, char* argv[]) {
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
 
-	  FixBodies(mphysicalSystem, tStep);
+	  //FixBodies(mphysicalSystem, tStep);
+		FixSmarticles(mphysicalSystem, mySmarticlesVec);
 	  PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
-
 	  std::cout.flush();
 
 
