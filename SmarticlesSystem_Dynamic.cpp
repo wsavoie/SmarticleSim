@@ -101,9 +101,9 @@ using namespace gui;
 // Use the namespace of Chrono
 
 enum SmarticleType {SMART_ARMS , SMART_U};
-enum BucketType { CYLINDER, BOX };
+enum BucketType { CYLINDER, BOX, HULL,RAMP,HOPPER };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = CYLINDER;
+BucketType bucketType = HOPPER;
 // =============================================================================
 
 class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
@@ -183,8 +183,12 @@ ChSharedPtr<ChBody> bucket_bott;
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 	double bucket_half_thick = sizeScale * .005;
 
+
+	double rampAngle = 10 * CH_C_PI / 180;
+	double rampInc = 1.0;
+
+
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
-	
 	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
 	ChSharedPtr<ChTexture> floorTexture(new ChTexture());
 
@@ -220,7 +224,6 @@ ChSharedPtr<ChBody> bucket_bott;
 
 			text_Y = app->GetIGUIEnvironment()->addStaticText(L"Press Y to move cylinder away",
 				rect<s32>(850, 185, 1050, 200), true);
-
 			
 
 		}
@@ -236,6 +239,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					else
 						Smarticle::global_GUI_value = 0;
 					return true;
+					break;
 
 				case irr::KEY_KEY_W:
 					if (Smarticle::global_GUI_value != 2)
@@ -243,12 +247,14 @@ ChSharedPtr<ChBody> bucket_bott;
 					else
 						Smarticle::global_GUI_value = 0;
 					return true;
+					break;
 				case irr::KEY_KEY_E:
 					if (Smarticle::global_GUI_value != 3)
 						Smarticle::global_GUI_value = 3;
 					else
 						Smarticle::global_GUI_value = 0;
 					return true;
+					break;
 				case irr::KEY_KEY_R: //vibrate around current theta
 					if (Smarticle::global_GUI_value != 4)
 					{
@@ -307,6 +313,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					else
 						Smarticle::global_GUI_value = 0;
 					return true;
+					break;
 
 				case irr::KEY_KEY_T:
 					if (Smarticle::global_GUI_value != 5)
@@ -329,11 +336,13 @@ ChSharedPtr<ChBody> bucket_bott;
 							{
 								Smarticle::global_GUI_value = 0;
 								return true;
+								break;
 							}
 							if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
 							{
 								Smarticle::global_GUI_value = 0;
 								return true;
+								break;
 							}
 
 							sPtr->vib.emplace_back(ang1,ang2);
@@ -349,16 +358,49 @@ ChSharedPtr<ChBody> bucket_bott;
 					else
 						Smarticle::global_GUI_value = 0;
 					return true;
+					break;
 
-				case irr::KEY_KEY_Y:
+				case irr::KEY_KEY_Y: //remove conainer or floor
 					if (bucket_exist)
 					{
-						bucket->SetPos(ChVector<>(100, 0, 0));
+						switch (bucketType)
+						{
+						case CYLINDER:
+							bucket->SetPos(ChVector<>(100, 0, 0));
+							break;
+						case HOPPER:
+							bucket_bott->SetPos(ChVector<>(100, 0, 0));
+							break;
+						case RAMP:
+							bucket->SetPos(ChVector<>(100, 0, 0));
+							break;
+						}
+						
 						bucket_exist = false;
 					}
 
 					return true;
+					break;
 
+
+				case irr::KEY_KEY_1:			//decrease angle of bucket by rampInc //TODO why is first shift angle change so large?
+					rampAngle = rampAngle - rampInc * CH_C_PI / 180.0;
+					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)));
+					return true;
+					break;
+				case irr::KEY_KEY_2:			//increase angle of bucket by rampInc
+					rampAngle = rampAngle + rampInc * CH_C_PI / 180.0;
+					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)));
+					return true;
+					break;
+				case irr::KEY_KEY_3:			//decrease rampInc
+					rampInc = rampInc-0.2;
+					return true;
+					break;
+				case irr::KEY_KEY_4:			//increase rampInc
+					rampInc = rampInc + 0.2;
+					return true;
+					break;
 				}
 
 
@@ -579,7 +621,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 #endif
 	double z;
-	int numPerLayer =1;
+	int numPerLayer =6;
 	int smarticleCount = mySmarticlesVec.size();
 	double ang = 2*CH_C_PI / numPerLayer;
 	double w = w_smarticle;
@@ -591,7 +633,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		phase = MyRand()*CH_C_PI / 2;
 		ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i+phase) *(bucket_rad/2 + w*MyRand()-w/2),
 			cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2),
-			std::min(4 * bucket_interior_halfDim.z, z) + (i + 1)*w_smarticle / 4);
+			//std::min(4 * bucket_interior_halfDim.z, z) + (i + 1)*w_smarticle / 4);
+			 z + (i + 1)*w_smarticle / 4);
 			
 		ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
 			myRot.Normalize();
@@ -621,11 +664,37 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 
 
 }
+
+ChSharedPtr<ChBody> create_ramp(int id, CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
+{
+	ChSharedPtr<ChBody> ramp;
+	if (USE_PARALLEL) {ramp = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));}
+	else{ramp = ChSharedPtr<ChBody>(new ChBody);}
+	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
+
+	//cyl_container->SetMass(mass);
+	ramp->SetPos(bucket_ctr);
+	ramp->SetRot(QUNIT);
+	ramp->SetBodyFixed(false);
+	ramp->SetCollide(true);
+
+	ramp->GetCollisionModel()->ClearModel();
+	ramp->SetMaterialSurface(wallMat);
+	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+	ramp->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	ChVector<> rampSize(w_smarticle * 5, w_smarticle * 5, t);
+	ChVector<> rampPos(0, 0, -sin(rampAngle)*rampSize.x-t);
+	
+	utils::AddBoxGeometry(ramp.get_ptr(), rampSize, rampPos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)), true);
+	ramp->GetCollisionModel()->BuildModel();
+	ramp->AddAsset(floorTexture);
+	mphysicalSystem->AddBody(ramp);
+	return ramp;
+}
 // =============================================================================
 //creates an approximate cylinder from a n-sided regular polygon
 //num_boxes = number of boxes to use
 //bucket_rad = radius of cylinder, center point to midpoint of side a side
-
 ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool overlap, CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
 {
 	ChSharedPtr<ChBody> cyl_container;
@@ -709,61 +778,74 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 //bucket_rad = radius of cylinder, center point to midpoint of side a side
 ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat, double w1, double w2, double w3, double h1, double h2,  bool overlap)
 {
-	ChSharedPtr<ChBody> cyl_container;
+	ChSharedPtr<ChBody> hopper;
 	if (USE_PARALLEL) {
-		cyl_container = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+		hopper = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	}
 	else {
-		cyl_container = ChSharedPtr<ChBody>(new ChBody);
+		hopper = ChSharedPtr<ChBody>(new ChBody);
 	}
 
 
-	double hw1 = 0.5 * w1;
-	double hw2 = 0.5 * w2;
-	double hw3 = 0.5 * w3;
-	double hh1 = 0.5 * h1;
-	double hh2 = 0.5 * h2;
+	double hw1 = w1;
+	double hw2 = w2;
+	double hw3 = w3;
+	double hh1 = h1*.5;
+	double hh2 = h2*.5;
 	double ht = bucket_half_thick;
 
-	//cyl_container->SetIdentifier(id);
-	//cyl_container->SetMass(mass);
-	cyl_container->SetPos(bucket_ctr);
-	cyl_container->SetRot(QUNIT);
-	cyl_container->SetBodyFixed(true);
-	cyl_container->SetCollide(true);
+	hopper->SetPos(bucket_ctr);
+	hopper->SetRot(QUNIT);
+	hopper->SetBodyFixed(true);
+	hopper->SetCollide(true);
 
 
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double o_lap = 0;
 	if (overlap){ o_lap = 2 * t; }
 
-	cyl_container->GetCollisionModel()->ClearModel();
-	cyl_container->SetMaterialSurface(wallMat);
+	hopper->GetCollisionModel()->ClearModel();
+	hopper->SetMaterialSurface(wallMat);
 	double mtheta = atan((hw1 - hw3) / h1);
 
 
-	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-	
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(hw1 + ht, 0, h1 + hh2), QUNIT, true); // upper part, max_x plate
+	bucketTexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
+	hopper->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(hw1 + ht, 0, h1 + hh2), QUNIT, true); // upper part, max_x plate
 
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(-hw1 - ht, 0, h1 + hh2), QUNIT, true); // upper part, min_x plate
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, hw2 + ht, h1 + hh2), QUNIT, true); // upper part, min_x plate
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, -hw2 - ht, h1 + hh2), QUNIT, true); // upper part, min_x plate
+	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(ht, hw2 + o_lap, hh2 + o_lap), ChVector<>(-hw1 - ht, 0, h1 + hh2), QUNIT, true); // upper part, min_x plate
+	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, hw2 + ht, h1 + hh2), QUNIT, true); // upper part, min_x plate
+	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh2 + o_lap), ChVector<>(0, -hw2 - ht, h1 + hh2), QUNIT, true); // upper part, min_x plate
 
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, -hw2 - ht, hh1), QUNIT, true); // upper part, min_x plate
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, hw2 + ht, hh1), QUNIT, true); // upper part, min_x plate
+	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, -hw2 - ht, hh1), QUNIT, true); // upper part, min_x plate
+	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(hw1 + o_lap, ht, hh1), ChVector<>(0, hw2 + ht, hh1), QUNIT, true); // upper part, min_x plate
 
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(mtheta, VECT_Y), true); // upper part, min_x plate
-	utils::AddBoxGeometry(cyl_container.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(-mtheta, VECT_Y), true); // upper part, min_x plate
-	cyl_container->AddAsset(bucketTexture);
+	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(hw3 + hh1 * tan(mtheta) + ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(mtheta, VECT_Y), true); // upper part, min_x plate
+	utils::AddBoxGeometry(hopper.get_ptr(), ChVector<>(ht, hw2, hh1 / cos(mtheta)), ChVector<>(-hw3 - hh1 * tan(mtheta) - ht * cos(mtheta), 0, hh1 - ht * sin(mtheta)), Q_from_AngAxis(-mtheta, VECT_Y), true); // upper part, min_x plate
+	hopper->AddAsset(bucketTexture);
 
 	double estimated_volume = 8 * (w1 * t * h1); // Arman : fix this
-	cyl_container->SetMass(rho_cylinder*estimated_volume);
-	cyl_container->GetCollisionModel()->BuildModel();
-	mphysicalSystem->AddBody(cyl_container);
-	return cyl_container;
+	hopper->SetMass(rho_cylinder*estimated_volume);
+	hopper->GetCollisionModel()->BuildModel();
+	mphysicalSystem->AddBody(hopper);
+	return hopper;
 }
+void CreateBucket_bott(CH_SYSTEM& mphysicalSystem)
+{
+	bucket_bott->SetBodyFixed(true);
+	bucket_bott->SetCollide(true);
+	bucket_bott->GetCollisionModel()->ClearModel();
+	bucket_bott->SetPos(bucket_ctr);
+	bucket_bott->SetMaterialSurface(mat_g);
+	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));//custom file
+	bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(bucket_bott.get_ptr(), Vector(bucket_rad + 2 * bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
+	bucket_bott->AddAsset(floorTexture);
+	bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
+	bucket_bott->GetCollisionModel()->BuildModel();
+	mphysicalSystem.AddBody(bucket_bott);
+}
 // =============================================================================
 void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 	/////////////////
@@ -783,62 +865,52 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		bucket = ChSharedPtr<ChBody>(new ChBody);
 		bucket_bott = ChSharedPtr<ChBody>(new ChBody);
 	}
-	ground->SetMaterialSurface(mat_g);
-	ground->SetPos(boxLoc);
+	//ground->SetMaterialSurface(mat_g);
+	//ground->SetPos(boxLoc);
 
-	// ground->SetIdentifier(-1);
-	ground->SetBodyFixed(true);
-	ground->SetCollide(true);
+	//// ground->SetIdentifier(-1);
+	//ground->SetBodyFixed(true);
+	//ground->SetCollide(true);
 
-	ground->GetCollisionModel()->ClearModel();
-	ground->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
-	ground->GetCollisionModel()->SetFamily(1);
-	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	//ground->GetCollisionModel()->ClearModel();
+	//ground->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	//utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	//ground->GetCollisionModel()->SetFamily(1);
+	//ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
-	ground->GetCollisionModel()->BuildModel();
-	mphysicalSystem.AddBody(ground);
-	
-	groundTexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
-	ground->AddAsset(groundTexture);
+	//ground->GetCollisionModel()->BuildModel();
+	//mphysicalSystem.AddBody(ground);
+	//
+	//groundTexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
+	//ground->AddAsset(groundTexture);
 
 	// 1: create bucket
 		mat_g->SetFriction(0.4); //steel- plexiglass   (plexiglass was outer cylinder material)
-	if (bucketType == BOX){
-	//	bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
 		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-		//bucket->AddAsset(mtexture);
-		bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z,  true);
+		switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
+		{
+		case BOX:
+			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+			bucket->AddAsset(bucketTexture);
+			break;
 
-	}
-	if (bucketType == CYLINDER){
-		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
+		case CYLINDER:
+			bucket = create_cylinder_from_blocks(25, 1, true, &mphysicalSystem, mat_g);
+			CreateBucket_bott(mphysicalSystem);
+			break;
 
-		bucket = create_cylinder_from_blocks(25, 1, true, &mphysicalSystem, mat_g);
-		
-
-		bucket_bott->SetBodyFixed(true);
-		bucket_bott->SetCollide(true);
-		bucket_bott->GetCollisionModel()->ClearModel();
-		bucket_bott->SetPos(bucket_ctr);
-		bucket_bott->SetMaterialSurface(mat_g);
-		floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));//custom file
-		bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-		utils::AddBoxGeometry(bucket_bott.get_ptr(), Vector(bucket_rad + 2 * bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
-		bucket_bott->AddAsset(floorTexture);
-		bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-		
-		bucket_bott->GetCollisionModel()->BuildModel();
-
-
-
-	
-	
-		
-	
-		mphysicalSystem.AddBody(bucket_bott);
+		case RAMP:
+			bucket = create_ramp(1,&mphysicalSystem,mat_g);
+			break;
+		case HOPPER:
+			bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z, true);
+			CreateBucket_bott(mphysicalSystem);
+			break;
+		case HULL:
+			break; 
+		}
 		mat_g->SetFriction(0.5); //steel - steel
-	}
+
 
 	bucket->SetBodyFixed(false);
 	bucket->SetCollide(true);
@@ -982,7 +1054,7 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
 	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 		ChBody* bodyPtr = *(myIter + i);
-		if (bodyPtr->GetPos().z < -1.5 * bucket_interior_halfDim.z) {
+		if (bodyPtr->GetPos().z < -5.0*bucket_interior_halfDim.z) {
 			bodyPtr->SetBodyFixed(true);
 		}
 	}
