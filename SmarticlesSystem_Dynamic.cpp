@@ -533,8 +533,8 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 
   // Modify some setting of the physical system for the simulation, if you want
   mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR); // LCP_ITERATIVE_SOR_MULTITHREAD , LCP_ITERATIVE_SOR  (LCP_ITERATIVE_SOR_MULTITHREAD does not work)
-  mphysicalSystem.SetIterLCPmaxItersSpeed(50);
-  mphysicalSystem.SetIterLCPmaxItersStab(5);   // unuseful for Anitescu, only Tasora uses this
+  mphysicalSystem.SetIterLCPmaxItersSpeed(100);
+  mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
   mphysicalSystem.SetParallelThreadNumber(1);  //TODO figure out if this can increase speed
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   mphysicalSystem.SetIterLCPwarmStarting(true);
@@ -652,7 +652,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 
 
 			smarticle0->populateMoveVector();
-			smarticle0->SetAngle(90, 90, true);
+			smarticle0->SetAngle(0, 0, true);
 			smarticle0->Create();
 			//smarticle0->AddMotion(myMotionDefault);
 			//smarticle0->AddMotion(myMotion);
@@ -1346,7 +1346,7 @@ int main(int argc, char* argv[]) {
   application.AssetUpdateAll();
   application.SetStepManage(true);
   application.SetTimestep(dT);  // Arman modify
-	mphysicalSystem.SetIterLCPmaxItersSpeed(50);
+
   std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 	MyEventReceiver receiver(&application, &mySmarticlesVec);
 	// note how to add the custom event receiver to the default interface:
