@@ -688,11 +688,21 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 	return 0;
 }
 bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1, double momega2,MoveType mtype)
-{	
+{
 	//real ang01 and ang12
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
-
+	
+	//if (link_actuator01->IsBroken())
+	//{
+	//	arm0->AddAsset(mtextureOT);
+	//	GetLog() << "broken actuator 01 !";
+	//}
+	//if (link_actuator12->IsBroken())
+	//{
+	//	arm0->AddAsset(mtextureOT);
+	//	GetLog() << "broken actuator12!";
+	//}
 	SetAngle(ang01, ang12);
 	
 	//expected ang01 and ang12
@@ -757,10 +767,11 @@ void Smarticle::MoveLoop2(int guiState = 0)
 {
 	//initialize boolean describing same moveType as last step
 	bool sameMoveType = false;
-	bool successfulMotion = false;
+	static bool successfulMotion = false;
+	bool prevSucessful = successfulMotion;
+	successfulMotion = false;
 	//this pointer will point to the correct moveType vector
 	std::vector<std::pair<double, double>> *v;
-	
 	//set prevMoveType to previous value
 	this->prevMoveType = this->moveType;
 
@@ -768,7 +779,8 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
 
-
+	double omega1Prev = link_actuator01->Get_mot_rot_dt();
+	double omega2Prev = link_actuator12->Get_mot_rot_dt();
 	//double omega01 = li
 	double torque01 = link_actuator01->Get_react_torque().Length2(); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
 	double torque12 = link_actuator12->Get_react_torque().Length2();
@@ -807,6 +819,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		v = &global;
 		break;
 	}
+	
 	//overTorque takes priority!
 	//arm0->AddAsset(mtextureArm);
 	//arm2->AddAsset(mtextureArm);
@@ -835,7 +848,8 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		}
 	
 	}
-
+	link_actuator01->SetDisabled(false);
+	link_actuator12->SetDisabled(false);
 	if (this->moveType == this->prevMoveType){
 		sameMoveType = true;
 	}
@@ -853,7 +867,19 @@ void Smarticle::MoveLoop2(int guiState = 0)
 			break;
 		case GUI1:
 			
-			if (sameMoveType){}
+			if (sameMoveType)
+			{
+				if (omega1Prev == 0 && omega2Prev == 0)
+				{
+					//GetLog() << "Set disabled\n";
+					//link_actuator01->SetDisabled(true);
+					//link_actuator12->SetDisabled(true);
+					//arm0->SetUseSleeping(.005);
+					//arm2->SetUseSleeping(.005);
+					//successfulMotion = true;
+					//break;
+				}
+			}
 			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
 			break;
 		case GUI2:

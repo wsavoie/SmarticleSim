@@ -16,11 +16,11 @@ angHigh=120;
 
 global_gait= 3;
 gui1_gait = 1;
-gui2_gait = 1;
+gui2_gait = 2;
 gui3_gait = 1;
 
 
-PON= 1;
+PON= 0;
 if PON
     figure(1)
 end
@@ -82,18 +82,9 @@ switch global_gait
             figText(gcf,15);
         end
     case 3% 90 to 120 oscillate
-        ang = [pi/2:ss:2*pi/3, 2*pi/3:-ss:pi/2];
-        global_theta_1Pos= ang;
-        global_theta_2Pos= ang;
-        if PON
-            plot(global_theta_1Pos,global_theta_2Pos,'.k');
-            xlabel('\theta_1');
-            ylabel('\theta_2');
-            axis([pi/2 2*pi/3 pi/2 2*pi/3])
-            axis square
-            title('\pi/2\rightarrow 2\pi/3\rightarrow\pi/2');
-            figText(gcf,15);
-        end
+         ang = 0:ss:2*pi;
+        global_theta_1Pos=;
+        global_theta_2Pos=r*sin(ang-phi);
 end
 
 %convert the distance between the points to the proper amount
