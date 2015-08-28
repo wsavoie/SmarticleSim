@@ -103,7 +103,7 @@ using namespace gui;
 enum SmarticleType {SMART_ARMS , SMART_U};
 enum BucketType { CYLINDER, BOX, HULL,RAMP,HOPPER };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = HOPPER;
+BucketType bucketType = RAMP;
 // =============================================================================
 
 class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
@@ -185,7 +185,7 @@ ChSharedPtr<ChBody> bucket_bott;
 
 
 	double rampAngle = 10 * CH_C_PI / 180;
-	double rampInc = 0.1;
+	double rampInc = 0.2;
 
 
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
@@ -203,6 +203,9 @@ ChSharedPtr<ChBody> bucket_bott;
 			app = myapp;
 			// ..add a GUI slider to control friction
 
+
+			text_Angle = app->GetIGUIEnvironment()->addStaticText(L"Angle: 0, Increment: 0",
+				rect<s32>(850, 45, 1050, 60), true);
 			text_SmarticleAmt = app->GetIGUIEnvironment()->addStaticText(L"Layers: 0, Smarticles: 0",
 				rect<s32>(850, 65, 1050, 80), true);
 
@@ -225,6 +228,7 @@ ChSharedPtr<ChBody> bucket_bott;
 			text_Y = app->GetIGUIEnvironment()->addStaticText(L"Press Y to move cylinder away",
 				rect<s32>(850, 185, 1050, 200), true);
 			
+
 
 		}
 		
@@ -384,21 +388,28 @@ ChSharedPtr<ChBody> bucket_bott;
 
 
 				case irr::KEY_KEY_1:			//decrease angle of bucket by rampInc //TODO why is first shift angle change so large?
-					rampAngle = rampAngle - rampInc * CH_C_PI / 180.0;
-					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)));
+					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0;
+					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
+						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0
+						, 0, 0)));
+					drawAngle();
 					return true;
 					break;
 				case irr::KEY_KEY_2:			//increase angle of bucket by rampInc
-					rampAngle = rampAngle + rampInc * CH_C_PI / 180.0;
-					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)));
+					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
+						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0
+						, 0, 0)));
+					drawAngle();
 					return true;
 					break;
 				case irr::KEY_KEY_3:			//decrease rampInc
-					rampInc = rampInc-0.2;
+					rampInc = rampInc-0.05;
+					drawAngle();
 					return true;
 					break;
 				case irr::KEY_KEY_4:			//increase rampInc
-					rampInc = rampInc + 0.2;
+					rampInc = rampInc + 0.05;
+					drawAngle();
 					return true;
 					break;
 				}
@@ -411,6 +422,12 @@ ChSharedPtr<ChBody> bucket_bott;
 		{
 			char message[100]; sprintf(message, "Layers: %d, Smarticles: %d", numLayers, sv->size());
 			this->text_SmarticleAmt->setText(core::stringw(message).c_str());
+		}
+		void drawAngle()
+		{
+			char message[100]; sprintf(message, "Angle: %g, Increment: %g", Quat_to_Angle(ANGLESET_RXYZ,bucket->GetRot()).x*180/CH_C_PI, rampInc);
+			this->text_Angle->setText(core::stringw(message).c_str());
+
 		}
 		void drawOTArms()
 		{
@@ -454,6 +471,7 @@ ChSharedPtr<ChBody> bucket_bott;
 		IGUIStaticText* text_T;
 		IGUIStaticText* text_Y;
 		IGUIStaticText* text_SmarticleAmt;
+		IGUIStaticText* text_Angle;
 		IGUIScrollBar* scrollbar_cohesion;
 		IGUIStaticText* text_cohesion;
 		IGUIScrollBar* scrollbar_compliance;
@@ -533,9 +551,9 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 
   // Modify some setting of the physical system for the simulation, if you want
   mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR); // LCP_ITERATIVE_SOR_MULTITHREAD , LCP_ITERATIVE_SOR  (LCP_ITERATIVE_SOR_MULTITHREAD does not work)
-  mphysicalSystem.SetIterLCPmaxItersSpeed(100);
+  mphysicalSystem.SetIterLCPmaxItersSpeed(120);
   mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
-  mphysicalSystem.SetParallelThreadNumber(1);  //TODO figure out if this can increase speed
+  //mphysicalSystem.SetParallelThreadNumber(1);  //TODO figure out if this can increase speed
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   mphysicalSystem.SetIterLCPwarmStarting(true);
   mphysicalSystem.SetUseSleeping(false);
@@ -652,7 +670,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 
 
 			smarticle0->populateMoveVector();
-			smarticle0->SetAngle(0, 0, true);
+			smarticle0->SetAngle(90, -90, true);
 			smarticle0->Create();
 			//smarticle0->AddMotion(myMotionDefault);
 			//smarticle0->AddMotion(myMotion);
@@ -701,18 +719,21 @@ ChSharedPtr<ChBody> create_ramp(int id, CH_SYSTEM* mphysicalSystem, ChSharedPtr<
 	else{ramp = ChSharedPtr<ChBody>(new ChBody);}
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 
+
+	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 	//cyl_container->SetMass(mass);
 	ramp->SetPos(bucket_ctr);
-	ramp->SetRot(QUNIT);
+	ramp->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)));
 	ramp->SetBodyFixed(false);
 	ramp->SetCollide(true);
+	ChVector<> rampSize(w_smarticle * 5, w_smarticle * 5, t);
+	ChVector<> rampPos(0, 0, -sin(rampAngle)*rampSize.x - t);
 
 	ramp->GetCollisionModel()->ClearModel();
 	ramp->SetMaterialSurface(wallMat);
-	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+
 	ramp->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	ChVector<> rampSize(w_smarticle * 5, w_smarticle * 5, t);
-	ChVector<> rampPos(0, 0, -sin(rampAngle)*rampSize.x-t);
+
 	
 	utils::AddBoxGeometry(ramp.get_ptr(), rampSize, rampPos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)), true);
 	ramp->GetCollisionModel()->BuildModel();
@@ -1351,6 +1372,7 @@ int main(int argc, char* argv[]) {
 	MyEventReceiver receiver(&application, &mySmarticlesVec);
 	// note how to add the custom event receiver to the default interface:
 	application.SetUserEventReceiver(&receiver);
+	receiver.drawAngle();//initialize draw angle
 
 #endif
 
@@ -1397,7 +1419,6 @@ int main(int argc, char* argv[]) {
 		application.AssetBindAll();
 		application.AssetUpdateAll();
 	}
-  printf("************** size sys %d \n", mySmarticlesVec.size());
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
@@ -1446,7 +1467,7 @@ int main(int argc, char* argv[]) {
 			//		}
 		}
 
-	   printf("\n");
+	   
 
 		 if (t > vibrateStart){
 			 bucket->SetBodyFixed(false);
@@ -1507,9 +1528,6 @@ int main(int argc, char* argv[]) {
     UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
-		char filename[100];
-		sprintf(filename, "screenshot%d.bmp", tStep);
-		//screenshot(filename);
 	  step_timer.stop("step time");
 	  std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
 

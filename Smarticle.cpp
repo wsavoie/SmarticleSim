@@ -240,7 +240,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	arm->SetMaterialSurface(mat_g);
 
 	//double mass = density * vol;
-	double mass = .043/3.0; //robot weight 43 grams
+	double mass = .005;//.043/3.0; //robot weight 43 grams
 	arm->GetCollisionModel()->ClearModel();
 	
 	
@@ -552,7 +552,7 @@ std::pair<double, double> Smarticle::populateMoveVector()
 		mtorqueThresh2 >>
 		mangLow >>
 		mangHigh;
-	printf("dt %f omega %f torqueThresh2 %f angLow %f angHigh %f", mdt, momega, mtorqueThresh2, mangLow, mangHigh);
+	//printf("dt %f omega %f torqueThresh2 %f angLow %f angHigh %f", mdt, momega, mtorqueThresh2, mangLow, mangHigh);
 	SetDefaultOmega(momega);
 	SetOmega(momega);
 	char ddCh;
@@ -581,7 +581,6 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	//this->SetAngle(angPair.first, angPair.second);
 	//this->SetAngle1(ang1);
 	//this->SetAngle2(ang2);
-	GetLog() << "\n";
 	//for some reason it only works with vectors?
 	ChVector<> angVals;
 	smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
@@ -1012,8 +1011,6 @@ void Smarticle::MoveCircle() {
 			omega2 = -smallOmega;
 		}
 	}
-
-	printf(" omega1 %f omega2 %f\n", omega1, omega2);
 
 	this->SetActuatorFunction(0, omega1);
 	this->SetActuatorFunction(1, omega2);

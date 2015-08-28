@@ -54,7 +54,6 @@ void CheckPointSmarticles_Write(
 	strcat(nameCheckPoint, fileCounter);
 	strcat(nameCheckPoint, ".csv");
 
-	std::cout << "******************************************************************************************** " <<std::endl;
 	std::ofstream outSmarticles;
 	outSmarticles.open(nameCheckPoint);
 
@@ -123,7 +122,6 @@ void CheckPointSmarticlesDynamic_Write(
 	strcat(nameCheckPoint, fileCounter);
 	strcat(nameCheckPoint, ".csv");
 
-	std::cout << "******************************************************************************************** " << std::endl;
 	std::ofstream outSmarticles;
 	outSmarticles.open(nameCheckPoint);
 
