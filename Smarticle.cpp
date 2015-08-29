@@ -317,8 +317,8 @@ ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
 }
 void Smarticle::TransportSmarticle(ChVector<> newPosition)
 {
-	GetArm(0)->SetPos(GetArm(1)->GetPos() - GetArm(0)->GetPos() + newPosition);
-	GetArm(2)->SetPos(GetArm(1)->GetPos() - GetArm(2)->GetPos() + newPosition);
+	GetArm(0)->SetPos(GetArm(0)->GetPos() - GetArm(1)->GetPos() + newPosition);
+	GetArm(2)->SetPos(GetArm(2)->GetPos() - GetArm(1)->GetPos() + newPosition);
 	GetArm(1)->SetPos(newPosition);
 }
 void Smarticle::CreateJoints() {
