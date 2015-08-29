@@ -188,7 +188,7 @@ ChSharedPtr<ChBody> bucket_bott;
 
 	double rampAngle = 10 * CH_C_PI / 180;
 	double rampInc = 0.2;
-	double drum_freq = 4;
+	double drum_freq = 1;
 	double drum_omega = drum_freq*2*CH_C_PI;
 
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
@@ -468,7 +468,7 @@ ChSharedPtr<ChBody> bucket_bott;
 			
 			if (bucketType == DRUM)
 			{
-				char message[100]; sprintf(message, "AngVel: %g, Increment: %g", drum_freq, rampInc);
+				char message[100]; sprintf(message, "AngVel: %g Hz, Increment: %g", drum_freq, rampInc);
 				this->text_Angle->setText(core::stringw(message).c_str());
 			}
 			else{
@@ -687,6 +687,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 #endif
 	double z;
+	double zpos;
 	int numPerLayer =6;
 	int smarticleCount = mySmarticlesVec.size();
 	double ang = 2*CH_C_PI / numPerLayer;
@@ -697,10 +698,15 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 	for (int i = 0; i < numPerLayer; i++)
 	{
 		phase = MyRand()*CH_C_PI / 2;
-		ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i+phase) *(bucket_rad/2 + w*MyRand()-w/2),
+		zpos = std::min(3 * bucket_interior_halfDim.z, z) + w_smarticle / 4;
+		if (bucketType==DRUM)
+			zpos = std::min(bucket_interior_halfDim.z, z) + w_smarticle / 4;
+		ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand() - w / 2),
 			cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2),
+			zpos);
+			
 			//std::min(4 * bucket_interior_halfDim.z, z) + (i + 1)*w_smarticle / 4);
-			std::min(3 * bucket_interior_halfDim.z, z) + w_smarticle / 4);
+			//std::min(3 * bucket_interior_halfDim.z, z) + w_smarticle / 4);
 			// z + w_smarticle / 2);
 			
 		ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
@@ -719,7 +725,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 
 
 			smarticle0->populateMoveVector();
-			smarticle0->SetAngle(120, 120, true);
+			smarticle0->SetAngle(90, 90, true);
 			smarticle0->Create();
 			//smarticle0->AddMotion(myMotionDefault);
 			//smarticle0->AddMotion(myMotion);
@@ -800,12 +806,13 @@ ChSharedPtr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* 
 	}
 //TODO add bucketVolume as global variable and set it in each function to calculate for each shape volumefraction seamlessly
 	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-	drum->GetCollisionModel()->SetFamily(1);
-	drum->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+
 	drum->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	//front wall made invisible so we can see inside
 	utils::AddBoxGeometry(drum.get_ptr(), ChVector<>(wallt + bucket_rad*radMult, wallt + bucket_rad*radMult, wallt), bucket_ctr + VECT_Z*(half_height + 2 * o_lap - 2 * t), QUNIT,false); 
 	drum->GetCollisionModel()->BuildModel();
+	drum->GetCollisionModel()->SetFamily(1);
+	drum->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	mphysicalSystem->AddBody(drum);
 	
 
@@ -819,12 +826,12 @@ ChSharedPtr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* 
 	bucket_bott->AddAsset(bucketTexture);
 	utils::AddBoxGeometry(bucket_bott.get_ptr(), ChVector<>(wallt + bucket_rad*radMult, wallt + bucket_rad*radMult, wallt), bucket_ctr - VECT_Z*(half_height + 2 * o_lap - 2 * t), QUNIT);
 
-	bucket_bott->GetCollisionModel()->SetFamily(1);
-	bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+
 	bucket_bott->GetCollisionModel()->BuildModel();
 	mphysicalSystem->AddBody(bucket_bott);
 	bucket_bott->SetRot(Q_from_AngAxis(CH_C_PI / 2.0, VECT_X));
-
+	bucket_bott->GetCollisionModel()->SetFamily(1);
+	bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
 	return drum;
 }
@@ -1284,17 +1291,30 @@ bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 	if (pt.z < rad.y || pt.z >rad.z){ return false; }
 	return true;
 }
-
+void printFlowRate(double time)
+{
+	GetLog()<< "\n" << time;
+}
 // =============================================================================
 void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec)
 {
-	double pos = -3.0*bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
+	double pos = -1*bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
+
+
+
+	//ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand() - w / 2),
+	//	cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2),
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++)
 	{
 		Smarticle* sPtr = mySmarticlesVec[i];
 		if (sPtr->GetArm(1)->GetPos().z < pos)
 		{
-			sPtr->TransportSmarticle(ChVector<>(0,0,bucket_interior_halfDim.z));
+			sPtr->TransportSmarticle(ChVector<>
+				(ChVector<>(sPtr->GetArm(1)->GetPos().x,
+				sPtr->GetArm(1)->GetPos().y,
+				bucket_interior_halfDim.z*2)));
+			//sPtr->SetSpeed(sPtr->GetArm(1)->GetPos_dt()/2);
+			printFlowRate(mphysicalSystem.GetChTime());
 		}
 	}
 }
@@ -1309,8 +1329,8 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 	}
 }
 // =============================================================================
-void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec) { ///remove all traces of smarticle from system
-	if (bucketType == HOPPER) //if hopper, put smarticles back inside after reaching below hopper
+void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec,double tstep) { ///remove all traces of smarticle from system
+	if (bucketType == HOPPER && bucket_exist==false) //if hopper, put smarticles back inside after reaching below hopper if bucket_bott still exists delete
 	{
 		recycleSmarticles(mphysicalSystem,mySmarticlesVec);
 		return;
@@ -1430,10 +1450,18 @@ void rotate_drum(double t)//method is called on each iteration to rotate drum at
 	////bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()) + ChVector<>(0, 0, bucket_omega*t)));
 	//bucket->SetRot_dt(Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(0,0,bucket_omega)));
 	//bucket->SetRot_dtdt(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 0)));
+	bucket->SetBodyFixed(false);
+	bucket_bott->SetBodyFixed(true);
+	
 
 	static ChSharedPtr<ChFunction_Const> mfun2 = drum_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
 	drum_omega = drum_freq*CH_C_PI * 2;
 	mfun2->Set_yconst(drum_omega);
+	//ChQuaternion<> rspeed = (bucket->GetRot()*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, drum_omega)));
+	//rspeed.Normalize();
+	//bucket->SetRot_dt(rspeed);
+	//bucket->SetPos(VNULL);
+
 }
 void setUpDrumActuator(CH_SYSTEM& mphysicalSystem)
 {
@@ -1701,17 +1729,17 @@ int main(int argc, char* argv[]) {
 		}
 
 
-		if (bucketType == DRUM)
-		{
-			rotate_drum(t);
-		}
+
 		if (t > vibrateStart){
 			bucket->SetBodyFixed(false);
 			vibrate_bucket(t);
 		}
 		else{ bucket->SetBodyFixed(true);}
 		receiver.drawSmarticleAmt(numGeneratedLayers);
-
+		if (bucketType == DRUM)
+		{
+			rotate_drum(t);
+		}
 		 //receiver.drawOTArms();
 
 
@@ -1754,6 +1782,7 @@ int main(int argc, char* argv[]) {
 	
 		application.DrawAll();
     application.DoStep();
+		
     application.GetVideoDriver()->endScene();
 #else
     mphysicalSystem.DoStepDynamics(dT);
@@ -1761,7 +1790,7 @@ int main(int argc, char* argv[]) {
 #endif
 
 
-
+		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
     UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
@@ -1769,7 +1798,7 @@ int main(int argc, char* argv[]) {
 	  //std::cout << "step time: " << step_timer.GetTime("step time") << ", time passed: " << int(timeDiff)/3600 <<":"<< (int(timeDiff) % 3600) / 60 << ":" << (int(timeDiff) % 60) <<std::endl;
 
 	  //FixBodies(mphysicalSystem, tStep);
-		FixSmarticles(mphysicalSystem, mySmarticlesVec);
+		
 	  PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
 	  std::cout.flush();
 
