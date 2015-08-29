@@ -1281,25 +1281,40 @@ bool IsIn(ChVector<> pt, ChVector<> min, ChVector<> max) {
 bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 {
 	ChVector<> dist = pt - centralPt;
-	double xydist = (std::sqrt(dist.x * dist.x + dist.y * dist.y));
-	xydist = (std::sqrt((pt.x - centralPt.x)*(pt.x - centralPt.x) + (pt.y - centralPt.y)*(pt.y - centralPt.y)));
+	double xydist = std::sqrt(dist.x * dist.x + dist.y * dist.y);
+	//xydist = (std::sqrt((pt.x - centralPt.x)*(pt.x - centralPt.x) + (pt.y - centralPt.y)*(pt.y - centralPt.y)));
 //	if ((xydist < rad.x) && (pt.z >= rad.y) && (pt.z < rad.z)) {
 //		return true;
 //	}
 //	return false;
-	if (xydist >= rad.x) { return false; } // if outside radius
-	if (pt.z < rad.y || pt.z >rad.z){ return false; }
+	if (xydist >= rad.x) { GetLog() << "outside radius"; return false; } // if outside radius
+	if (pt.z < rad.y || pt.z >rad.z){ GetLog() << "outside z"; return false; }
 	return true;
 }
-void printFlowRate(double time)
+void printFlowRate(double time,int count) //SAVE smarticle gaitType out for reference!
 {
-	GetLog()<< "\n" << time;
+	static bool started= false;
+	const std::string flowRate = out_dir + "/flowrate.txt";
+
+	std::ofstream flowRate_of;
+	if (!started) 
+	{
+		flowRate_of.open(flowRate.c_str());
+		started = true;
+	}
+	else 
+	{
+		flowRate_of.open(flowRate.c_str(), std::ios::app);
+	}
+	flowRate_of << time << ", " << count << ", " << Smarticle::global_GUI_value<<std::endl;
+
+	flowRate_of.close();
 }
 // =============================================================================
 void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec)
 {
 	double pos = -1*bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
-
+	static int recycledSmarticles = 0;
 
 
 	//ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand() - w / 2),
@@ -1314,9 +1329,11 @@ void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySm
 				sPtr->GetArm(1)->GetPos().y,
 				bucket_interior_halfDim.z*2)));
 			//sPtr->SetSpeed(sPtr->GetArm(1)->GetPos_dt()/2);
-			printFlowRate(mphysicalSystem.GetChTime());
+			recycledSmarticles++;
+			
 		}
 	}
+	printFlowRate(mphysicalSystem.GetChTime(), recycledSmarticles);
 }
 // =============================================================================
 void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
@@ -1333,14 +1350,14 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 	if (bucketType == HOPPER && bucket_exist==false) //if hopper, put smarticles back inside after reaching below hopper if bucket_bott still exists delete
 	{
 		recycleSmarticles(mphysicalSystem,mySmarticlesVec);
-		return;
 	}
-	else
+
+	std::vector<Smarticle*>::iterator myIter;
+	for (myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end();)
 	{
-		std::vector<Smarticle*>::iterator myIter;
-		for (myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end();)
+		Smarticle* sPtr = *(myIter);
+		if (bucketType != HOPPER)
 		{
-			Smarticle* sPtr = *(myIter);
 			if (sPtr->GetArm(1)->GetPos().z < -3.0*bucket_interior_halfDim.z)
 			{
 				sPtr->~Smarticle();
@@ -1348,7 +1365,19 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 			}
 			else{ ++myIter; }
 		}
+		else
+		{
+			//ed w_smarticle/4 to make sure it doesn't delete particles being generated!
+			if (!IsInRadial(sPtr->GetArm(1)->GetPos(), bucket->GetPos(), ChVector<>(bucket_rad * 2, -4.0*bucket_interior_halfDim.z, 4.0*bucket_interior_halfDim.z)))
+			{
+				sPtr->~Smarticle();
+				myIter = mySmarticlesVec.erase(myIter);
+			}
+			else{ ++myIter; }
+			
+		}
 	}
+	
 	
 }
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {

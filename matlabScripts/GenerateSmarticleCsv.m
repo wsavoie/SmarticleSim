@@ -14,16 +14,14 @@ torqueThresh=100;%.00005;
 angLow=60;
 angHigh=120;
 
-global_gait= 3;
+global_gait= 1;
 gui1_gait = 1;
 gui2_gait = 1;
 gui3_gait = 1;
 
 
 PON= 1;
-if PON
-    figure(1)
-end
+
 
 directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 fileloc = horzcat(directory_name,'\','smarticleMoves.csv');
@@ -40,7 +38,7 @@ fprintf(fid,'#\n');
 ss= dt*omega; %step size
 
 
-hold on;
+
 switch global_gait
     case 1% circle gait
         ang = 0:ss:2*pi;
@@ -49,6 +47,8 @@ switch global_gait
         global_theta_1Pos=r*cos(ang-phi);
         global_theta_2Pos=r*sin(ang-phi);
         if PON
+            hold on;
+            figure(1);
             plot(global_theta_1Pos,global_theta_2Pos,'.k');
             xlabel('\theta_1');
             ylabel('\theta_2');
@@ -73,6 +73,8 @@ switch global_gait
         global_theta_1Pos=[t1,l1,b1,r1];
         global_theta_2Pos=[t2,l2,b2,r2];
         if PON
+            figure(1);
+            hold on;
             plot(global_theta_1Pos,global_theta_2Pos,'.k');
             xlabel('\theta_1');
             ylabel('\theta_2');
@@ -86,6 +88,8 @@ switch global_gait
         global_theta_1Pos= ang;
         global_theta_2Pos= ang;
         if PON
+            figure(1);
+            hold on;
             plot(global_theta_1Pos,global_theta_2Pos,'.k');
             xlabel('\theta_1');
             ylabel('\theta_2');
