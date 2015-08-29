@@ -153,6 +153,7 @@ namespace chrono {
 		virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 		virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
 		virtual void SetActuatorFunction(int actuatorID, double omega);
+	
 
 		// Smarticle volume
 		virtual double GetVolume();
@@ -162,7 +163,7 @@ namespace chrono {
 		virtual void AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece);
 		//	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented
 		//	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
-
+		virtual void TransportSmarticle(ChVector<>);
 		virtual void UpdateMySmarticleMotion();
 
 

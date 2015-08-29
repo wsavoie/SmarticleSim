@@ -103,7 +103,7 @@ using namespace gui;
 enum SmarticleType {SMART_ARMS , SMART_U};
 enum BucketType { CYLINDER, BOX, HULL,RAMP,HOPPER,DRUM};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = DRUM;
+BucketType bucketType = HOPPER;
 // =============================================================================
 
 class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
@@ -177,8 +177,8 @@ ChSharedPtr<ChBody> bucket_bott;
 
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	//double bucket_rad = sizeScale*0.034;
-	double bucket_rad = sizeScale*0.02;
+	double bucket_rad = sizeScale*0.034;
+	//double bucket_rad = sizeScale*0.02;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .030);
 
 	
@@ -188,7 +188,8 @@ ChSharedPtr<ChBody> bucket_bott;
 
 	double rampAngle = 10 * CH_C_PI / 180;
 	double rampInc = 0.2;
-	double bucket_omega = 4;
+	double drum_freq = 4;
+	double drum_omega = drum_freq*2*CH_C_PI;
 
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
 	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
@@ -393,7 +394,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					switch (bucketType)
 					{
 					case DRUM:
-						bucket_omega = bucket_omega - rampInc;
+						drum_freq = drum_freq - rampInc;
 						break;
 					case RAMP:
 
@@ -419,7 +420,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					switch (bucketType)
 					{
 					case DRUM:
-						bucket_omega = bucket_omega + rampInc;
+						drum_freq = drum_freq + rampInc;
 						break;
 					case RAMP:
 
@@ -467,7 +468,7 @@ ChSharedPtr<ChBody> bucket_bott;
 			
 			if (bucketType == DRUM)
 			{
-				char message[100]; sprintf(message, "AngVel: %g, Increment: %g", bucket_omega, rampInc);
+				char message[100]; sprintf(message, "AngVel: %g, Increment: %g", drum_freq, rampInc);
 				this->text_Angle->setText(core::stringw(message).c_str());
 			}
 			else{
@@ -741,7 +742,7 @@ ChSharedPtr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* 
 	else {
 		drum = ChSharedPtr<ChBody>(new ChBody);
 	}
-	double radMult = 3;
+	double radMult =1.5;
 	drum->SetIdentifier(id);
 	drum->SetPos(bucket_ctr);
 	drum->SetRot(QUNIT);
@@ -795,13 +796,15 @@ ChSharedPtr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* 
 		}
 		drum->SetRot(Q_from_AngAxis(CH_C_PI / 2.0, VECT_X));
 
-
 		
 	}
 //TODO add bucketVolume as global variable and set it in each function to calculate for each shape volumefraction seamlessly
 	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	drum->GetCollisionModel()->SetFamily(1);
 	drum->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	drum->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	//front wall made invisible so we can see inside
+	utils::AddBoxGeometry(drum.get_ptr(), ChVector<>(wallt + bucket_rad*radMult, wallt + bucket_rad*radMult, wallt), bucket_ctr + VECT_Z*(half_height + 2 * o_lap - 2 * t), QUNIT,false); 
 	drum->GetCollisionModel()->BuildModel();
 	mphysicalSystem->AddBody(drum);
 	
@@ -1004,6 +1007,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 //creates an approximate cylinder from a n-sided regular polygon
 //num_boxes = number of boxes to use
 //bucket_rad = radius of cylinder, center point to midpoint of side a side
+
 ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat, double w1, double w2, double w3, double h1, double h2,  bool overlap)
 {
 	ChSharedPtr<ChBody> hopper;
@@ -1280,6 +1284,20 @@ bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 	if (pt.z < rad.y || pt.z >rad.z){ return false; }
 	return true;
 }
+
+// =============================================================================
+void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec)
+{
+	double pos = -3.0*bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
+	for (size_t i = 0; i < mySmarticlesVec.size(); i++)
+	{
+		Smarticle* sPtr = mySmarticlesVec[i];
+		if (sPtr->GetArm(1)->GetPos().z < pos)
+		{
+			sPtr->TransportSmarticle(ChVector<>(0,0,bucket_interior_halfDim.z));
+		}
+	}
+}
 // =============================================================================
 void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
@@ -1292,18 +1310,26 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 }
 // =============================================================================
 void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec) { ///remove all traces of smarticle from system
-	
-	std::vector<Smarticle*>::iterator myIter;
-	for (myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end();)
+	if (bucketType == HOPPER) //if hopper, put smarticles back inside after reaching below hopper
 	{
-		Smarticle* sPtr = *(myIter);
-		if (sPtr->GetArm(1)->GetPos().z < -3.0*bucket_interior_halfDim.z) 
-		{
-			sPtr->~Smarticle();
-			myIter = mySmarticlesVec.erase(myIter);
-		}
-		else{++myIter;}
+		recycleSmarticles(mphysicalSystem,mySmarticlesVec);
+		return;
 	}
+	else
+	{
+		std::vector<Smarticle*>::iterator myIter;
+		for (myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end();)
+		{
+			Smarticle* sPtr = *(myIter);
+			if (sPtr->GetArm(1)->GetPos().z < -3.0*bucket_interior_halfDim.z)
+			{
+				sPtr->~Smarticle();
+				myIter = mySmarticlesVec.erase(myIter);
+			}
+			else{ ++myIter; }
+		}
+	}
+	
 }
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
 	const std::string vol_frac = out_dir + "/volumeFraction.txt";
@@ -1398,25 +1424,29 @@ void vibrate_bucket(double t) {
 	bucket->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
 	bucket->SetRot(QUNIT);
 }
-void rotate_drum(double t)
+void rotate_drum(double t)//method is called on each iteration to rotate drum at an angular velocity of drum_omega
 {
 
 	////bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()) + ChVector<>(0, 0, bucket_omega*t)));
 	//bucket->SetRot_dt(Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(0,0,bucket_omega)));
 	//bucket->SetRot_dtdt(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 0)));
+
 	static ChSharedPtr<ChFunction_Const> mfun2 = drum_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-	mfun2->Set_yconst(bucket_omega);
+	drum_omega = drum_freq*CH_C_PI * 2;
+	mfun2->Set_yconst(drum_omega);
 }
 void setUpDrumActuator(CH_SYSTEM& mphysicalSystem)
 {
 	drum_actuator = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
 	ChVector<> pR01(0, 0, 0);
-	drum_actuator->Initialize(bucket, bucket_bott, ChCoordsys<>());
+	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_Z);
+	drum_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), bucket->GetRot()));
 	drum_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	drum_actuator->SetMotion_axis(ChVector<>(0, 0, 1));
+	//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
 	mphysicalSystem.AddLink(drum_actuator);
 	ChSharedPtr<ChFunction_Const> mfun2 = drum_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-	mfun2->Set_yconst(bucket_omega);
+	drum_omega = drum_freq*CH_C_PI * 2;
+	mfun2->Set_yconst(drum_omega);
 }
 
 // =============================================================================
@@ -1646,10 +1676,6 @@ int main(int argc, char* argv[]) {
 				numGeneratedLayers++;
 			}
 
-			if (bucketType == DRUM)
-			{
-				rotate_drum(t);
-			}
 
 			//if (numGeneratedLayers == numLayers)
 			//{
@@ -1674,9 +1700,11 @@ int main(int argc, char* argv[]) {
 			//		}
 		}
 
-	   
+
 		if (bucketType == DRUM)
+		{
 			rotate_drum(t);
+		}
 		if (t > vibrateStart){
 			bucket->SetBodyFixed(false);
 			vibrate_bucket(t);

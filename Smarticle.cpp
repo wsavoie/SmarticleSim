@@ -49,8 +49,8 @@ Smarticle::~Smarticle()
 {
 	m_system->RemoveLink(link_actuator01);
 	m_system->RemoveLink(link_actuator12);
-	m_system->RemoveLink(link_revolute01);
-	m_system->RemoveLink(link_revolute12);
+	//m_system->RemoveLink(link_revolute01);
+	//m_system->RemoveLink(link_revolute12);
 	m_system->RemoveBody(GetArm(0));
 	m_system->RemoveBody(GetArm(1));
 	m_system->RemoveBody(GetArm(2));
@@ -315,6 +315,12 @@ ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
 	}
 	return link;
 }
+void Smarticle::TransportSmarticle(ChVector<> newPosition)
+{
+	GetArm(0)->SetPos(GetArm(1)->GetPos() - GetArm(0)->GetPos() + newPosition);
+	GetArm(2)->SetPos(GetArm(1)->GetPos() - GetArm(2)->GetPos() + newPosition);
+	GetArm(1)->SetPos(newPosition);
+}
 void Smarticle::CreateJoints() {
 	// link 1
 	link_revolute01 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
@@ -333,6 +339,7 @@ void Smarticle::CreateJoints() {
 	link_revolute12->SetMotion_axis(ChVector<>(0, 1, 0));
 	m_system->AddLink(link_revolute12);
 }
+
 
 void Smarticle::CreateActuators() {
 
@@ -382,7 +389,7 @@ void Smarticle::Create() {
 
 	//-(w / 2.0 + jointClearance - r2) + (l_mod / 2.0 + r2)*cos(angle1)
 	CreateActuators();
-	CreateJoints();
+	//CreateJoints(); //TODO do we need joints?
 
 	// mass property
 	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
