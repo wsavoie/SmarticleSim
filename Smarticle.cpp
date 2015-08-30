@@ -51,9 +51,9 @@ Smarticle::~Smarticle()
 	m_system->RemoveLink(link_actuator12);
 	//m_system->RemoveLink(link_revolute01);
 	//m_system->RemoveLink(link_revolute12);
-	m_system->RemoveBody(GetArm(0));
-	m_system->RemoveBody(GetArm(1));
-	m_system->RemoveBody(GetArm(2));
+	m_system->RemoveBody(arm0);
+	m_system->RemoveBody(arm1);
+	m_system->RemoveBody(arm2);
 }
 
 
@@ -275,57 +275,51 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 		arm2 = arm;
 	} break;
 	default:
-		std::cout << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
+		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
 		break;
 	}
 }
 
 
 ChSharedBodyPtr Smarticle::GetArm(int armID) {
-	ChSharedBodyPtr arm;
 	switch (armID) {
-	case 0: {
-		arm = arm0;
-	} break;
-	case 1: {
-		arm = arm1;
-	} break;
-	case 2: {
-		arm = arm2;
-	} break;
+	case 0:
+		return arm0;
+	case 1:
+		return arm1;
+	case 2:
+		return arm2;
 	default:
-		std::cout << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
+		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
 		break;
 	}
-	return arm;
+	 return ChSharedBodyPtr();
 }
 
 ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
-	ChSharedPtr<ChLinkLockRevolute> link;
+	
 	switch (jointID) {
-	case 0: {
-		link = link_revolute01;
-	} break;
-	case 1: {
-		link = link_revolute12;
-	} break;
+	case 0:
+		return link_revolute01;
+	case 1:
+		return link_revolute12;
 	default:
-		std::cout << "Error! smarticle can only have joints with ids from {0, 1}" << std::endl;
+		std::cerr << "Error! smarticle can only have joints with ids from {0, 1}" << std::endl;
 		break;
 	}
-	return link;
+	return ChSharedPtr<ChLinkLockRevolute>();
 }
 void Smarticle::SetSpeed(ChVector<> newSpeed)
 {
-	GetArm(0)->SetPos_dt(newSpeed);
-	GetArm(1)->SetPos_dt(newSpeed);
-	GetArm(2)->SetPos_dt(newSpeed);
+	arm0->SetPos_dt(newSpeed);
+	arm1->SetPos_dt(newSpeed);
+	arm2->SetPos_dt(newSpeed);
 }
 void Smarticle::TransportSmarticle(ChVector<> newPosition)
 {
-	GetArm(0)->SetPos(GetArm(0)->GetPos() - GetArm(1)->GetPos() + newPosition);
-	GetArm(2)->SetPos(GetArm(2)->GetPos() - GetArm(1)->GetPos() + newPosition);
-	GetArm(1)->SetPos(newPosition);
+	arm0->SetPos(arm0->GetPos() - arm1->GetPos() + newPosition);
+	arm2->SetPos(arm2->GetPos() - arm1->GetPos() + newPosition);
+	arm1->SetPos(newPosition);
 	
 }
 void Smarticle::CreateJoints() {
@@ -340,6 +334,7 @@ void Smarticle::CreateJoints() {
 	link_revolute01->Initialize(arm0, arm1, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx));
 	link_revolute01->SetMotion_axis(ChVector<>(0, 1, 0));
 	m_system->AddLink(link_revolute01);
+
 
 	// link 2
 	link_revolute12->Initialize(arm1, arm2, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx));
@@ -357,18 +352,28 @@ void Smarticle::CreateActuators() {
 	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
 	ChQuaternion<> qy1 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle1()));
 	ChQuaternion<> qy2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle2()));
+	ChLinkMaskLF m_mask01;
+	ChLinkMaskLF m_mask12;
+	m_mask01.SetLockMask(true, true, true, false, true, true, false); //standard revolute mask
+	m_mask01.SetTwoBodiesVariables(arm0->GetVariables1(), arm1->GetVariables1());
 
+	m_mask12.SetLockMask(true, true, true, false, true, true, false);
+	m_mask12.SetTwoBodiesVariables(arm1->GetVariables1(), arm2->GetVariables1());
 	// link 1
 	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx*qy1));
 	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	link_actuator01->SetMotion_axis(ChVector<>(0, 1, 0));
+	link_actuator01->ChangeLinkMask(&m_mask01);
+	link_actuator01->ChangedLinkMask();
 	m_system->AddLink(link_actuator01);
 
 	// link 2
+	
 	link_actuator12->Initialize(arm1, arm2, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx*qy2));
 	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	link_actuator12->SetMotion_axis(ChVector<>(0, 1, 0));
+	link_actuator12->ChangeLinkMask(&m_mask12);
+	link_actuator12->ChangedLinkMask();
 	m_system->AddLink(link_actuator12);
+	
 }
 
 void Smarticle::Create() {
@@ -922,11 +927,11 @@ void Smarticle::MoveLoop2(int guiState = 0)
 }
 ChSharedBodyPtr Smarticle::GetSmarticleBodyPointer()
 {
-	return GetArm(1);
+	return arm1;
 }
 int	Smarticle::GetID()
 {
-	return this->GetArm(0)->GetPhysicsItem()->GetIdentifier();
+	return arm0->GetPhysicsItem()->GetIdentifier();
 }
 void Smarticle::setCurrentMoveType(MoveType newMoveType)
 {
