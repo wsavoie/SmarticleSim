@@ -185,7 +185,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 // =============================================================================
 void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc, char* argv[]) {
 	// initializd random seeder
-	MySeed();
+	MySeed(120);
 
 
   // ---------------------

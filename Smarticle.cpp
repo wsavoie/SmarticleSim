@@ -146,6 +146,7 @@ void Smarticle::Properties(
 	angLow = 0;
 	angHigh = 120;
 	dumID = mdumID;
+	armBroken = false;
 }
 //////////////////////////////////////////////	
 void Smarticle::SetDefaultOmega(double omega) {
@@ -801,6 +802,8 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	double omega1Prev = link_actuator01->Get_mot_rot_dt();
 	double omega2Prev = link_actuator12->Get_mot_rot_dt();
 	//double omega01 = li
+	//double c1 = .pos.x;
+
 	double torque01 = link_actuator01->Get_react_torque().Length2(); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
 	double torque12 = link_actuator12->Get_react_torque().Length2();
 	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
@@ -844,6 +847,12 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	//arm2->AddAsset(mtextureArm);
 	arm0OT = false;
 	arm2OT = false;
+
+	if (fabs(link_actuator12->GetDeltaC().rot.e1) > .001 || fabs(link_actuator12->GetDeltaC().rot.e1) > .001
+		|| fabs(link_actuator12->GetDeltaC().rot.e2) > .001 || fabs(link_actuator12->GetDeltaC().rot.e2) > .001)//probably broken joint!
+	{
+		armBroken = true;
+	}
 	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)
 	{
 		//this->setCurrentMoveType(OT);
@@ -857,6 +866,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		//v = &ot;
 		if (torque01 > torqueThresh2)
 		{
+			GetLog() << link_actuator01->GetDeltaC();
 			arm0OT = true; 
 			//arm0->AddAsset(mtextureOT);
 		}
@@ -873,7 +883,6 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		sameMoveType = true;
 	}
 	static bool x = false;
-
 	switch (this->moveType) //have this in case I want to add different action based on move type
 	{
 		case GLOBAL://TODO implement different case if sameMoveType was wrong
