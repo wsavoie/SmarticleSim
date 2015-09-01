@@ -1845,6 +1845,8 @@ int main(int argc, char* argv[]) {
 		}
 		 //receiver.drawOTArms();
 
+		if (mySmarticlesVec.size()< numPerLayer*numLayers)
+			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application);
 
 //	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);

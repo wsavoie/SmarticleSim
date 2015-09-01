@@ -848,8 +848,8 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	arm0OT = false;
 	arm2OT = false;
 
-	if (fabs(link_actuator12->GetDeltaC().rot.e1) > .001 || fabs(link_actuator12->GetDeltaC().rot.e1) > .001
-		|| fabs(link_actuator12->GetDeltaC().rot.e2) > .001 || fabs(link_actuator12->GetDeltaC().rot.e2) > .001)//probably broken joint!
+	if (fabs(link_actuator12->GetDeltaC().rot.e1) > .01 || fabs(link_actuator12->GetDeltaC().rot.e1) > .01
+		|| fabs(link_actuator12->GetDeltaC().rot.e2) > .01 || fabs(link_actuator12->GetDeltaC().rot.e2) > .01)//probably broken joint!
 	{
 		armBroken = true;
 	}
@@ -866,7 +866,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		//v = &ot;
 		if (torque01 > torqueThresh2)
 		{
-			GetLog() << link_actuator01->GetDeltaC();
+			//GetLog() << link_actuator01->GetDeltaC();
 			arm0OT = true; 
 			//arm0->AddAsset(mtextureOT);
 		}
