@@ -174,7 +174,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	int out_fps = 120;
 	const std::string out_dir = "PostProcess";
 	const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-
+	int numPerLayer = 5;
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	//double bucket_rad = sizeScale*0.034;
@@ -1793,7 +1793,8 @@ int main(int argc, char* argv[]) {
 		if (!read_from_file)
 		{
 			if ((fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT) &&
-				(numGeneratedLayers < numLayers)){
+				//(numGeneratedLayers < numLayers)){
+				(mySmarticlesVec.size()<numPerLayer*(numLayers-1))){
 #if irrlichtVisualization
 				//AddParticlesLayer(mphysicalSystem, mySmarticlesVec,application);
 				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application);
@@ -1896,6 +1897,21 @@ int main(int argc, char* argv[]) {
 #endif
 
 
+		if (mphysicalSystem.GetChTime() > 5.6)
+			exit(-1);
+
+		//if (mphysicalSystem.GetChTime() < 1.6)
+		//	Smarticle::global_GUI_value = 1;
+		//else if (mphysicalSystem.GetChTime() > 1.6 && mphysicalSystem.GetChTime() < 2.6)
+		//	Smarticle::global_GUI_value = 3;
+		//else if (mphysicalSystem.GetChTime() > 2.6 && mphysicalSystem.GetChTime() < 3.6)
+		//	Smarticle::global_GUI_value = 1;
+		//else if (mphysicalSystem.GetChTime() > 3.6 && mphysicalSystem.GetChTime() < 4.6)
+		//	Smarticle::global_GUI_value = 3;
+		//else if (mphysicalSystem.GetChTime() > 4.6 && mphysicalSystem.GetChTime() < 5.6)
+		//	Smarticle::global_GUI_value = 1;
+		//else
+		//	exit(-1);
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
     UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	  time(&rawtimeCurrent);
