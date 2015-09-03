@@ -1379,6 +1379,36 @@ void printFlowRate(double time,int count) //SAVE smarticle gaitType out for refe
 	flowRate_of.close();
 }
 // =============================================================================
+void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem,	///< the chrono::engine physical system
+	double len = w_smarticle,
+	double rad = t_smarticle,
+	ChVector<> pos = bucket_ctr + ChVector<>(2.5*bucket_rad,0,bucket_interior_halfDim.z))
+{
+	ChSharedPtr<ChBody> xaxis, yaxis, zaxis;
+	if (USE_PARALLEL) { 
+		xaxis = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+		yaxis = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+		zaxis = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	}
+	else{ 
+		xaxis = ChSharedPtr<ChBody>(new ChBody);
+		yaxis = ChSharedPtr<ChBody>(new ChBody);
+		zaxis = ChSharedPtr<ChBody>(new ChBody);
+	}
+	GetLog() << "here!";
+	xaxis->SetPos(pos);						yaxis->SetPos(pos);							zaxis->SetPos(pos);
+	xaxis->SetCollide(false);			yaxis->SetCollide(false);				zaxis->SetCollide(false);
+	xaxis->SetBodyFixed(true);		yaxis->SetBodyFixed(true);			zaxis->SetBodyFixed(true);
+	
+	utils::AddCylinderGeometry(xaxis.get_ptr(), rad, len, ChVector<>(len, 0, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, CH_C_PI / 2)), true);//bottom
+	utils::AddCylinderGeometry(yaxis.get_ptr(), rad, len, ChVector<>(0, len, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 0)), true);//bottom, true);//bottom
+	utils::AddCylinderGeometry(zaxis.get_ptr(), rad, len, ChVector<>(0, 0, len) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(CH_C_PI / 2, 0, 0)), true);//bottom
+
+	xaxis->AddAsset(ChSharedPtr<ChColorAsset>(new ChColorAsset(1.0f, 0, 0)));
+	yaxis->AddAsset(ChSharedPtr<ChColorAsset>(new ChColorAsset(0, 1.0f, 0)));
+	zaxis->AddAsset(ChSharedPtr<ChColorAsset>(new ChColorAsset(0, 0, 1.0f)));
+	mphysicalSystem.AddBody(xaxis); mphysicalSystem.AddBody(yaxis); mphysicalSystem.AddBody(zaxis);
+}
 void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec)
 {
 	double pos = -.75*bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
