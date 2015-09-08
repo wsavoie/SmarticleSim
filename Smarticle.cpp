@@ -233,11 +233,6 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     arm->SetCollide(true);
     arm->SetBodyFixed(false);
     arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
-    if (armID == 1) //this was old code from when I was fixing them to fit
-    	arm->SetBodyFixed(false);
-    else
-    	arm->SetBodyFixed(false);
-
 	arm->SetMaterialSurface(mat_g);
 
 	//double mass = density * vol;
