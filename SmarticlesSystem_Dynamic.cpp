@@ -54,10 +54,10 @@
 #endif
 
 //#include "unit_IRRLICHT/ChIrrApp.h"
-#include "chrono_IRRLICHT/ChBodySceneNode.h"  //changed path from unit to chrono to reflect changes in updated chrono
-#include "chrono_IRRLICHT/ChBodySceneNodeTools.h" 
+#include "unit_IRRLICHT/ChBodySceneNode.h"  //changed path from unit to chrono to reflect changes in updated chrono
+#include "unit_IRRLICHT/ChBodySceneNodeTools.h"
 //#include "unit_IRRLICHT/ChIrrTools.h"
-#include "chrono_IRRLICHT/ChIrrWizard.h"
+#include "unit_IRRLICHT/ChIrrWizard.h"
 #include "core/ChRealtimeStep.h"
 //#include <irrlicht.h>
 #include "assets/ChTexture.h"
@@ -853,7 +853,6 @@ ChSharedPtr<ChBody> create_complex_convex_hull(CH_SYSTEM* mphysicalSystem, ChSha
 
 	convexShape->GetCollisionModel()->ClearModel();
 	double ang = 2 * CH_C_PI / numBoxes;
-	std::vector<ChVector<>>;
 	for (size_t i = 0; i < numBoxes; i++)
 	{
 		convexShape->GetCollisionModel()->SetEnvelope(collisionEnvelope);
