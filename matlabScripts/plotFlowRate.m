@@ -4,7 +4,7 @@ data=importdata(horzcat(directory_name,'\flowrate.txt'));
 
 dt = .0005;
 FS = 1/dt;
-cols = {[1,0,0],[1,.5,0],[113/255,188/255, 255/255],[0,0,0],[100,100,30],[30,27,95]};
+cols = {[1,0,0],[1,.5,0],[.4431,.7373, 1],[0,0,0],[.392,.824,.118],[.7,.4,.7]};
 plotNames = {'Smarticles','Gait','U-Shape','Straight','Tetris','Vib at \circ','Vib Angle'};
 plotTypes = [1];
 figure(1);
@@ -43,7 +43,7 @@ end
 legend([sp1(1:end)],plotNames(plotTypes));
 axis([data(1,1) data(end,1) data(1,2),data(end,2)]);
 ax = gca;
-ax.XTick= 0:1:max(ax.XTick)
+ax.XTick= 0:1:max(ax.XTick);
 %% subplot 2
 subplot(2,1,2)
 hold on;
@@ -97,4 +97,4 @@ legend([sp2(1:end)],plotNames(plotTypes2));
 % axis([data(1,1) data(end,1) min(flowRate) max(flowRate)]);
  axis([data(1,1) data(end,1) min(ydat2) max(ydat2)]);
 ax = gca;
-ax.XTick= 0:1:max(ax.XTick)
+ax.XTick= 0:1:max(ax.XTick);

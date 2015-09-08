@@ -684,13 +684,12 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   mphysicalSystem.GetSettings()->collision.bins_per_axis = _make_int3(40, 40, 40);  // Arman check
 }
 #if irrlichtVisualization
-void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application) {
+void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application,double timeForDisp) {
 #else
-void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
+void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
 #endif
 	double z;
 	double zpos;
-	int numPerLayer =5;
 	int smarticleCount = mySmarticlesVec.size();
 	double ang = 2*CH_C_PI / numPerLayer;
 	double w = w_smarticle;
@@ -1420,23 +1419,49 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem,	///< the chrono::engi
 void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec)
 {
 	double pos = -.75*bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
+	double ang = 2 * CH_C_PI / 5;
+	double rp = MyRand()*ang/4 ; //add slight offset to angInc to allow particles not always fall in nearly same position
 	static int recycledSmarticles = 0;
-
-
-	//ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand() - w / 2),
-	//	cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2),
+	static int inc = 0;
+	//ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand()), //TODO for hopper no -w/2.0
+	//	cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2.0),
+	//	zpos);
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++)
 	{
 		Smarticle* sPtr = mySmarticlesVec[i];
 		if (sPtr->GetArm(1)->GetPos().z < pos)
 		{
-			sPtr->TransportSmarticle(ChVector<>
-				(ChVector<>(sPtr->GetArm(1)->GetPos().x,
-				sPtr->GetArm(1)->GetPos().y,
-				bucket_interior_halfDim.z*1.75)));
-			//sPtr->SetSpeed(sPtr->GetArm(1)->GetPos_dt()/2);
+
+
+			if (bucketType == HOPPER)
+			{
+				sPtr->TransportSmarticle(bucket_ctr + ChVector<>(
+					sin(ang*inc + rp)*(bucket_rad / 2 + 4*w_smarticle*(MyRand() - 1/2.0)),
+					cos(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(MyRand() - 1 / 2.0)),
+					bucket_interior_halfDim.z*2
+					));
+
+				//sPtr->SetSpeed(sPtr->GetArm(1)->GetPos_dt() / 4);
+				sPtr->SetSpeed(ChVector<>(0, 0, -9.8*.01 / 2.0 - w_smarticle / .01));
+			}
+			else
+			{
+
+				sPtr->TransportSmarticle(bucket_ctr + ChVector<>(
+					sin(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(MyRand() - 1 / 2.0)),
+					cos(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(MyRand() - 1 / 2.0)),
+					bucket_interior_halfDim.z*1.75
+					));
+				//sPtr->TransportSmarticle(ChVector<>
+				//	(ChVector<>(sPtr->GetArm(1)->GetPos().x,
+				//	sPtr->GetArm(1)->GetPos().y,
+				//	bucket_interior_halfDim.z*1.75)));
+				//sPtr->SetSpeed(sPtr->GetArm(1)->GetPos_dt()/2);
+			}
+
+
 			recycledSmarticles++;
-			
+			inc = (inc+1)%5;
 		}
 	}
 	printFlowRate(mphysicalSystem.GetChTime(), recycledSmarticles);
@@ -1805,7 +1830,7 @@ int main(int argc, char* argv[]) {
   //double timeForVerticalDisplcement = 1.0 * sqrt(2 * w_smarticle / mphysicalSystem.Get_G_acc().Length()); // 1.5 for safety proximity
 	//removed length since unnecessary sqrt in that calc
 
-	double timeForVerticalDisplcement = 0.04; // 1.5 for safety proximity
+	double timeForVerticalDisplcement = 0.01; // 1.5 for safety proximity
  
 	int numGeneratedLayers = 0;
 
@@ -1834,11 +1859,11 @@ int main(int argc, char* argv[]) {
 		if (!read_from_file)
 		{
 			if ((fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT) &&
-				//(numGeneratedLayers < numLayers)){
-				(mySmarticlesVec.size()<numPerLayer*(numLayers-1))){
+				(numGeneratedLayers < numLayers)){
+				//(mySmarticlesVec.size()<numPerLayer*(numLayers-1))){
 #if irrlichtVisualization
 				//AddParticlesLayer(mphysicalSystem, mySmarticlesVec,application);
-				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application);
+				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplcement);
 #else
 				//AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
 				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec);
@@ -1887,8 +1912,9 @@ int main(int argc, char* argv[]) {
 		}
 		 //receiver.drawOTArms();
 
-		if (mySmarticlesVec.size()< numPerLayer*numLayers)
-			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application);
+		if (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT
+			&&mySmarticlesVec.size()< numPerLayer*numLayers && (numGeneratedLayers == numLayers))
+			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplcement);
 
 //	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);
