@@ -390,7 +390,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					break;
 
 
-				case irr::KEY_KEY_1:			//decrease angle of bucket by rampInc //TODO why is first shift angle change so large?
+				case irr::KEY_KEY_1:
 					switch (bucketType)
 					{
 					case DRUM:
@@ -472,7 +472,7 @@ ChSharedPtr<ChBody> bucket_bott;
 				this->text_Angle->setText(core::stringw(message).c_str());
 			}
 			else{
-				char message[100]; sprintf(message, "Angle: %g, Increment: %g", Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x * 180 / CH_C_PI, rampInc);
+				char message[100]; sprintf(message, "Angle: %1.1g, Increment: %1.3g", Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x * 180 / CH_C_PI, rampInc);
 				this->text_Angle->setText(core::stringw(message).c_str());
 			}
 
@@ -486,7 +486,6 @@ ChSharedPtr<ChBody> bucket_bott;
 				if (sPtr->GetArm0OT())
 				{
 					sPtr->GetArm(0)->AddAsset(Smarticle::mtextureOT);
-					
 				}
 				else
 				{
@@ -606,6 +605,9 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   mphysicalSystem.SetIterLCPwarmStarting(true);
   mphysicalSystem.SetUseSleeping(false);
   mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
+	//mphysicalSystem.SetTolForce(.0005);
+	//mphysicalSystem.SetTol(.0001);
+	//mphysicalSystem.SetMinBounceSpeed(.3);
 }
 // =============================================================================
 void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, int argc, char* argv[]) {
@@ -723,14 +725,17 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				myPos,
 				myRot
 				);
+			
 
 
 			smarticle0->populateMoveVector();
 			smarticle0->SetAngle(90, 90, true);
 			smarticle0->Create();
+
 			//smarticle0->AddMotion(myMotionDefault);
 			//smarticle0->AddMotion(myMotion);
 			mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
+			smarticle0->SetSpeed(ChVector<>(0, 0, -9.8*timeForDisp / 2.0 - w_smarticle / timeForDisp));
 #if irrlichtVisualization
 			application.AssetBindAll();
 			application.AssetUpdateAll();
@@ -1399,10 +1404,13 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem,	///< the chrono::engi
 	xaxis->SetPos(pos);						yaxis->SetPos(pos);							zaxis->SetPos(pos);
 	xaxis->SetCollide(false);			yaxis->SetCollide(false);				zaxis->SetCollide(false);
 	xaxis->SetBodyFixed(true);		yaxis->SetBodyFixed(true);			zaxis->SetBodyFixed(true);
+	xaxis->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	yaxis->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	zaxis->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	
-	utils::AddCylinderGeometry(xaxis.get_ptr(), rad, len, ChVector<>(len, 0, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, CH_C_PI / 2)), true);//bottom
-	utils::AddCylinderGeometry(yaxis.get_ptr(), rad, len, ChVector<>(0, len, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 0)), true);//bottom, true);//bottom
-	utils::AddCylinderGeometry(zaxis.get_ptr(), rad, len, ChVector<>(0, 0, len) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(CH_C_PI / 2, 0, 0)), true);//bottom
+	utils::AddCylinderGeometry(xaxis.get_ptr(), rad, len, ChVector<>(len-rad/2, 0, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, CH_C_PI / 2)), true);//bottom
+	utils::AddCylinderGeometry(yaxis.get_ptr(), rad, len, ChVector<>(0, len-rad/2, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 0)), true);//bottom, true);//bottom
+	utils::AddCylinderGeometry(zaxis.get_ptr(), rad, len, ChVector<>(0, 0, len-rad) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(CH_C_PI / 2, 0, 0)), true);//bottom
 
 	xaxis->AddAsset(ChSharedPtr<ChColorAsset>(new ChColorAsset(1.0f, 0, 0)));
 	yaxis->AddAsset(ChSharedPtr<ChColorAsset>(new ChColorAsset(0, 1.0f, 0)));
@@ -1735,10 +1743,12 @@ int main(int argc, char* argv[]) {
 	ChIrrWizard::add_typical_Logo(application.GetDevice());
 	ChIrrWizard::add_typical_Sky(application.GetDevice());
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
-		core::vector3df(-.1, -.06, .1),
-		core::vector3df(0, 0, -.01));
+		core::vector3df(-.1, 0, .1),
+		core::vector3df(-.1, 0, 0));
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
-
+	ChIrrWizard::add_typical_Lights(application.GetDevice(),
+		core::vector3df(0, -.1, 0),
+		core::vector3df(0, 0, -.01));
 
 	scene::RTSCamera* camera = new scene::RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
@@ -1747,7 +1757,7 @@ int main(int argc, char* argv[]) {
 	camera->setTarget(core::vector3df(0, 0, -.01));
 	camera->setNearValue(0.01f);
 	camera->setMinZoom(0.6f);
-
+	drawGlobalCoordinateFrame(mphysicalSystem);
 
 
   // Use this function for adding a ChIrrNodeAsset to all items
@@ -1808,11 +1818,12 @@ int main(int argc, char* argv[]) {
 	if (bucketType==DRUM)
 		setUpDrumActuator(mphysicalSystem);
 	
-	if (read_from_file) //TODO figure out how I read from smarticlesSystem
+	if (read_from_file)
 	{
 		CheckPointSmarticlesDynamic_Read(mphysicalSystem, mySmarticlesVec);
 		application.AssetBindAll();
 		application.AssetUpdateAll();
+		numGeneratedLayers = numLayers;
 	}
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	
@@ -1863,8 +1874,8 @@ int main(int argc, char* argv[]) {
 		}
 
 
-
 		if (t > vibrateStart){
+		//if (t > vibrateStart || bucketType==HOPPER){
 			bucket->SetBodyFixed(false);
 			vibrate_bucket(t);
 		}
@@ -1926,22 +1937,18 @@ int main(int argc, char* argv[]) {
 #endif
 #endif
 
-
-		if (mphysicalSystem.GetChTime() > 5.6)
+		if (mphysicalSystem.GetChTime() < 1.6)
+			Smarticle::global_GUI_value = 1;
+		else if (mphysicalSystem.GetChTime() > 1.6 && mphysicalSystem.GetChTime() < 2.6)
+			Smarticle::global_GUI_value = 2;
+		else if (mphysicalSystem.GetChTime() > 2.6 && mphysicalSystem.GetChTime() < 3.6)
+			Smarticle::global_GUI_value = 1;
+		else if (mphysicalSystem.GetChTime() > 3.6 && mphysicalSystem.GetChTime() < 4.6)
+			Smarticle::global_GUI_value = 2;
+		else if (mphysicalSystem.GetChTime() > 4.6 && mphysicalSystem.GetChTime() < 5.6)
+			Smarticle::global_GUI_value = 1;
+		else
 			exit(-1);
-
-		//if (mphysicalSystem.GetChTime() < 1.6)
-		//	Smarticle::global_GUI_value = 1;
-		//else if (mphysicalSystem.GetChTime() > 1.6 && mphysicalSystem.GetChTime() < 2.6)
-		//	Smarticle::global_GUI_value = 3;
-		//else if (mphysicalSystem.GetChTime() > 2.6 && mphysicalSystem.GetChTime() < 3.6)
-		//	Smarticle::global_GUI_value = 1;
-		//else if (mphysicalSystem.GetChTime() > 3.6 && mphysicalSystem.GetChTime() < 4.6)
-		//	Smarticle::global_GUI_value = 3;
-		//else if (mphysicalSystem.GetChTime() > 4.6 && mphysicalSystem.GetChTime() < 5.6)
-		//	Smarticle::global_GUI_value = 1;
-		//else
-		//	exit(-1);
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
     UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	  time(&rawtimeCurrent);
