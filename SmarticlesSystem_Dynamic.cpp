@@ -390,7 +390,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					break;
 
 
-				case irr::KEY_KEY_1:			//decrease angle of bucket by rampInc //TODO why is first shift angle change so large?
+				case irr::KEY_KEY_1:
 					switch (bucketType)
 					{
 					case DRUM:
@@ -472,7 +472,7 @@ ChSharedPtr<ChBody> bucket_bott;
 				this->text_Angle->setText(core::stringw(message).c_str());
 			}
 			else{
-				char message[100]; sprintf(message, "Angle: %g, Increment: %g", Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x * 180 / CH_C_PI, rampInc);
+				char message[100]; sprintf(message, "Angle: %1.1g, Increment: %1.3g", Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x * 180 / CH_C_PI, rampInc);
 				this->text_Angle->setText(core::stringw(message).c_str());
 			}
 
@@ -486,7 +486,6 @@ ChSharedPtr<ChBody> bucket_bott;
 				if (sPtr->GetArm0OT())
 				{
 					sPtr->GetArm(0)->AddAsset(Smarticle::mtextureOT);
-					
 				}
 				else
 				{
@@ -606,6 +605,9 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   mphysicalSystem.SetIterLCPwarmStarting(true);
   mphysicalSystem.SetUseSleeping(false);
   mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
+	//mphysicalSystem.SetTolForce(.0005);
+	//mphysicalSystem.SetTol(.0001);
+	//mphysicalSystem.SetMinBounceSpeed(.3);
 }
 // =============================================================================
 void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, int argc, char* argv[]) {
@@ -682,13 +684,12 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   mphysicalSystem.GetSettings()->collision.bins_per_axis = _make_int3(40, 40, 40);  // Arman check
 }
 #if irrlichtVisualization
-void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application) {
+void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application,double timeForDisp) {
 #else
-void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
+void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
 #endif
 	double z;
 	double zpos;
-	int numPerLayer =5;
 	int smarticleCount = mySmarticlesVec.size();
 	double ang = 2*CH_C_PI / numPerLayer;
 	double w = w_smarticle;
@@ -723,14 +724,17 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				myPos,
 				myRot
 				);
+			
 
 
 			smarticle0->populateMoveVector();
 			smarticle0->SetAngle(90, 90, true);
 			smarticle0->Create();
+
 			//smarticle0->AddMotion(myMotionDefault);
 			//smarticle0->AddMotion(myMotion);
 			mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
+			smarticle0->SetSpeed(ChVector<>(0, 0, -9.8*timeForDisp / 2.0 - w_smarticle / timeForDisp));
 #if irrlichtVisualization
 			application.AssetBindAll();
 			application.AssetUpdateAll();
@@ -1398,10 +1402,13 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem,	///< the chrono::engi
 	xaxis->SetPos(pos);						yaxis->SetPos(pos);							zaxis->SetPos(pos);
 	xaxis->SetCollide(false);			yaxis->SetCollide(false);				zaxis->SetCollide(false);
 	xaxis->SetBodyFixed(true);		yaxis->SetBodyFixed(true);			zaxis->SetBodyFixed(true);
+	xaxis->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	yaxis->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	zaxis->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	
-	utils::AddCylinderGeometry(xaxis.get_ptr(), rad, len, ChVector<>(len, 0, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, CH_C_PI / 2)), true);//bottom
-	utils::AddCylinderGeometry(yaxis.get_ptr(), rad, len, ChVector<>(0, len, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 0)), true);//bottom, true);//bottom
-	utils::AddCylinderGeometry(zaxis.get_ptr(), rad, len, ChVector<>(0, 0, len) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(CH_C_PI / 2, 0, 0)), true);//bottom
+	utils::AddCylinderGeometry(xaxis.get_ptr(), rad, len, ChVector<>(len-rad/2, 0, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, CH_C_PI / 2)), true);//bottom
+	utils::AddCylinderGeometry(yaxis.get_ptr(), rad, len, ChVector<>(0, len-rad/2, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 0)), true);//bottom, true);//bottom
+	utils::AddCylinderGeometry(zaxis.get_ptr(), rad, len, ChVector<>(0, 0, len-rad) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(CH_C_PI / 2, 0, 0)), true);//bottom
 
 	xaxis->AddAsset(ChSharedPtr<ChColorAsset>(new ChColorAsset(1.0f, 0, 0)));
 	yaxis->AddAsset(ChSharedPtr<ChColorAsset>(new ChColorAsset(0, 1.0f, 0)));
@@ -1411,23 +1418,49 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem,	///< the chrono::engi
 void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec)
 {
 	double pos = -.75*bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
+	double ang = 2 * CH_C_PI / 5;
+	double rp = MyRand()*ang/4 ; //add slight offset to angInc to allow particles not always fall in nearly same position
 	static int recycledSmarticles = 0;
-
-
-	//ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand() - w / 2),
-	//	cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2),
+	static int inc = 0;
+	//ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand()), //TODO for hopper no -w/2.0
+	//	cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2.0),
+	//	zpos);
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++)
 	{
 		Smarticle* sPtr = mySmarticlesVec[i];
 		if (sPtr->GetArm(1)->GetPos().z < pos)
 		{
-			sPtr->TransportSmarticle(ChVector<>
-				(ChVector<>(sPtr->GetArm(1)->GetPos().x,
-				sPtr->GetArm(1)->GetPos().y,
-				bucket_interior_halfDim.z*1.75)));
-			//sPtr->SetSpeed(sPtr->GetArm(1)->GetPos_dt()/2);
+
+
+			if (bucketType == HOPPER)
+			{
+				sPtr->TransportSmarticle(bucket_ctr + ChVector<>(
+					sin(ang*inc + rp)*(bucket_rad / 2 + 4*w_smarticle*(MyRand() - 1/2.0)),
+					cos(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(MyRand() - 1 / 2.0)),
+					bucket_interior_halfDim.z*2
+					));
+
+				//sPtr->SetSpeed(sPtr->GetArm(1)->GetPos_dt() / 4);
+				sPtr->SetSpeed(ChVector<>(0, 0, -9.8*.01 / 2.0 - w_smarticle / .01));
+			}
+			else
+			{
+
+				sPtr->TransportSmarticle(bucket_ctr + ChVector<>(
+					sin(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(MyRand() - 1 / 2.0)),
+					cos(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(MyRand() - 1 / 2.0)),
+					bucket_interior_halfDim.z*1.75
+					));
+				//sPtr->TransportSmarticle(ChVector<>
+				//	(ChVector<>(sPtr->GetArm(1)->GetPos().x,
+				//	sPtr->GetArm(1)->GetPos().y,
+				//	bucket_interior_halfDim.z*1.75)));
+				//sPtr->SetSpeed(sPtr->GetArm(1)->GetPos_dt()/2);
+			}
+
+
 			recycledSmarticles++;
-			
+			inc = (inc+1)%5;
 		}
 	}
 	printFlowRate(mphysicalSystem.GetChTime(), recycledSmarticles);
@@ -1734,10 +1767,12 @@ int main(int argc, char* argv[]) {
 	ChIrrWizard::add_typical_Logo(application.GetDevice());
 	ChIrrWizard::add_typical_Sky(application.GetDevice());
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
-		core::vector3df(-.1, -.06, .1),
-		core::vector3df(0, 0, -.01));
+		core::vector3df(-.1, 0, .1),
+		core::vector3df(-.1, 0, 0));
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
-
+	ChIrrWizard::add_typical_Lights(application.GetDevice(),
+		core::vector3df(0, -.1, 0),
+		core::vector3df(0, 0, -.01));
 
 	scene::RTSCamera* camera = new scene::RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
@@ -1746,7 +1781,7 @@ int main(int argc, char* argv[]) {
 	camera->setTarget(core::vector3df(0, 0, -.01));
 	camera->setNearValue(0.01f);
 	camera->setMinZoom(0.6f);
-
+	drawGlobalCoordinateFrame(mphysicalSystem);
 
 
   // Use this function for adding a ChIrrNodeAsset to all items
@@ -1794,7 +1829,7 @@ int main(int argc, char* argv[]) {
   //double timeForVerticalDisplcement = 1.0 * sqrt(2 * w_smarticle / mphysicalSystem.Get_G_acc().Length()); // 1.5 for safety proximity
 	//removed length since unnecessary sqrt in that calc
 
-	double timeForVerticalDisplcement = 0.04; // 1.5 for safety proximity
+	double timeForVerticalDisplcement = 0.01; // 1.5 for safety proximity
  
 	int numGeneratedLayers = 0;
 
@@ -1807,11 +1842,12 @@ int main(int argc, char* argv[]) {
 	if (bucketType==DRUM)
 		setUpDrumActuator(mphysicalSystem);
 	
-	if (read_from_file) //TODO figure out how I read from smarticlesSystem
+	if (read_from_file)
 	{
 		CheckPointSmarticlesDynamic_Read(mphysicalSystem, mySmarticlesVec);
 		application.AssetBindAll();
 		application.AssetUpdateAll();
+		numGeneratedLayers = numLayers;
 	}
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	
@@ -1822,11 +1858,11 @@ int main(int argc, char* argv[]) {
 		if (!read_from_file)
 		{
 			if ((fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT) &&
-				//(numGeneratedLayers < numLayers)){
-				(mySmarticlesVec.size()<numPerLayer*(numLayers-1))){
+				(numGeneratedLayers < numLayers)){
+				//(mySmarticlesVec.size()<numPerLayer*(numLayers-1))){
 #if irrlichtVisualization
 				//AddParticlesLayer(mphysicalSystem, mySmarticlesVec,application);
-				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application);
+				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplcement);
 #else
 				//AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
 				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec);
@@ -1862,8 +1898,8 @@ int main(int argc, char* argv[]) {
 		}
 
 
-
 		if (t > vibrateStart){
+		//if (t > vibrateStart || bucketType==HOPPER){
 			bucket->SetBodyFixed(false);
 			vibrate_bucket(t);
 		}
@@ -1875,8 +1911,9 @@ int main(int argc, char* argv[]) {
 		}
 		 //receiver.drawOTArms();
 
-		if (mySmarticlesVec.size()< numPerLayer*numLayers)
-			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application);
+		if (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT
+			&&mySmarticlesVec.size()< numPerLayer*numLayers && (numGeneratedLayers == numLayers))
+			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplcement);
 
 //	  int stage = int(t / (CH_C_PI/2));
 //	  printf("yo %d \n", stage%4);
@@ -1925,22 +1962,18 @@ int main(int argc, char* argv[]) {
 #endif
 #endif
 
-
-		if (mphysicalSystem.GetChTime() > 5.6)
+		if (mphysicalSystem.GetChTime() < 1.6)
+			Smarticle::global_GUI_value = 1;
+		else if (mphysicalSystem.GetChTime() > 1.6 && mphysicalSystem.GetChTime() < 2.6)
+			Smarticle::global_GUI_value = 2;
+		else if (mphysicalSystem.GetChTime() > 2.6 && mphysicalSystem.GetChTime() < 3.6)
+			Smarticle::global_GUI_value = 1;
+		else if (mphysicalSystem.GetChTime() > 3.6 && mphysicalSystem.GetChTime() < 4.6)
+			Smarticle::global_GUI_value = 2;
+		else if (mphysicalSystem.GetChTime() > 4.6 && mphysicalSystem.GetChTime() < 5.6)
+			Smarticle::global_GUI_value = 1;
+		else
 			exit(-1);
-
-		//if (mphysicalSystem.GetChTime() < 1.6)
-		//	Smarticle::global_GUI_value = 1;
-		//else if (mphysicalSystem.GetChTime() > 1.6 && mphysicalSystem.GetChTime() < 2.6)
-		//	Smarticle::global_GUI_value = 3;
-		//else if (mphysicalSystem.GetChTime() > 2.6 && mphysicalSystem.GetChTime() < 3.6)
-		//	Smarticle::global_GUI_value = 1;
-		//else if (mphysicalSystem.GetChTime() > 3.6 && mphysicalSystem.GetChTime() < 4.6)
-		//	Smarticle::global_GUI_value = 3;
-		//else if (mphysicalSystem.GetChTime() > 4.6 && mphysicalSystem.GetChTime() < 5.6)
-		//	Smarticle::global_GUI_value = 1;
-		//else
-		//	exit(-1);
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
     UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	  time(&rawtimeCurrent);

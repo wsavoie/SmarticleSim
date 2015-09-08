@@ -315,8 +315,7 @@ void Smarticle::TransportSmarticle(ChVector<> newPosition)
 {
 	arm0->SetPos(arm0->GetPos() - arm1->GetPos() + newPosition);
 	arm2->SetPos(arm2->GetPos() - arm1->GetPos() + newPosition);
-	arm1->SetPos(newPosition);
-	
+	arm1->SetPos(newPosition);	
 }
 void Smarticle::CreateJoints() {
 	// link 1
@@ -374,6 +373,7 @@ void Smarticle::CreateActuators() {
 
 void Smarticle::Create() {
 	//jointClearance =1.0/3.0*r2;
+	jointClearance = 0;
 	double l_mod = l - jointClearance;
 
 	// ** initialize U
@@ -384,7 +384,8 @@ void Smarticle::Create() {
 	
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));	
-	
+	quat0.Normalize();
+	quat2.Normalize();
 	CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
 	CreateArm(1, w, ChVector<>(0, 0, 0));
 	CreateArm(2, l_mod, ChVector<>( w / 2.0 - r2 + (l_mod / 2.0 - r2)*cos(angle2), 0, -(l_mod / 2.0-r2)*sin(angle2)), quat2);
@@ -842,7 +843,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	//arm2->AddAsset(mtextureArm);
 	arm0OT = false;
 	arm2OT = false;
-
+	//GetLog() << "\nlink12 constraint violations" <<link_actuator12->GetRelC().rot;
 	if (fabs(link_actuator12->GetDeltaC().rot.e1) > .01 || fabs(link_actuator12->GetDeltaC().rot.e1) > .01
 		|| fabs(link_actuator12->GetDeltaC().rot.e2) > .01 || fabs(link_actuator12->GetDeltaC().rot.e2) > .01)//probably broken joint!
 	{
