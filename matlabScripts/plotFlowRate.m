@@ -1,5 +1,5 @@
-directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests\PostProcess');
-% directory_name='D:\SimResults\Chrono\SmarticleU\tests\PostProcess';
+% 24directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests\PostProcess');
+directory_name='D:\SimResults\Chrono\SmarticleU\tests\PostProcess';
 data=importdata(horzcat(directory_name,'\flowrate.txt'));
 
 dt = .0005;
