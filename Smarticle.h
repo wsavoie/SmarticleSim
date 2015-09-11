@@ -10,18 +10,18 @@
 
 #include "core/ChVector.h"
 #include "assets/ChTexture.h"
-#include "chrono_IRRLICHT/ChIrrApp.h"//changed path from unit to chrono to reflect changes in updated chrono
-#include "chrono_IRRLICHT/ChIrrTools.h"
+#include "chrono_irrlicht/ChIrrApp.h"//changed path from unit to chrono to reflect changes in updated chrono
+#include "chrono_irrlicht/ChIrrTools.h"
 #include <irrlicht.h>
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include <memory>
 
-#ifndef true 
+#ifndef true
 #define true 1
 #endif
 
-#ifndef false 
+#ifndef false
 #define false 0
 #endif
 
@@ -63,11 +63,11 @@ namespace chrono {
 		MotionType motionType;
 	};
 
-	
+
 
 	class Smarticle {
 	public:
-		
+
 		static ChSharedPtr<ChTexture> mtextureOT;
 		static ChSharedPtr<ChTexture> mtextureMid;
 		static ChSharedPtr<ChTexture> mtextureArm;
@@ -154,7 +154,7 @@ namespace chrono {
 		virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
 		virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
 		virtual void SetActuatorFunction(int actuatorID, double omega);
-	
+
 
 		// Smarticle volume
 		virtual double GetVolume();
@@ -202,7 +202,7 @@ namespace chrono {
 		std::vector<std::pair<double, double>> ot; //over torque
 		std::vector<std::pair<double, double>> oa; //over angle
 		std::vector<std::pair<double, double>> vib; //vibrate this HAS to be particle specific so cannot be static?
-		
+
 		std::vector<int> moveTypeIdxs;//this vector keeps the current values of the move types
 		MoveType moveType;
 		MoveType prevMoveType;
@@ -220,7 +220,7 @@ namespace chrono {
 		double ChooseOmegaAmount(double momega, double currAng, double destAng);
 		virtual void setCurrentMoveType(MoveType newMoveType);
 		void MoveLoop2(int guiState);
-			
+
 		//////////////////////////////////////////////////////
 	private:
 		// create smarticle arm, set collision, surface, and mass property.
@@ -262,7 +262,7 @@ namespace chrono {
 		double density;
 		ChSharedPtr<ChMaterialSurface> mat_g;
 
-	
+
 
 
 
@@ -304,7 +304,7 @@ namespace chrono {
 
 
 	};
-	
+
 }
 
 #endif /* SMARTICLE_H_ */

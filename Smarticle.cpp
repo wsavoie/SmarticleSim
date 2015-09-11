@@ -33,7 +33,7 @@ Smarticle::Smarticle(
 	rotation = QUNIT;
 	jointClearance = 0;
 	volume = GetVolume();
-	
+
 }
 std::vector<std::pair<double, double>> Smarticle::global;
 std::vector<std::pair<double, double>> Smarticle::gui1;
@@ -45,12 +45,12 @@ ChSharedPtr<ChTexture> Smarticle::mtextureMid = ChSharedPtr<ChTexture>(new ChTex
 double Smarticle::distThresh;
 unsigned int Smarticle::global_GUI_value;
 
-Smarticle::~Smarticle() 
+Smarticle::~Smarticle()
 {
 	m_system->RemoveLink(link_actuator01);
 	m_system->RemoveLink(link_actuator12);
-	//m_system->RemoveLink(link_revolute01);
-	//m_system->RemoveLink(link_revolute12);
+	m_system->RemoveLink(link_revolute01);
+	m_system->RemoveLink(link_revolute12);
 	m_system->RemoveBody(arm0);
 	m_system->RemoveBody(arm1);
 	m_system->RemoveBody(arm2);
@@ -148,7 +148,7 @@ void Smarticle::Properties(
 	dumID = mdumID;
 	armBroken = false;
 }
-//////////////////////////////////////////////	
+//////////////////////////////////////////////
 void Smarticle::SetDefaultOmega(double omega) {
 	defaultOmega = omega;
 }
@@ -243,8 +243,8 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	//double mass = density * vol;
 	double mass = .005;//.043/3.0; //robot weight 43 grams
 	arm->GetCollisionModel()->ClearModel();
-	
-	
+
+
 	if (armID == 1)
 		arm->AddAsset(mtextureMid);
 	else
@@ -263,8 +263,8 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 
     m_system->AddBody(arm);
 
-		
-		
+
+
 	switch (armID) {
 	case 0: {
 		arm0 = arm;
@@ -298,7 +298,7 @@ ChSharedBodyPtr Smarticle::GetArm(int armID) {
 }
 
 ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
-	
+
 	switch (jointID) {
 	case 0:
 		return link_revolute01;
@@ -320,7 +320,7 @@ void Smarticle::TransportSmarticle(ChVector<> newPosition)
 {
 	arm0->SetPos(arm0->GetPos() - arm1->GetPos() + newPosition);
 	arm2->SetPos(arm2->GetPos() - arm1->GetPos() + newPosition);
-	arm1->SetPos(newPosition);	
+	arm1->SetPos(newPosition);
 }
 void Smarticle::CreateJoints() {
 	// link 1
@@ -362,18 +362,18 @@ void Smarticle::CreateActuators() {
 	// link 1
 	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx*qy1));
 	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	link_actuator01->ChangeLinkMask(&m_mask01);
-	link_actuator01->ChangedLinkMask();
+	// link_actuator01->ChangeLinkMask(&m_mask01);
+	// link_actuator01->ChangedLinkMask();
 	m_system->AddLink(link_actuator01);
 
 	// link 2
-	
+
 	link_actuator12->Initialize(arm1, arm2, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx*qy2));
 	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	link_actuator12->ChangeLinkMask(&m_mask12);
-	link_actuator12->ChangedLinkMask();
+	// link_actuator12->ChangeLinkMask(&m_mask12);
+	// link_actuator12->ChangedLinkMask();
 	m_system->AddLink(link_actuator12);
-	
+
 }
 
 void Smarticle::Create() {
@@ -386,9 +386,9 @@ void Smarticle::Create() {
 //	CreateArm(1, w, ChVector<>(0, 0, 0));
 //	CreateArm(2, l_mod, ChVector<>(w/2 - r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
 
-	
+
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));	
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));
 	quat0.Normalize();
 	quat2.Normalize();
 	CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
@@ -403,7 +403,7 @@ void Smarticle::Create() {
 
 	//-(w / 2.0 + jointClearance - r2) + (l_mod / 2.0 + r2)*cos(angle1)
 	CreateActuators();
-	//CreateJoints(); //TODO do we need joints?
+	CreateJoints(); //TODO do we need joints?
 
 	// mass property
 	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
@@ -538,7 +538,7 @@ void Smarticle::AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece) {
 void Smarticle::MoveLoop() {
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
-	
+
 	double omega1 = current_motion->joint_01.omega;
 	double omega2 = current_motion->joint_12.omega;
 
@@ -630,7 +630,7 @@ std::pair<double, double> Smarticle::populateMoveVector()
 				break;
 		}
 	}
-	
+
 	if (gui1.size() < 1)
 	{
 		//GUI1
@@ -713,7 +713,7 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 	//real ang01 and ang12
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
-	
+
 	//if (link_actuator01->IsBroken())
 	//{
 	//	arm0->AddAsset(mtextureOT);
@@ -725,7 +725,7 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 	//	GetLog() << "broken actuator12!";
 	//}
 	SetAngle(ang01, ang12);
-	
+
 	//expected ang01 and ang12
 	double expAng01 = v->at(moveTypeIdxs.at(mtype)).first;
 	double expAng12 = v->at(moveTypeIdxs.at(mtype)).second;
@@ -739,7 +739,7 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 	//different real - expected
 	double ang01Diff = ang01-expAng01;
 	double ang12Diff = ang12-expAng12;
-	
+
 	double omega01 = ChooseOmegaAmount(momega1, ang01, expAng01);
 	double omega12 = ChooseOmegaAmount(momega2, ang12, expAng12);
 
@@ -764,7 +764,7 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 			this->SetActuatorFunction(0, 0);
 			this->SetActuatorFunction(1, omega12);
 			return false;
-		}	
+		}
 	}
 	// from this point we know arm01 is wrong
 	if (ChooseOmegaAmount(momega2, ang12, expAng12) == 0)
@@ -782,7 +782,7 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 		return false;
 	}
 
-		
+
 }
 void Smarticle::MoveLoop2(int guiState = 0)
 {
@@ -842,7 +842,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		v = &global;
 		break;
 	}
-	
+
 	//overTorque takes priority!
 	//arm0->AddAsset(mtextureArm);
 	//arm2->AddAsset(mtextureArm);
@@ -868,7 +868,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		if (torque01 > torqueThresh2)
 		{
 			//GetLog() << link_actuator01->GetDeltaC();
-			arm0OT = true; 
+			arm0OT = true;
 			//arm0->AddAsset(mtextureOT);
 		}
 		if (torque12 > torqueThresh2)
@@ -876,7 +876,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 			arm2OT = true;
 			//arm2->AddAsset(mtextureOT);
 		}
-	
+
 	}
 	link_actuator01->SetDisabled(false);
 	link_actuator12->SetDisabled(false);
@@ -887,15 +887,15 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	switch (this->moveType) //have this in case I want to add different action based on move type
 	{
 		case GLOBAL://TODO implement different case if sameMoveType was wrong
-			
+
 			successfulMotion = MoveToAngle2(v, omega1, omega2,moveType);
 			break;
 		case OT:
-			
+
 			if (sameMoveType){}
 			break;
 		case GUI1:
-			
+
 			if (sameMoveType)
 			{
 				if (omega1Prev == 0 && omega2Prev == 0)
@@ -912,12 +912,12 @@ void Smarticle::MoveLoop2(int guiState = 0)
 			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
 			break;
 		case GUI2:
-			
+
 			if (sameMoveType){}
 			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
 			break;
 		case GUI3:
-			
+
 			if (sameMoveType){}
 			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
 			break;
@@ -932,7 +932,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	{
 		moveTypeIdxs.at(moveType) = ((moveTypeIdxs.at(moveType) + 1) % v->size());
 	}
-	
+
 	return;
 }
 ChSharedBodyPtr Smarticle::GetSmarticleBodyPointer()
