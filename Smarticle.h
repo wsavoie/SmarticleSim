@@ -10,8 +10,8 @@
 
 #include "core/ChVector.h"
 #include "assets/ChTexture.h"
-#include "unit_IRRLICHT/ChIrrApp.h"//changed path from unit to chrono to reflect changes in updated chrono
-#include "unit_IRRLICHT/ChIrrTools.h"
+#include "chrono_irrlicht/ChIrrApp.h"//changed path from unit to chrono to reflect changes in updated chrono
+#include "chrono_irrlicht/ChIrrTools.h"
 #include <irrlicht.h>
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"

@@ -54,10 +54,10 @@
 #endif
 
 //#include "unit_IRRLICHT/ChIrrApp.h"
-#include "unit_IRRLICHT/ChBodySceneNode.h"  //changed path from unit to chrono to reflect changes in updated chrono
-#include "unit_IRRLICHT/ChBodySceneNodeTools.h"
+#include "chrono_irrlicht/ChBodySceneNode.h"  //changed path from unit to chrono to reflect changes in updated chrono
+#include "chrono_irrlicht/ChBodySceneNodeTools.h"
 //#include "unit_IRRLICHT/ChIrrTools.h"
-#include "unit_IRRLICHT/ChIrrWizard.h"
+#include "chrono_irrlicht/ChIrrWizard.h"
 #include "core/ChRealtimeStep.h"
 //#include <irrlicht.h>
 #include "assets/ChTexture.h"
