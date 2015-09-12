@@ -42,6 +42,7 @@ std::vector<std::pair<double, double>> Smarticle::gui3;
 ChSharedPtr<ChTexture> Smarticle::mtextureOT = ChSharedPtr<ChTexture>(new ChTexture());
 ChSharedPtr<ChTexture> Smarticle::mtextureArm = ChSharedPtr<ChTexture>(new ChTexture());
 ChSharedPtr<ChTexture> Smarticle::mtextureMid = ChSharedPtr<ChTexture>(new ChTexture());
+double Smarticle::pctActive = 1.0;
 double Smarticle::distThresh;
 unsigned int Smarticle::global_GUI_value;
 
@@ -49,8 +50,8 @@ Smarticle::~Smarticle()
 {
 	m_system->RemoveLink(link_actuator01);
 	m_system->RemoveLink(link_actuator12);
-	m_system->RemoveLink(link_revolute01);
-	m_system->RemoveLink(link_revolute12);
+	//m_system->RemoveLink(link_revolute01);
+	//m_system->RemoveLink(link_revolute12);
 	m_system->RemoveBody(arm0);
 	m_system->RemoveBody(arm1);
 	m_system->RemoveBody(arm2);
@@ -403,10 +404,16 @@ void Smarticle::Create() {
 
 	//-(w / 2.0 + jointClearance - r2) + (l_mod / 2.0 + r2)*cos(angle1)
 	CreateActuators();
-	CreateJoints(); //TODO do we need joints?
+	//CreateJoints(); //TODO do we need joints?
 
 	// mass property
 	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
+	double r = ChRandom();
+	//GetLog() << "rand number=" << r << "pctActive="<<pctActive <<"\n";
+	if (r <= pctActive)
+	{
+		active = true;
+	}
 }
 
 ChSharedPtr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
@@ -710,6 +717,8 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 }
 bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1, double momega2,MoveType mtype)
 {
+	if (!active)
+		return true;
 	//real ang01 and ang12
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
@@ -884,6 +893,9 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		sameMoveType = true;
 	}
 	static bool x = false;
+
+	//link_actuator01->ChangeLinkType(LNK_ENGINE);
+	//link_actuator12->ChangeLinkType(LNK_ENGINE);
 	switch (this->moveType) //have this in case I want to add different action based on move type
 	{
 		case GLOBAL://TODO implement different case if sameMoveType was wrong
@@ -900,13 +912,9 @@ void Smarticle::MoveLoop2(int guiState = 0)
 			{
 				if (omega1Prev == 0 && omega2Prev == 0)
 				{
-					//GetLog() << "Set disabled\n";
-					//link_actuator01->SetDisabled(true);
-					//link_actuator12->SetDisabled(true);
-					//arm0->SetUseSleeping(.005);
-					//arm2->SetUseSleeping(.005);
-					//successfulMotion = true;
-					//break;
+					
+					successfulMotion = true;
+					break;
 				}
 			}
 			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);

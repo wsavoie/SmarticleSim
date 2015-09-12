@@ -71,6 +71,8 @@ namespace chrono {
 		static ChSharedPtr<ChTexture> mtextureOT;
 		static ChSharedPtr<ChTexture> mtextureMid;
 		static ChSharedPtr<ChTexture> mtextureArm;
+		bool active=false;
+		static double pctActive;
 		bool armBroken;
 		// Construct a smarticle and add it to ChSystem.
 		Smarticle(

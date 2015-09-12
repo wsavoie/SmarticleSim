@@ -190,7 +190,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	double rampInc = 1.0/60.0;
 	double drum_freq = 1;
 	double drum_omega = drum_freq*2*CH_C_PI;
-
+	double pctActive = 1.0;
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
 	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
 	ChSharedPtr<ChTexture> floorTexture(new ChTexture());
@@ -535,7 +535,7 @@ ChSharedPtr<ChBody> bucket_bott;
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
-void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle,bool& readFile) {
+void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle,bool& readFile,double& mpctActive) {
   if (argc > 1) {
 	const char* text = argv[1];
 	double mult_l = atof(text);
@@ -554,19 +554,22 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[4];
 		readFile = atoi(text);
 	}
-
+	if (argc > 5){
+		const char* text = argv[5];
+		mpctActive = atof(text);
+	}
 	/// if parallel, get solver setting
   if (USE_PARALLEL) {
-	  if (argc > 5) {
-		const char* text = argv[5];
-		threads = atoi(text);
-	  }
 	  if (argc > 6) {
 		const char* text = argv[6];
-		max_iteration_sliding = atoi(text);
+		threads = atoi(text);
 	  }
 	  if (argc > 7) {
 		const char* text = argv[7];
+		max_iteration_sliding = atoi(text);
+	  }
+	  if (argc > 8) {
+		const char* text = argv[8];
 		max_iteration_bilateral = atoi(text);
 	  }
   }
@@ -575,7 +578,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc, char* argv[]) {
 	// initializd random seeder
 	MySeed();
-
+	ChSetRandomSeed(time(NULL));
 
   // ---------------------
   // Print the rest of parameters
@@ -584,13 +587,15 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	int dummyNumber0;
 	int dummyNumber1;
 	int dummyNumber2;
-  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle, read_from_file);
+  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle, read_from_file,pctActive);
 
-  simParams << std::endl <<
-		  " l_smarticle: " << l_smarticle << std::endl <<
-		  " l_smarticle mult for w (w = mult x l): " << l_smarticle /  w_smarticle << std::endl <<
-			" read from file: " << read_from_file << std::endl <<
-		  " dT: " << dT << std::endl << std::endl;
+	simParams << std::endl <<
+		" l_smarticle: " << l_smarticle << std::endl <<
+		" l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
+		" read from file: " << read_from_file << std::endl <<
+		" dT: " << dT << std::endl << std::endl <<
+		" Active Percent: " << pctActive << std::endl << std::endl;
+	
 
   // ---------------------
   // Edit mphysicalSystem settings.
@@ -628,7 +633,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set params from input
   // ----------------------
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle,read_from_file);
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle,read_from_file,pctActive);
 
   // ----------------------
   // Set number of threads.
@@ -1734,7 +1739,8 @@ int main(int argc, char* argv[]) {
 #else
 	InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
 #endif
-
+	GetLog() << "@@@@@@@@@@@@@@@@@@@pctActive" << pctActive;
+	Smarticle::pctActive = pctActive;
 	MyBroadPhaseCallback mySmarticleBroadphaseCollisionCallback;
 	mphysicalSystem.GetCollisionSystem()->SetBroadPhaseCallback(&mySmarticleBroadphaseCollisionCallback);
 
