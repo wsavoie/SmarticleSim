@@ -1794,6 +1794,16 @@ int main(int argc, char* argv[]) {
 	camera->setMinZoom(0.6f);
 	drawGlobalCoordinateFrame(mphysicalSystem);
 
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.wScan = 0; // hardware scan code for key
+	ip.ki.time = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.wVk = 0x59; // virtual-key code for the "a" key
+	ip.ki.dwFlags = 0; // 0 for key press
+
+
+
 
   // Use this function for adding a ChIrrNodeAsset to all items
   // If you need a finer control on which item really needs a visualization
@@ -1974,19 +1984,27 @@ int main(int argc, char* argv[]) {
     mphysicalSystem.DoStepDynamics(dT);
 #endif
 #endif
-
-		// if (mphysicalSystem.GetChTime() < 1.6)
-		// 	Smarticle::global_GUI_value = 1;
-		// else if (mphysicalSystem.GetChTime() > 1.6 && mphysicalSystem.GetChTime() < 2.6)
-		// 	Smarticle::global_GUI_value = 2;
-		// else if (mphysicalSystem.GetChTime() > 2.6 && mphysicalSystem.GetChTime() < 3.6)
-		// 	Smarticle::global_GUI_value = 1;
-		// else if (mphysicalSystem.GetChTime() > 3.6 && mphysicalSystem.GetChTime() < 4.6)
-		// 	Smarticle::global_GUI_value = 2;
-		// else if (mphysicalSystem.GetChTime() > 4.6 && mphysicalSystem.GetChTime() < 5.6)
-		// 	Smarticle::global_GUI_value = 1;
-		// else
-		// 	exit(-1);
+		
+		
+		if (bucket_exist && mphysicalSystem.GetChTime()>.1)
+		{
+			SendInput(1, &ip, sizeof(INPUT));
+			ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
+			SendInput(1, &ip, sizeof(INPUT));
+		}
+			
+		if (mphysicalSystem.GetChTime() < 1.6)
+		Smarticle::global_GUI_value = 1;
+		else if (mphysicalSystem.GetChTime() > 1.6 && mphysicalSystem.GetChTime() < 2.6)
+		Smarticle::global_GUI_value = 2;
+		else if (mphysicalSystem.GetChTime() > 2.6 && mphysicalSystem.GetChTime() < 3.6)
+		Smarticle::global_GUI_value = 1;
+		else if (mphysicalSystem.GetChTime() > 3.6 && mphysicalSystem.GetChTime() < 4.6)
+		Smarticle::global_GUI_value = 2;
+		else if (mphysicalSystem.GetChTime() > 4.6 && mphysicalSystem.GetChTime() < 5.6)
+		Smarticle::global_GUI_value = 1;
+		else
+		exit(-1);
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
     UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	  time(&rawtimeCurrent);
