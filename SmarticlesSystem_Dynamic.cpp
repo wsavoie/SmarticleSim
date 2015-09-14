@@ -1794,16 +1794,6 @@ int main(int argc, char* argv[]) {
 	camera->setMinZoom(0.6f);
 	drawGlobalCoordinateFrame(mphysicalSystem);
 
-	INPUT ip;
-	ip.type = INPUT_KEYBOARD;
-	ip.ki.wScan = 0; // hardware scan code for key
-	ip.ki.time = 0;
-	ip.ki.dwExtraInfo = 0;
-	ip.ki.wVk = 0x59; // virtual-key code for the "a" key
-	ip.ki.dwFlags = 0; // 0 for key press
-
-
-
 
   // Use this function for adding a ChIrrNodeAsset to all items
   // If you need a finer control on which item really needs a visualization
@@ -1821,6 +1811,16 @@ int main(int argc, char* argv[]) {
 	// note how to add the custom event receiver to the default interface:
 	application.SetUserEventReceiver(&receiver);
 	receiver.drawAngle();//initialize draw angle
+
+	//ool OnEvent(const SEvent& event) {
+	//	// check if user moved the sliders with mouse..
+	//	if (event.EventType == irr::EET_KEY_INPUT_EVENT && !event.KeyInput.PressedDown) {
+	//		switch (event.KeyInput.Key)
+	//		{
+	//		case irr::KEY_KEY_Q:
+	//			if (Smarticle::global_GUI_value != 1)
+	
+
 #endif
 
 
@@ -1977,6 +1977,7 @@ int main(int argc, char* argv[]) {
 
 		application.SetVideoframeSaveInterval(2);//only save every 2 frames
 		application.DrawAll();
+
     application.DoStep();
 
     application.GetVideoDriver()->endScene();
@@ -1988,9 +1989,8 @@ int main(int argc, char* argv[]) {
 		
 		if (bucket_exist && mphysicalSystem.GetChTime()>.1)
 		{
-			SendInput(1, &ip, sizeof(INPUT));
-			ip.ki.dwFlags = KEYEVENTF_KEYUP; // KEYEVENTF_KEYUP for key release
-			SendInput(1, &ip, sizeof(INPUT));
+			bucket_bott->SetPos(ChVector<>(100, 0, 0));
+			bucket_exist = false;
 		}
 			
 		if (mphysicalSystem.GetChTime() < 1.6)
