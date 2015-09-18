@@ -245,13 +245,16 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	//double mass = .005;//.043/3.0; //robot weight 43 grams
 	arm->GetCollisionModel()->ClearModel();
 
-
+	if (visualize)
+	{
 	if (armID == 1)
 		arm->AddAsset(mtextureMid);
 	else
 		arm->AddAsset(mtextureArm);
+	
+	}
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelop);
-	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0));
+	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0),QUNIT,visualize);
 
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 
@@ -333,13 +336,13 @@ void Smarticle::CreateJoints() {
 
 	// link 1
 	link_revolute01->Initialize(arm0, arm1, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx));
-	link_revolute01->SetMotion_axis(ChVector<>(0, 1, 0));
+	link_revolute01->SetMotion_axis(ChVector<>(0, 0, 1));
 	m_system->AddLink(link_revolute01);
 
 
 	// link 2
 	link_revolute12->Initialize(arm1, arm2, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx));
-	link_revolute12->SetMotion_axis(ChVector<>(0, 1, 0));
+	link_revolute12->SetMotion_axis(ChVector<>(0, 0, 1));
 	m_system->AddLink(link_revolute12);
 }
 
@@ -365,6 +368,8 @@ void Smarticle::CreateActuators() {
 	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 	// link_actuator01->ChangeLinkMask(&m_mask01);
 	// link_actuator01->ChangedLinkMask();
+	link_actuator01->SetMotion_axis(ChVector<>(0, 0, 1));
+
 	m_system->AddLink(link_actuator01);
 
 	// link 2
@@ -373,6 +378,7 @@ void Smarticle::CreateActuators() {
 	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 	// link_actuator12->ChangeLinkMask(&m_mask12);
 	// link_actuator12->ChangedLinkMask();
+	link_actuator12->SetMotion_axis(ChVector<>(0, 0, 1));
 	m_system->AddLink(link_actuator12);
 
 }
@@ -809,7 +815,6 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	std::vector<std::pair<double, double>> *v;
 	//set prevMoveType to previous value
 	this->prevMoveType = this->moveType;
-
 	//get previous values from last timestep
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
@@ -819,8 +824,8 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	//double omega01 = li
 	//double c1 = .pos.x;
 
-	double torque01 = link_actuator01->Get_react_torque().Length2(); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
-	double torque12 = link_actuator12->Get_react_torque().Length2();
+	double torque01 = fabs(link_actuator01->Get_react_torque().z); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
+	double torque12 = fabs(link_actuator12->Get_react_torque().z);
 	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
 
 
@@ -868,6 +873,16 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	{
 		armBroken = true; 
 	}
+	//ChVector<> rel01 = link_actuator01->GetRelRotaxis();
+	//ChVector<> rel12 = link_actuator12->GetRelRotaxis();
+	////GetLog() <<"\n"<< rel01 << "\n";
+	//if (fabs(rel01.x) > .1 || fabs(rel01.y) > .1
+	//	|| fabs(rel12.x) > .1 || fabs(rel12.x) > .1)//probably broken joint!
+	//{
+	//	arm0->AddAsset(mtextureOT);
+	//	//armBroken = true;
+	//}
+
 	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)
 	{
 		//this->setCurrentMoveType(OT);
@@ -997,11 +1012,11 @@ ChVector<> Smarticle::GetReactTorqueVectors12()
 }
 double Smarticle::GetReactTorqueLen01()
 {
-	return (link_actuator12->Get_react_torque().Length());
+	return (abs(link_actuator01->Get_react_torque().z));
 }
 double Smarticle::GetReactTorqueLen12()
 {
-	return (link_actuator12->Get_react_torque().Length());
+	return (abs(link_actuator12->Get_react_torque().z));
 }
 
 

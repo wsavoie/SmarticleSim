@@ -704,7 +704,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 	int smarticleCount = mySmarticlesVec.size();
 	double ang = 2*CH_C_PI / numPerLayer;
 	double w = w_smarticle;
-	if (smarticleCount < numPerLayer){ z = 0; }
+	if (smarticleCount < numPerLayer){ z = w_smarticle / 2; }
 	else{ z = Find_Max_Z(mphysicalSystem); }
 	double phase = MyRand()*CH_C_PI / 2;
 	for (int i = 0; i < numPerLayer; i++)
@@ -743,8 +743,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				myRot
 				);
 
-
-
+			if (MyRand()<0.2)
+				smarticle0->visualize = true;
 			smarticle0->populateMoveVector();
 			smarticle0->SetAngle(90, 90, true);
 			smarticle0->Create();
@@ -1587,11 +1587,12 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2.0*bucket_interior_halfDim.z))) {
 				countInside2++;
 				totalVolume2 += sPtr->GetVolume();
-				zCom += sPtr->Get_cm().z*sPtr->GetMass();
+				zCom += sPtr->Get_cm().z+bucketMin.z;
 				meanOT += sPtr->GetReactTorqueLen01() + sPtr->GetReactTorqueLen12();
+				
 			}
 		}
-
+	
 		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2.0 * bucket_interior_halfDim.z);
 		zCom = zCom / countInside2;
 		meanOT = meanOT / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
@@ -2000,7 +2001,7 @@ int main(int argc, char* argv[]) {
 		else if (mphysicalSystem.GetChTime() > 2.5 && mphysicalSystem.GetChTime() < 4)
 		Smarticle::global_GUI_value = 3;
 		else if (mphysicalSystem.GetChTime() > 4 && mphysicalSystem.GetChTime() < 5.5)
-			Smarticle::global_GUI_value = 1;
+			Smarticle::global_GUI_value = 2;
 		else
 		exit(-1);
 
