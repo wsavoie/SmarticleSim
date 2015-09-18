@@ -241,8 +241,8 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 
 	arm->SetMaterialSurface(mat_g);
 
-	//double mass = density * vol;
-	double mass = .005;//.043/3.0; //robot weight 43 grams
+	double mass = density * vol;
+	//double mass = .005;//.043/3.0; //robot weight 43 grams
 	arm->GetCollisionModel()->ClearModel();
 
 
@@ -467,6 +467,10 @@ void Smarticle::SetActuatorFunction(int actuatorID, double omega) {
 double Smarticle::GetVolume() {
 //	return r * r2 * (w + 2 * (l + jointClearance));
 	return (2 * r) * (2 * r2 )* (w + 2 * l);
+}
+double Smarticle::GetMass() {
+	//	return r * r2 * (w + 2 * (l + jointClearance));
+	return mass;
 }
 
 ChVector<> Smarticle::Get_cm() {
@@ -719,6 +723,10 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 {
 	if (!active)
 		return true;
+	if (arm0OT || arm2OT) //turn off motion at limit
+	{
+		return false;
+	}
 	//real ang01 and ang12
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
@@ -752,10 +760,7 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 	double omega01 = ChooseOmegaAmount(momega1, ang01, expAng01);
 	double omega12 = ChooseOmegaAmount(momega2, ang12, expAng12);
 
-	if (arm0OT || arm2OT)
-	{
-		return false;
-	}
+
 
 	//if within some threshold distance to where curr angle is supposed to be:
 	if (omega01==0)
@@ -857,11 +862,11 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	//arm2->AddAsset(mtextureArm);
 	arm0OT = false;
 	arm2OT = false;
-	//GetLog() << "\nlink12 constraint violations" <<link_actuator12->GetRelC().rot;
+	//GetLog() << "\nlink01 " << link_actuator01->GetRelC_dt().rot << "\nlink012" << link_actuator01->GetRelC_dt().rot;
 	if (fabs(link_actuator12->GetDeltaC().rot.e1) > .01 || fabs(link_actuator12->GetDeltaC().rot.e1) > .01
 		|| fabs(link_actuator12->GetDeltaC().rot.e2) > .01 || fabs(link_actuator12->GetDeltaC().rot.e2) > .01)//probably broken joint!
 	{
-		armBroken = true;
+		armBroken = true; 
 	}
 	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)
 	{
@@ -982,6 +987,23 @@ bool Smarticle::MoveToRange() {
 
 	return isInRange;
 }
+ChVector<> Smarticle::GetReactTorqueVectors01()
+{
+	return link_actuator01->Get_react_torque();
+}
+ChVector<> Smarticle::GetReactTorqueVectors12()
+{
+	return link_actuator12->Get_react_torque();
+}
+double Smarticle::GetReactTorqueLen01()
+{
+	return (link_actuator12->Get_react_torque().Length());
+}
+double Smarticle::GetReactTorqueLen12()
+{
+	return (link_actuator12->Get_react_torque().Length());
+}
+
 
 void Smarticle::MoveSquare() {
 	double ang01 = link_actuator01->Get_mot_rot();

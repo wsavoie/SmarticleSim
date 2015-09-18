@@ -132,6 +132,12 @@ namespace chrono {
 			double other_angLow=0,
 			double other_angHigh=120);
 
+
+		virtual ChVector<> GetReactTorqueVectors01();
+		virtual ChVector<> GetReactTorqueVectors12();
+		virtual double GetReactTorqueLen01();
+		virtual double GetReactTorqueLen12();
+
 		virtual void SetDefaultOmega(double omega);
 		virtual void SetOmega(double momega1, double momega2, bool angularFreq = true);
 		virtual void SetOmega(double momega, bool angularFreq = true);
@@ -162,6 +168,8 @@ namespace chrono {
 		virtual double GetVolume();
 		virtual ChVector<> Get_cm();
 		virtual ChVector<> Get_InitPos();
+
+		virtual double GetMass();
 		virtual double GetDensity() {return density;};
 		virtual void AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece);
 		//	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented

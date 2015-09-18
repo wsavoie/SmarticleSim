@@ -103,7 +103,7 @@ using namespace gui;
 enum SmarticleType {SMART_ARMS , SMART_U};
 enum BucketType { CYLINDER, BOX, HULL,RAMP,HOPPER,DRUM};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = HOPPER;
+BucketType bucketType = CYLINDER;
 // =============================================================================
 
 class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
@@ -178,7 +178,8 @@ ChSharedPtr<ChBody> bucket_bott;
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	//double bucket_rad = sizeScale*0.034;
-	double bucket_rad = sizeScale*0.02;
+	//double bucket_rad = sizeScale*0.02;
+	double bucket_rad = sizeScale*0.025;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .030);
 
 
@@ -588,22 +589,25 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	int dummyNumber1;
 	int dummyNumber2;
   SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle, read_from_file,pctActive);
-
+	double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * l_smarticle);
 	simParams << std::endl <<
-		" l_smarticle: " << l_smarticle << std::endl <<
-		" l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
-		" read from file: " << read_from_file << std::endl <<
-		" dT: " << dT << std::endl << std::endl <<
-		" Active Percent: " << pctActive << std::endl << std::endl;
+		"l_smarticle: " << l_smarticle << std::endl <<
+		"l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
+		"read from file: " << read_from_file << std::endl <<
+		"dT: " << dT << std::endl << std::endl <<
+		"Active Percent: " << pctActive << std::endl;
 	
+
+	simParams << "Smarticle volume" << vol << std::endl;
+	simParams << "Smarticle mass: " << vol*rho_smarticle << std::endl;
 
   // ---------------------
   // Edit mphysicalSystem settings.
   // ---------------------
 
   // Modify some setting of the physical system for the simulation, if you want
-  mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR); // LCP_ITERATIVE_SOR_MULTITHREAD , LCP_ITERATIVE_SOR  (LCP_ITERATIVE_SOR_MULTITHREAD does not work)
-  mphysicalSystem.SetIterLCPmaxItersSpeed(120);
+	mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR);
+	mphysicalSystem.SetIterLCPmaxItersSpeed(120);
   mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
   //mphysicalSystem.SetParallelThreadNumber(1);  //TODO figure out if this can increase speed
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
@@ -713,6 +717,13 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand()), //TODO for hopper no -w/2.0
 			cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w/2.0),
 			zpos);
+
+		if (bucketType == CYLINDER)
+		{
+				myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.1), //TODO for hopper no -w/2.0
+				cos(ang*i + phase)*(bucket_rad / 2.1),
+				zpos);
+		}
 
 			//std::min(4 * bucket_interior_halfDim.z, z) + (i + 1)*w_smarticle / 4);
 			//std::min(3 * bucket_interior_halfDim.z, z) + w_smarticle / 4);
@@ -1002,7 +1013,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 	//utils::AddBoxGeometry(cyl_container.get_ptr(), Vector(bucket_rad, bucket_rad + t, t), Vector(0, 0, -t), QUNIT, true);
 
 	//checks top,bottom, and middle location
-	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos() + Vector(0,0,2 * bucket_interior_halfDim.z + 2 * bucket_half_thick), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos() + Vector(0,0,2 * bucket_interior_halfDim.z + 2.0 * bucket_half_thick), Q_from_AngAxis(CH_C_PI/2.0, VECT_Y),true);
 	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos(), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos() + Vector(0, 0, bucket_interior_halfDim.z), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 
@@ -1365,7 +1376,7 @@ bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 //		return true;
 //	}
 //	return false;
-	if (xydist >= rad.x) { GetLog() << "\noutside radius\n"; return false; } // if outside radius
+	if (xydist >= rad.x) { /*GetLog() << "\noutside radius\n";*/ return false; } // if outside radius
 	if (pt.z < rad.y || pt.z >rad.z){ GetLog() << "outside z"; return false; }
 	return true;
 }
@@ -1493,24 +1504,32 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 	for (myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end();)
 	{
 		Smarticle* sPtr = *(myIter);
+		if (sPtr->armBroken)
+		{
+			sPtr->~Smarticle();
+			myIter = mySmarticlesVec.erase(myIter);
+			GetLog() << "\narm broken removing smarticle\n";
+			continue;
+		}
 		if (bucketType != HOPPER)
 		{
 			if (sPtr->GetArm(1)->GetPos().z < -3.0*bucket_interior_halfDim.z)
 			{
 				sPtr->~Smarticle();
 				myIter = mySmarticlesVec.erase(myIter);
+				continue;
 			}
-			else{ ++myIter; }
-		}
-		else
-		{
-			if (sPtr->armBroken)
+			if (bucketType == CYLINDER && !IsInRadial(sPtr->Get_cm(), bucket->GetPos() + ChVector<>(0, 0, bucket_interior_halfDim.z), ChVector<>(bucket_rad, bucket->GetPos().z, bucket->GetPos().z + 2 * bucket_interior_halfDim.z)))
 			{
 				sPtr->~Smarticle();
 				myIter = mySmarticlesVec.erase(myIter);
-				GetLog() << "\narm broken removing smarticle\n";
 				continue;
 			}
+			 ++myIter;
+		}
+		else
+		{
+
 			if (!IsInRadial(sPtr->GetArm(1)->GetPos(), bucket->GetPos(), ChVector<>(2*bucket_rad, -4.0*bucket_interior_halfDim.z, 4.0*bucket_interior_halfDim.z)))
 			{
 				sPtr->~Smarticle();
@@ -1523,10 +1542,13 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 
 
 }
+
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
-	const std::string vol_frac = out_dir + "/volumeFraction.txt";
-	int stepSave = 10;
+	const static std::string vol_frac = out_dir + "/volumeFraction.txt";
+	static int stepSave = 10;
 	if (tStep % stepSave != 0) return;
+	double zCom = 0;
+	double meanOT = 0;
 
 	std::ofstream vol_frac_of;
 	if (tStep == 0) {
@@ -1542,27 +1564,6 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	// *** remember, 2 * bucket_half_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_half_thick from each side
 
 	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
-//	const std::string smarticleTypeName;
-//	if (smarticleType == SMART_ARMS) {
-//		smarticleTypeName = "smarticle_arm";
-//	} else if (smarticleType == SMART_U) {
-//		smarticleTypeName = "smarticle_u";
-//	} else {
-//		std::cout << "Error! Smarticle type is not set correctly" << std::endl;
-//	}
-//	int countInside = 0;
-//	double totalVolume1 = 0;
-//	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
-//	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
-//		ChBody* bodyPtr = *(myIter + i);
-//		if ( strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0 ) {
-//			if ( IsIn(bodyPtr->GetPos(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + 2 * ChVector<>(0, 0, 2 * bucket_half_thick)) ) {
-//				countInside ++;
-//				totalVolume1 += bodyPtr->GetMass() / bodyPtr->GetDensity();
-//			}
-//		}
-//	}
-
 	double totalVolume2 = 0;
 	int countInside2 = 0;
 	double volumeFraction = 0;
@@ -1570,29 +1571,33 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	{
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 			Smarticle* sPtr = mySmarticlesVec[i];
-			if (IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + ChVector<>(0, 0, 2 * bucket_half_thick))) {
+			if (IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + ChVector<>(0, 0, 2.0 * bucket_half_thick))) {
 				countInside2++;
 				totalVolume2 += sPtr->GetVolume();
 			}
 		}
 
-		volumeFraction = totalVolume2 / (4 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - bucketMin.z));
+		volumeFraction = totalVolume2 / (4.0 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - bucketMin.z));
 	}
 	if (bucketType == CYLINDER)
 	{
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 			Smarticle* sPtr = mySmarticlesVec[i];
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
-			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2*bucket_interior_halfDim.z))) {
+			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2.0*bucket_interior_halfDim.z))) {
 				countInside2++;
 				totalVolume2 += sPtr->GetVolume();
+				zCom += sPtr->Get_cm().z*sPtr->GetMass();
+				meanOT += sPtr->GetReactTorqueLen01() + sPtr->GetReactTorqueLen12();
 			}
 		}
 
-		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2 * bucket_interior_halfDim.z);
+		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2.0 * bucket_interior_halfDim.z);
+		zCom = zCom / countInside2;
+		meanOT = meanOT / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
 	}
 
-	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2  << ", " << volumeFraction << ", " << zMax << std::endl;
+	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zCom << ", " << meanOT<< ", " << Smarticle::global_GUI_value << std::endl;
 
 	vol_frac_of.close();
 }
@@ -1987,24 +1992,36 @@ int main(int argc, char* argv[]) {
 #endif
 		
 		
-		if (bucket_exist && mphysicalSystem.GetChTime()>.1)
-		{
-			bucket_bott->SetPos(ChVector<>(100, 0, 0));
-			bucket_exist = false;
-		}
-			
-		if (mphysicalSystem.GetChTime() < 1.6)
-		Smarticle::global_GUI_value = 1;
-		else if (mphysicalSystem.GetChTime() > 1.6 && mphysicalSystem.GetChTime() < 2.6)
-		Smarticle::global_GUI_value = 2;
-		else if (mphysicalSystem.GetChTime() > 2.6 && mphysicalSystem.GetChTime() < 3.6)
-		Smarticle::global_GUI_value = 1;
-		else if (mphysicalSystem.GetChTime() > 3.6 && mphysicalSystem.GetChTime() < 4.6)
-		Smarticle::global_GUI_value = 2;
-		else if (mphysicalSystem.GetChTime() > 4.6 && mphysicalSystem.GetChTime() < 5.6)
-		Smarticle::global_GUI_value = 1;
+
+		if (mphysicalSystem.GetChTime() < 1.0)
+			Smarticle::global_GUI_value = 1;
+		else if (mphysicalSystem.GetChTime() > 1 && mphysicalSystem.GetChTime() < 2.5)
+			Smarticle::global_GUI_value = 2;
+		else if (mphysicalSystem.GetChTime() > 2.5 && mphysicalSystem.GetChTime() < 4)
+		Smarticle::global_GUI_value = 3;
+		else if (mphysicalSystem.GetChTime() > 4 && mphysicalSystem.GetChTime() < 5.5)
+			Smarticle::global_GUI_value = 1;
 		else
 		exit(-1);
+
+		//if (bucket_exist && mphysicalSystem.GetChTime()>.1)
+		//{
+		//	bucket_bott->SetPos(ChVector<>(100, 0, 0));
+		//	bucket_exist = false;
+		//}
+			
+		//if (mphysicalSystem.GetChTime() < 1.6)
+		//Smarticle::global_GUI_value = 1;
+		//else if (mphysicalSystem.GetChTime() > 1.6 && mphysicalSystem.GetChTime() < 2.6)
+		//Smarticle::global_GUI_value = 2;
+		//else if (mphysicalSystem.GetChTime() > 2.6 && mphysicalSystem.GetChTime() < 3.6)
+		//Smarticle::global_GUI_value = 1;
+		//else if (mphysicalSystem.GetChTime() > 3.6 && mphysicalSystem.GetChTime() < 4.6)
+		//Smarticle::global_GUI_value = 2;
+		//else if (mphysicalSystem.GetChTime() > 4.6 && mphysicalSystem.GetChTime() < 5.6)
+		//Smarticle::global_GUI_value = 1;
+		//else
+		//exit(-1);
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
     UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	  time(&rawtimeCurrent);
@@ -2029,11 +2046,14 @@ int main(int argc, char* argv[]) {
 	  		rho_smarticle);
 
   }
+
+	simParams << "Smarticle OT: " <<	 mySmarticlesVec.at(0)->torqueThresh2 << std::endl;
   for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 	  delete mySmarticlesVec[i];
 
   }
   mySmarticlesVec.clear();
+
 	simParams << "completed"<<std::endl;
   simParams.close();
   return 0;

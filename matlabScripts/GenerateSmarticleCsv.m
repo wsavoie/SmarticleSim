@@ -10,7 +10,7 @@
 
 dt=.0005;
 omega = 10;
-torqueThresh=50;%.00005;
+torqueThresh=5*4.6657e-04*9.8*.0059;%.00005;  4.6657e-04 
 angLow=60;
 angHigh=120;
 
