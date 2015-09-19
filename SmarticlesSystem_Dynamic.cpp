@@ -231,7 +231,8 @@ ChSharedPtr<ChBody> bucket_bott;
 
 			text_Y = app->GetIGUIEnvironment()->addStaticText(L"Press Y to move cylinder away",
 				rect<s32>(850, 185, 1050, 200), true);
-
+			text_successful = app->GetIGUIEnvironment()->addStaticText(L"Successfully moved smarticles",
+				rect<s32>(850, 205, 1050, 220), true);
 
 
 		}
@@ -478,6 +479,16 @@ ChSharedPtr<ChBody> bucket_bott;
 			}
 
 		}
+		void drawSuccessful()
+		{
+			int count = 0;
+			for (int i = 0; i < sv->size(); i++) //get each particles current theta
+			{
+				if(sv->at(i)->successfulMotion) count++;
+			}
+			char message[100]; sprintf(message, "Successfully Moving: %d/%d", count, sv->size());
+			this->text_successful->setText(core::stringw(message).c_str());
+		}
 		void drawOTArms()
 		{
 			for (int i = 0; i < sv->size(); i++) //get each particles current theta
@@ -528,6 +539,7 @@ ChSharedPtr<ChBody> bucket_bott;
 		IGUIStaticText* text_angle2;
 		IGUIEditBox* angle1Input;
 		IGUIEditBox* angle2Input;
+		IGUIStaticText* text_successful;
 
 
 	};
@@ -607,7 +619,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 
   // Modify some setting of the physical system for the simulation, if you want
 	mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR);
-	mphysicalSystem.SetIterLCPmaxItersSpeed(120);
+	mphysicalSystem.SetIterLCPmaxItersSpeed(int(2.5*numLayers*numPerLayer));
   mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
   //mphysicalSystem.SetParallelThreadNumber(1);  //TODO figure out if this can increase speed
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
@@ -1812,8 +1824,9 @@ int main(int argc, char* argv[]) {
   application.SetStepManage(true);
   application.SetTimestep(dT);  // Arman modify
 
-  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n" << std::endl;
 	MyEventReceiver receiver(&application, &mySmarticlesVec);
+
 	// note how to add the custom event receiver to the default interface:
 	application.SetUserEventReceiver(&receiver);
 	receiver.drawAngle();//initialize draw angle
@@ -1875,7 +1888,6 @@ int main(int argc, char* argv[]) {
 		application.AssetUpdateAll();
 		numGeneratedLayers = numLayers;
 	}
-
 //  for (int tStep = 0; tStep < 1; tStep++) {
 
   for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
@@ -1939,7 +1951,7 @@ int main(int argc, char* argv[]) {
 			rotate_drum(t);
 		}
 		 //receiver.drawOTArms();
-
+		receiver.drawSuccessful();
 		if (fmod(mphysicalSystem.GetChTime(), timeForVerticalDisplcement) < dT
 			&&mySmarticlesVec.size()< numPerLayer*numLayers && (numGeneratedLayers == numLayers))
 			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplcement);
@@ -1994,16 +2006,18 @@ int main(int argc, char* argv[]) {
 		
 		
 
-		if (mphysicalSystem.GetChTime() < 1.0)
-			Smarticle::global_GUI_value = 1;
-		else if (mphysicalSystem.GetChTime() > 1 && mphysicalSystem.GetChTime() < 2.5)
-			Smarticle::global_GUI_value = 2;
-		else if (mphysicalSystem.GetChTime() > 2.5 && mphysicalSystem.GetChTime() < 4)
-		Smarticle::global_GUI_value = 3;
-		else if (mphysicalSystem.GetChTime() > 4 && mphysicalSystem.GetChTime() < 5.5)
-			Smarticle::global_GUI_value = 2;
-		else
-		exit(-1);
+
+
+		//if (mphysicalSystem.GetChTime() < 1.0)
+		//	Smarticle::global_GUI_value = 1;
+		//else if (mphysicalSystem.GetChTime() > 1 && mphysicalSystem.GetChTime() < 2.5)
+		//	Smarticle::global_GUI_value = 2;
+		//else if (mphysicalSystem.GetChTime() > 2.5 && mphysicalSystem.GetChTime() < 4)
+		//Smarticle::global_GUI_value = 3;
+		//else if (mphysicalSystem.GetChTime() > 4 && mphysicalSystem.GetChTime() < 5.5)
+		//	Smarticle::global_GUI_value = 2;
+		//else
+		//exit(-1);
 
 		//if (bucket_exist && mphysicalSystem.GetChTime()>.1)
 		//{
@@ -2045,6 +2059,18 @@ int main(int argc, char* argv[]) {
 	  		t2_smarticle,
 	  		collisionEnvelope,
 	  		rho_smarticle);
+
+
+		if (mphysicalSystem.GetChTime() < 0.25)
+			Smarticle::global_GUI_value = 1;
+		else if (mphysicalSystem.GetChTime() >= 0.25 && mphysicalSystem.GetChTime() < 0.5)
+			Smarticle::global_GUI_value = 2;
+		else if (mphysicalSystem.GetChTime() > 0.5 && mphysicalSystem.GetChTime() < 0.75)
+			Smarticle::global_GUI_value = 3;
+		else if (mphysicalSystem.GetChTime() > 0.75 && mphysicalSystem.GetChTime() < 1.0)
+			Smarticle::global_GUI_value = 2;
+		else
+			break;
 
   }
 

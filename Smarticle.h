@@ -210,6 +210,7 @@ namespace chrono {
 		static std::vector<std::pair<double, double>> gui2;//gui option 2
 		static std::vector<std::pair<double, double>> gui3;//gui option 3
 		bool visualize=false;
+		bool successfulMotion = false;
 		std::vector<std::pair<double, double>> ot; //over torque
 		std::vector<std::pair<double, double>> oa; //over angle
 		std::vector<std::pair<double, double>> vib; //vibrate this HAS to be particle specific so cannot be static?

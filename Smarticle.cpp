@@ -356,18 +356,10 @@ void Smarticle::CreateActuators() {
 	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
 	ChQuaternion<> qy1 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle1()));
 	ChQuaternion<> qy2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle2()));
-	ChLinkMaskLF m_mask01;
-	ChLinkMaskLF m_mask12;
-	m_mask01.SetLockMask(true, true, true, false, true, true, false); //standard revolute mask
-	m_mask01.SetTwoBodiesVariables(arm0->GetVariables1(), arm1->GetVariables1());
 
-	m_mask12.SetLockMask(true, true, true, false, true, true, false);
-	m_mask12.SetTwoBodiesVariables(arm1->GetVariables1(), arm2->GetVariables1());
 	// link 1
 	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx*qy1));
 	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	// link_actuator01->ChangeLinkMask(&m_mask01);
-	// link_actuator01->ChangedLinkMask();
 	link_actuator01->SetMotion_axis(ChVector<>(0, 0, 1));
 
 	m_system->AddLink(link_actuator01);
@@ -376,8 +368,6 @@ void Smarticle::CreateActuators() {
 
 	link_actuator12->Initialize(arm1, arm2, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx*qy2));
 	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	// link_actuator12->ChangeLinkMask(&m_mask12);
-	// link_actuator12->ChangedLinkMask();
 	link_actuator12->SetMotion_axis(ChVector<>(0, 0, 1));
 	m_system->AddLink(link_actuator12);
 
@@ -388,11 +378,6 @@ void Smarticle::Create() {
 	jointClearance = 0;
 	double l_mod = l - jointClearance;
 
-	// ** initialize U
-//	CreateArm(0, l_mod, ChVector<>(-w/2 + r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
-//	CreateArm(1, w, ChVector<>(0, 0, 0));
-//	CreateArm(2, l_mod, ChVector<>(w/2 - r2, 0, l_mod/2 + r2 + jointClearance), Q_from_AngAxis(CH_C_PI / 2, VECT_Y));
-
 
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));
@@ -401,14 +386,7 @@ void Smarticle::Create() {
 	CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
 	CreateArm(1, w, ChVector<>(0, 0, 0));
 	CreateArm(2, l_mod, ChVector<>( w / 2.0 - r2 + (l_mod / 2.0 - r2)*cos(angle2), 0, -(l_mod / 2.0-r2)*sin(angle2)), quat2);
-	////////////////////////////////////////////////////////
-	//CreateArm(1, w, ChVector<>(0, 0, 0));
-	//CreateArm(0, l_mod, ChVector<>(-w / 2 - jointClearance - r2 - l_mod / 2, 0, 0));//original
-	//CreateArm(2, l_mod, ChVector<>(w / 2 + jointClearance + r2 + l_mod / 2, 0, 0));//original
-	/////////////////////////////////////////////////////////
 
-
-	//-(w / 2.0 + jointClearance - r2) + (l_mod / 2.0 + r2)*cos(angle1)
 	CreateActuators();
 	//CreateJoints(); //TODO do we need joints?
 
@@ -808,7 +786,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 {
 	//initialize boolean describing same moveType as last step
 	bool sameMoveType = false;
-	static bool successfulMotion = false;
+	//static bool successfulMotion = false;
 	bool prevSucessful = successfulMotion;
 	successfulMotion = false;
 	//this pointer will point to the correct moveType vector
@@ -867,21 +845,21 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	//arm2->AddAsset(mtextureArm);
 	arm0OT = false;
 	arm2OT = false;
-	//GetLog() << "\nlink01 " << link_actuator01->GetRelC_dt().rot << "\nlink012" << link_actuator01->GetRelC_dt().rot;
-	if (fabs(link_actuator12->GetDeltaC().rot.e1) > .01 || fabs(link_actuator12->GetDeltaC().rot.e1) > .01
-		|| fabs(link_actuator12->GetDeltaC().rot.e2) > .01 || fabs(link_actuator12->GetDeltaC().rot.e2) > .01)//probably broken joint!
-	{
-		armBroken = true; 
-	}
-	//ChVector<> rel01 = link_actuator01->GetRelRotaxis();
-	//ChVector<> rel12 = link_actuator12->GetRelRotaxis();
-	////GetLog() <<"\n"<< rel01 << "\n";
-	//if (fabs(rel01.x) > .1 || fabs(rel01.y) > .1
-	//	|| fabs(rel12.x) > .1 || fabs(rel12.x) > .1)//probably broken joint!
+	////GetLog() << "\nlink01 " << link_actuator01->GetRelC_dt().rot << "\nlink012" << link_actuator01->GetRelC_dt().rot;
+	//if (fabs(link_actuator12->GetDeltaC().rot.e1) > .01 || fabs(link_actuator12->GetDeltaC().rot.e1) > .01
+	//	|| fabs(link_actuator12->GetDeltaC().rot.e2) > .01 || fabs(link_actuator12->GetDeltaC().rot.e2) > .01)//probably broken joint!
 	//{
-	//	arm0->AddAsset(mtextureOT);
-	//	//armBroken = true;
+	//	armBroken = true; 
 	//}
+	ChVector<> rel01 = link_actuator01->GetRelRotaxis();
+	ChVector<> rel12 = link_actuator12->GetRelRotaxis();
+	//GetLog() <<"\n"<< rel01 << "\n";
+	if (fabs(rel01.x) > .1 || fabs(rel01.y) > .1
+		|| fabs(rel12.x) > .1 || fabs(rel12.x) > .1)//if angle in x or y is > .1 radians, it is definitely broken
+	{
+		//arm0->AddAsset(mtextureOT);
+		armBroken = true;
+	}
 
 	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)
 	{
