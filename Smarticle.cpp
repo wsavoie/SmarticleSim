@@ -885,8 +885,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		}
 
 	}
-	link_actuator01->SetDisabled(false);
-	link_actuator12->SetDisabled(false);
+
 	if (this->moveType == this->prevMoveType){
 		sameMoveType = true;
 	}

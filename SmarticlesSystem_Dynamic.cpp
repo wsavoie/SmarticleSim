@@ -629,6 +629,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	//mphysicalSystem.SetTolForce(.0005);
 	//mphysicalSystem.SetTol(.0001);
 	//mphysicalSystem.SetMinBounceSpeed(.3);
+	simParams.close();
 }
 // =============================================================================
 void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, int argc, char* argv[]) {
@@ -1743,7 +1744,7 @@ int main(int argc, char* argv[]) {
 	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	simParams.open(simulationParams.c_str());
 	simParams << " Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
-
+	simParams.close();
 
 	// define material property for everything
 	mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
@@ -2065,15 +2066,15 @@ int main(int argc, char* argv[]) {
 			Smarticle::global_GUI_value = 1;
 		else if (mphysicalSystem.GetChTime() >= 0.25 && mphysicalSystem.GetChTime() < 0.5)
 			Smarticle::global_GUI_value = 2;
-		else if (mphysicalSystem.GetChTime() > 0.5 && mphysicalSystem.GetChTime() < 0.75)
-			Smarticle::global_GUI_value = 3;
-		else if (mphysicalSystem.GetChTime() > 0.75 && mphysicalSystem.GetChTime() < 1.0)
-			Smarticle::global_GUI_value = 2;
+		//else if (mphysicalSystem.GetChTime() > 0.5 && mphysicalSystem.GetChTime() < 0.75)
+		//	Smarticle::global_GUI_value = 3;
+		//else if (mphysicalSystem.GetChTime() > 0.75 && mphysicalSystem.GetChTime() < 1.0)
+		//	Smarticle::global_GUI_value = 2;
 		else
 			break;
 
   }
-
+	simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "Smarticle OT: " <<	 mySmarticlesVec.at(0)->torqueThresh2 << std::endl;
   for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 	  delete mySmarticlesVec[i];
