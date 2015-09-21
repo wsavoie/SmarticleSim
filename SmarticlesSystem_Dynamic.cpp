@@ -596,7 +596,8 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   // ---------------------
   // Print the rest of parameters
   // ---------------------
-
+	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
+	simParams.open(simulationParams.c_str(), std::ios::app);
 	int dummyNumber0;
 	int dummyNumber1;
 	int dummyNumber2;
@@ -610,8 +611,18 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 		"Active Percent: " << pctActive << std::endl;
 	
 
-	simParams << "Smarticle volume" << vol << std::endl;
+	simParams << "Smarticle volume: " << vol << std::endl;
 	simParams << "Smarticle mass: " << vol*rho_smarticle << std::endl;
+
+	//copy smarticle checkpoint if used to PostProcess folder
+	if (read_from_file)
+	{
+		const std::string copyCheckpoint = std::string("cp smarticles.csv " + out_dir);
+		std::system(copyCheckpoint.c_str());
+	}
+	//copy smarticleMoves to PostProcess Folder
+	const std::string copyMoves = std::string("cp smarticleMoves.csv " + out_dir);
+	std::system(copyMoves.c_str());
 
   // ---------------------
   // Edit mphysicalSystem settings.
@@ -619,6 +630,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 
   // Modify some setting of the physical system for the simulation, if you want
 	mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR);
+	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
 	mphysicalSystem.SetIterLCPmaxItersSpeed(int(2.5*numLayers*numPerLayer));
   mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
   //mphysicalSystem.SetParallelThreadNumber(1);  //TODO figure out if this can increase speed
@@ -666,6 +678,8 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 	mphysicalSystem.GetSettings()->perform_thread_tuning = thread_tuning;
 	mphysicalSystem.GetSettings()->min_threads = std::max(1, threads/2);
 	mphysicalSystem.GetSettings()->max_threads = std::min(max_threads, int(3.0 * threads / 2));
+	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
+	simParams.open(simulationParams.c_str(), std::ios::app);
   // ---------------------
   // Print the rest of parameters
   // ---------------------
@@ -1429,7 +1443,7 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem,	///< the chrono::engi
 		yaxis = ChSharedPtr<ChBody>(new ChBody);
 		zaxis = ChSharedPtr<ChBody>(new ChBody);
 	}
-	GetLog() << "here!";
+	
 	xaxis->SetPos(pos);						yaxis->SetPos(pos);							zaxis->SetPos(pos);
 	xaxis->SetCollide(false);			yaxis->SetCollide(false);				zaxis->SetCollide(false);
 	xaxis->SetBodyFixed(true);		yaxis->SetBodyFixed(true);			zaxis->SetBodyFixed(true);
@@ -1743,9 +1757,8 @@ int main(int argc, char* argv[]) {
 
 	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	simParams.open(simulationParams.c_str());
-	simParams << " Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
+	simParams << "Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
 	simParams.close();
-
 	// define material property for everything
 	mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
 	mat_g->SetFriction(0.5); // .6 for wall to staple using tan (theta) tested on 7/20
@@ -1758,7 +1771,7 @@ int main(int argc, char* argv[]) {
 #else
 	InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
 #endif
-	GetLog() << "@@@@@@@@@@@@@@@@@@@pctActive" << pctActive;
+	GetLog() << "\npctActive" << pctActive<<"\n";
 	Smarticle::pctActive = pctActive;
 	MyBroadPhaseCallback mySmarticleBroadphaseCollisionCallback;
 	mphysicalSystem.GetCollisionSystem()->SetBroadPhaseCallback(&mySmarticleBroadphaseCollisionCallback);
