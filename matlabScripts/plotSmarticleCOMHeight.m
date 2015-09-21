@@ -1,6 +1,7 @@
 % directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-17-15--9-18-15\com changing shape\r1\PostProcess\volumeFraction.txt');
 data = importdata('D:\SimResults\Chrono\SmarticleU\tests\PostProcess\volumeFraction.txt');
+% data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-20\PostProcess\volumeFraction.txt');
 time        = data(:,1);
 smartcount  = data(:,2);
 volfrac     = data(:,3);
@@ -42,8 +43,8 @@ plotTypes=[plotTypes, (gg(i,2)+1)];
 end
 title('Mean COM height vs. time')
 xlabel('time [s]');
-ylabel('<h> [m]');
-
+ylabel('<h> [m], \phi');
+plot(time,volfrac)
 
 %% Plot meanOT
 figure(2);

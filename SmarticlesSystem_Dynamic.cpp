@@ -1827,7 +1827,8 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 			}
 		}
 	
-		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2.0 * bucket_interior_halfDim.z);
+		//volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2.0 * bucket_interior_halfDim.z);
+		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * zMax);
 		zCom = zCom / countInside2;
 		meanOT = meanOT / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
 	}
@@ -2230,6 +2231,7 @@ int main(int argc, char* argv[]) {
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
 	  step_timer.stop("step time");
+		//max_z = 0;
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
 	  std::cout.flush();
 		receiver.drawSmarticleAmt(numGeneratedLayers);
