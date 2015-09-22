@@ -19,18 +19,18 @@ re=$(grep -E "read" params | awk '{print $2}');
 pa=$(grep -E "pa" params | awk '{print $2}');
 echo "run vars!: $lw $dt $nl $re $pa"
 
-lwArr=(0.1 0.3 0.5 0.7);
-dtArr=(0.00025 0.00025 0.00025 0.00025);
-nlArr=(40 40 40 40);
-reArr=(0 0 0 0);
-paArr=(0.0 0.0 0.0 0.0);
+lwArr=(0.1 0.3 0.5 0.7 0.9);
+dtArr=(0.0001 0.0001 0.0001 0.0001 0.0001);
+nlArr=(60 55 45 40 35);
+reArr=(0 0 0 0 0);
+paArr=(0 0 0 0 0);
 
 # for i in `seq 0 4`; do
-for i in `seq 2 3`; do
+for i in `seq 4 -1 0`; do
   echo $i
   $smartRunFile ${lwArr[$i]} ${dtArr[$i]} ${nlArr[$i]} ${reArr[$i]} ${paArr[$i]};
-  mkdir ./volFracFilling/${lwArr[$i]}/
-  cp -R PostProcess ./volFracFilling/${lwArr[$i]}/
+  mkdir ./diffWidthVolFracFilling/${lwArr[$i]}/
+  cp -R PostProcess ./diffWidthVolFracFilling/${lwArr[$i]}/
 done
 #
 # for i in `seq 0 4`; do

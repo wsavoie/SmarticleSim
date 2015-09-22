@@ -251,7 +251,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 		arm->AddAsset(mtextureMid);
 	else
 		arm->AddAsset(mtextureArm);
-	
+
 	}
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelop);
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0),QUNIT,visualize);
@@ -383,9 +383,13 @@ void Smarticle::Create() {
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));
 	quat0.Normalize();
 	quat2.Normalize();
-	CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0+r2)*sin(angle1)), quat0);
+
+	// CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0+r2)*sin(angle1)), quat0);
+	// CreateArm(1, w, ChVector<>(0, 0, 0));
+	// CreateArm(2, l_mod, ChVector<>( w / 2.0 - r2 + (l_mod / 2.0 - r2)*cos(angle2), 0, -(l_mod / 2.0+r2)*sin(angle2)), quat2);
+	CreateArm(0, l_mod, ChVector<>(-w / 2.0 -r2- (l_mod / 2.0-r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(2, l_mod, ChVector<>( w / 2.0 - r2 + (l_mod / 2.0 - r2)*cos(angle2), 0, -(l_mod / 2.0+r2)*sin(angle2)), quat2);
+	CreateArm(2, l_mod, ChVector<>( w / 2.0 +r2 + (l_mod / 2.0-r2)*cos(angle2), 0, -(l_mod / 2.0-r2)*sin(angle2)), quat2);
 
 	CreateActuators();
 	//CreateJoints(); //TODO do we need joints?
@@ -849,7 +853,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	//if (fabs(link_actuator12->GetDeltaC().rot.e1) > .01 || fabs(link_actuator12->GetDeltaC().rot.e1) > .01
 	//	|| fabs(link_actuator12->GetDeltaC().rot.e2) > .01 || fabs(link_actuator12->GetDeltaC().rot.e2) > .01)//probably broken joint!
 	//{
-	//	armBroken = true; 
+	//	armBroken = true;
 	//}
 	ChVector<> rel01 = link_actuator01->GetRelRotaxis();
 	ChVector<> rel12 = link_actuator12->GetRelRotaxis();
@@ -909,7 +913,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 			{
 				if (omega1Prev == 0 && omega2Prev == 0)
 				{
-					
+
 					successfulMotion = true;
 					break;
 				}

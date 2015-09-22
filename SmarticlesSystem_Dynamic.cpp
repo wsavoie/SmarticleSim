@@ -138,10 +138,10 @@ ChSharedPtr<ChBody> bucket_bott;
 
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double contact_recovery_speed = 0.5 * sizeScale;
-	double tFinal = 5.5;
-	double vibrateStart= tFinal-5.0;
+	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
+	double contact_recovery_speed = 0.3* sizeScale;
+	double tFinal = 4.0;
+	double vibrateStart= tFinal-3.0;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -155,10 +155,10 @@ ChSharedPtr<ChBody> bucket_bott;
 		// staple smarticle geometry
 		double w_smarticle 	= sizeScale * 0.0117;
 		double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	//	double t_smarticle 	= sizeScale * .00127;
-	//	double t2_smarticle	= sizeScale * .0005;
-		double t_smarticle 	= sizeScale * .00254;
-		double t2_smarticle	= sizeScale * .001;
+		double t_smarticle 	= sizeScale * .00127;
+		double t2_smarticle	= sizeScale * .0005;
+		// double t_smarticle 	= sizeScale * .00254;
+		// double t2_smarticle	= sizeScale * .001;
 
 	////robot smarticle geometry
 	//double w_smarticle = 0.046; //4.6cm
@@ -180,7 +180,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	//double bucket_rad = sizeScale*0.034;
 	//double bucket_rad = sizeScale*0.02;
-	double bucket_rad = sizeScale*0.025;
+	double bucket_rad = sizeScale*0.0216;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .030);
 
 
@@ -497,9 +497,9 @@ ChSharedPtr<ChBody> bucket_bott;
 		}
 		void addSuccessful(Smarticle &sPtr)
 		{
-			if (sPtr.successfulMotion) 
+			if (sPtr.successfulMotion)
 				successfulCount++;
-			
+
 		}
 		void drawOTArms(Smarticle &sPtr)
 		{
@@ -681,8 +681,8 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 
   // Modify some setting of the physical system for the simulation, if you want
 	mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR);
-	mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
-	mphysicalSystem.SetIterLCPmaxItersSpeed(int(2.5*numLayers*numPerLayer));
+	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
+	mphysicalSystem.SetIterLCPmaxItersSpeed(int(2.85*numLayers*numPerLayer));
   mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
   //mphysicalSystem.SetParallelThreadNumber(1);  //TODO figure out if this can increase speed
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
@@ -822,7 +822,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				myRot
 				);
 
-			if (MyRand()<.1)
+			if (MyRand()<1)
 				smarticle0->visualize = true;
 			smarticle0->populateMoveVector();
 			smarticle0->SetAngle(90, 90, true);
@@ -1749,7 +1749,7 @@ double PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, Smarticle &sPtr,boo
 	static int countInside2 = 0;
 	static double volumeFraction = 0;
 	ChVector<> bucketMin = bucket->GetPos();
-	
+
 
 
 	// *** remember, 2 * bucket_half_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_half_thick from each side
@@ -1800,8 +1800,8 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	  vol_frac_of.open(vol_frac.c_str(), std::ios::app);
 	}
 	double zMax=0;
-	
-	
+
+
 	//double zMax = Find_Max_Z(mphysicalSystem,mySmarticlesVec);
 	ChVector<> bucketMin = bucket->GetPos();
 
@@ -1839,7 +1839,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 				zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z- bucketMin.z);
 			}
 		}
-	
+
 		//volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2.0 * bucket_interior_halfDim.z);
 		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * zMax);
 		zCom = zCom / countInside2;
@@ -1872,6 +1872,10 @@ void vibrate_bucket(double t) {
 		bucket->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
 		bucket->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
 		bucket->SetRot(QUNIT);
+		bucket_bott->SetPos(ChVector<>(0, 0, x_bucket));
+		bucket_bott->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
+		bucket_bott->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
+		bucket_bott->SetRot(QUNIT);
 	}
 }
 void rotate_drum(double t)//method is called on each iteration to rotate drum at an angular velocity of drum_omega
@@ -1957,7 +1961,7 @@ int main(int argc, char* argv[]) {
 #else
 	SetChronoDataPath("../Smarticles/data/");
 #endif
-	
+
 	time_t rawtimeCurrent;
 	struct tm* timeinfoDiff;
 	// --------------------------
@@ -2084,7 +2088,7 @@ int main(int argc, char* argv[]) {
 	//		{
 	//		case irr::KEY_KEY_Q:
 	//			if (Smarticle::global_GUI_value != 1)
-	
+
 
 #endif
 
@@ -2174,7 +2178,7 @@ int main(int argc, char* argv[]) {
 		//	UpdateSmarticles(mphysicalSystem, sPtr);
 
 		//	i == 0 ? max_z = PrintFractions(mphysicalSystem, tStep, sPtr, true) : max_z = PrintFractions(mphysicalSystem, tStep, sPtr, false);
-		//	
+		//
 		//receiver.addSuccessful(sPtr);
 		//}
 		//receiver.drawSuccessful2();
@@ -2192,7 +2196,7 @@ int main(int argc, char* argv[]) {
 
 
 		/////////////////////////////////////////////////////////////////////////////////////
-		
+
 
 
 		if (fmod(t, timeForVerticalDisplcement) < dT
@@ -2223,7 +2227,7 @@ int main(int argc, char* argv[]) {
 
 		application.SetVideoframeSaveInterval(2);//only save every 2 frames
 		application.DrawAll();
-		
+
     application.DoStep();//
     application.GetVideoDriver()->endScene();
 #else
