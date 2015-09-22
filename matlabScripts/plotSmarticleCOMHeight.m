@@ -1,7 +1,8 @@
 % directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-17-15--9-18-15\com changing shape\r1\PostProcess\volumeFraction.txt');
-data = importdata('D:\SimResults\Chrono\SmarticleU\tests\PostProcess\volumeFraction.txt');
+% data = importdata('D:\SimResults\Chrono\SmarticleU\tests\PostProcess\volumeFraction.txt');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-20\PostProcess\volumeFraction.txt');
+data = importdata('\\centos\secured\shared_data\PostProcess\volumeFraction.txt');
 time        = data(:,1);
 smartcount  = data(:,2);
 volfrac     = data(:,3);
@@ -44,6 +45,13 @@ end
 title('Mean COM height vs. time')
 xlabel('time [s]');
 ylabel('<h> [m], \phi');
+
+vibTime = find(time>.5,1);
+vibrate = true;
+if vibrate
+    plot(time(vibTime),volfrac(vibTime),'k.','MarkerSize',20);
+end
+text(time(vibTime-2),1.04*volfrac(vibTime),'\phi')
 plot(time,volfrac)
 
 %% Plot meanOT
@@ -90,3 +98,21 @@ ylabel('<|\tau|> [Nm]')
 % plot(time,volfrac);
 % plot(data2(:,1),data2(:,3));
 % % plot(data3(:,1),data3(:,5));
+
+%%
+
+x=[]
+data = importdata('\\centos\secured\shared_data\volFracFilling\0.1\PostProcess\volumeFraction.txt');
+a1= data(end,3);
+% x= [x data(end,3)];
+data = importdata('\\centos\secured\shared_data\volFracFilling\0.12\PostProcess\volumeFraction.txt');
+x=[(a1+data(end,3))/2];
+% x= [x data(end,3)];
+data = importdata('\\centos\secured\shared_data\volFracFilling\0.3\PostProcess\volumeFraction.txt');
+x= [x data(end,3)];
+data = importdata('\\centos\secured\shared_data\volFracFilling\0.5\PostProcess\volumeFraction.txt');
+x= [x data(end,3)];
+data = importdata('\\centos\secured\shared_data\volFracFilling\0.7\PostProcess\volumeFraction.txt');
+x= [x data(end,3)];
+
+plot([.1,.3,.5,.7],x,'o-');

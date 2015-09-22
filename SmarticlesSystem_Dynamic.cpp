@@ -672,7 +672,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 
   // Modify some setting of the physical system for the simulation, if you want
 	mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR);
-	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
+	mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
 	mphysicalSystem.SetIterLCPmaxItersSpeed(int(2.5*numLayers*numPerLayer));
   mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
   //mphysicalSystem.SetParallelThreadNumber(1);  //TODO figure out if this can increase speed
@@ -1730,7 +1730,7 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 
 
 }
-double PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, Smarticle &sPtr,bool lastIdx) { //cant use for box!
+double PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, Smarticle &sPtr,bool lastIdx) { //TODO make zmax proper!
 	const static std::string vol_frac = out_dir + "/volumeFraction.txt";
 	static int stepSave = 10;
 	static double zCom = 0;
@@ -1790,11 +1790,13 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	} else {
 	  vol_frac_of.open(vol_frac.c_str(), std::ios::app);
 	}
-
-	double zMax = Find_Max_Z(mphysicalSystem,mySmarticlesVec);
+	double zMax=0;
+	
+	
+	//double zMax = Find_Max_Z(mphysicalSystem,mySmarticlesVec);
 	ChVector<> bucketMin = bucket->GetPos();
 
-	zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
+
 	// *** remember, 2 * bucket_half_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_half_thick from each side
 
 	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
@@ -1803,6 +1805,8 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	double volumeFraction = 0;
 	if (bucketType == BOX)
 	{
+		zMax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
+		zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 			Smarticle* sPtr = mySmarticlesVec[i];
 			if (IsIn(sPtr->Get_cm(), bucketCtr - bucket_interior_halfDim, bucketCtr + bucket_interior_halfDim + ChVector<>(0, 0, 2.0 * bucket_half_thick))) {
