@@ -19,27 +19,26 @@ re=$(grep -E "read" params | awk '{print $2}');
 pa=$(grep -E "pa" params | awk '{print $2}');
 echo "run vars!: $lw $dt $nl $re $pa"
 
-lwArr=(0.5 0.5 0.5 0.5 0.5);
-dtArr=(0.0005 0.0005 0.0005 0.0005 0.0005);
-nlArr=(90 90 90 90 90);
-reArr=(1 1 1 1 1);
-paArr=(1.0 0.75 0.5 0.25 0.0);
-
+lwArr=(0.1 0.3 0.5 0.7);
+dtArr=(0.00025 0.00025 0.00025 0.00025);
+nlArr=(40 40 40 40);
+reArr=(0 0 0 0);
+paArr=(0.0 0.0 0.0 0.0);
 
 # for i in `seq 0 4`; do
-for i in `seq 0 4`; do
+for i in `seq 2 3`; do
   echo $i
   $smartRunFile ${lwArr[$i]} ${dtArr[$i]} ${nlArr[$i]} ${reArr[$i]} ${paArr[$i]};
-  mkdir ./MixedSmartWithOT10/r1/${paArr[$i]}/
-  cp -R PostProcess ./MixedSmartWithOT10/r1/${paArr[$i]}
+  mkdir ./volFracFilling/${lwArr[$i]}/
+  cp -R PostProcess ./volFracFilling/${lwArr[$i]}/
 done
-
-for i in `seq 0 4`; do
-  echo $i
-  $smartRunFile ${lwArr[$i]} ${dtArr[$i]} ${nlArr[$i]} ${reArr[$i]} ${paArr[$i]};
-  mkdir ./MixedSmartWithOT10/r2/${paArr[$i]}/
-  cp -R PostProcess ./MixedSmartWithOT10/r2/${paArr[$i]}
-done
+#
+# for i in `seq 0 4`; do
+#   echo $i
+#   $smartRunFile ${lwArr[$i]} ${dtArr[$i]} ${nlArr[$i]} ${reArr[$i]} ${paArr[$i]};
+#   mkdir ./MixedSmartWithOT10/r2/${paArr[$i]}/
+#   cp -R PostProcess ./MixedSmartWithOT10/r2/${paArr[$i]}
+# done
 
 echo "\\n blah \\n";
 echo ${lwArr[*]};
