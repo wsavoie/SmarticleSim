@@ -1,8 +1,8 @@
 % directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-17-15--9-18-15\com changing shape\r1\PostProcess\volumeFraction.txt');
-data = importdata('D:\SimResults\Chrono\SmarticleU\tests\PostProcess\volumeFraction.txt');
+% data = importdata('D:\SimResults\Chrono\SmarticleU\tests\PostProcess\volumeFraction.txt');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-20\PostProcess\volumeFraction.txt');
-% data = importdata('\\centos\secured\shared_data\PostProcess\volumeFraction.txt');
+data = importdata('\\centos\secured\shared_data\PostProcess\volumeFraction.txt');
 time        = data(:,1);
 smartcount  = data(:,2);
 volfrac     = data(:,3);
@@ -99,20 +99,25 @@ ylabel('<|\tau|> [Nm]')
 % plot(data2(:,1),data2(:,3));
 % % plot(data3(:,1),data3(:,5));
 
-%%
+%
+
+figure(3);
+x=[];
+y=[];
+data = importdata('\\centos\secured\shared_data\volFracFilling\0.1\PostProcess\volumeFraction.txt');
+y= [y data(end,3)];
+x= [x .1];
+data = importdata('\\centos\secured\shared_data\volFracFilling\0.3\PostProcess\volumeFraction.txt');
+y= [y data(end,3)];
+x= [x .3];
+data = importdata('\\centos\secured\shared_data\volFracFilling\0.5\PostProcess\volumeFraction.txt');
+y= [y data(end,3)];
+x= [x .5];
+data = importdata('\\centos\secured\shared_data\volFracFilling\0.7\PostProcess\volumeFraction.txt');
+y= [y data(end,3)];
+x= [x .7];
+data = importdata('\\centos\secured\shared_data\volFracFilling\0.7\PostProcess\volumeFraction.txt');
+y= [y data(end,3)];
+x= [x .9];
 % 
-% x=[]
-% data = importdata('\\centos\secured\shared_data\volFracFilling\0.1\PostProcess\volumeFraction.txt');
-% a1= data(end,3);
-% % x= [x data(end,3)];
-% data = importdata('\\centos\secured\shared_data\volFracFilling\0.12\PostProcess\volumeFraction.txt');
-% x=[(a1+data(end,3))/2];
-% % x= [x data(end,3)];
-% data = importdata('\\centos\secured\shared_data\volFracFilling\0.3\PostProcess\volumeFraction.txt');
-% x= [x data(end,3)];
-% data = importdata('\\centos\secured\shared_data\volFracFilling\0.5\PostProcess\volumeFraction.txt');
-% x= [x data(end,3)];
-% data = importdata('\\centos\secured\shared_data\volFracFilling\0.7\PostProcess\volumeFraction.txt');
-% x= [x data(end,3)];
-% 
-% plot([.1,.3,.5,.7],x,'o-');
+plot(x,y,'o-');
