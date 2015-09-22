@@ -1825,9 +1825,9 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2.0*bucket_interior_halfDim.z))) {
 				countInside2++;
 				totalVolume2 += sPtr->GetVolume();
-				zCom += sPtr->Get_cm().z+bucketMin.z;
+				zCom += sPtr->Get_cm().z-bucketMin.z;//TODO this is minus right?
 				meanOT += sPtr->GetReactTorqueLen01() + sPtr->GetReactTorqueLen12();
-				
+				zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z);
 			}
 		}
 	
