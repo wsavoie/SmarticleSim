@@ -140,7 +140,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.001;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 0.5 * sizeScale;
-	double tFinal = 1000;
+	double tFinal = 5.5;
 	double vibrateStart= tFinal-5.0;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
@@ -643,6 +643,14 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	int dummyNumber0;
 	int dummyNumber1;
 	int dummyNumber2;
+	int max_threads = omp_get_num_procs();
+	int threads = 1;
+	if (threads > max_threads)
+		threads = max_threads;
+	mphysicalSystem.SetParallelThreadNumber(threads);
+	omp_set_num_threads(threads);
+
+
   SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle, read_from_file,pctActive);
 	double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * l_smarticle);
 	simParams << std::endl <<
@@ -650,8 +658,9 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 		"l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
 		"read from file: " << read_from_file << std::endl <<
 		"dT: " << dT << std::endl << std::endl <<
+		"tFinal: " << tFinal << std::endl <<
+		"vibrate start: " << vibrateStart << std::endl <<
 		"Active Percent: " << pctActive << std::endl;
-	
 
 	simParams << "Smarticle volume: " << vol << std::endl;
 	simParams << "Smarticle mass: " << vol*rho_smarticle << std::endl;
@@ -813,7 +822,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				myRot
 				);
 
-			if (MyRand()<.2)
+			if (MyRand()<.1)
 				smarticle0->visualize = true;
 			smarticle0->populateMoveVector();
 			smarticle0->SetAngle(90, 90, true);
@@ -1510,7 +1519,7 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem,	///< the chrono::engi
 		yaxis = ChSharedPtr<ChBody>(new ChBody);
 		zaxis = ChSharedPtr<ChBody>(new ChBody);
 	}
-	
+
 	xaxis->SetPos(pos);						yaxis->SetPos(pos);							zaxis->SetPos(pos);
 	xaxis->SetCollide(false);			yaxis->SetCollide(false);				zaxis->SetCollide(false);
 	xaxis->SetBodyFixed(true);		yaxis->SetBodyFixed(true);			zaxis->SetBodyFixed(true);
@@ -1827,7 +1836,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 				totalVolume2 += sPtr->GetVolume();
 				zCom += sPtr->Get_cm().z-bucketMin.z;//TODO this is minus right?
 				meanOT += sPtr->GetReactTorqueLen01() + sPtr->GetReactTorqueLen12();
-				zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z);
+				zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z- bucketMin.z);
 			}
 		}
 	
@@ -1853,13 +1862,17 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 // =============================================================================
 // move bucket
 void vibrate_bucket(double t) {
-	double x_bucket = vibration_amp*sin(vibration_freq * t);
-	double xDot_bucket = vibration_amp*vibration_freq*cos(vibration_freq * t);
-	double xDDot_bucket = vibration_amp*vibration_freq*vibration_freq*-1 * sin(omega_bucket * t);
-	bucket->SetPos(ChVector<>(0, 0, x_bucket));
-	bucket->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
-	bucket->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
-	bucket->SetRot(QUNIT);
+	if (bucketType == CYLINDER)
+	{
+		double phase = -omega_bucket*vibrateStart;
+		double x_bucket = vibration_amp*sin(omega_bucket * t + phase);
+		double xDot_bucket = vibration_amp*omega_bucket*cos(omega_bucket * t + phase);
+		double xDDot_bucket = vibration_amp*omega_bucket*omega_bucket*-1 * sin(omega_bucket * t + phase);
+		bucket->SetPos(ChVector<>(0, 0, x_bucket));
+		bucket->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
+		bucket->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
+		bucket->SetRot(QUNIT);
+	}
 }
 void rotate_drum(double t)//method is called on each iteration to rotate drum at an angular velocity of drum_omega
 {
@@ -2217,18 +2230,19 @@ int main(int argc, char* argv[]) {
     mphysicalSystem.DoStepDynamics(dT);
 #endif
 #endif
-		if (t < 1.6)
-			Smarticle::global_GUI_value = 1;
-		else if (t > 1.6 && t < 2.6)
-			Smarticle::global_GUI_value = 2;
-		else if (t > 2.6 && t < 3.6)
-			Smarticle::global_GUI_value = 1;
-		else if (t > 3.6 && t < 4.6)
-			Smarticle::global_GUI_value = 2;
-		else if (t > 4.6 &&t < 5.6)
-			Smarticle::global_GUI_value = 1;
-		else
-			break;
+		Smarticle::global_GUI_value = 1;
+		//if (t < 1.6)
+		//	Smarticle::global_GUI_value = 1;
+		//else if (t > 1.6 && t < 2.6)
+		//	Smarticle::global_GUI_value = 2;
+		//else if (t > 2.6 && t < 3.6)
+		//	Smarticle::global_GUI_value = 1;
+		//else if (t > 3.6 && t < 4.6)
+		//	Smarticle::global_GUI_value = 2;
+		//else if (t > 4.6 &&t < 5.6)
+		//	Smarticle::global_GUI_value = 1;
+		//else
+		//	break;
 		receiver.drawSuccessful();
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
 		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
