@@ -383,9 +383,9 @@ void Smarticle::Create() {
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));
 	quat0.Normalize();
 	quat2.Normalize();
-	CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
+	CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0+r2)*sin(angle1)), quat0);
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(2, l_mod, ChVector<>( w / 2.0 - r2 + (l_mod / 2.0 - r2)*cos(angle2), 0, -(l_mod / 2.0-r2)*sin(angle2)), quat2);
+	CreateArm(2, l_mod, ChVector<>( w / 2.0 - r2 + (l_mod / 2.0 - r2)*cos(angle2), 0, -(l_mod / 2.0+r2)*sin(angle2)), quat2);
 
 	CreateActuators();
 	//CreateJoints(); //TODO do we need joints?
