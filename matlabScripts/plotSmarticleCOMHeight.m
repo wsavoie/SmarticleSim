@@ -2,7 +2,10 @@
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-17-15--9-18-15\com changing shape\r1\PostProcess\volumeFraction.txt');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\PostProcess\volumeFraction.txt');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-20\PostProcess\volumeFraction.txt');
-data = importdata('\\centos\secured\shared_data\PostProcess\volumeFraction.txt');
+% data = importdata('\\centos\secured\shared_data\diffWidth2VolFracFilling\0.9-20150924-095709\PostProcess\volumeFraction.txt');
+data = importdata('\\centos\secured\shared_data\diffWidth3VolFracFilling\0.1-20150925-125854\PostProcess\volumeFraction.txt');
+% data = importdata('\\centos\secured\shared_data\diffWidth3VolFracFilling\0.3-20150925-124007\PostProcess\volumeFraction.txt');
+
 time        = data(:,1);
 smartcount  = data(:,2);
 volfrac     = data(:,3);
@@ -11,7 +14,7 @@ zcom        = data(:,5);
 meanOT      = data(:,6);
 guid        = data(:,7);
 close all;
-
+% volfrac= (smartcount.*v./(rad^2*pi*2*zcom));
 % Time << CountInside << volumeFraction << zMax << zCom <<GUID
 cols = {[1,0,0],[1,.5,0],[.4431,.7373, 1],[0,0,0],[.392,.824,.118],[.7,.4,.7]};
 plotNames = {'Smarticles','Gait','U-Shape','Straight','Tetris','Vib at \circ','Vib Angle'};
@@ -46,7 +49,7 @@ title('Mean COM height vs. time')
 xlabel('time [s]');
 ylabel('<h> [m], \phi');
 
-vibTime = find(time>.5,1);
+vibTime = find(time>.75,1);
 vibrate = true;
 if vibrate
     plot(time(vibTime),volfrac(vibTime),'k.','MarkerSize',20);
@@ -99,25 +102,25 @@ ylabel('<|\tau|> [Nm]')
 % plot(data2(:,1),data2(:,3));
 % % plot(data3(:,1),data3(:,5));
 
-%
+%%
 
-figure(3);
-x=[];
-y=[];
-data = importdata('\\centos\secured\shared_data\volFracFilling\0.1\PostProcess\volumeFraction.txt');
-y= [y data(end,3)];
-x= [x .1];
-data = importdata('\\centos\secured\shared_data\volFracFilling\0.3\PostProcess\volumeFraction.txt');
-y= [y data(end,3)];
-x= [x .3];
-data = importdata('\\centos\secured\shared_data\volFracFilling\0.5\PostProcess\volumeFraction.txt');
-y= [y data(end,3)];
-x= [x .5];
-data = importdata('\\centos\secured\shared_data\volFracFilling\0.7\PostProcess\volumeFraction.txt');
-y= [y data(end,3)];
-x= [x .7];
-data = importdata('\\centos\secured\shared_data\volFracFilling\0.7\PostProcess\volumeFraction.txt');
-y= [y data(end,3)];
-x= [x .9];
-% 
-plot(x,y,'o-');
+% figure(3);
+% x=[];
+% y=[];
+% data = importdata('\\centos\secured\shared_data\diffWidthVolFracFilling\0.1\PostProcess\volumeFraction.txt');
+% y= [y data(end,3)];
+% x= [x .1];
+% data = importdata('\\centos\secured\shared_data\diffWidthVolFracFilling\0.3\PostProcess\volumeFraction.txt');
+% y= [y data(end,3)];
+% x= [x .3];
+% data = importdata('\\centos\secured\shared_data\diffWidthVolFracFilling\0.5\PostProcess\volumeFraction.txt');
+% y= [y data(end,3)];
+% x= [x .5];
+% data = importdata('\\centos\secured\shared_data\diffWidthVolFracFilling\0.7\PostProcess\volumeFraction.txt');
+% y= [y data(end,3)];
+% x= [x .7];
+% data = importdata('\\centos\secured\shared_data\diffWidthVolFracFilling\0.9\PostProcess\volumeFraction.txt');
+% y= [y data(end,3)];
+% x= [x .9];
+% % 
+% plot(x,y,'o-');
