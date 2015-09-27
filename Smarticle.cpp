@@ -330,8 +330,10 @@ void Smarticle::CreateJoints() {
 	// link 1
 	link_revolute01 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
 	link_revolute12 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
-	ChVector<> pR01(-w / 2.0+r2, 0, 0);
-	ChVector<> pR12(w / 2.0-r2, 0, 0);
+	// ChVector<> pR01(-w / 2.0+r2, 0, 0);
+	// ChVector<> pR12(w / 2.0-r2, 0, 0);
+	ChVector<> pR01(-w / 2.0-r2, 0, 0);
+	ChVector<> pR12(w / 2.0+r2, 0, 0);
 	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
 
 	// link 1
@@ -351,8 +353,10 @@ void Smarticle::CreateActuators() {
 
 	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
 	link_actuator12 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
-	ChVector<> pR01(-w / 2.0+r2, 0, 0);
-	ChVector<> pR12(w / 2.0-r2, 0, 0);
+	// ChVector<> pR01(-w / 2.0+r2, 0, 0);
+	// ChVector<> pR12(w / 2.0-r2, 0, 0);
+	ChVector<> pR01(-w / 2.0-r2, 0, 0);
+	ChVector<> pR12(w / 2.0+r2, 0, 0);
 	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
 	ChQuaternion<> qy1 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle1()));
 	ChQuaternion<> qy2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle2()));
@@ -454,7 +458,7 @@ void Smarticle::SetActuatorFunction(int actuatorID, double omega) {
 
 double Smarticle::GetVolume() {
 //	return r * r2 * (w + 2 * (l + jointClearance));
-	return (2 * r) * (2 * r2 )* (w + 2 * l);
+	return (2 * r) * (2 * r2 )* (w + 2 * (l+2*r2));
 }
 double Smarticle::GetMass() {
 	//	return r * r2 * (w + 2 * (l + jointClearance));

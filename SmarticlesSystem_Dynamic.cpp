@@ -116,6 +116,31 @@ class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
 		{return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 3));}
 };
 
+// double Find_Z_Region_Heights(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec)
+// {
+// 	double sqSize = w_smarticle/2; // size of squares in grid
+// 	int rowSize = ceil(bucket_rad*2/sqSize);
+// 	static std::vector<double> zHeights(rowSize*rowSize);
+// 	double zmax = 0;
+// 	for (size_t i = 0; i < mySmarticlesVec.size(); i++)
+// 	{
+// 		Smarticle* sPtr = mySmarticlesVec[i];
+// 		zCom += sPtr->Get_cm().z-bucketMin.z;
+//
+// 	//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
+// 		ChVector<> pos = sPtr->Get_cm() - ChVector<>(0,0,bucket->GetPos());
+// 		int xpos = int(pos.x/rowSize);
+// 		int ypos = int(pos.y/rowSize);
+// 		int vecPos = rowSize*xpos+y;
+// 		zHeights[vecPos]=pos.z;
+// 	}
+// 	for (size_t i = 0; i < zHeights.size(); i++)
+// 	{
+// 		zmax= zmax+zHeights.at(i);
+// 	}
+// }
+
+
 // =============================================================================
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
@@ -139,9 +164,9 @@ ChSharedPtr<ChBody> bucket_bott;
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double contact_recovery_speed = 0.3* sizeScale;
+	double contact_recovery_speed = 2* sizeScale;
 	double tFinal = 4.0;
-	double vibrateStart= tFinal-3.0;
+	double vibrateStart= tFinal-3.25;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -153,13 +178,13 @@ ChSharedPtr<ChBody> bucket_bott;
 	ChSharedPtr<ChLinkEngine> drum_actuator;
 
 		// staple smarticle geometry
-		double w_smarticle 	= sizeScale * 0.0117;
-		double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-		double t_smarticle 	= sizeScale * .00127;
-		double t2_smarticle	= sizeScale * .0005;
+	double w_smarticle 	= sizeScale * 0.0117;
+	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+	double t_smarticle 	= sizeScale * .00127;
+	double t2_smarticle	= sizeScale * .0005;
 		// double t_smarticle 	= sizeScale * .00254;
 		// double t2_smarticle	= sizeScale * .001;
-
+	double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle + t2_smarticle));
 	////robot smarticle geometry
 	//double w_smarticle = 0.046; //4.6cm
 	//double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
@@ -180,7 +205,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	//double bucket_rad = sizeScale*0.034;
 	//double bucket_rad = sizeScale*0.02;
-	double bucket_rad = sizeScale*0.0216;
+	double bucket_rad = sizeScale*0.022;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .030);
 
 
@@ -652,9 +677,9 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 
 
   SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle, read_from_file,pctActive);
-	double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * l_smarticle);
+	vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle+t2_smarticle));
 	simParams << std::endl <<
-		"l_smarticle: " << l_smarticle << std::endl <<
+		"l_smarticle: " << l_smarticle+t2_smarticle << std::endl <<
 		"l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
 		"read from file: " << read_from_file << std::endl <<
 		"dT: " << dT << std::endl << std::endl <<
@@ -788,19 +813,19 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 	double phase = MyRand()*CH_C_PI / 2;
 	for (int i = 0; i < numPerLayer; i++)
 	{
-		phase = MyRand()*CH_C_PI / 2;
+		phase = MyRand()*CH_C_PI / 2 - MyRand()*CH_C_PI / 4 ;
 		zpos = std::min(3 * bucket_interior_halfDim.z, z) + w_smarticle / 2;
 		if (bucketType==DRUM)
 			zpos = std::min(bucket_interior_halfDim.z/2, z) + w_smarticle / 4;
 
-		ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand()), //TODO for hopper no -w/2.0
+		ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand()-w/2), //TODO for hopper no -w/2.0
 			cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w/2.0),
 			zpos);
 
 		if (bucketType == CYLINDER)
 		{
-				myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.1), //TODO for hopper no -w/2.0
-				cos(ang*i + phase)*(bucket_rad / 2.1),
+				myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.2), //TODO for hopper no -w/2.0
+				cos(ang*i + phase)*(bucket_rad / 2.2),
 				zpos);
 		}
 
@@ -808,14 +833,14 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			//std::min(3 * bucket_interior_halfDim.z, z) + w_smarticle / 4);
 			// z + w_smarticle / 2);
 
-		ChQuaternion<> myRot = ChQuaternion<>(MyRand(), MyRand(), MyRand(), MyRand());
+		ChQuaternion<> myRot = ChQuaternion<>(2*MyRand()-1, 2*MyRand()-1, 2*MyRand()-1, 2*MyRand()-1);
 			myRot.Normalize();
 
 			Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 			smarticle0->Properties(mySmarticlesVec.size(), mySmarticlesVec.size() * 4,
 				rho_smarticle, mat_g,
 				collisionEnvelope,
-				l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+				l_smarticle+t2_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 				sOmega,
 				true,
 				myPos,
@@ -1739,58 +1764,11 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 
 
 }
-double PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, Smarticle &sPtr,bool lastIdx) { //TODO make zmax proper!
-	const static std::string vol_frac = out_dir + "/volumeFraction.txt";
-	static int stepSave = 10;
-	static double zCom = 0;
-	static double meanOT = 0;
-	static double zMax = 0;
-	static double totalVolume2 = 0;
-	static int countInside2 = 0;
-	static double volumeFraction = 0;
-	ChVector<> bucketMin = bucket->GetPos();
-
-
-
-	// *** remember, 2 * bucket_half_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_half_thick from each side
-
-	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
-
-	if (bucketType == CYLINDER)
-	{
-			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
-			if (IsInRadial(sPtr.Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z + 2.0*bucket_interior_halfDim.z))) {
-				countInside2++;
-				totalVolume2 += sPtr.GetVolume();
-				zCom += sPtr.Get_cm().z + bucketMin.z;
-				meanOT += sPtr.GetReactTorqueLen01() + sPtr.GetReactTorqueLen12();
-				zMax = std::max(zMax, sPtr.GetArm(1)->GetPos().z);
-			}
-	}
-
-	if (lastIdx&& tStep % stepSave == 0)
-	{
-
-		std::ofstream vol_frac_of;
-		if (tStep == 0) {
-			vol_frac_of.open(vol_frac.c_str());
-		}
-		else {
-			vol_frac_of.open(vol_frac.c_str(), std::ios::app);
-		}
-		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2.0 * bucket_interior_halfDim.z);
-		zCom = zCom / countInside2;
-		meanOT = meanOT / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
-		vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zCom << ", " << meanOT << ", " << Smarticle::global_GUI_value << std::endl;
-		vol_frac_of.close();
-	}
-	return zMax;
-}
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
 	const static std::string vol_frac = out_dir + "/volumeFraction.txt";
 	static int stepSave = 10;
 	if (tStep % stepSave != 0) return;
-	double zCom = 0;
+	double zComz = 0;
 	double meanOT = 0;
 
 	std::ofstream vol_frac_of;
@@ -1799,8 +1777,25 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	} else {
 	  vol_frac_of.open(vol_frac.c_str(), std::ios::app);
 	}
-	double zMax=0;
 
+	//double sqSize = w_smarticle; // try increasing!
+	//int rowSize = std::ceil(bucket_rad*2/sqSize);
+	double sqSizex = (w_smarticle+2*t2_smarticle); // try increasing!
+	double sqSizey = (l_smarticle+2*t2_smarticle); // try increasing!
+	int colSize = std::ceil(bucket_rad*2/sqSizex);
+	int rowSize = std::ceil(bucket_rad*2/sqSizey);
+	std::pair<int,double> p(0,0.0);
+	// std::vector<std::pair<int,double>> zHeights(rowSize*rowSize,p);
+	 std::vector<std::pair<int,double>> zHeights(rowSize*colSize,p);
+
+	double zmax = 0;
+	int xpos = 0;
+	int ypos = 0;
+	int vecPos=0;
+	ChVector<> com;
+		ChVector<> pos;
+	double zMax =0;
+	int countInside =0;
 
 	//double zMax = Find_Max_Z(mphysicalSystem,mySmarticlesVec);
 	ChVector<> bucketMin = bucket->GetPos();
@@ -1833,21 +1828,52 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
 			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2.0*bucket_interior_halfDim.z))) {
 				countInside2++;
-				totalVolume2 += sPtr->GetVolume();
-				zCom += sPtr->Get_cm().z-bucketMin.z;//TODO this is minus right?
+				//totalVolume2 += sPtr->GetVolume();
+				com = sPtr->Get_cm()-ChVector<>(0,0,bucketMin.z);
+				//pos = sPtr->GetArm(1)->GetPos()-ChVector<>(0,0,bucketMin.z);
+				pos = com;
+				zComz += com.z;
+
+			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
+				// xpos = int((pos.x+bucket_rad)/sqSize);
+				// ypos = int((pos.y+bucket_rad)/sqSize);
+				xpos = int((pos.x+bucket_rad)/sqSizex);
+				ypos = int((pos.y+bucket_rad)/sqSizey);
+
+				vecPos = colSize*xpos+ypos;
+				// vecPos = rowSize*xpos+ypos;
+				//GetLog()<<vecPos<<"\n";
+
+				zHeights[vecPos]=std::pair<int,double>(zHeights[vecPos].first+1,std::max(pos.z,zHeights[vecPos].second));
+
 				meanOT += sPtr->GetReactTorqueLen01() + sPtr->GetReactTorqueLen12();
 				zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z- bucketMin.z);
+
 			}
 		}
 
+
 		//volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2.0 * bucket_interior_halfDim.z);
-		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * zMax);
-		zCom = zCom / countInside2;
+		//volumeFraction = (countInside2*mySmarticlesVec[1]->GetVolume()) / (CH_C_PI * bucket_rad * bucket_rad * zMax);
+		for (size_t i = 0; i < zHeights.size(); i++)
+		{
+			// volumeFraction += zHeights[i].second*sqSize*sqSize;
+
+			volumeFraction += zHeights[i].second*sqSizey*sqSizex;
+
+			// if(zHeights[i].second==0)
+			// 	continue;
+			// volumeFraction += (zHeights[i].first*mySmarticlesVec[1]->GetVolume())/(zHeights[i].second*sqSize*sqSize);
+		}
+		//volumeFraction=volumeFraction/(rowSize*rowSize);
+		volumeFraction = countInside2*vol/volumeFraction;
+
+
+		zComz = zComz / countInside2;
 		meanOT = meanOT / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
 	}
 
-	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zCom << ", " << meanOT<< ", " << Smarticle::global_GUI_value << std::endl;
-
+	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << meanOT<< ", " << Smarticle::global_GUI_value << std::endl;
 	vol_frac_of.close();
 }
 // =============================================================================
@@ -1959,7 +1985,7 @@ int main(int argc, char* argv[]) {
 	fp = __FILE__+fp;
 	SetChronoDataPath(fp);
 #else
-	SetChronoDataPath("../Smarticles/data/");
+	SetChronoDataPath("/home/wsavoie/Documents/ChronoPkgs/Smarticles/data/");
 #endif
 
 	time_t rawtimeCurrent;
@@ -2311,4 +2337,54 @@ int main(int argc, char* argv[]) {
 	simParams << "completed"<<std::endl;
   simParams.close();
   return 0;
+}
+
+
+
+double PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, Smarticle &sPtr,bool lastIdx) { //TODO make zmax proper!
+	const static std::string vol_frac = out_dir + "/volumeFraction.txt";
+	static int stepSave = 10;
+	static double zCom = 0;
+	static double meanOT = 0;
+	static double zMax = 0;
+	static double totalVolume2 = 0;
+	static int countInside2 = 0;
+	static double volumeFraction = 0;
+	ChVector<> bucketMin = bucket->GetPos();
+
+
+
+	// *** remember, 2 * bucket_half_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_half_thick from each side
+
+	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
+
+	if (bucketType == CYLINDER)
+	{
+			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
+			if (IsInRadial(sPtr.Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z + 2.0*bucket_interior_halfDim.z))) {
+				countInside2++;
+				totalVolume2 += sPtr.GetVolume();
+				zCom += sPtr.Get_cm().z + bucketMin.z;
+				meanOT += sPtr.GetReactTorqueLen01() + sPtr.GetReactTorqueLen12();
+				zMax = std::max(zMax, sPtr.GetArm(1)->GetPos().z);
+			}
+	}
+
+	if (lastIdx&& tStep % stepSave == 0)
+	{
+
+		std::ofstream vol_frac_of;
+		if (tStep == 0) {
+			vol_frac_of.open(vol_frac.c_str());
+		}
+		else {
+			vol_frac_of.open(vol_frac.c_str(), std::ios::app);
+		}
+		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2.0 * bucket_interior_halfDim.z);
+		zCom = zCom / countInside2;
+		meanOT = meanOT / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
+		vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zCom << ", " << meanOT << ", " << Smarticle::global_GUI_value << std::endl;
+		vol_frac_of.close();
+	}
+	return zMax;
 }
