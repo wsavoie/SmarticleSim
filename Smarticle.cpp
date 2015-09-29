@@ -868,7 +868,6 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		//arm0->AddAsset(mtextureOT);
 		armBroken = true;
 	}
-
 	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)
 	{
 		//this->setCurrentMoveType(OT);

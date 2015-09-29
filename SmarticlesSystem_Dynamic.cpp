@@ -184,7 +184,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	double t2_smarticle	= sizeScale * .0005;
 		// double t_smarticle 	= sizeScale * .00254;
 		// double t2_smarticle	= sizeScale * .001;
-	double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle + t2_smarticle));
+	double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 	////robot smarticle geometry
 	//double w_smarticle = 0.046; //4.6cm
 	//double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
@@ -677,7 +677,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 
 
   SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle, read_from_file,pctActive);
-	vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle+t2_smarticle));
+	vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 	simParams << std::endl <<
 		"l_smarticle: " << l_smarticle+t2_smarticle << std::endl <<
 		"l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
@@ -821,12 +821,15 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		ChVector<> myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand()-w/2), //TODO for hopper no -w/2.0
 			cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w/2.0),
 			zpos);
-
 		if (bucketType == CYLINDER)
 		{
 				myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.2), //TODO for hopper no -w/2.0
 				cos(ang*i + phase)*(bucket_rad / 2.2),
 				zpos);
+
+				//ChVector<> myPos = bucket_ctr + ChVector<>((MyRand()-.5)*(bucket_rad / 2), //TODO for hopper no -w/2.0
+				//	(MyRand() - .5)*(bucket_rad / 2),
+				//	zpos);
 		}
 
 			//std::min(4 * bucket_interior_halfDim.z, z) + (i + 1)*w_smarticle / 4);
@@ -840,7 +843,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			smarticle0->Properties(mySmarticlesVec.size(), mySmarticlesVec.size() * 4,
 				rho_smarticle, mat_g,
 				collisionEnvelope,
-				l_smarticle+t2_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+				//l_smarticle+t2_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+				l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 				sOmega,
 				true,
 				myPos,
@@ -1118,7 +1122,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool over
 
 	//checks top,bottom, and middle location
 	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos() + Vector(0,0,2 * bucket_interior_halfDim.z + 2.0 * bucket_half_thick), Q_from_AngAxis(CH_C_PI/2.0, VECT_Y),true);
-	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos(), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos(), Q_from_AngAxis(CH_C_PI / 2.0, VECT_Y));
 	//utils::AddCylinderGeometry(cyl_container.get_ptr(), bucket_rad, 0, cyl_container->GetPos() + Vector(0, 0, bucket_interior_halfDim.z), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
 
 	//ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
@@ -1770,7 +1774,8 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	if (tStep % stepSave != 0) return;
 	double zComz = 0;
 	double meanOT = 0;
-
+	//static ChSharedPtr<ChBody> grid;  //uncomment to visualize vol frac boxes
+	//static bool a = false;						//uncomment to visualize vol frac boxes
 	std::ofstream vol_frac_of;
 	if (tStep == 0) {
 	  vol_frac_of.open(vol_frac.c_str());
@@ -1789,6 +1794,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	 std::vector<std::pair<int,double>> zHeights(rowSize*colSize,p);
 
 	double zmax = 0;
+	double max2 = 0;
 	int xpos = 0;
 	int ypos = 0;
 	int vecPos=0;
@@ -1823,52 +1829,58 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	}
 	if (bucketType == CYLINDER)
 	{
+		//if (a)
+		//	mphysicalSystem.RemoveBody(grid);			//uncomment to visualize vol frac boxes
+		//grid = ChSharedPtr<ChBody>(new ChBody); //uncomment to visualize vol frac boxes
+		//grid->RecomputeCollisionModel();				//uncomment to visualize vol frac boxes
+		//grid->GetCollisionModel()->ClearModel();//uncomment to visualize vol frac boxes
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 			Smarticle* sPtr = mySmarticlesVec[i];
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
 			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z+2.0*bucket_interior_halfDim.z))) {
 				countInside2++;
-				//totalVolume2 += sPtr->GetVolume();
-				com = sPtr->Get_cm()-ChVector<>(0,0,bucketMin.z);
-				//pos = sPtr->GetArm(1)->GetPos()-ChVector<>(0,0,bucketMin.z);
-				pos = com;
+				//com = sPtr->Get_cm()-ChVector<>(0,0,bucketMin.z);
+				com = sPtr->Get_cm() - ChVector<>(0, 0, bucketMin.z);
 				zComz += com.z;
+				max2 = std::max(max2, com.z);
+				if(max2>zMax)
+				{
+					double temp = zMax;
+					zMax = max2;
+					max2 = temp;
+				}
 
-			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
-				// xpos = int((pos.x+bucket_rad)/sqSize);
-				// ypos = int((pos.y+bucket_rad)/sqSize);
-				xpos = int((pos.x+bucket_rad)/sqSizex);
-				ypos = int((pos.y+bucket_rad)/sqSizey);
-
-				vecPos = colSize*xpos+ypos;
-				// vecPos = rowSize*xpos+ypos;
-				//GetLog()<<vecPos<<"\n";
-
-				zHeights[vecPos]=std::pair<int,double>(zHeights[vecPos].first+1,std::max(pos.z,zHeights[vecPos].second));
-
+				//pos = com;
+				//xpos = int((pos.x+bucket_rad)/sqSizex);
+				//ypos = int((pos.y+bucket_rad)/sqSizey);
+				//vecPos = (colSize)*ypos+xpos;
+				//zHeights[vecPos]=std::pair<int,double>(zHeights[vecPos].first+1,std::max(pos.z,zHeights[vecPos].second));
+				
+				//utils::AddBoxGeometry(grid.get_ptr(), ChVector<>(sqSizex / 2, sqSizey / 2, pos.z / 2), ChVector<>((4)*sqSizex + sqSizex / 2 - bucket_rad, (6)*sqSizey + sqSizey / 2 - bucket_rad, bucket->GetPos().z + pos.z / 2), QUNIT, true); // upper part, min_x plate
+				//GetLog() << "\n (smartx,smarty): (" << com.x << "," << com.y << ")\n";
+				//GetLog() << "\n(xpos,ypos): (" << (xpos)*sqSizex - bucket_rad << "," << (ypos)*sqSizex - bucket_rad << ")\n";
 				meanOT += sPtr->GetReactTorqueLen01() + sPtr->GetReactTorqueLen12();
-				zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z- bucketMin.z);
+				//zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z- bucketMin.z);
 
 			}
 		}
+		
+		//uncomment to visualize vol frac boxes
+		//grid->AddAsset(Smarticle::mtextureOT);
+		//grid->GetCollisionModel()->BuildModel();
+		//a = true;
+		//mphysicalSystem.AddBody(grid);
 
-
-		//volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2.0 * bucket_interior_halfDim.z);
-		//volumeFraction = (countInside2*mySmarticlesVec[1]->GetVolume()) / (CH_C_PI * bucket_rad * bucket_rad * zMax);
-		for (size_t i = 0; i < zHeights.size(); i++)
-		{
-			// volumeFraction += zHeights[i].second*sqSize*sqSize;
-
-			volumeFraction += zHeights[i].second*sqSizey*sqSizex;
-
-			// if(zHeights[i].second==0)
-			// 	continue;
-			// volumeFraction += (zHeights[i].first*mySmarticlesVec[1]->GetVolume())/(zHeights[i].second*sqSize*sqSize);
-		}
-		//volumeFraction=volumeFraction/(rowSize*rowSize);
-		volumeFraction = countInside2*vol/volumeFraction;
-
-
+		
+		//for (size_t i = 0; i < zHeights.size(); i++)
+		//{
+		//	volumeFraction += zHeights[i].second*sqSizey*sqSizex;
+		//}
+		//volumeFraction = countInside2*vol/volumeFraction;
+	
+		volumeFraction = countInside2*vol / (max2*CH_C_PI*bucket_rad*bucket_rad);
+		//GetLog() << vol << " " << countInside2 << " " << bucket_rad << " " << zMax << " " << volumeFraction << "\n";
+		GetLog() <<"phi="<< volumeFraction << "\n";
 		zComz = zComz / countInside2;
 		meanOT = meanOT / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
 	}
@@ -2253,7 +2265,8 @@ int main(int argc, char* argv[]) {
 
 		application.SetVideoframeSaveInterval(2);//only save every 2 frames
 		application.DrawAll();
-
+		//application.AssetBindAll();  //uncomment to visualize vol frac boxes
+		//application.AssetUpdateAll();//uncomment to visualize vol frac boxes
     application.DoStep();//
     application.GetVideoDriver()->endScene();
 #else

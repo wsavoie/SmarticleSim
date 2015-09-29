@@ -1,5 +1,6 @@
 % directory_name = uigetdir('\\centos\secured\shared_data\diffWidthVolFracFilling');
-directory_name = '\\centos\secured\shared_data\Cyl4.4VolFracFilling\';
+% directory_name = '\\centos\secured\shared_data\Cyl4.4VolFracFilling\';
+directory_name = 'D:\SimResults\Chrono\SmarticleU\tests\volFrac2\';
 folds = dir(directory_name);
 folds = folds(3:end);
 dFile = '\PostProcess\volumefraction.txt';
@@ -29,4 +30,4 @@ end
 
 OutM= errBarCalc(lws,y);
 errorbar(OutM(:,1),OutM(:,2),OutM(:,3),'o-');
-axis([0 1.4 0.05 0.5])
+axis([0 1.4 0.05 0.25])
