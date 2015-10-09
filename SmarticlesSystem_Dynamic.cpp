@@ -180,8 +180,8 @@ ChSharedPtr<ChBody> bucket_bott;
 		// staple smarticle geometry
 	double w_smarticle 	= sizeScale * 0.0117;
 	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	double t_smarticle 	= sizeScale * .00127;
-	double t2_smarticle	= sizeScale * .0005;
+	double t_smarticle 	= sizeScale * .00127/2;
+	double t2_smarticle	= sizeScale * .0005/2;
 		// double t_smarticle 	= sizeScale * .00254;
 		// double t2_smarticle	= sizeScale * .001;
 	double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
@@ -218,6 +218,8 @@ ChSharedPtr<ChBody> bucket_bott;
 	double drum_freq = 1;
 	double drum_omega = drum_freq*2*CH_C_PI;
 	double pctActive = 1.0;
+	double angle1 = 90;
+	double angle2 = 90;
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
 	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
 	ChSharedPtr<ChTexture> floorTexture(new ChTexture());
@@ -615,7 +617,7 @@ ChSharedPtr<ChBody> bucket_bott;
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
-void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle,bool& readFile,double& mpctActive) {
+void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle,bool& readFile,double& mpctActive, double& mangle1, double& mangle2) {
   if (argc > 1) {
 	const char* text = argv[1];
 	double mult_l = atof(text);
@@ -638,18 +640,26 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[5];
 		mpctActive = atof(text);
 	}
+	if (argc > 6){
+		const char* text = argv[6];
+		angle1 = atof(text);
+	}
+	if (argc > 7){
+		const char* text = argv[7];
+		angle2 = atof(text);
+	}
 	/// if parallel, get solver setting
   if (USE_PARALLEL) {
-	  if (argc > 6) {
-		const char* text = argv[6];
-		threads = atoi(text);
-	  }
-	  if (argc > 7) {
-		const char* text = argv[7];
-		max_iteration_sliding = atoi(text);
-	  }
 	  if (argc > 8) {
 		const char* text = argv[8];
+		threads = atoi(text);
+	  }
+	  if (argc > 9) {
+		const char* text = argv[9];
+		max_iteration_sliding = atoi(text);
+	  }
+	  if (argc > 10) {
+		const char* text = argv[10];
 		max_iteration_bilateral = atoi(text);
 	  }
   }
@@ -676,16 +686,17 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	omp_set_num_threads(threads);
 
 
-  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle, read_from_file,pctActive);
+  SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle, read_from_file,pctActive,angle1,angle2);
 	vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 	simParams << std::endl <<
-		"l_smarticle: " << l_smarticle+t2_smarticle << std::endl <<
+		"l_smarticle: " << l_smarticle << std::endl <<
 		"l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
 		"read from file: " << read_from_file << std::endl <<
 		"dT: " << dT << std::endl << std::endl <<
 		"tFinal: " << tFinal << std::endl <<
 		"vibrate start: " << vibrateStart << std::endl <<
-		"Active Percent: " << pctActive << std::endl;
+		"Active Percent: " << pctActive << std::endl <<
+		"Start Angles: " << angle1 << " " << angle2<< std::endl;
 
 	simParams << "Smarticle volume: " << vol << std::endl;
 	simParams << "Smarticle mass: " << vol*rho_smarticle << std::endl;
@@ -738,7 +749,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
   // Set params from input
   // ----------------------
 
-  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle,read_from_file,pctActive);
+  SetArgumentsForMbdFromInput(argc, argv, threads, max_iteration_sliding, max_iteration_bilateral, dT,numLayers, armAngle,read_from_file,pctActive,angle1,angle2);
 
   // ----------------------
   // Set number of threads.
@@ -771,7 +782,7 @@ void InitializeMbdPhysicalSystem_Parallel(ChSystemParallelDVI& mphysicalSystem, 
 		" tFinal: " << tFinal << std::endl <<
 		" vibrate start: " << vibrateStart << std::endl <<
 		" read from file: " << read_from_file << std::endl <<
-		" arm angle: " << armAngle << std::endl << std::endl;
+		" arm angle: " << angle1<< " " << angle2 << std::endl << std::endl;
 
 
   // ---------------------
@@ -854,7 +865,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			if (MyRand()<1)
 				smarticle0->visualize = true;
 			smarticle0->populateMoveVector();
-			smarticle0->SetAngle(90, 90, true);
+			smarticle0->SetAngle(angle1, angle2, true);
 			smarticle0->Create();
 
 			//smarticle0->AddMotion(myMotionDefault);
@@ -1687,7 +1698,6 @@ bool FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 		GetLog() << "\narm broken removing smarticle\n";
 		return true;
 	}
-
 	if (bucketType != HOPPER)
 	{
 		if (sPtr.GetArm(1)->GetPos().z < -3.0*bucket_interior_halfDim.z) //if far below bucket
@@ -1736,6 +1746,12 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 			myIter = mySmarticlesVec.erase(myIter);
 			GetLog() << "\narm broken removing smarticle\n";
 			continue;
+		}
+		if (sPtr->GetArm(0)->GetRot_dt().GetVector().Length2() > 10000)
+		{
+			sPtr->GetArm(0)->SetRot_dt(sPtr->GetArm(0)->GetRot() / 2); //added this because small arms can start to spin uncontrollably
+			sPtr->GetArm(1)->SetRot_dt(sPtr->GetArm(1)->GetRot() / 2);
+			sPtr->GetArm(2)->SetRot_dt(sPtr->GetArm(2)->GetRot() / 2);
 		}
 		if (bucketType != HOPPER)
 		{
@@ -1993,8 +2009,8 @@ int main(int argc, char* argv[]) {
 	Smarticle::global_GUI_value = 0;
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 #if defined(_WIN64)
-	std::string fp = "\\..\\data\\";
-	fp = __FILE__+fp;
+	std::string fp = "D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\";
+	//fp = __FILE__+fp;
 	SetChronoDataPath(fp);
 #else
 	SetChronoDataPath("/home/wsavoie/Documents/ChronoPkgs/Smarticles/data/");
