@@ -3,10 +3,12 @@
 dt=.005;
 omega = 10;
 ss= dt*omega; %step size
-ss=2*pi/3/120
+% ss=2*pi/3/120
+ss=2*pi/360
 % w  = .0117;
-% lw =.5;
-w= 1;
+% lw =.5;grid o
+w= .0117;
+% w= 1;
 lw = .5;
 l = lw*w;
 
@@ -41,8 +43,10 @@ case 4
     %U shape to straight
 %     ang = 2*pi:-ss:0;
 %     ang2= 2*pi:-ss:0;
-    ang = 0:ss:pi;
-    ang2= 0:ss:pi;
+%     ang = -pi:ss:0;
+%     ang2= -pi:ss:0;
+    ang = 0:ss:2*pi/3;
+    ang2= 0:ss:2*pi/3;
     t1=ang';
     t2=ang2';
 case 5
@@ -106,29 +110,30 @@ if(find(~ang==ang2)) %if ang1 ~= ang2
 else
     figure(1);
     hold on;
-    x = linspace(0,1.4,29); % l/w value
-    y = ang;    
-    z1 = zeros(length(y),length(x));
-    z2 = zeros(length(y),length(x));
-aa = zeros(length(y),length(x));
-w=4;
-for ii=1:length(x)
-    for jj=1:length(y)
-    a=(2*cos(y(jj))*w*x(ii)+2*w)*sin(y(jj))*w*x(ii)*1/2;
-    aa(jj,ii)= a;
+    lws = linspace(0,1.4,29); % l/w value
+    angs = ang;    
+    z1 = zeros(length(angs),length(lws));
+    z2 = zeros(length(angs),length(lws));
+areas = zeros(length(angs),length(lws));
+for ii=1:length(lws)
+    for jj=1:length(angs)
+%         area of trap = (a+b)*h/2, a= top, b= bott,  h= height
+%     a=(2*cos(angs(jj))*w*lws(ii)+2*w)*sin(angs(jj))*w*lws(ii)*1/2;
+    areas(jj,ii)= (lws(ii)*w*sin(angs(jj)))*(lws(ii)*w*cos(angs(jj))+w);
     end
 end
 
 hold on;
 
 
-[mx,ix]=max(aa,[],1);
-[my,iy]=max(aa,[],2);
+[mx,maxAreaAngs]=max(areas,[],1);
+[my,maxAreaLws]=max(areas,[],2);
 % surf(x,y*180/pi,abs(aa))
 % scatter3(x(:),y(ix)*180/pi,abs(max(aa)),'r','MarkerFaceColor','flat');
 
-surf(x,y*180/pi,abs(aa/max(aa(:))))
-scatter3(x(:),y(ix)*180/pi,abs(max(aa)/max(aa(:))),'r','MarkerFaceColor','flat');
+surf(lws,angs*180/pi,abs(areas/max(areas(:))))
+scatter3(lws(:),angs(maxAreaAngs)*180/pi,abs(max(areas)/max(areas(:))),'r','MarkerFaceColor','flat');
+
 
     figure(1);
     hold on;
@@ -140,22 +145,31 @@ dd =[0.25,0.35,0.4,0.7,1,1.2];
     zlabel('Normalized Area');
 end
 
-angplot = 90;
-lwplot = 0.5;
+angplot = 120;
+lwplot = .5;
 figure(11)
+hold on;
+subplot(2,1,1)
 xlabel('\alpha')
 
 ylabel('Interior area')
 hold on;
-plot(y*180/pi,aa(:,find(x==lwplot)));
 title(horzcat('interior area vs angle at l/w=',num2str(lwplot)));
+plot(angs*180/pi,areas(:,find(lws==lwplot)));
+subplot(2,1,2)
+
+% plot(angs(maxAreaAngs)*180/pi,abs(max(areas)/max(areas(:))))
+plot(lws(:),angs(maxAreaAngs)*180/pi,'o-')
+title('\alpha (\circ) of max in interior area vs. l/w')
+ylabel('\alpha (\circ)')
+xlabel('l/w');
 
 figure(12)
 xlabel('l/w')
 ylabel('interior area (arb)')
 hold on;
 title(horzcat('interior area vs l/w at \alpha=',num2str(angplot)));
-plot(x,aa(find(int32(y*180/pi)==angplot),:))
+plot(lws,areas(find(int32(angs*180/pi)==angplot),:))
 % figure(12312)
 % plot(x,aa(:,find(y==90*pi/180)))
 % figure(11)

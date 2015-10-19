@@ -1,11 +1,12 @@
 % directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-17-15--9-18-15\com changing shape\r1\PostProcess\volumeFraction.txt');
-data = importdata('D:\SimResults\Chrono\SmarticleU\tests\PostProcess\volumeFraction.txt');
+% data = importdata('D:\SimResults\Chrono\SmarticleU\tests\PostProcess\volumeFraction.txt');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-20\PostProcess\volumeFraction.txt');
 % data = importdata('\\centos\secured\shared_data\diffWidth2VolFracFilling\0.9-20150924-095709\PostProcess\volumeFraction.txt');
 % data = importdata('\\centos\secured\shared_data\diffWidth3VolFracFilling\0.1-20150925-125854\PostProcess\volumeFraction.txt');
 % data = importdata('\\centos\secured\shared_data\diffWidth3VolFracFilling\0.3-20150925-124007\PostProcess\volumeFraction.txt');
-
+data = importdata('D:\SimResults\Chrono\SmarticleU\tests\shapeChangeVolumeFraction1013-2\PostProcess\volumeFraction.txt');
+data = importdata('D:\SimResults\Chrono\SmarticleU\tests\fastShapeChange1013\PostProcess\volumeFraction.txt');
 time        = data(:,1);
 smartcount  = data(:,2);
 volfrac     = data(:,3);
@@ -24,59 +25,68 @@ hold on;
 gc =[0; find(diff(guid))];
 gc=gc+1;
 val=[guid(gc)]+1;%added value can be zero (global) and matrices are 1 started
-sp1=[plot(time,zcom)]; %starts variable for the legend
+% sp1=[plot(time,zcom)]; %starts variable for the legend
+
 gg = [gc, val];
 ggOld = gg;
 gg= sortrows(gg,2); 
 figure(1);
+shapeLines=[]; %[time, colr, colg, colb, plotNameIdx;...]
 for i=1:size(gg,1)
     if i~=1
         if gg(i,2)==gg(i-1,2) %if true will mean a repeat in color on legend
-            plot([time(gg(i,1)),time(gg(i,1))],[min(zcom),max(zcom)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)
-            text(time(gg(i,1)),max(zcom)*1.02,plotNames((gg(i,2)+1)))
+%             plot([time(gg(i,1)),time(gg(i,1))],[min(zcom),max(zcom)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)
+            shapeLines=[shapeLines; time(gg(i,1)) cell2mat(cols(gg(i,2))),gg(i,2)+1];
+        
+%             text(time(gg(i,1)),max(zcom)*1.02,plotNames((gg(i,2)+1)))
             continue;
         else
-            sp1 = [sp1 plot([time(gg(i,1)),time(gg(i,1))],[min(zcom),max(zcom)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)];
-            text(time(gg(i,1)),max(zcom)*1.02,plotNames((gg(i,2)+1)))
+            shapeLines=[shapeLines; time(gg(i,1)) cell2mat(cols(gg(i,2))),gg(i,2)+1];
+%             sp1 = [sp1 plot([time(gg(i,1)),time(gg(i,1))],[min(zcom),max(zcom)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)];
+%             text(time(gg(i,1)),max(zcom)*1.02,plotNames((gg(i,2)+1)))
         end
     else
-        sp1 = [sp1 plot([time(gg(i,1)),time(gg(i,1))],[min(zcom),max(zcom)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)];
-        text(time(gg(i,1)),max(zcom)*1.02,plotNames((gg(i,2)+1)))
+        shapeLines=[shapeLines; time(gg(i,1)) cell2mat(cols(gg(i,2))),gg(i,2)+1];
+%         sp1 = [sp1 plot([time(gg(i,1)),time(gg(i,1))],[min(zcom),max(zcom)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)];
+%         text(time(gg(i,1)),max(zcom)*1.02,plotNames((gg(i,2)+1)))
     end
-plotTypes=[plotTypes, (gg(i,2)+1)];
+% plotTypes=[plotTypes, (gg(i,2)+1)];
 end
-title('Mean COM height vs. time')
-xlabel('time [s]');
-ylabel('<h> [m], \phi');
 
+lineVar= zcom;
+plot(time,lineVar)
+for i=1:size(shapeLines,1)
+    plot([shapeLines(i,1),shapeLines(i,1)],[min(lineVar) max(lineVar)],'color',shapeLines(i,2:4),'LineWidth',2)
+    text(shapeLines(i,1),max(lineVar)*1.02,plotNames(shapeLines(i,5)))
+end
+% title('\phi vs. time')
+title('Mean COM of pile vs. time')
+xlabel('time [s]');
+ylabel('<h> [m]');
+% ylabel('<h> [m], \phi');
+% ylabel('\phi');
 vibTime = find(time>.75,1);
-vibrate = true;
+vibrate = false;
 if vibrate
     plot(time(vibTime),volfrac(vibTime),'k.','MarkerSize',20);
+    text(time(vibTime-2),1.04*lineVar(vibTime),'\phi')
 end
-text(time(vibTime-2),1.04*volfrac(vibTime),'\phi')
-plot(time,volfrac)
 
+xlim([0,2.15])
+set(gca,'Position',...
+        get(gca,'OuterPosition') - ...
+        get(gca,'TightInset') * ...
+        [-1 0 1 0; 0 -1 0 1; 0 0 1 0; 0 0 0 1])
 %% Plot meanOT
 figure(2);
 hold on;
 plot(time,meanOT);
-for i=1:size(gg,1)
-    if i~=1
-        if gg(i,2)==gg(i-1,2) %if true will mean a repeat in color on legend
-            plot([time(gg(i,1)),time(gg(i,1))],[min(meanOT),max(meanOT)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)
-            text(time(gg(i,1)),max(meanOT)*1.02,plotNames((gg(i,2)+1)))
-            continue;
-        else
-            sp1 = [sp1 plot([time(gg(i,1)),time(gg(i,1))],[min(meanOT),max(meanOT)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)];
-            text(time(gg(i,1)),max(meanOT)*1.02,plotNames((gg(i,2)+1)))
-        end
-    else
-        sp1 = [sp1 plot([time(gg(i,1)),time(gg(i,1))],[min(meanOT),max(meanOT)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)];
-        text(time(gg(i,1)),max(meanOT)*1.02,plotNames((gg(i,2)+1)))
-    end
-plotTypes=[plotTypes, (gg(i,2)+1)];
+
+for(i=1:size(shapeLines,1))
+    plot([shapeLines(i,1),shapeLines(i,1)],[min(meanOT) max(meanOT)],'color',shapeLines(i,2:4),'LineWidth',2)
+    text(shapeLines(i,1),max(meanOT)*1.02,plotNames(shapeLines(i,5)))
 end
+
 title('Mean reaction torque on arms vs. time')
 xlabel('time [s]');
 ylabel('<|\tau|> [Nm]')

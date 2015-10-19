@@ -8,13 +8,21 @@
 %   angHigh     = highest angle smarticle is allowed to move to
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
 
-dt=.00025;
-omega = 5;
-torqueThresh=5*4.6657e-04*9.8*.0059;%.00005;  4.6657e-04 
+dt=.0005;
+omega = 10;
+rho = 7850.0;
+%(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
+t2  = .0005;
+t   = .00127;
+w_s = .0117;
+l_s = w_s;
+volume =  t2 * t* (w_s + 2 * (l_s));
+mass = volume*rho;
+torqueThresh=9.8*mass*w_s*6;%.00005;  4.6657e-04 
 angLow=60;
 angHigh=120;
 
-global_gait= 1;
+global_gait= 2;
 gui1_gait = 1;
 gui2_gait = 1;
 gui3_gait = 1;

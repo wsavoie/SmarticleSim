@@ -3,7 +3,7 @@ directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests\PostProcess');
 data=importdata(horzcat(directory_name,'\flowrate.txt'));
 
 dt = .0005;
-FS = 1/dt;
+FS = 1/dt;  
 cols = {[1,0,0],[1,.5,0],[.4431,.7373, 1],[0,0,0],[.392,.824,.118],[.7,.4,.7]};
 plotNames = {'Smarticles','Gait','U-Shape','Straight','Tetris','Vib at \circ','Vib Angle'};
 plotTypes = [1];

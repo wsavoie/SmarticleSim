@@ -165,8 +165,8 @@ ChSharedPtr<ChBody> bucket_bott;
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = 2* sizeScale;
-	double tFinal = 4.0;
-	double vibrateStart= tFinal-3.25;
+	double tFinal = 6;
+	double vibrateStart= .750+100;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -180,8 +180,8 @@ ChSharedPtr<ChBody> bucket_bott;
 		// staple smarticle geometry
 	double w_smarticle 	= sizeScale * 0.0117;
 	double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	double t_smarticle 	= sizeScale * .00127/2;
-	double t2_smarticle	= sizeScale * .0005/2;
+	double t_smarticle 	= sizeScale * .00127;
+	double t2_smarticle	= sizeScale * .0005;
 		// double t_smarticle 	= sizeScale * .00254;
 		// double t2_smarticle	= sizeScale * .001;
 	double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
@@ -220,6 +220,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	double pctActive = 1.0;
 	double angle1 = 90;
 	double angle2 = 90;
+	double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
 	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
 	ChSharedPtr<ChTexture> floorTexture(new ChTexture());
@@ -296,14 +297,16 @@ ChSharedPtr<ChBody> bucket_bott;
 				case irr::KEY_KEY_R: //vibrate around current theta
 					if (Smarticle::global_GUI_value != 4) //TODO create a boolean and then call a method later which performs this so we don't have to run through smarticle vec here!
 					{
+						
 						double CurrTheta01;
 						double CurrTheta12;
 						Smarticle::global_GUI_value = 4;
 						std::pair<double, double> angPair;
 						for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 						{
-							Smarticle* sPtr = sv->at(i);
 
+							Smarticle* sPtr = sv->at(i);
+							
 							MoveType currMoveType = sPtr->moveType;
 							std::vector<std::pair<double, double>> *v;
 
@@ -333,21 +336,19 @@ ChSharedPtr<ChBody> bucket_bott;
 								v = &sPtr->global;
 								break;
 							}
-
+							
 							CurrTheta01 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).first;
 							CurrTheta12 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).second;
-							sPtr->vib.clear();
+				
+								sPtr->vib.clear();
 
-							sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
-
-							sPtr->vib.emplace_back(CurrTheta01 - vibAmp, CurrTheta12 - vibAmp);
-
-							sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
-
-							sPtr->vib.emplace_back(CurrTheta01 + vibAmp, CurrTheta12 + vibAmp);
+								sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
+								sPtr->vib.emplace_back(CurrTheta01 - vibAmp, CurrTheta12 - vibAmp);
+								sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
+								sPtr->vib.emplace_back(CurrTheta01 + vibAmp, CurrTheta12 + vibAmp);
+							}
 						}
 
-					}
 					else
 						Smarticle::global_GUI_value = 0;
 					return true;
@@ -586,7 +587,7 @@ ChSharedPtr<ChBody> bucket_bott;
 			successfulCount = 0;
 		}
 	private:
-		double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
+
 		std::vector<Smarticle*> *sv;
 		ChIrrApp* app;
 		IGUIScrollBar* scrollbar_friction;
@@ -720,11 +721,11 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
 	mphysicalSystem.SetIterLCPmaxItersSpeed(int(2.85*numLayers*numPerLayer));
   mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
-  //mphysicalSystem.SetParallelThreadNumber(1);  //TODO figure out if this can increase speed
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   mphysicalSystem.SetIterLCPwarmStarting(true);
   mphysicalSystem.SetUseSleeping(false);
   mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
+
 	//mphysicalSystem.SetTolForce(.0005);
 	//mphysicalSystem.SetTol(.0001);
 	//mphysicalSystem.SetMinBounceSpeed(.3);
@@ -868,8 +869,11 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			smarticle0->SetAngle(angle1, angle2, true);
 			smarticle0->Create();
 
-			//smarticle0->AddMotion(myMotionDefault);
-			//smarticle0->AddMotion(myMotion);
+			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180, angle2*CH_C_PI / 180);
+			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180 - vibAmp, angle1*CH_C_PI / 180 - vibAmp);
+			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180, angle2*CH_C_PI / 180);
+			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180 + vibAmp, angle1*CH_C_PI / 180 + vibAmp);
+
 			mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
 			smarticle0->SetSpeed(ChVector<>(0, 0, -9.8*timeForDisp / 2.0 - w_smarticle / timeForDisp));
 #if irrlichtVisualization
@@ -1979,23 +1983,7 @@ void UpdateSmarticles(
 
 	double current_time = mphysicalSystem.GetChTime();
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
-		//mySmarticlesVec[i]->MoveLoop();
-
 		mySmarticlesVec[i]->MoveLoop2(Smarticle::global_GUI_value);
-//		mySmarticlesVec[i]->UpdateMySmarticleMotion();
-//
-//		if (current_time > 0.4 && current_time < 0.8) {
-//					mySmarticlesVec[i]->MoveToAngle(CH_C_PI/3, -CH_C_PI/3);
-//		} else if (current_time > 0.8 && current_time < 1.2) {
-//			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/2, CH_C_PI/2);
-//		} else if (current_time >= 1.2 && current_time < 2.0) {
-//			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/2, -CH_C_PI/2);
-//		} else if (current_time >= 2.0 && current_time < 2.4) {
-//			mySmarticlesVec[i]->MoveToAngle(0, 0);
-//		} else {
-//			mySmarticlesVec[i]->MoveToAngle(CH_C_PI/3, CH_C_PI/3);
-//		}
-
 	}
 }
 // =============================================================================
@@ -2112,8 +2100,10 @@ int main(int argc, char* argv[]) {
 	camera->setUpVector(core::vector3df(0, 0, 1));
 	camera->setPosition(core::vector3df(0, -.1, 0));
 	camera->setTarget(core::vector3df(0, 0, -.01));
-	camera->setNearValue(0.01f);
-	camera->setMinZoom(0.6f);
+	camera->setNearValue(0.0005f);
+	camera->setMinZoom(0.1f);
+	camera->setZoomSpeed(0.1f);
+
 	drawGlobalCoordinateFrame(mphysicalSystem);
 
 
@@ -2193,6 +2183,7 @@ int main(int argc, char* argv[]) {
 		numGeneratedLayers = numLayers;
 	}
 //  for (int tStep = 0; tStep < 1; tStep++) {
+	Smarticle::global_GUI_value = 1;
 
 	for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 		double t = mphysicalSystem.GetChTime();
@@ -2208,7 +2199,7 @@ int main(int argc, char* argv[]) {
 				numGeneratedLayers++;
 			}
 		}
-		if (t > vibrateStart){
+		if (t > vibrateStart && t<vibrateStart+3){
 			//if (t > vibrateStart || bucketType==HOPPER){
 			bucket->SetBodyFixed(false);
 			vibrate_bucket(t);
@@ -2279,29 +2270,46 @@ int main(int argc, char* argv[]) {
 		//application.AssetBindAll();
 		//application.AssetUpdateAll();
 
-		application.SetVideoframeSaveInterval(2);//only save every 2 frames
+		//framerecord
+		application.SetVideoframeSaveInterval(20);//only save every 2 frames
 		application.DrawAll();
-		//application.AssetBindAll();  //uncomment to visualize vol frac boxes
-		//application.AssetUpdateAll();//uncomment to visualize vol frac boxes
+		application.AssetBindAll();  //uncomment to visualize vol frac boxes
+		application.AssetUpdateAll();//uncomment to visualize vol frac boxes
     application.DoStep();//
     application.GetVideoDriver()->endScene();
-#else
-    mphysicalSystem.DoStepDynamics(dT);
+	#else
+			mphysicalSystem.DoStepDynamics(dT);
+	#endif
 #endif
-#endif
-		Smarticle::global_GUI_value = 1;
-		//if (t < 1.6)
+
+		//Smarticle::global_GUI_value = 1;
+		//if (t < .75)
 		//	Smarticle::global_GUI_value = 1;
-		//else if (t > 1.6 && t < 2.6)
+		//else if (t > .75 && t < 1.5)
 		//	Smarticle::global_GUI_value = 2;
-		//else if (t > 2.6 && t < 3.6)
-		//	Smarticle::global_GUI_value = 1;
-		//else if (t > 3.6 && t < 4.6)
-		//	Smarticle::global_GUI_value = 2;
+		//else if (t > 1.5 && t < 2.25)
+		//	Smarticle::global_GUI_value = 3;
+		//else if (t > 2.25 && t < 4.6)
+		//	break;
 		//else if (t > 4.6 &&t < 5.6)
 		//	Smarticle::global_GUI_value = 1;
 		//else
 		//	break;
+
+
+			//if (t < vibrateStart+3.1)
+			//	Smarticle::global_GUI_value = 1;
+			//else if (t > 3.1)
+			//	Smarticle::global_GUI_value = 4;
+			//else
+			//break;
+
+			//if (bucket_exist && t>.1)
+			//{
+			//	bucket_bott->SetPos(ChVector<>(100, 0, 0));
+			//	bucket_exist = false;
+			//}
+
 		receiver.drawSuccessful();
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
 		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
@@ -2323,35 +2331,9 @@ int main(int argc, char* argv[]) {
 	  		rho_smarticle);
 
 
-		//if (t < 1.0)
-		//	Smarticle::global_GUI_value = 1;
-		//else if (t > 1 && t < 2.5)
-		//	Smarticle::global_GUI_value = 2;
-		//else if (t > 2.5 && t < 4)
-		//Smarticle::global_GUI_value = 3;
-		//else if (t > 4 && t < 5.5)
-		//	Smarticle::global_GUI_value = 2;
-		//else
-		//break;
-
-		//if (bucket_exist && t>.1)
-		//{
-		//	bucket_bott->SetPos(ChVector<>(100, 0, 0));
-		//	bucket_exist = false;
-		//}
 
 
 
-		//if (t < 0.25)
-		//	Smarticle::global_GUI_value = 1;
-		//else if (t >= 0.25 && t < 0.31)
-		//	Smarticle::global_GUI_value = 2;
-		////else if (t > 0.5 && t < 0.75)
-		////	Smarticle::global_GUI_value = 3;
-		////else if (t > 0.75 && t < 1.0)
-		////	Smarticle::global_GUI_value = 2;
-		//else
-		//	break;
 
 
   }

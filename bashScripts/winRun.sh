@@ -40,13 +40,13 @@ echo "run vars!: $lw $dt $nl $re $pa"
 foldName=lowThickness
 lwArr=(0.5 0.7 0.9 0.3 0.3 0.3 0.6 0.6 0.7 0.7 0.7 0.7);
 dtArr=(0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005 0.0005);
-nlArr=(160 160 120 120 120 60 60 60 55 55 55 55);
+nlArr=(90 80 70 120 120 60 60 60 55 55 55 55);
 reArr=(0 0 0 0 0 0 0 0 0 0 0 0);
 paArr=(0 0 0 0 0 0 0 0 0 0 0 0);
 ang1Arr=(90 90 90)
 ang2Arr=(90 90 90)
 mkdir $foldName
-for i in `seq 0 0`; do
+for i in `seq 0 2`; do
   echo $i
   a=./$foldName/${lwArr[$i]}-${nlArr[$i]}-${ang1Arr[$i]}-$(date '+%Y%m%d-%H%M%S')
   mkdir $a

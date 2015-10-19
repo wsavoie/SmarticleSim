@@ -1,6 +1,8 @@
 % directory_name = uigetdir('\\centos\secured\shared_data\diffWidthVolFracFilling');
 % directory_name = '\\centos\secured\shared_data\Cyl4.4VolFracFilling\';
-directory_name = 'D:\SimResults\Chrono\SmarticleU\tests\volFrac2\';
+% directory_name = 'D:\SimResults\Chrono\SmarticleU\tests\volFrac2\';
+% directory_name = 'D:\SimResults\Chrono\SmarticleU\tests\lowThickness\';
+directory_name = 'D:\SimResults\Chrono\SmarticleU\tests\angle120regthick\';
 folds = dir(directory_name);
 folds = folds(3:end);
 dFile = '\PostProcess\volumefraction.txt';
@@ -57,7 +59,9 @@ lws = nlws;
 hold all;
 OutM= errBarCalc(lws,y);
 errorbar(OutM(:,1),OutM(:,2),OutM(:,3),'o-');
-axis([0 1.4 0.05 0.3])
+axis([0 1.4 0.00 0.3])
+xlabel('l/w')
+ylabel('\phi_f')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % OutM2= errBarCalc(lws,y2);
 % errorbar(OutM2(:,1),OutM2(:,2),OutM2(:,3),'yo-');

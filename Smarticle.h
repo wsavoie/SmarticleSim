@@ -29,41 +29,8 @@
 #define irrlichtVisualization true
 namespace chrono {
 
-	enum MotionType {SQUARE_G, CIRCLE_G, RELEASE_G, LOOP_G};
-
 	enum MoveType { GLOBAL=0, GUI1=1, GUI2=2, GUI3=3, VIB=4, OT=5}; //IF ADDING MORE ALWAYS KEEP OT AS LAST INDEX!!!!
 	// structs to attach motion to smarticles
-	class JointMotion : public ChShared {
-	public:
-		double theta1;			// lower limit of the motion
-		double theta2;			// upper limit of the motion
-		double omega;			// joint angular velocity
-
-		JointMotion() {}
-		~JointMotion() {}
-	};
-
-	class SmarticleMotionPiece : public ChShared{
-
-	public:
-		JointMotion joint_01;	// joint 1 motion,
-		JointMotion joint_12;	// joint 1 motion
-		double timeInterval;	// time of action
-		double startTime;		// start time of the motion
-		double dT;
-		SmarticleMotionPiece() {}
-		~SmarticleMotionPiece() {}
-
-		virtual void SetMotionType(MotionType myMotion) {motionType = myMotion;}
-		virtual MotionType GetMotionType() {return motionType;}
-
-		int motionSubSegment;
-	private:
-		int motionSegment;
-		MotionType motionType;
-	};
-
-
 
 	class Smarticle {
 	public:
@@ -171,12 +138,10 @@ namespace chrono {
 
 		virtual double GetMass();
 		virtual double GetDensity() {return density;};
-		virtual void AddMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece);
 		//	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented
 		//	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
 		virtual void TransportSmarticle(ChVector<>);
 		virtual void SetSpeed(ChVector<> newSpeed);
-		virtual void UpdateMySmarticleMotion();
 
 
 		//smarticle arm angle
@@ -186,7 +151,6 @@ namespace chrono {
 		virtual void SetAngle1(double mangle1, bool degrees = false);
 		virtual void SetAngle2(double mangle2, bool degrees = false);
 
-		virtual ChSharedPtr<SmarticleMotionPiece> Get_Current_Motion();
 		virtual int GetID();
 
 		virtual double GetAngle1(bool degrees = false);
@@ -307,9 +271,6 @@ namespace chrono {
 		// joints functions
 		ChSharedPtr<ChFunction> function01;
 		ChSharedPtr<ChFunction> function12;
-
-		std::vector<ChSharedPtr<SmarticleMotionPiece>> motion_vector;
-		ChSharedPtr<SmarticleMotionPiece> current_motion;
 
 
 
