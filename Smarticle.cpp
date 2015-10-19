@@ -808,12 +808,16 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	static double relr01 = link_actuator01->GetDist();
 	static double relr12 = link_actuator12->GetDist();
 	//GetLog() << "\n" << "rel1:" << rel01 << "rel2:" << rel12 << "\n";
-	if (fabs(rel01.y) > .1 || fabs(rel12.y) > .1)//if angle in x or y is > .1 radians, it is definitely broken
+
+
+	if (fabs(rel01.y) > .05 || fabs(rel12.y) > .05)//if angle in x or y is > .1 radians, it is definitely broken
 	{
+		GetLog() << "angle bad break! \n";
 		armBroken = true;
 	}
-	if (fabs(relr01) > .125*r2 || fabs(relr12) > .125*r2)//if angle in x or y is > .1 radians, it is definitely broken
+	if (fabs(relr01) > .05*r2 || fabs(relr12) > .05*r2)//if distance between markers is .025% of thickness, break!
 	{
+		GetLog() << "distance wrong break! \n";
 		armBroken = true;
 	}
 

@@ -719,7 +719,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   // Modify some setting of the physical system for the simulation, if you want
 	mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR);
 	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
-	mphysicalSystem.SetIterLCPmaxItersSpeed(int(2.85*numLayers*numPerLayer));
+	mphysicalSystem.SetIterLCPmaxItersSpeed(int(3*numLayers*numPerLayer));
   mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   mphysicalSystem.SetIterLCPwarmStarting(true);
@@ -2271,7 +2271,7 @@ int main(int argc, char* argv[]) {
 		//application.AssetUpdateAll();
 
 		//framerecord
-		application.SetVideoframeSaveInterval(20);//only save every 2 frames
+		application.SetVideoframeSaveInterval(5);//only save every 2 frames
 		application.DrawAll();
 		application.AssetBindAll();  //uncomment to visualize vol frac boxes
 		application.AssetUpdateAll();//uncomment to visualize vol frac boxes
@@ -2282,19 +2282,18 @@ int main(int argc, char* argv[]) {
 	#endif
 #endif
 
-		//Smarticle::global_GUI_value = 1;
-		//if (t < .75)
-		//	Smarticle::global_GUI_value = 1;
-		//else if (t > .75 && t < 1.5)
-		//	Smarticle::global_GUI_value = 2;
-		//else if (t > 1.5 && t < 2.25)
-		//	Smarticle::global_GUI_value = 3;
-		//else if (t > 2.25 && t < 4.6)
-		//	break;
-		//else if (t > 4.6 &&t < 5.6)
-		//	Smarticle::global_GUI_value = 1;
-		//else
-		//	break;
+		if (t < .75)
+			Smarticle::global_GUI_value = 1;
+		else if (t > .75 && t < 1.5)
+			Smarticle::global_GUI_value = 2;
+		else if (t > 1.5 && t < 2.25)
+			Smarticle::global_GUI_value = 1;
+		else if (t > 2.25 && t < 3.0)
+			Smarticle::global_GUI_value = 2;
+		else if (t > 3.0 &&t < 3.75)
+			Smarticle::global_GUI_value = 3;
+		else
+			break;
 
 
 			//if (t < vibrateStart+3.1)

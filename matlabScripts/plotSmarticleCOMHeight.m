@@ -5,8 +5,8 @@
 % data = importdata('\\centos\secured\shared_data\diffWidth2VolFracFilling\0.9-20150924-095709\PostProcess\volumeFraction.txt');
 % data = importdata('\\centos\secured\shared_data\diffWidth3VolFracFilling\0.1-20150925-125854\PostProcess\volumeFraction.txt');
 % data = importdata('\\centos\secured\shared_data\diffWidth3VolFracFilling\0.3-20150925-124007\PostProcess\volumeFraction.txt');
-data = importdata('D:\SimResults\Chrono\SmarticleU\tests\shapeChangeVolumeFraction1013-2\PostProcess\volumeFraction.txt');
 data = importdata('D:\SimResults\Chrono\SmarticleU\tests\fastShapeChange1013\PostProcess\volumeFraction.txt');
+data = importdata('D:\SimResults\Chrono\SmarticleU\tests\10-19 configChangeWithOTMovie\PostProcess\volumeFraction.txt');
 time        = data(:,1);
 smartcount  = data(:,2);
 volfrac     = data(:,3);
@@ -72,7 +72,7 @@ if vibrate
     text(time(vibTime-2),1.04*lineVar(vibTime),'\phi')
 end
 
-xlim([0,2.15])
+
 set(gca,'Position',...
         get(gca,'OuterPosition') - ...
         get(gca,'TightInset') * ...

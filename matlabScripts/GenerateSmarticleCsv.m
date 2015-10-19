@@ -9,7 +9,7 @@
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
 
 dt=.0005;
-omega = 10;
+omega = 5;
 rho = 7850.0;
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 t2  = .0005;
