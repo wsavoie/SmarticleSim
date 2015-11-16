@@ -209,6 +209,16 @@ namespace chrono {
 				ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
 				);
 
+		void CreateArm2(
+			int armID, 			// 0: left arm, 1: middle arm, 2: right arm
+			double len, 			// arm length
+			double mr,
+			double mr2,
+			ChVector<> posRel, 	// relative initPosition of the arm wrt the smarticle initPos, which is the center of the center arm
+			// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
+			ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
+			);
+
 		//void CreateArm1(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot=QUNIT);
 		void CreateJoints();
 		//void CreateJoints1(ChQuaternion<>, ChQuaternion<>);

@@ -55,6 +55,7 @@ Smarticle::~Smarticle()
 	m_system->RemoveBody(arm0);
 	m_system->RemoveBody(arm1);
 	m_system->RemoveBody(arm2);
+	GetLog() << "Removing smarticle";
 }
 
 
@@ -284,7 +285,79 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 		break;
 	}
 }
+void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
+	ChVector<> gyr;  	// components gyration
+	double vol;			// components volume
 
+	ChSharedBodyPtr arm;
+
+	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, mr, mr2));
+	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, mr, mr2)).Get_Diag();
+	// create body, set position and rotation, add surface property, and clear/make collision model
+	if (USE_PARALLEL) {
+		arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
+	}
+	else {
+		arm = ChSharedBodyPtr(new ChBody);
+	}
+	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
+
+	arm->SetName("smarticle_arm");
+	arm->SetPos(posArm);
+	arm->SetRot(rotation*armRelativeRot);
+	arm->SetCollide(true);
+	arm->SetBodyFixed(false);
+	arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
+	if (armID == 1) //this was old code from when I was fixing them to fit
+		arm->SetBodyFixed(false);
+	else
+		arm->SetBodyFixed(false);
+
+	arm->SetMaterialSurface(mat_g);
+
+	double mass = density * vol;
+	//double mass = .005;//.043/3.0; //robot weight 43 grams
+	arm->GetCollisionModel()->ClearModel();
+
+	if (visualize)
+	{
+		if (armID == 1)
+			arm->AddAsset(mtextureMid);
+		else
+			arm->AddAsset(mtextureArm);
+
+	}
+	arm->GetCollisionModel()->SetEnvelope(collisionEnvelop);
+	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
+
+	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+
+	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
+
+	// change mass and inertia property
+	arm->SetMass(mass);
+	arm->SetInertiaXX(mass * gyr);
+	//arm->SetDensity(density);
+
+	m_system->AddBody(arm);
+
+
+
+	switch (armID) {
+	case 0: {
+		arm0 = arm;
+	} break;
+	case 1: {
+		arm1 = arm;
+	} break;
+	case 2: {
+		arm2 = arm;
+	} break;
+	default:
+		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
+		break;
+	}
+}
 
 ChSharedBodyPtr Smarticle::GetArm(int armID) {
 	switch (armID) {
@@ -353,10 +426,14 @@ void Smarticle::CreateActuators() {
 
 	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
 	link_actuator12 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
-	// ChVector<> pR01(-w / 2.0+r2, 0, 0);
-	// ChVector<> pR12(w / 2.0-r2, 0, 0);
-	ChVector<> pR01(-w / 2.0-r2, 0, 0);
-	ChVector<> pR12(w / 2.0+r2, 0, 0);
+	
+	//current sim
+	//ChVector<> pR01(-w / 2.0-r2, 0, 0);
+	//ChVector<> pR12(w / 2.0+r2, 0, 0);
+	
+	ChVector<> pR01(-w / 2.0, 0, 0);
+	ChVector<> pR12(w / 2.0, 0, 0);
+
 	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
 	ChQuaternion<> qy1 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle1()));
 	ChQuaternion<> qy2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle2()));
@@ -380,7 +457,7 @@ void Smarticle::CreateActuators() {
 void Smarticle::Create() {
 	//jointClearance =1.0/3.0*r2;
 	jointClearance = 0;
-	double l_mod = l - jointClearance;
+	double l_mod = l + 2*r2- jointClearance;
 
 
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
@@ -388,12 +465,21 @@ void Smarticle::Create() {
 	quat0.Normalize();
 	quat2.Normalize();
 
-	// CreateArm(0, l_mod, ChVector<>(-w / 2.0 + r2 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0+r2)*sin(angle1)), quat0);
-	// CreateArm(1, w, ChVector<>(0, 0, 0));
-	// CreateArm(2, l_mod, ChVector<>( w / 2.0 - r2 + (l_mod / 2.0 - r2)*cos(angle2), 0, -(l_mod / 2.0+r2)*sin(angle2)), quat2);
-	CreateArm(0, l_mod, ChVector<>(-w / 2.0 -r2- (l_mod / 2.0-r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
+	//current sim version
+	//CreateArm(0, l_mod, ChVector<>(-w / 2.0 -r2- (l_mod / 2.0-r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
+	//CreateArm(1, w, ChVector<>(0, 0, 0));
+	//CreateArm(2, l_mod, ChVector<>( w / 2.0 +r2 + (l_mod / 2.0-r2)*cos(angle2), 0, -(l_mod / 2.0-r2)*sin(angle2)), quat2);
+
+	
+	////new version
+	//CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l_mod / 2.0-r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
+	//CreateArm(1, w, ChVector<>(0, 0, 0));
+	//CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0 - r2)*cos(angle2), 0, -((l_mod) / 2.0-r2)*sin(angle2)), quat2);
+	double armt2 = .0022/6;
+	CreateArm2(0, l_mod, r, armt2, ChVector<>(-w / 2.0 - (l_mod / 2.0 - armt2)*cos(angle1), 0, -(l_mod / 2.0 - armt2)*sin(angle1)), quat0);
 	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm(2, l_mod, ChVector<>( w / 2.0 +r2 + (l_mod / 2.0-r2)*cos(angle2), 0, -(l_mod / 2.0-r2)*sin(angle2)), quat2);
+	CreateArm2(2, l_mod, r, armt2, ChVector<>(w / 2.0 + (l / 2.0 - armt2)*cos(angle2), 0, -((l_mod) / 2.0 - armt2)*sin(angle2)), quat2);
+
 
 	CreateActuators();
 	//CreateJoints(); //TODO do we need joints?
@@ -681,7 +767,7 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1, double momega2,MoveType mtype)
 {
 	if (!active)
-		return true;
+		return false;
 	if (arm0OT || arm2OT) //turn off motion at limit
 	{
 		return false;
@@ -815,7 +901,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 		GetLog() << "angle bad break! \n";
 		armBroken = true;
 	}
-	if (fabs(relr01) > .05*r2 || fabs(relr12) > .05*r2)//if distance between markers is .025% of thickness, break!
+	if (fabs(relr01) > .075*r2 || fabs(relr12) > .075*r2)//if distance between markers is .025% of thickness, break!
 	{
 		GetLog() << "distance wrong break! \n";
 		armBroken = true;
@@ -916,7 +1002,7 @@ void Smarticle::MoveLoop2(int guiState = 0)
 			break;
 		}
 	//add 1 to size if move was successful (i.e. can move on to next move index if reached previous one)
-	if (successfulMotion)
+	if (successfulMotion&&active&&(!arm0OT&&!arm2OT))
 	{
 		moveTypeIdxs.at(moveType) = ((moveTypeIdxs.at(moveType) + 1) % v->size());
 	}
