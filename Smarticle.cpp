@@ -457,8 +457,10 @@ void Smarticle::CreateActuators() {
 void Smarticle::Create() {
 	//jointClearance =1.0/3.0*r2;
 	jointClearance = 0;
-	double l_mod = l + 2*r2- jointClearance;
 
+
+	double l_mod;
+	//double l_mod = l + 2 * r2 - jointClearance;
 
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));
@@ -470,16 +472,24 @@ void Smarticle::Create() {
 	//CreateArm(1, w, ChVector<>(0, 0, 0));
 	//CreateArm(2, l_mod, ChVector<>( w / 2.0 +r2 + (l_mod / 2.0-r2)*cos(angle2), 0, -(l_mod / 2.0-r2)*sin(angle2)), quat2);
 
-	
-	////new version
-	//CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l_mod / 2.0-r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
-	//CreateArm(1, w, ChVector<>(0, 0, 0));
-	//CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0 - r2)*cos(angle2), 0, -((l_mod) / 2.0-r2)*sin(angle2)), quat2);
-	double armt2 = .0022/6;
-	CreateArm2(0, l_mod, r, armt2, ChVector<>(-w / 2.0 - (l_mod / 2.0 - armt2)*cos(angle1), 0, -(l_mod / 2.0 - armt2)*sin(angle1)), quat0);
-	CreateArm(1, w, ChVector<>(0, 0, 0));
-	CreateArm2(2, l_mod, r, armt2, ChVector<>(w / 2.0 + (l / 2.0 - armt2)*cos(angle2), 0, -((l_mod) / 2.0 - armt2)*sin(angle2)), quat2);
 
+	////new version
+	if (stapleSize)
+	{
+		l_mod = l + 2 * r2 - jointClearance;
+		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0 - r2)*sin(angle1)), quat0);
+		CreateArm(1, w, ChVector<>(0, 0, 0));
+		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0 - r2)*cos(angle2), 0, -((l_mod) / 2.0 - r2)*sin(angle2)), quat2);
+	}
+	else
+	{
+		double armt = r / 2;
+		double armt2 = .0022 / 2 * sizeScale;
+		l_mod = l + 2 * armt2 - jointClearance;
+		CreateArm2(0, l_mod, r, armt2, ChVector<>(-w / 2.0 - (l_mod / 2.0 - armt2)*cos(angle1), 0, -(l_mod / 2.0 - armt2)*sin(angle1)), quat0);
+		CreateArm2(1, w,r,r2, ChVector<>(0, 0, 0));
+		CreateArm2(2, l_mod, r, armt2, ChVector<>(w / 2.0 + (l / 2.0 - armt2)*cos(angle2), 0, -((l_mod) / 2.0 - armt2)*sin(angle2)), quat2);
+	}
 
 	CreateActuators();
 	//CreateJoints(); //TODO do we need joints?
@@ -770,8 +780,11 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 		return false;
 	if (arm0OT || arm2OT) //turn off motion at limit
 	{
+		this->SetActuatorFunction(0, 0);
+		this->SetActuatorFunction(1, 0);
 		return false;
 	}
+
 	//real ang01 and ang12
 	double ang01 = link_actuator01->Get_mot_rot();
 	double ang12 = link_actuator12->Get_mot_rot();
@@ -781,6 +794,7 @@ bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double m
 	//next ang01 and ang12
 	double nextAng01 = v->at((moveTypeIdxs.at(moveType) + 1) % v->size()).first;
 	double nextAng12 = v->at((moveTypeIdxs.at(moveType) + 1) % v->size()).second;
+
 
 	double expAng01 = v->at(moveTypeIdxs.at(mtype)).first;
 	double expAng12 = v->at(moveTypeIdxs.at(mtype)).second;

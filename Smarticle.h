@@ -16,6 +16,7 @@
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include <memory>
+#include "common.h"
 
 #ifndef true
 #define true 1

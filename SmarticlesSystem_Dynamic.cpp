@@ -42,7 +42,7 @@
 #include "Smarticle.h"
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
-
+#include "common.h"
 #include <memory>
 
 
@@ -61,6 +61,7 @@
 #include "core/ChRealtimeStep.h"
 //#include <irrlicht.h>
 #include "assets/ChTexture.h"
+
 
 using namespace irr;
 using namespace core;
@@ -147,26 +148,26 @@ double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
-
+	double sizeScale = 5;
 	int appWidth = 1280;
 	int appHeight = 720;
-	double sizeScale = 1;
-	double gravity = -9.81 * sizeScale;
-
+	//double sizeScale = 5;
+	//double gravity = -9.81 * sizeScale;
+	double gravity = -9.81;
 	double vibration_freq = 30;
 
 	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 	//double vibration_amp = sizeScale * 0.00055;
 	double mGamma = 2.0 * gravity;
 	double vibration_amp = mGamma / (omega_bucket*omega_bucket);
-
+	bool stapleSize = false;
 
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double contact_recovery_speed = 2* sizeScale;
+	double contact_recovery_speed = .5* sizeScale;
 	double tFinal = 6;
-	double vibrateStart= 1.75;
+	double vibrateStart= 1;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -178,17 +179,25 @@ ChSharedPtr<ChBody> bucket_bott;
 	ChSharedPtr<ChLinkEngine> drum_actuator;
 
 	////////////////staple smarticle geometry
-	//double w_smarticle 	= sizeScale * 0.0117;
-	//double l_smarticle 	= 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	//double t_smarticle 	= sizeScale * .00127;
-	//double t2_smarticle	= sizeScale * .0005;
+	//double w_smarticle;
+
+#if stapleSize
+		double w_smarticle = sizeScale * 0.0117;
+		double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+		double t_smarticle = sizeScale * .00127;
+		double t2_smarticle = sizeScale * .0005;
+	#else
+		double w_smarticle = sizeScale * 0.0117 / 1;
+		double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+		//real value
+		double t_smarticle = sizeScale * .0079 / 1;
+		double t2_smarticle = sizeScale * .0053 / 1;
+	
+	#endif
 
 	////////////////rescaled robot geometry (3.93) based on w_smarticle scaling
 	////////////////robot dim is l/w =1, w=.046 t=.031 t2=.021
-	double w_smarticle = sizeScale * 0.0117/3;
-	double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	double t_smarticle = sizeScale * .0079/3;
-	double t2_smarticle = sizeScale * .0053/3;
+	
 
 
 
@@ -210,12 +219,13 @@ ChSharedPtr<ChBody> bucket_bott;
 	int out_fps = 120;
 	const std::string out_dir = "PostProcess";
 	const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-	int numPerLayer = 5;
+	int numPerLayer = 4;
 	ChVector<> bucket_ctr = ChVector<>(0,0,0);
 	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 	//double bucket_rad = sizeScale*0.034;
 	//double bucket_rad = sizeScale*0.02;
-	double bucket_rad = sizeScale*0.022;
+	//double bucket_rad = sizeScale*0.022;
+	double bucket_rad = sizeScale*0.03;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .030);
 	std::vector<ChSharedPtr<ChBody>> bucket_bod_vec;
 
@@ -729,7 +739,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   // Modify some setting of the physical system for the simulation, if you want
 	mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR);
 	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
-	mphysicalSystem.SetIterLCPmaxItersSpeed(int(3*numLayers*numPerLayer));
+	mphysicalSystem.SetIterLCPmaxItersSpeed(50+1.1*numLayers);
   mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   mphysicalSystem.SetIterLCPwarmStarting(true);
@@ -822,8 +832,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 #else
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
 #endif
-
-
+	
 	double z;
 	double zpos;
 	int smarticleCount = mySmarticlesVec.size();
@@ -846,8 +855,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		if (bucketType == CYLINDER)
 		{
 				myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.2), //TODO for hopper no -w/2.0
-					cos(ang*i + phase)*(bucket_rad / 1.5),
-				//cos(ang*i + phase)*(bucket_rad / 2.2),
+					//cos(ang*i + phase)*(bucket_rad / 1.5),
+				cos(ang*i + phase)*(bucket_rad / 2.2),
 				zpos);
 
 				//ChVector<> myPos = bucket_ctr + ChVector<>((MyRand()-.5)*(bucket_rad / 2), //TODO for hopper no -w/2.0
@@ -886,7 +895,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180 + vibAmp, angle1*CH_C_PI / 180 + vibAmp);
 
 			mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
-			smarticle0->SetSpeed(ChVector<>(0, 0, -9.8*timeForDisp / 2.0 - w_smarticle / timeForDisp));
+			smarticle0->SetSpeed(ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2*w_smarticle / timeForDisp));
 #if irrlichtVisualization
 			application.AssetBindAll();
 			application.AssetUpdateAll();
@@ -1581,9 +1590,14 @@ double Find_Max_Z(CH_SYSTEM& mphysicalSystem) {
 		std::cout << "Error! Smarticle type is not set correctly" << std::endl;
 	}
 	double zMax = -999999999;
-	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+
+
+
+	//std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	std::vector<ChSharedPtr<ChBody> >::iterator ibody = mphysicalSystem.Get_bodylist()->begin();
 	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
-		ChBody* bodyPtr = *(myIter + i);
+		//ChBody* bodyPtr = *(myIter + i);
+		ChSharedPtr<ChBody> bodyPtr = *(ibody + i);
 		if ( strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0 ) {
 			if (zMax < bodyPtr->GetPos().z) {
 				//zMax = bodyPtr->GetPos().z;
@@ -1605,9 +1619,12 @@ double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmartic
 		std::cout << "Error! Smarticle type is not set correctly" << std::endl;
 	}
 	double zMax = -999999999;
-	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	//std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	std::vector<ChSharedPtr<ChBody> >::iterator ibody = mphysicalSystem.Get_bodylist()->begin();
+
 	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
-		ChBody* bodyPtr = *(myIter + i);
+		//ChBody* bodyPtr = *(myIter + i);
+		ChSharedPtr<ChBody> bodyPtr = *(ibody + i);
 		if (strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0) {
 			if (zMax < bodyPtr->GetPos().z) {
 				//zMax = bodyPtr->GetPos().z;
@@ -1793,9 +1810,12 @@ void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySm
 }
 // =============================================================================
 void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
-	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	//std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+	std::vector<ChSharedPtr<ChBody> >::iterator ibody = mphysicalSystem.Get_bodylist()->begin();
+
 	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
-		ChBody* bodyPtr = *(myIter + i);
+		//ChBody* bodyPtr = *(myIter + i);
+		ChSharedPtr<ChBody> bodyPtr = *(ibody + i);
 		if (bodyPtr->GetPos().z < -5.0*bucket_interior_halfDim.z) {
 			bodyPtr->SetBodyFixed(true);
 		}
@@ -2180,7 +2200,7 @@ int main(int argc, char* argv[]) {
 #else
 	InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
 #endif
-	GetLog() << "\npctActive" << pctActive<<"\n";
+	GetLog() << "\npctActive" << pctActive << "\n";
 	Smarticle::pctActive = pctActive;
 	MyBroadPhaseCallback mySmarticleBroadphaseCollisionCallback;
 	mphysicalSystem.GetCollisionSystem()->SetBroadPhaseCallback(&mySmarticleBroadphaseCollisionCallback);
@@ -2219,12 +2239,13 @@ int main(int argc, char* argv[]) {
 	ChIrrWizard::add_typical_Logo(application.GetDevice());
 	ChIrrWizard::add_typical_Sky(application.GetDevice());
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
-		core::vector3df(-.1, 0, .1),
-		core::vector3df(-.1, 0, 0));
+		core::vector3df(-.1, 0, .1)*sizeScale,
+		core::vector3df(-.1, 0, 0)*sizeScale);
+
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
-		core::vector3df(0, -.1, 0),
-		core::vector3df(0, 0, -.01));
+		core::vector3df(0, -.1, 0)*sizeScale,
+		core::vector3df(0, 0, -.01)*sizeScale);
 
 	scene::RTSCamera* camera = new scene::RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
@@ -2238,18 +2259,18 @@ int main(int argc, char* argv[]) {
 	drawGlobalCoordinateFrame(mphysicalSystem);
 
 
-  // Use this function for adding a ChIrrNodeAsset to all items
-  // If you need a finer control on which item really needs a visualization
-  // proxy in
-  // Irrlicht, just use application.AssetBind(myitem); on a per-item basis.
-  application.AssetBindAll();
-  // Use this function for 'converting' into Irrlicht meshes the assets
-  // into Irrlicht-visualizable meshes
-  application.AssetUpdateAll();
-  application.SetStepManage(true);
-  application.SetTimestep(dT);  // Arman modify
+	// Use this function for adding a ChIrrNodeAsset to all items
+	// If you need a finer control on which item really needs a visualization
+	// proxy in
+	// Irrlicht, just use application.AssetBind(myitem); on a per-item basis.
+	application.AssetBindAll();
+	// Use this function for 'converting' into Irrlicht meshes the assets
+	// into Irrlicht-visualizable meshes
+	application.AssetUpdateAll();
+	application.SetStepManage(true);
+	application.SetTimestep(dT);  // Arman modify
 
-  std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n" << std::endl;
+	std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n" << std::endl;
 	MyEventReceiver receiver(&application, &mySmarticlesVec);
 
 	// note how to add the custom event receiver to the default interface:
@@ -2268,25 +2289,25 @@ int main(int argc, char* argv[]) {
 #endif
 
 
-  int stepEnd = int(tFinal / dT);  // 1.0e6;//2.4e6;//600000;//2.4e6 * (.02 * paramsH.sizeScale) /
-  // ***************************** Simulation loop ********************************************
+	int stepEnd = int(tFinal / dT);  // 1.0e6;//2.4e6;//600000;//2.4e6 * (.02 * paramsH.sizeScale) /
+	// ***************************** Simulation loop ********************************************
 
-  ChSharedPtr<ChFunction_Const> fun1 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(0));
-  ChSharedPtr<ChFunction_Ramp> fun2 = ChSharedPtr<ChFunction_Ramp>(new ChFunction_Ramp(0,5));
-  ChSharedPtr<ChFunction_Ramp> fun3 = ChSharedPtr<ChFunction_Ramp>(new ChFunction_Ramp(0,-1));
+	ChSharedPtr<ChFunction_Const> fun1 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(0));
+	ChSharedPtr<ChFunction_Ramp> fun2 = ChSharedPtr<ChFunction_Ramp>(new ChFunction_Ramp(0, 5));
+	ChSharedPtr<ChFunction_Ramp> fun3 = ChSharedPtr<ChFunction_Ramp>(new ChFunction_Ramp(0, -1));
 
-  ChSharedPtr<ChFunction_Const> fun4 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(CH_C_PI / 2));
-  ChSharedPtr<ChFunction_Const> fun5 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(-CH_C_PI / 2));
-
-
-  //AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+	ChSharedPtr<ChFunction_Const> fun4 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(CH_C_PI / 2));
+	ChSharedPtr<ChFunction_Const> fun5 = ChSharedPtr<ChFunction_Const>(new ChFunction_Const(-CH_C_PI / 2));
 
 
-//  for (int i = 0; i < mySmarticlesVec.size(); i++) {
-//	  mySmarticlesVec[i]->SetActuatorFunction(0, fun2);
-//	  mySmarticlesVec[i]->SetActuatorFunction(1, fun1);
-//
-//  }
+	//AddParticlesLayer(mphysicalSystem, mySmarticlesVec);
+
+
+	//  for (int i = 0; i < mySmarticlesVec.size(); i++) {
+	//	  mySmarticlesVec[i]->SetActuatorFunction(0, fun2);
+	//	  mySmarticlesVec[i]->SetActuatorFunction(1, fun1);
+	//
+	//  }
 
 
 
@@ -2321,23 +2342,32 @@ int main(int argc, char* argv[]) {
 	//stick->SetCollide(true);
 	//mphysicalSystem.AddBody(stick);
 	std::vector<ChSharedPtr<ChBody>> sphereStick;
-	int sphereNum = stickLen / (t_smarticle);
+	int sphereNum = stickLen / (t_smarticle / 2);
 	for (size_t i = 0; i < sphereNum; i++)
 	{
 		ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
 		stick->SetRot(QUNIT);
 		stick->SetBodyFixed(true);
-		
+
 
 		stick->GetCollisionModel()->ClearModel();
 		stick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-		//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
+		//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
 		//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate
-		utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle/2.0, bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
+		//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle/2.0, bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
+		if (stapleSize)
+		{
+			utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 2.0, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
+		}
+		else
+		{
+			utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 4, bucket_ctr + ChVector<>(0, 0, t_smarticle / 2 * (i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
+		}
+
 		stick->SetMaterialSurface(mat_g);
 		stick->AddAsset(groundTexture);
-		stick->SetMass(.4);
-	
+		stick->SetMass(2);
+
 		stick->GetCollisionModel()->BuildModel();
 		stick->GetCollisionModel()->SetFamily(1);
 		stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
@@ -2345,7 +2375,36 @@ int main(int argc, char* argv[]) {
 		mphysicalSystem.AddBody(stick);
 		sphereStick.emplace_back(stick);
 	}
+	int hookNum;
+	hookNum = 8 - stapleSize * 4;
+	for (size_t i = 0; i < hookNum; i++)
+	{
+		ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
+		stick->SetRot(QUNIT);
+		stick->SetBodyFixed(true);
 
+		stick->GetCollisionModel()->ClearModel();
+		stick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+		//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
+		//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate]
+		if (stapleSize)
+		{utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(t_smarticle*(i + 1), 0, t_smarticle*(1 / 2.0)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(CH_C_PI, 0, 0)), true);}
+		else
+		{utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 4, bucket_ctr + ChVector<>(t_smarticle*(i + 1)/2, 0, t_smarticle*(1 / 2.0))/2, Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(CH_C_PI, 0, 0)), true);}
+
+		//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle / 2.0, bucket_ctr + ChVector<>(t2_smarticle*(i + 1),0 , t2_smarticle*(1 / 2.0)), QUNIT, true); // upper part, min_x plate
+		stick->SetMaterialSurface(mat_g);
+		stick->SetMaterialSurface(mat_g);
+		stick->AddAsset(groundTexture);
+		stick->SetMass(.4);
+
+		stick->GetCollisionModel()->BuildModel();
+		stick->GetCollisionModel()->SetFamily(1);
+		stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+		stick->SetCollide(true);
+		mphysicalSystem.AddBody(stick);
+		sphereStick.emplace_back(stick);
+	}
 
 	////////////////////////////////////////////////////////////////////
 
@@ -2357,8 +2416,8 @@ int main(int argc, char* argv[]) {
 
 
 
-
-	double timeForVerticalDisplcement = 0.02; // 1.5 for safety proximity
+	
+	double timeForVerticalDisplcement = 0.015; // 1.5 for safety proximity
 	int numGeneratedLayers = 0;
 	if (bucketType==DRUM)
 		setUpDrumActuator(mphysicalSystem);
@@ -2390,22 +2449,40 @@ int main(int argc, char* argv[]) {
 		if (t > vibrateStart && t<vibrateStart+3){
 			////if (t > vibrateStart || bucketType==HOPPER){
 			////vibrate_bucket(t);
-			
-			//for (size_t i = 0; i < bucket_bod_vec.size(); i++)
+
+			//vibrate bucket before doing lifting stick
+			//if (t < vibrateStart + .75)
 			//{
-			//	bucket_bod_vec.at(i)->SetBodyFixed(false);
-			//	vibrate_bucket(t, bucket_bod_vec.at(i));
+			//	for (size_t i = 0; i < bucket_bod_vec.size(); i++)
+			//	{
+			//		bucket_bod_vec.at(i)->SetBodyFixed(false);
+			//		vibrate_bucket(t, bucket_bod_vec.at(i));
+			//	}
+			//	bucket_bott->SetBodyFixed(false);
+			//	vibrate_bucket(t, bucket);
+			//	vibrate_bucket(t, bucket_bott);
+			//	for (size_t i = 0; i < sphereStick.size(); i++)
+			//	{
+			//		sphereStick.at(i)->SetBodyFixed(false);
+			//		vibrate_bucket(t,sphereStick.at(i));
+			//	}
 			//}
-			//bucket_bott->SetBodyFixed(false);
-			//vibrate_bucket(t, bucket);
-			//vibrate_bucket(t, bucket_bott);
-
-			for (size_t i = 0; i < sphereStick.size(); i++)
+			if (t > vibrateStart + .75)
 			{
-				sphereStick.at(i)->SetBodyFixed(false);
-				sphereStick.at(i)->SetPos_dt(ChVector<>(0, 0, .125));
-			}
 
+				//for (size_t i = 0; i < bucket_bod_vec.size(); i++)
+				//{
+				//	bucket_bod_vec.at(i)->SetBodyFixed(true);
+				//	vibrate_bucket(t, bucket_bod_vec.at(i));
+				//}
+				//bucket_bott->SetBodyFixed(true);
+				for (size_t i = 0; i < sphereStick.size(); i++)
+				{
+				
+					sphereStick.at(i)->SetBodyFixed(false);
+					sphereStick.at(i)->SetPos_dt(ChVector<>(0, 0, .125*sizeScale));
+				}
+			}
 
 		}
 
@@ -2540,12 +2617,6 @@ int main(int argc, char* argv[]) {
 	  		t2_smarticle,
 	  		collisionEnvelope,
 	  		rho_smarticle);
-
-
-
-
-
-
 
   }
 	simParams.open(simulationParams.c_str(), std::ios::app);

@@ -8,14 +8,23 @@
 %   angHigh     = highest angle smarticle is allowed to move to
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
 
+stapleSize = false;
 dt=.0005;
+sizeScale=5;
 omega = 5;
-rho = 7850.0;
+rho = 7850.0/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
-t2  = .0005;
-t   = .00127;
-w_s = .0117;
-l_s = w_s;
+if stapleSize
+    t2  = .0005*sizeScale;
+    t   = .00127*sizeScale;
+    w_s = .0117*sizeScale;
+    l_s = w_s;
+else
+    t2  = .0053/2*sizeScale;
+    t   = .0079/2*sizeScale;
+    w_s = .0117/2*sizeScale;
+    l_s = w_s;
+end
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
 torqueThresh=9.8*mass*w_s*6;%.00005;  4.6657e-04 
