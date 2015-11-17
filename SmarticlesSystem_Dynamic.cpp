@@ -160,7 +160,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	//double vibration_amp = sizeScale * 0.00055;
 	double mGamma = 2.0 * gravity;
 	double vibration_amp = mGamma / (omega_bucket*omega_bucket);
-	bool stapleSize = false;
+
 
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
@@ -180,13 +180,16 @@ ChSharedPtr<ChBody> bucket_bott;
 
 	////////////////staple smarticle geometry
 	//double w_smarticle;
-
-#if stapleSize
+	//bool stapleSize = true;
+	#if stapleSize
+		double bucket_rad = sizeScale*0.022;
 		double w_smarticle = sizeScale * 0.0117;
 		double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 		double t_smarticle = sizeScale * .00127;
 		double t2_smarticle = sizeScale * .0005;
+
 	#else
+		double bucket_rad = sizeScale*0.04;
 		double w_smarticle = sizeScale * 0.0117 / 1;
 		double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 		//real value
@@ -225,8 +228,8 @@ ChSharedPtr<ChBody> bucket_bott;
 	//double bucket_rad = sizeScale*0.034;
 	//double bucket_rad = sizeScale*0.02;
 	//double bucket_rad = sizeScale*0.022;
-	double bucket_rad = sizeScale*0.03;
-	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, .030);
+//	double bucket_rad = sizeScale*0.04;
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, bucket_rad*.5);
 	std::vector<ChSharedPtr<ChBody>> bucket_bod_vec;
 
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
@@ -739,7 +742,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   // Modify some setting of the physical system for the simulation, if you want
 	mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR);
 	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
-	mphysicalSystem.SetIterLCPmaxItersSpeed(50+1.1*numLayers);
+	mphysicalSystem.SetIterLCPmaxItersSpeed(80+1.1*numLayers);
   mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   mphysicalSystem.SetIterLCPwarmStarting(true);
@@ -2447,8 +2450,8 @@ int main(int argc, char* argv[]) {
 			}
 		}
 		if (t > vibrateStart && t<vibrateStart+3){
-			////if (t > vibrateStart || bucketType==HOPPER){
-			////vibrate_bucket(t);
+			//if (t > vibrateStart || bucketType==HOPPER){
+			//vibrate_bucket(t);
 
 			//vibrate bucket before doing lifting stick
 			//if (t < vibrateStart + .75)
@@ -2480,6 +2483,7 @@ int main(int argc, char* argv[]) {
 				{
 				
 					sphereStick.at(i)->SetBodyFixed(false);
+					sphereStick.at(i)->SetPos(ChVector<>(0, 0, sphereStick.at(i)->GetPos().z));
 					sphereStick.at(i)->SetPos_dt(ChVector<>(0, 0, .125*sizeScale));
 				}
 			}

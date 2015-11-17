@@ -20,9 +20,9 @@ if stapleSize
     w_s = .0117*sizeScale;
     l_s = w_s;
 else
-    t2  = .0053/2*sizeScale;
-    t   = .0079/2*sizeScale;
-    w_s = .0117/2*sizeScale;
+    t2  = .0053*sizeScale;
+    t   = .0079*sizeScale;
+    w_s = .0117*1.4*sizeScale;
     l_s = w_s;
 end
 volume =  t2 * t* (w_s + 2 * (l_s));
