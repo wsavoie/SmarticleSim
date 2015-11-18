@@ -676,10 +676,15 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	firstAngPair.second = angVals.y;
 	//TODO need to rewrite the below way of reading file, very ugly!
 
+	ot.push_back(angPair);
+	ot.push_back(angPair);
 	if (global.size() < 1)
 	{
+		ang1 = angPair.first;
+		ang2 = angPair.second;
 	global.push_back(angPair);
 
+	//SetAngle(ang1, ang2);
 	SetAngle(ang1, ang2);
 	//Global
 
@@ -910,16 +915,16 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	//GetLog() << "\n" << "rel1:" << rel01 << "rel2:" << rel12 << "\n";
 
 
-	if (fabs(rel01.y) > .05 || fabs(rel12.y) > .05)//if angle in x or y is > .1 radians, it is definitely broken
-	{
-		GetLog() << "angle bad break! \n";
-		armBroken = true;
-	}
-	if (fabs(relr01) > .075*r2 || fabs(relr12) > .075*r2)//if distance between markers is .025% of thickness, break!
-	{
-		GetLog() << "distance wrong break! \n";
-		armBroken = true;
-	}
+	//if (fabs(rel01.y) > .05 || fabs(rel12.y) > .05)//if angle in x or y is > .1 radians, it is definitely broken
+	//{
+	//	GetLog() << "angle bad break! \n";
+	//	armBroken = true;
+	//}
+	//if (fabs(relr01) > .075*r2 || fabs(relr12) > .075*r2)//if distance between markers is .025% of thickness, break!
+	//{
+	//	GetLog() << "distance wrong break! \n";
+	//	armBroken = true;
+	//}
 
 	//ChVector<> rel01 = link_actuator01->GetRelRotaxis();
 	//ChVector<> rel12 = link_actuator12->GetRelRotaxis();

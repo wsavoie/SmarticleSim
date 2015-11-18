@@ -15,13 +15,13 @@ omega = 5;
 rho = 7850.0/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 if stapleSize
-    t2  = .0005*sizeScale;
     t   = .00127*sizeScale;
+    t2  = .0005*sizeScale;
     w_s = .0117*sizeScale;
     l_s = w_s;
 else
-    t2  = .0053*sizeScale;
     t   = .0079*sizeScale;
+    t2  = .0053*sizeScale;
     w_s = .0117*1.4*sizeScale;
     l_s = w_s;
 end

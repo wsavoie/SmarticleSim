@@ -360,9 +360,11 @@ ChSharedPtr<ChBody> bucket_bott;
 								break;
 							}
 							
-							CurrTheta01 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).first;
-							CurrTheta12 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).second;
-				
+
+								CurrTheta01=sPtr->GetAngle1();
+								CurrTheta12 = sPtr->GetAngle2();
+								//CurrTheta01 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).first;
+								//CurrTheta12 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).second;
 								sPtr->vib.clear();
 
 								sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
