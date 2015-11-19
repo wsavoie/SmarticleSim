@@ -183,6 +183,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	////////////////staple smarticle geometry
 	//double w_smarticle;
 	//bool stapleSize = true;
+	double stickSurfaceArea = 0;
 	#if stapleSize
 		double bucket_rad = sizeScale*0.022;
 		double w_smarticle = sizeScale * 0.0117;
@@ -679,7 +680,7 @@ ChSharedPtr<ChBody> bucket_bott;
 
 					//GetLog() << "running method";
 					double a = react_forces.Length();
-					this->m_contact_force+= react_forces.Length();
+					this->m_contact_force+= react_forces.Length()/stickSurfaceArea;
 
 					//n_contact_force += react_forces.y;
 					//GetLog() << "Normal Force: " << m_contact_force << "\n";
@@ -1995,6 +1996,18 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 
 
 }
+void PrintStress(CH_SYSTEM* mphysicalSystem, int tStep)
+{
+	const static std::string stress = out_dir + "/Stress.txt";
+	std::ofstream stress_of;
+	if (tStep == 0) {
+		stress_of.open(stress.c_str());
+	}
+	else {
+		stress_of.open(stress.c_str(), std::ios::app);	}
+	stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << std::endl;
+	stress_of.close();
+}
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
 	const static std::string vol_frac = out_dir + "/volumeFraction.txt";
 	static int stepSave = 10;
@@ -2492,7 +2505,11 @@ int main(int argc, char* argv[]) {
 
 
 std::vector<ChSharedPtr<ChBody>> sphereStick;
+double mult = 4;
+double rad = 0;
 int sphereNum = stickLen / (t_smarticle);
+
+double sphereStickHeight = t_smarticle*mult/2*(sphereNum+1); //shouldnt need extra 2*rad offset because of how z is defined using i below
 for (size_t i = 0; i < sphereNum; i++)
 {
 	ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
@@ -2505,16 +2522,13 @@ for (size_t i = 0; i < sphereNum; i++)
 	//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
 	//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate
 	//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle/2.0, bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
-	double mult = 4;
-	if (stapleSize)
-	{
-		utils::AddSphereGeometry(stick.get_ptr(), t_smarticle*mult, bucket_ctr + ChVector<>(0, 0, t_smarticle*mult / 2 * (i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
-	}
-	else
-	{
-		utils::AddSphereGeometry(stick.get_ptr(), t_smarticle*mult/ 4, bucket_ctr + ChVector<>(0, 0, t_smarticle*mult / 2 * (i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
-	}
 
+	if (stapleSize)
+	{rad = t_smarticle*mult;}
+	else
+	{rad = t_smarticle*mult/4;}
+	//if you change z height between spheres, you must change sphereStickHeight above!
+	utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, t_smarticle*mult / 2 * (i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
 	stick->SetMaterialSurface(mat_g);
 	stick->AddAsset(groundTexture);
 	stick->SetMass(2);
@@ -2527,7 +2541,7 @@ for (size_t i = 0; i < sphereNum; i++)
 	mphysicalSystem.AddBody(stick);
 	sphereStick.emplace_back(stick);
 }
-
+stickSurfaceArea = CH_C_PI*rad * 2 * sphereStickHeight;
 
 
 
@@ -2601,7 +2615,7 @@ for (size_t i = 0; i < sphereNum; i++)
 				
 					sphereStick.at(i)->SetBodyFixed(false);
 					sphereStick.at(i)->SetPos(ChVector<>(0, 0, sphereStick.at(i)->GetPos().z));
-					sphereStick.at(i)->SetPos_dt(ChVector<>(0, 0, 2*sizeScale));
+					sphereStick.at(i)->SetPos_dt(ChVector<>(0, 0, .125*sizeScale));
 				}
 			}
 
@@ -2746,7 +2760,7 @@ for (size_t i = 0; i < sphereNum; i++)
 	  		rho_smarticle);
 
 
-		GetLog() << "Magnitude Stress=" << showForce(&mphysicalSystem)<< "\n";
+		PrintStress(&mphysicalSystem, tStep);
   }
 	simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "Smarticle OT: " <<	 mySmarticlesVec.at(0)->torqueThresh2 << std::endl;
