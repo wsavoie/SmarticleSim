@@ -107,6 +107,8 @@ SmarticleType smarticleType = SMART_ARMS;//SMART_U;
 BucketType bucketType = CYLINDER;
 // =============================================================================
 
+
+
 class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
   public:
     /// Callback used to report 'near enough' pairs of models.
@@ -160,14 +162,14 @@ ChSharedPtr<ChBody> bucket_bott;
 	//double vibration_amp = sizeScale * 0.00055;
 	double mGamma = 2.0 * gravity;
 	double vibration_amp = mGamma / (omega_bucket*omega_bucket);
-
+	unsigned int largeID = 10000000;
 
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .5* sizeScale;
 	double tFinal = 6;
-	double vibrateStart= 1;
+	double vibrateStart= 0.5;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -189,7 +191,7 @@ ChSharedPtr<ChBody> bucket_bott;
 		double t2_smarticle = sizeScale * .0005;
 
 	#else
-		double bucket_rad = sizeScale*0.04;
+		double bucket_rad = sizeScale*0.05;
 		double w_smarticle = sizeScale * 0.0117 / 1;
 		double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 		//real value
@@ -246,8 +248,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
 	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
-	ChSharedPtr<ChTexture> floorTexture(new ChTexture());
-
+	ChSharedPtr<ChTexture> floorTexture(new ChTexture());	
 // =============================================================================
 #if irrlichtVisualization
 	class MyEventReceiver : public IEventReceiver {
@@ -429,7 +430,16 @@ ChSharedPtr<ChBody> bucket_bott;
 						switch (bucketType)
 						{
 						case CYLINDER:
-							bucket->SetPos(ChVector<>(100, 0, 0));
+								for (size_t i = 0; i < bucket_bod_vec.size(); i++)
+								{
+									bucket_bod_vec.at(i)->SetBodyFixed(false);
+
+									bucket_bod_vec.at(i)->SetPos(ChVector<>(
+									bucket_bod_vec.at(i)->GetPos().x,
+									bucket_bod_vec.at(i)->GetPos().y,
+									bucket_bod_vec.at(i)->GetPos().z+100));
+								}
+								
 							break;
 						case HOPPER:
 							bucket_bott->SetPos(ChVector<>(100, 0, 0));
@@ -639,6 +649,61 @@ ChSharedPtr<ChBody> bucket_bott;
 	};
 	int MyEventReceiver::successfulCount = 0;
 #endif
+
+	double showForce(CH_SYSTEM *msys)
+	{
+		class ext_force :public ChReportContactCallback2{
+
+		public:
+			double n_contact_force = 0;
+			ChVector<> t_contact_force = (0, 0, 0);
+			double m_contact_force = 0;
+			virtual bool ReportContactCallback2(
+				const ChVector<>& pA,             ///< get contact pA
+				const ChVector<>& pB,             ///< get contact pB
+				const ChMatrix33<>& plane_coord,  ///< get contact plane coordsystem (A column 'X' is contact normal)
+				const double& distance,           ///< get contact distance
+				const ChVector<>& react_forces,   ///< get react.forces (if already computed). In coordsystem 'plane_coord'
+				const ChVector<>& react_torques,  ///< get react.torques, if rolling friction (if already computed).
+				ChContactable* contactobjA,  ///< get model A (note: some containers may not support it and could be zero!)
+				ChContactable* contactobjB   ///< get model B (note: some containers may not support it and could be zero!)
+				)
+			{
+				unsigned int ia = contactobjA->GetPhysicsItem()->GetIdentifier();// only reports force on bott if ia = 
+				unsigned int ib = contactobjB->GetPhysicsItem()->GetIdentifier();
+				//GetLog() << "Report Callback\n";
+
+				//normal force
+				if (ia >= largeID)
+				{
+
+					//GetLog() << "running method";
+					double a = react_forces.Length();
+					this->m_contact_force+= react_forces.Length();
+
+					//n_contact_force += react_forces.y;
+					//GetLog() << "Normal Force: " << m_contact_force << "\n";
+					//t_contact_force += Vector(react_forces.y, react_forces.x, react_forces.z); ///x(output)=y(system) y(output)=x(system)  z(output) = z(sys)
+
+					// r = -Vector(BOTT.X, BOTT.TOP_SURF, BOTT.Z) + Vector(pA.y, 0, pA.z); but since bottom is at 0,BOTT.TOP_SURF,0
+
+					//Vector r;
+					//Vector torque;
+					//r = (pA.x, pA.y, pA.z);
+					//torque.Cross(r, Vector(react_forces.x, react_forces.y, react_forces.z));
+					//r = (pA.x, pA.y, pA.z);
+					//torque.Cross(r, Vector(react_forces.x, react_forces.y, react_forces.z));
+					//t_contact_force += torque;
+				}
+
+				return true;
+			}
+
+		};
+			ext_force ef;
+			msys->GetContactContainer()->ReportAllContacts2(&ef);
+			return ef.m_contact_force;
+	}
 // =============================================================================
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
@@ -1851,7 +1916,7 @@ bool FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 			GetLog() << "\nbelow bucket\n";
 			return true;
 		}
-		if (bucketType == CYLINDER && !IsInRadial(sPtr.Get_cm(), bucket_bott->GetPos() + ChVector<>(0, 0, bucket_interior_halfDim.z), ChVector<>(bucket_rad, bucket_bott->GetPos().z, bucket_bott->GetPos().z + 2 * bucket_interior_halfDim.z))) //if outside radius
+		if (bucketType == CYLINDER && !IsInRadial(sPtr.Get_cm(), bucket_bott->GetPos() + ChVector<>(0, 0, bucket_interior_halfDim.z), ChVector<>(bucket_rad, bucket_bott->GetPos().z, bucket_bott->GetPos().z + 3 * bucket_interior_halfDim.z))) //if outside radius
 		{
 			sPtr.~Smarticle();
 			//mySmarticlesVec.erase(mySmarticlesVec.begin() + idx);
@@ -2277,9 +2342,12 @@ int main(int argc, char* argv[]) {
 
 	std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n" << std::endl;
 	MyEventReceiver receiver(&application, &mySmarticlesVec);
-
+	// scan all contact
 	// note how to add the custom event receiver to the default interface:
 	application.SetUserEventReceiver(&receiver);
+
+
+
 	receiver.drawAngle();//initialize draw angle
 	application.SetShowInfos(true);
 	//ool OnEvent(const SEvent& event) {
@@ -2346,72 +2414,119 @@ int main(int argc, char* argv[]) {
 	//stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	//stick->SetCollide(true);
 	//mphysicalSystem.AddBody(stick);
-	std::vector<ChSharedPtr<ChBody>> sphereStick;
-	int sphereNum = stickLen / (t_smarticle / 2);
-	for (size_t i = 0; i < sphereNum; i++)
+
+
+
+	//////////////////////////////////////////////////////
+	///////////////smarticle stick lift///////////////////
+	//////////////////////////////////////////////////////
+	//std::vector<ChSharedPtr<ChBody>> sphereStick;
+	//int sphereNum = stickLen / (t_smarticle / 2);
+	//for (size_t i = 0; i < sphereNum; i++)
+	//{
+	//	ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
+	//	stick->SetRot(QUNIT);
+	//	stick->SetBodyFixed(true);
+
+
+	//	stick->GetCollisionModel()->ClearModel();
+	//	stick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	//	//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
+	//	//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate
+	//	//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle/2.0, bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
+	//	if (stapleSize)
+	//	{
+	//		utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 2.0, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
+	//	}
+	//	else
+	//	{
+	//		utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 4, bucket_ctr + ChVector<>(0, 0, t_smarticle / 2 * (i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
+	//	}
+
+	//	stick->SetMaterialSurface(mat_g);
+	//	stick->AddAsset(groundTexture);
+	//	stick->SetMass(2);
+
+	//	stick->GetCollisionModel()->BuildModel();
+	//	stick->GetCollisionModel()->SetFamily(1);
+	//	stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	//	stick->SetCollide(true);
+	//	mphysicalSystem.AddBody(stick);
+	//	sphereStick.emplace_back(stick);
+	//}
+	//int hookNum;
+	//hookNum = 8 - stapleSize * 4;
+	//for (size_t i = 0; i < hookNum; i++)
+	//{
+	//	ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
+	//	stick->SetRot(QUNIT);
+	//	stick->SetBodyFixed(true);
+
+	//	stick->GetCollisionModel()->ClearModel();
+	//	stick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	//	//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
+	//	//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate]
+	//	if (stapleSize)
+	//	{utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(t_smarticle*(i + 1), 0, t_smarticle*(1 / 2.0)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(CH_C_PI, 0, 0)), true);}
+	//	else
+	//	{utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 4, bucket_ctr + ChVector<>(t_smarticle*(i + 1)/2, 0, t_smarticle*(1 / 2.0))/2, Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(CH_C_PI, 0, 0)), true);}
+
+	//	//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle / 2.0, bucket_ctr + ChVector<>(t2_smarticle*(i + 1),0 , t2_smarticle*(1 / 2.0)), QUNIT, true); // upper part, min_x plate
+	//	stick->SetMaterialSurface(mat_g);
+	//	stick->SetMaterialSurface(mat_g);
+	//	stick->AddAsset(groundTexture);
+	//	stick->SetMass(.4);
+
+	//	stick->GetCollisionModel()->BuildModel();
+	//	stick->GetCollisionModel()->SetFamily(1);
+	//	stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	//	stick->SetCollide(true);
+	//	mphysicalSystem.AddBody(stick);
+	//	sphereStick.emplace_back(stick);
+	//}
+
+	//////////////////////////////////////////////////////
+	///////////////smarticle stick end;///////////////////
+	//////////////////////////////////////////////////////
+
+
+
+std::vector<ChSharedPtr<ChBody>> sphereStick;
+int sphereNum = stickLen / (t_smarticle);
+for (size_t i = 0; i < sphereNum; i++)
+{
+	ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
+	stick->SetRot(QUNIT);
+	stick->SetBodyFixed(true);
+
+
+	stick->GetCollisionModel()->ClearModel();
+	stick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
+	//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate
+	//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle/2.0, bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
+	double mult = 4;
+	if (stapleSize)
 	{
-		ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
-		stick->SetRot(QUNIT);
-		stick->SetBodyFixed(true);
-
-
-		stick->GetCollisionModel()->ClearModel();
-		stick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-		//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
-		//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate
-		//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle/2.0, bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
-		if (stapleSize)
-		{
-			utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 2.0, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
-		}
-		else
-		{
-			utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 4, bucket_ctr + ChVector<>(0, 0, t_smarticle / 2 * (i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
-		}
-
-		stick->SetMaterialSurface(mat_g);
-		stick->AddAsset(groundTexture);
-		stick->SetMass(2);
-
-		stick->GetCollisionModel()->BuildModel();
-		stick->GetCollisionModel()->SetFamily(1);
-		stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-		stick->SetCollide(true);
-		mphysicalSystem.AddBody(stick);
-		sphereStick.emplace_back(stick);
+		utils::AddSphereGeometry(stick.get_ptr(), t_smarticle*mult, bucket_ctr + ChVector<>(0, 0, t_smarticle*mult / 2 * (i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
 	}
-	int hookNum;
-	hookNum = 8 - stapleSize * 4;
-	for (size_t i = 0; i < hookNum; i++)
+	else
 	{
-		ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
-		stick->SetRot(QUNIT);
-		stick->SetBodyFixed(true);
-
-		stick->GetCollisionModel()->ClearModel();
-		stick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-		//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
-		//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate]
-		if (stapleSize)
-		{utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(t_smarticle*(i + 1), 0, t_smarticle*(1 / 2.0)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(CH_C_PI, 0, 0)), true);}
-		else
-		{utils::AddBoxGeometry(stick.get_ptr(), t_smarticle / 4, bucket_ctr + ChVector<>(t_smarticle*(i + 1)/2, 0, t_smarticle*(1 / 2.0))/2, Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(CH_C_PI, 0, 0)), true);}
-
-		//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle / 2.0, bucket_ctr + ChVector<>(t2_smarticle*(i + 1),0 , t2_smarticle*(1 / 2.0)), QUNIT, true); // upper part, min_x plate
-		stick->SetMaterialSurface(mat_g);
-		stick->SetMaterialSurface(mat_g);
-		stick->AddAsset(groundTexture);
-		stick->SetMass(.4);
-
-		stick->GetCollisionModel()->BuildModel();
-		stick->GetCollisionModel()->SetFamily(1);
-		stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-		stick->SetCollide(true);
-		mphysicalSystem.AddBody(stick);
-		sphereStick.emplace_back(stick);
+		utils::AddSphereGeometry(stick.get_ptr(), t_smarticle*mult/ 4, bucket_ctr + ChVector<>(0, 0, t_smarticle*mult / 2 * (i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
 	}
 
-	////////////////////////////////////////////////////////////////////
+	stick->SetMaterialSurface(mat_g);
+	stick->AddAsset(groundTexture);
+	stick->SetMass(2);
+
+	stick->GetCollisionModel()->BuildModel();
+	stick->GetCollisionModel()->SetFamily(1);
+	stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	stick->GetPhysicsItem()->SetIdentifier(largeID + i);
+	stick->SetCollide(true);
+	mphysicalSystem.AddBody(stick);
+	sphereStick.emplace_back(stick);
+}
 
 
 
@@ -2486,7 +2601,7 @@ int main(int argc, char* argv[]) {
 				
 					sphereStick.at(i)->SetBodyFixed(false);
 					sphereStick.at(i)->SetPos(ChVector<>(0, 0, sphereStick.at(i)->GetPos().z));
-					sphereStick.at(i)->SetPos_dt(ChVector<>(0, 0, .125*sizeScale));
+					sphereStick.at(i)->SetPos_dt(ChVector<>(0, 0, 2*sizeScale));
 				}
 			}
 
@@ -2582,9 +2697,9 @@ int main(int argc, char* argv[]) {
 		//	break;
 
 		if (t < .5)
-			Smarticle::global_GUI_value = 1;
-		else if (t > .5 && t < 1.25)
 			Smarticle::global_GUI_value = 2;
+		else if (t > .5 && t < 1.25)
+			Smarticle::global_GUI_value = 1;
 		else if (t > 1.25 && t < 2.3)
 			Smarticle::global_GUI_value = 1;
 		else
@@ -2612,7 +2727,13 @@ int main(int argc, char* argv[]) {
 	  step_timer.stop("step time");
 		//max_z = 0;
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
+
 	  std::cout.flush();
+		//print sphereStick stress
+		double stressMag = 0;
+
+
+
 		receiver.drawSmarticleAmt(numGeneratedLayers);
 		CheckPointSmarticlesDynamic_Write(mySmarticlesVec,
 	  		tStep,
@@ -2624,6 +2745,8 @@ int main(int argc, char* argv[]) {
 	  		collisionEnvelope,
 	  		rho_smarticle);
 
+
+		GetLog() << "Magnitude Stress=" << showForce(&mphysicalSystem)<< "\n";
   }
 	simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "Smarticle OT: " <<	 mySmarticlesVec.at(0)->torqueThresh2 << std::endl;
@@ -2637,7 +2760,6 @@ int main(int argc, char* argv[]) {
   simParams.close();
   return 0;
 }
-
 
 
 double PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, Smarticle &sPtr,bool lastIdx) { //TODO make zmax proper!

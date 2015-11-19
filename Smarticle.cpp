@@ -486,9 +486,9 @@ void Smarticle::Create() {
 		double armt = r / 2;
 		double armt2 = .0022 / 2 * sizeScale;
 		l_mod = l + 2 * armt2 - jointClearance;
-		CreateArm2(0, l_mod, r, armt2, ChVector<>(-w / 2.0 - (l_mod / 2.0 - armt2)*cos(angle1), 0, -(l_mod / 2.0 - armt2)*sin(angle1)), quat0);
+		CreateArm2(0, l_mod, armt, armt2, ChVector<>(-w / 2.0 - (l_mod / 2.0 - armt2)*cos(angle1), 0, -(l_mod / 2.0 - armt2)*sin(angle1)), quat0);
 		CreateArm2(1, w,r,r2, ChVector<>(0, 0, 0));
-		CreateArm2(2, l_mod, r, armt2, ChVector<>(w / 2.0 + (l / 2.0 - armt2)*cos(angle2), 0, -((l_mod) / 2.0 - armt2)*sin(angle2)), quat2);
+		CreateArm2(2, l_mod, armt, armt2, ChVector<>(w / 2.0 + (l / 2.0 - armt2)*cos(angle2), 0, -((l_mod) / 2.0 - armt2)*sin(angle2)), quat2);
 	}
 
 	CreateActuators();
@@ -747,6 +747,7 @@ std::pair<double, double> Smarticle::populateMoveVector()
 				break;
 		}
 	}
+
 
 	//SetAngle(firstAngPair);
 	//returning first ang pair but can be set here
