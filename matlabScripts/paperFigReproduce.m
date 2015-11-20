@@ -18,6 +18,8 @@ ylabel('exp(\Delta)');
 %if t_o = 1, tt/tt_0 = tt
 gamma=[1.23 1.48 1.7 1.96 2.20 2.5];
 
+f=1/30;
+
 delta=15;
 figure(4)
 tau=log(f)+delta./gamma;

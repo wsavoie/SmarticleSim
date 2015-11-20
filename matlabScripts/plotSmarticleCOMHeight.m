@@ -24,36 +24,7 @@ plotNames = {'Smarticles','Gait','U-Shape','Straight','Tetris','Vib at \circ','V
 plotTypes = [1];
 hold on;
 
-gc =[0; find(diff(guid))];
-gc=gc+1;
-val=[guid(gc)]+1;%added value can be zero (global) and matrices are 1 started
-% sp1=[plot(time,zcom)]; %starts variable for the legend
-
-gg = [gc, val];
-ggOld = gg;
-gg= sortrows(gg,2); 
-figure(1);
-shapeLines=[]; %[time, colr, colg, colb, plotNameIdx;...]
-for i=1:size(gg,1)
-    if i~=1
-        if gg(i,2)==gg(i-1,2) %if true will mean a repeat in color on legend
-%             plot([time(gg(i,1)),time(gg(i,1))],[min(zcom),max(zcom)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)
-            shapeLines=[shapeLines; time(gg(i,1)) cell2mat(cols(gg(i,2))),gg(i,2)+1];
-        
-%             text(time(gg(i,1)),max(zcom)*1.02,plotNames((gg(i,2)+1)))
-            continue;
-        else
-            shapeLines=[shapeLines; time(gg(i,1)) cell2mat(cols(gg(i,2))),gg(i,2)+1];
-%             sp1 = [sp1 plot([time(gg(i,1)),time(gg(i,1))],[min(zcom),max(zcom)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)];
-%             text(time(gg(i,1)),max(zcom)*1.02,plotNames((gg(i,2)+1)))
-        end
-    else
-        shapeLines=[shapeLines; time(gg(i,1)) cell2mat(cols(gg(i,2))),gg(i,2)+1];
-%         sp1 = [sp1 plot([time(gg(i,1)),time(gg(i,1))],[min(zcom),max(zcom)],'color',cell2mat(cols(gg(i,2))),'LineWidth',2)];
-%         text(time(gg(i,1)),max(zcom)*1.02,plotNames((gg(i,2)+1)))
-    end
-% plotTypes=[plotTypes, (gg(i,2)+1)];
-end
+shapeLines=getShapeLines(time,guid);
 
 lineVar= zcom;
 plot(time,lineVar)
