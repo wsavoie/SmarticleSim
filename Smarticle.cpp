@@ -477,9 +477,9 @@ void Smarticle::Create() {
 	if (stapleSize)
 	{
 		l_mod = l + 2 * r2 - jointClearance;
-		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l_mod / 2.0 - r2)*cos(angle1), 0, -(l_mod / 2.0 - r2)*sin(angle1)), quat0);
+		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(angle1), 0, -(l_mod / 2.0 - r2)*sin(angle1)), quat0);
 		CreateArm(1, w, ChVector<>(0, 0, 0));
-		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0 - r2)*cos(angle2), 0, -((l_mod) / 2.0 - r2)*sin(angle2)), quat2);
+		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(angle2), 0, -(l_mod / 2.0 - r2)*sin(angle2)), quat2);
 	}
 	else
 	{
@@ -488,7 +488,7 @@ void Smarticle::Create() {
 		l_mod = l + 2 * armt2 - jointClearance;
 		CreateArm2(0, l_mod, armt, armt2, ChVector<>(-w / 2.0 - (l_mod / 2.0 - armt2)*cos(angle1), 0, -(l_mod / 2.0 - armt2)*sin(angle1)), quat0);
 		CreateArm2(1, w,r,r2, ChVector<>(0, 0, 0));
-		CreateArm2(2, l_mod, armt, armt2, ChVector<>(w / 2.0 + (l / 2.0 - armt2)*cos(angle2), 0, -((l_mod) / 2.0 - armt2)*sin(angle2)), quat2);
+		CreateArm2(2, l_mod, armt, armt2, ChVector<>(w / 2.0 + (l_mod / 2.0 - armt2)*cos(angle2), 0, -((l_mod) / 2.0 - armt2)*sin(angle2)), quat2);
 	}
 
 	CreateActuators();
