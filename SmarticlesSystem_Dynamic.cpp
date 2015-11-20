@@ -104,7 +104,7 @@ using namespace gui;
 enum SmarticleType {SMART_ARMS , SMART_U};
 enum BucketType {HOOKRAISE,STRESSSTICK,CYLINDER, BOX, HULL,RAMP,HOPPER,DRUM};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = RAMP;
+BucketType bucketType = STRESSSTICK;
 
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 // =============================================================================
@@ -171,7 +171,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .5* sizeScale;
 	double tFinal = 6;
-	double vibrateStart= 0.5;
+	double vibrateStart= 1;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -698,7 +698,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					//torque.Cross(r, Vector(react_forces.x, react_forces.y, react_forces.z));
 					//t_contact_force += torque;
 				}
-
+				
 				return true;
 			}
 
@@ -2579,7 +2579,9 @@ int main(int argc, char* argv[]) {
 		{
 			switch (bucketType)
 			{
-			case STRESSSTICK: case HOOKRAISE:
+			//case STRESSSTICK:
+			//	break;
+			case HOOKRAISE: case STRESSSTICK:
 			{
 
 				for (size_t i = 0; i < sphereStick.size(); i++)
@@ -2719,11 +2721,11 @@ int main(int argc, char* argv[]) {
 		//else
 		//	break;
 
-		if (t < .75)
+		if (t < vibrateStart-.4)
 			Smarticle::global_GUI_value = 2;
-		else if (t > .75 && t < 1.5)
+		else if (t > vibrateStart-.4 && t < vibrateStart+.25)
 			Smarticle::global_GUI_value = 1;
-		else if (t > 1.5 && t < 2.3)
+		else if (t > vibrateStart + .25 && t < vibrateStart + .55)
 			Smarticle::global_GUI_value = 1;
 		else
 			break;
