@@ -1,5 +1,6 @@
 %plot stress
-filename = 'D:\SimResults\Chrono\SmarticleU\tests\PostProcess\Stress.txt';
+filename = 'D:\SimResults\Chrono\SmarticleU\tests\plotStress\knob\PostProcess\Stress.txt';
+% filename = 'D:\SimResults\Chrono\SmarticleU\tests\PostProcess\Stress.txt';
 %stressdata
 sd=importdata(filename);
 time=sd(:,1);
@@ -24,7 +25,6 @@ plot(time,lineVar);
 plot(time,y,'LineWidth',4);
 
 
-figure(2)
 hold on;
 shapeLines=getShapeLines(time,guid);
 
@@ -34,4 +34,7 @@ for i=1:size(shapeLines,1)
     text(shapeLines(i,1),max(lineVar)*1.02,plotNames(shapeLines(i,5)))
 end
 
+xlabel('Time (s)');
+ylabel('Stress');
 figText(gcf,14);
+

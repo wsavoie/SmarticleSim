@@ -55,8 +55,9 @@ Smarticle::~Smarticle()
 	m_system->RemoveBody(arm0);
 	m_system->RemoveBody(arm1);
 	m_system->RemoveBody(arm2);
-	GetLog() << "Removing smarticle";
+	GetLog() << "Removing smarticle\n";
 }
+
 
 
 void Smarticle::Properties(
@@ -426,7 +427,7 @@ void Smarticle::CreateActuators() {
 
 	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
 	link_actuator12 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
-	
+
 	//current sim
 	//ChVector<> pR01(-w / 2.0-r2, 0, 0);
 	//ChVector<> pR12(w / 2.0+r2, 0, 0);
