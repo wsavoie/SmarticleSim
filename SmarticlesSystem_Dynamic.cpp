@@ -46,7 +46,6 @@
 #include <memory>
 
 
-
 #if irrlichtVisualization
 
 #ifdef CHRONO_OPENGL
@@ -102,9 +101,9 @@ using namespace gui;
 // Use the namespace of Chrono
 
 enum SmarticleType {SMART_ARMS , SMART_U};
-enum BucketType {HOOKRAISE,STRESSSTICK,CYLINDER, BOX, HULL,RAMP,HOPPER,DRUM};
+enum BucketType {KNOBCYLINDER,HOOKRAISE,STRESSSTICK,CYLINDER, BOX, HULL,RAMP,HOPPER,DRUM};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = STRESSSTICK;
+BucketType bucketType = KNOBCYLINDER;
 
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 // =============================================================================
@@ -171,7 +170,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .5* sizeScale;
 	double tFinal = 6;
-	double vibrateStart= 1;
+	double vibrateStart= 2;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -250,6 +249,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	double angle2 = 90;
 	double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
+	ChSharedPtr<ChTexture> sphereTexture(new ChTexture());
 	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
 	ChSharedPtr<ChTexture> floorTexture(new ChTexture());	
 // =============================================================================
@@ -432,7 +432,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					{
 						switch (bucketType)
 						{
-						case CYLINDER: case STRESSSTICK: case HOOKRAISE:
+						case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
 								for (size_t i = 0; i < bucket_bod_vec.size(); i++)
 								{
 									bucket_bod_vec.at(i)->SetBodyFixed(false);
@@ -661,6 +661,7 @@ ChSharedPtr<ChBody> bucket_bott;
 			double n_contact_force = 0;
 			ChVector<> t_contact_force = (0, 0, 0);
 			double m_contact_force = 0;
+			double maxHeight = 0;
 			virtual bool ReportContactCallback2(
 				const ChVector<>& pA,             ///< get contact pA
 				const ChVector<>& pB,             ///< get contact pB
@@ -672,7 +673,7 @@ ChSharedPtr<ChBody> bucket_bott;
 				ChContactable* contactobjB   ///< get model B (note: some containers may not support it and could be zero!)
 				)
 			{
-				unsigned int ia = contactobjA->GetPhysicsItem()->GetIdentifier();// only reports force on bott if ia = 
+				unsigned int ia = contactobjA->GetPhysicsItem()->GetIdentifier();// reports force BY ib ON ia.
 				unsigned int ib = contactobjB->GetPhysicsItem()->GetIdentifier();
 				//GetLog() << "Report Callback\n";
 
@@ -681,8 +682,9 @@ ChSharedPtr<ChBody> bucket_bott;
 				{
 
 					//GetLog() << "running method";
-					double a = react_forces.Length();
-					this->m_contact_force+= react_forces.Length()/stickSurfaceArea;
+					//double a = react_forces.Length();
+					//this->m_contact_force+= react_forces.Length()/stickSurfaceArea;
+					this->m_contact_force += react_forces.Length();
 
 					//n_contact_force += react_forces.y;
 					//GetLog() << "Normal Force: " << m_contact_force << "\n";
@@ -705,7 +707,7 @@ ChSharedPtr<ChBody> bucket_bott;
 		};
 			ext_force ef;
 			msys->GetContactContainer()->ReportAllContacts2(&ef);
-			return ef.m_contact_force;
+			return ef.m_contact_force; //TODO return max height too
 	}
 // =============================================================================
 void MySeed(double s = time(NULL)) { srand(s); }
@@ -854,7 +856,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2.0),
 				zpos);
 			break;
-		case CYLINDER: case STRESSSTICK: case HOOKRAISE:
+		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
 			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.2), //TODO for hopper no -w/2.0
 				//cos(ang*i + phase)*(bucket_rad / 1.5),
 				cos(ang*i + phase)*(bucket_rad / 2.2),
@@ -1335,7 +1337,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 			bucket->AddAsset(bucketTexture);
 			break;
 
-		case CYLINDER: case STRESSSTICK: case HOOKRAISE:
+		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
 			CreateBucket_bott(mphysicalSystem);
 			bucket = create_cylinder_from_blocks2(25, 1, true, &mphysicalSystem, mat_g);
 			break;
@@ -1556,111 +1558,84 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 	}
 }
 // =============================================================================
-//true if removed, false if not fixed
-bool FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec, Smarticle &sPtr, int tstep, int idx) //TODO remake method
+
+void FixRotation(CH_SYSTEM& mphysicalSystem, Smarticle* sPtr) //reduces rotation speed by half 
 {
-	//recycle smarticles if bucket or hopper
-	if (bucketType == HOPPER && bucket_exist == false) //if hopper, put smarticles back inside after reaching below hopper if bucket_bott still exists delete
+	if (sPtr->GetArm(0)->GetRot_dt().GetVector().Length2() > 10000)//added this because small arms can start to spin uncontrollably
 	{
-		recycleSmarticles(mphysicalSystem, sPtr);
-		return false;
+		sPtr->GetArm(0)->SetRot_dt(sPtr->GetArm(0)->GetRot() / 2);
+		sPtr->GetArm(1)->SetRot_dt(sPtr->GetArm(1)->GetRot() / 2);
+		sPtr->GetArm(2)->SetRot_dt(sPtr->GetArm(2)->GetRot() / 2);
 	}
-	if (sPtr.armBroken)
-	{
-		sPtr.~Smarticle();
-		mySmarticlesVec.erase(mySmarticlesVec.begin()+idx);
-		GetLog() << "\narm broken removing smarticle\n";
-		return true;
-	}
-	if (bucketType != HOPPER)
-	{
-		if (sPtr.GetArm(1)->GetPos().z < -3.0*bucket_interior_halfDim.z) //if far below bucket
-		{
-			sPtr.~Smarticle();
-			mySmarticlesVec.erase(mySmarticlesVec.begin() + idx);
-			GetLog() << "\nbelow bucket\n";
-			return true;
-		}
-		if ((bucketType == CYLINDER || bucketType==STRESSSTICK || bucketType==HOOKRAISE) && !IsInRadial(sPtr.Get_cm(), bucket_bott->GetPos() + ChVector<>(0, 0, bucket_interior_halfDim.z), ChVector<>(bucket_rad, bucket_bott->GetPos().z, bucket_bott->GetPos().z + 3 * bucket_interior_halfDim.z))) //if outside radius
-		{
-			sPtr.~Smarticle();
-			//mySmarticlesVec.erase(mySmarticlesVec.begin() + idx);
-			GetLog() << "\noutside radius removing bucketType==CYLINDER || STRESSSTICK!\n";
-			return true;
-		}
-	}
-	else //when does this happen?
-	{
+}
+void EraseSmarticle(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*>::iterator& myIter, Smarticle& sPtr, std::vector<Smarticle*> &mySmarticlesVec)
+{
+	sPtr.~Smarticle();
+	myIter = mySmarticlesVec.erase(myIter); 
 
-		if (!IsInRadial(sPtr.Get_cm(), bucket_bott->GetPos(), ChVector<>(2 * bucket_rad, -4.0*bucket_interior_halfDim.z, 4.0*bucket_interior_halfDim.z)))
-		{
-			sPtr.~Smarticle();
-			mySmarticlesVec.erase(mySmarticlesVec.begin() + idx);
-			GetLog() << "\noutside radius else\n";
-			return true;
-		}
-	}
-	return false;
-
+	//sPtr->~Smarticle();
+	//myIter = mySmarticlesVec.erase(myIter);
 }
 void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec, double tstep) { ///remove all traces of smarticle from system //TODO REMAKE METHOD
-	if (bucketType == HOPPER && bucket_exist==false) //if hopper, put smarticles back inside after reaching below hopper if bucket_bott still exists delete
+	if (bucketType == HOPPER && bucket_exist == false) //if hopper, put smarticles back inside after reaching below hopper if bucket_bott still exists delete
 	{
-		recycleSmarticles(mphysicalSystem,mySmarticlesVec);
+		recycleSmarticles(mphysicalSystem, mySmarticlesVec);
 	}
 
 	std::vector<Smarticle*>::iterator myIter;
-	//for(myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end(); ++myIter)
-		for (myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end();)
+	for (myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end();)
 	{
 		Smarticle* sPtr = *(myIter);
 		if (sPtr->armBroken)
 		{
-			sPtr->~Smarticle();
-			myIter = mySmarticlesVec.erase(myIter);
-			GetLog() << "\narm broken removing smarticle\n";
+			EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
+			GetLog() << "\nArm broken removing smarticle \n";
 			continue;
 		}
-		if (sPtr->GetArm(0)->GetRot_dt().GetVector().Length2() > 10000)
-		{
-			sPtr->GetArm(0)->SetRot_dt(sPtr->GetArm(0)->GetRot() / 2); //added this because small arms can start to spin uncontrollably
-			sPtr->GetArm(1)->SetRot_dt(sPtr->GetArm(1)->GetRot() / 2);
-			sPtr->GetArm(2)->SetRot_dt(sPtr->GetArm(2)->GetRot() / 2);
-		}
+		FixRotation(mphysicalSystem, sPtr);
+
 		if (bucketType != HOPPER)
 		{
 			if (sPtr->GetArm(1)->GetPos().z < -3.0*bucket_interior_halfDim.z)
 			{
-				sPtr->~Smarticle();
-				myIter = mySmarticlesVec.erase(myIter);
+				EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
+				GetLog() << "\nRemoving Smarticle far below container \n";
 				continue;
 			}
-			if ((bucketType == CYLINDER || bucketType==STRESSSTICK|| bucketType==HOOKRAISE)&& !IsInRadial(sPtr->Get_cm(), bucket_bott->GetPos() + ChVector<>(0, 0, bucket_interior_halfDim.z), ChVector<>(bucket_rad, bucket_bott->GetPos().z, bucket_bott->GetPos().z + 2 * bucket_interior_halfDim.z)))
-			{
-				sPtr->~Smarticle();
-				GetLog() << "not in radial buckettype=CYLINDER\n";
-				myIter = mySmarticlesVec.erase(myIter);
-				continue;
-			}
-			 ++myIter;
 		}
-		else
-		{
 
-			if (!IsInRadial(sPtr->GetArm(1)->GetPos(), bucket->GetPos(), ChVector<>(2*bucket_rad, -4.0*bucket_interior_halfDim.z, 4.0*bucket_interior_halfDim.z)))
+		switch (bucketType)
+		{
+		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
+			if (!IsInRadial(sPtr->Get_cm(), bucket_bott->GetPos() + ChVector<>(0, 0, bucket_interior_halfDim.z), ChVector<>(bucket_rad, bucket_bott->GetPos().z, bucket_bott->GetPos().z + 2 * bucket_interior_halfDim.z)))
 			{
-				sPtr->~Smarticle();
-				GetLog() << "not in radial buckettype=else\n";
-				myIter = mySmarticlesVec.erase(myIter);
+				EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
+				GetLog() << "\nRemoving smarticle outside system \n";
+				continue;
+			}
+			++myIter;
+			break;
+
+
+		case HOPPER:
+			if (!IsInRadial(sPtr->GetArm(1)->GetPos(), bucket->GetPos(), ChVector<>(2 * bucket_rad, -4.0*bucket_interior_halfDim.z, 4.0*bucket_interior_halfDim.z)))
+			{
+				EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
+				GetLog() << "\nRemoving smarticle outside hopper \n";
+
 			}
 			else{ ++myIter; }
+			break;
 
+		default:
+			++myIter;
+			break;
 		}
 	}
 
 
 }
-void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep)
+void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad)
 {
 	const static std::string stress = out_dir + "/Stress.txt";
 	std::ofstream stress_of;
@@ -1669,8 +1644,8 @@ void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep)
 	}
 	else {
 		stress_of.open(stress.c_str(), std::ios::app);	}
-	
-		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) <<","<< Smarticle::global_GUI_value << std::endl;
+	//force/(surface area)
+		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem)/(CH_C_PI*2*cylrad*zmax) <<","<< Smarticle::global_GUI_value << std::endl;
 	stress_of.close();
 }
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
@@ -1734,12 +1709,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 
 		volumeFraction = totalVolume2 / (4.0 * bucket_interior_halfDim.x * bucket_interior_halfDim.y * (zMax - bucketMin.z));
 		break;
-	case CYLINDER: case STRESSSTICK: case HOOKRAISE:
-		//if (a)
-		//	mphysicalSystem.RemoveBody(grid);			//uncomment to visualize vol frac boxes
-		//grid = ChSharedPtr<ChBody>(new ChBody); //uncomment to visualize vol frac boxes
-		//grid->RecomputeCollisionModel();				//uncomment to visualize vol frac boxes
-		//grid->GetCollisionModel()->ClearModel();//uncomment to visualize vol frac boxes
+	case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 			Smarticle* sPtr = mySmarticlesVec[i];
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
@@ -1769,9 +1739,9 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	default:
 		break;
 	}
-
 	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << meanOT<< ", " << Smarticle::global_GUI_value << std::endl;
 	vol_frac_of.close();
+	return;
 }
 // =============================================================================
 //void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
@@ -1793,7 +1763,7 @@ void vibrate_bucket(double t) {
 		bucket->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
 		bucket->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
 		bucket->SetRot(QUNIT);
-	if (bucketType == CYLINDER || bucketType==STRESSSTICK|| bucketType==HOOKRAISE)
+		if (bucketType == CYLINDER || bucketType == STRESSSTICK || bucketType == HOOKRAISE || bucketType==KNOBCYLINDER)
 	{
 		bucket_bott->SetPos(ChVector<>(0, 0, x_bucket));
 		bucket_bott->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
@@ -1892,7 +1862,7 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 	}
-
+	sphereTexture->SetTextureFilename(GetChronoDataFile("spheretexture.png"));
 	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	simParams.open(simulationParams.c_str());
 	simParams << "Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
@@ -1932,8 +1902,6 @@ int main(int argc, char* argv[]) {
 	gl_window.SetRenderMode(opengl::WIREFRAME);
 
 	// Uncomment the following two lines for the OpenGL manager to automatically
-	// run the simulation in an infinite loop.
-	// gl_window.StartDrawLoop(time_step);
 	// return 0;
 #endif
 
@@ -2035,7 +2003,7 @@ int main(int argc, char* argv[]) {
 				rad = t_smarticle*mult / 4.0;
 			}
 			//if you change z height between spheres, you must change sphereStickHeight above!
-			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, t_smarticle*mult / 2 * (i + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
+			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, sphereStickHeight / sphereNum * (i)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
 			stick->SetMaterialSurface(mat_g);
 			stick->AddAsset(groundTexture);
 			stick->SetMass(2);
@@ -2087,6 +2055,51 @@ int main(int argc, char* argv[]) {
 				sphereStick.emplace_back(stick);
 			}
 		}
+		//if (bucketType == KNOBCYLINDER)
+		//{
+		//	unsigned int kpr = 8;//knobs per row
+		//	unsigned int kpz = 10; //knob per z
+		//	double knobRad = t2_smarticle;
+		//	double ang = 2 * CH_C_PI / kpr;
+		//	double hp = (sphereStickHeight - 2 * rad) / kpz;
+		//	for (size_t row = 0; row < kpr; row++)
+		//	{
+		//		for (size_t col = 0; col < kpz; col++)
+		//		{
+		//			ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
+		//			stick->SetRot(QUNIT);
+		//			stick->SetBodyFixed(true);
+		//			stick->GetCollisionModel()->ClearModel();
+		//			stick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+		//			ChCoordsys<> a;
+		//			//a.pos= ChVector<>(0,0,hp*row + rad);
+		//			//a.rot= QUNIT;
+		//			//ChFrame<> b;
+		//			//stick->fra
+		//			//stick->SetCoord(a);
+		//			if (stapleSize)
+		//			{
+		//				utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle, bucket_ctr + ChVector<>(rad*cos(col*ang), rad*sin(col*ang), hp*row+rad), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(CH_C_PI, 0, 0)), true);
+		//			}
+		//			else
+		//			{
+		//				utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle, bucket_ctr + ChVector<>(rad*cos(col*ang), rad*sin(col*ang), hp*row + rad), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(CH_C_PI, 0, 0)), true);
+		//			}
+
+		//			stick->SetMaterialSurface(mat_g);
+		//			stick->SetMaterialSurface(mat_g);
+		//			stick->AddAsset(sphereTexture);
+		//			stick->SetMass(.4);
+
+		//			stick->GetCollisionModel()->BuildModel();
+		//			stick->GetCollisionModel()->SetFamily(1);
+		//			stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+		//			stick->SetCollide(true);
+		//			mphysicalSystem.AddBody(stick);
+		//			sphereStick.emplace_back(stick);
+		//		}
+		//	}
+		//}
 		break;
 	}
 
@@ -2094,6 +2107,104 @@ int main(int argc, char* argv[]) {
 	{
 		setUpDrumActuator(mphysicalSystem);
 		break;
+	}
+	case KNOBCYLINDER:
+	{
+
+		ChSharedPtr<ChBody> truss = ChSharedPtr<ChBody>(new ChBody);
+		truss->SetBodyFixed(true);
+		truss->GetCollisionModel()->ClearModel();
+		utils::AddCylinderGeometry(truss.get_ptr(), t2_smarticle, bucket_interior_halfDim.z*1, bucket_ctr+ChVector<>(0,0,bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(CH_C_PI/2.0,0,0)), true);
+		truss->GetCollisionModel()->BuildModel();
+		truss->AddAsset(sphereTexture);
+		truss->SetCollide(false);
+		mphysicalSystem.AddBody(truss);
+
+
+		double mult = 4.0;
+
+		double stickLen = bucket_interior_halfDim.z*1.5;
+		int sphereNum = stickLen / (t_smarticle);
+
+		//double sphereStickHeight = t_smarticle*mult / 2.0 * (sphereNum + 1); //shouldnt need extra 2*rad offset because of how z is defined using i below
+		double sphereStickHeight = bucket_interior_halfDim.z; //shouldnt need extra 2*rad offset because of how z is defined using i below
+		
+		knobstick->GetCollisionModel()->ClearModel();
+		knobstick->SetRot(QUNIT);
+		knobstick->SetBodyFixed(true);
+		knobstick->SetMaterialSurface(mat_g);
+		knobstick->AddAsset(groundTexture);
+		knobstick->SetMass(1);
+		for (size_t i = 0; i < sphereNum; i++)
+		{
+			knobstick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+			//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
+			//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate
+			//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle/2.0, bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
+			if (stapleSize)
+			{
+				rad = t_smarticle*mult;
+			}
+			else
+			{
+				rad = t_smarticle*mult / 4.0;
+			}
+			//if you change z height between spheres, you must change sphereStickHeight above!
+			utils::AddSphereGeometry(knobstick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, sphereStickHeight / sphereNum * (i)), QUNIT, true);
+			sphereStick.emplace_back(knobstick);
+		}
+			unsigned int kpr = 8;//knobs per row
+			unsigned int kpz = 10; //knob per z
+			double knobRad = t2_smarticle;
+			double ang = 2 * CH_C_PI / kpr;
+			double hp = (sphereStickHeight - 2 * rad) / kpz;//height between rows
+			double pOffset = CH_C_PI/kpr; //phase offset
+			for (size_t row = 0; row < kpr; row++)
+			{
+				for (size_t col = 0; col < kpz; col++)
+				{
+					//ChCoordsys<> a;
+					//a.pos= ChVector<>(0,0,hp*row + rad);
+					//a.rot= QUNIT;
+					//ChFrame<> b;
+					//stick->fra
+					//stick->SetCoord(a);
+					if (stapleSize)
+					{
+						utils::AddSphereGeometry(knobstick.get_ptr(), t2_smarticle, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*row + rad), QUNIT, true);
+					}
+					else
+					{
+						utils::AddSphereGeometry(knobstick.get_ptr(), t2_smarticle, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*row + rad), QUNIT, true);
+					}
+					sphereStick.emplace_back(knobstick);
+				}
+			}
+
+		knobstick->GetCollisionModel()->BuildModel();
+		knobstick->SetCollide(true);
+		knobstick->GetCollisionModel()->SetFamily(1);
+		knobstick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+		knobstick->GetPhysicsItem()->SetIdentifier(largeID + 1);
+		mphysicalSystem.AddBody(knobstick);
+	
+
+		stickSurfaceArea = CH_C_PI*rad * 2 * sphereStickHeight 
+			+ kpz*kpr * 4 * CH_C_PI*(t2_smarticle / 2)*(t2_smarticle / 2);//add surface area of all knobs (hemispheres) on side of rod
+		
+		//ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
+		link_engine->Initialize(knobstick, truss,
+			ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
+		link_engine->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_LOCK); // also works as revolute support
+		link_engine->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+		link_engine->Set_rot_funct(knobcylinderfunc);
+		link_engine->SetDisabled(true);
+		mphysicalSystem.AddLink(link_engine);
+
+
+		
+		break;
+
 	}
 		default:
 			break;
@@ -2112,9 +2223,12 @@ int main(int argc, char* argv[]) {
 	}
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	Smarticle::global_GUI_value = 1;
-
+	//START OF LOOP 
 	for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 		double t = mphysicalSystem.GetChTime();
+		
+		//GetLog() << "****\n" << "knobcylinderfunc:" << knobcylinderfunc->Get_y_dx(t) << "\n****\n"<< "link:"<<link_engine->Get_spe_funct()->Get_y_dx(link_engine->GetChTime())<<"\n****\n";
+		//GetLog() << "****\n" << "knobcylinderfunc:" << knobcylinderfunc->Get_y_dx(t) << "\n****\n" << "link:" << link_engine->Get_mot_rot_dtdt()<< "\n****\n";
 		if (!read_from_file)
 		{
 			if ((fmod(t, timeForVerticalDisplcement) < dT) &&
@@ -2180,9 +2294,37 @@ int main(int argc, char* argv[]) {
 
 				//}
 
-
 				break;
 			}
+			case KNOBCYLINDER:
+			{
+				//for (size_t i = 0; i < sphereStick.size(); i++)
+				//{
+				//	double phase = -omega_bucket*vibrateStart;
+				//	double x_bucket = vibration_amp*sin(omega_bucket * t + phase);
+				//	double xDot_bucket = vibration_amp*omega_bucket*cos(omega_bucket * t + phase);
+				//	double xDDot_bucket = vibration_amp*omega_bucket*omega_bucket*-1 * sin(omega_bucket * t + phase);
+				//	sphereStick.at(i)->SetBodyFixed(false);
+				//	//if (sphereStick.at(i)->GetPhysicsItem()->GetIdentifier() //TODO create coordinate system and rotate around coordinate system! look up tutorials
+				//
+				//	//a.rot = Angle_to_Quat(ANGLESET_RXYZ, (0, 0, CH_C_PI / 4));
+				//	//a.pos = ChVector<>(0, 0, 0);
+				//	//sphereStick.at(i)->SetCoord_dt(a);
+
+				//	//sphereStick.at(i)->SetRot_dtdt(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, xDDot_bucket)));
+				//	//sphereStick.at(i)->SetRot_dt(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, xDot_bucket)));
+				//	//sphereStick.at(i)->SetRot_dtdt(Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(0,0,xDDot_bucket)));
+					
+				//}
+				if (link_engine->IsDisabled())
+				{
+					knobstick->SetBodyFixed(false);
+					link_engine->SetDisabled(false);
+				}
+					
+				break;
+			}
+
 			case CYLINDER:
 			{
 				//vibrate cylinder
@@ -2269,33 +2411,30 @@ int main(int argc, char* argv[]) {
 #endif
 #endif
 
-		//if (t < .75)
-		//	Smarticle::global_GUI_value = 1;
-		//else if (t > .75 && t < 1.5)
+		//if (t < vibrateStart-.4)
 		//	Smarticle::global_GUI_value = 2;
-		//else if (t > 1.5 && t < 2.25)
+		//else if (t > vibrateStart-.4 && t < vibrateStart+.25)
 		//	Smarticle::global_GUI_value = 1;
-		//else if (t > 2.25 && t < 3.0)
-		//	Smarticle::global_GUI_value = 2;
-		//else if (t > 3.0 &&t < 3.75)
+		//else if (t > vibrateStart + .25 && t < vibrateStart + 4)
 		//	Smarticle::global_GUI_value = 1;
 		//else
 		//	break;
 
-		if (t < vibrateStart-.4)
+		if (t < .5)
 			Smarticle::global_GUI_value = 2;
-		else if (t > vibrateStart-.4 && t < vibrateStart+.25)
+		else if (t > .5 && t < 1)
 			Smarticle::global_GUI_value = 1;
-		else if (t > vibrateStart + .25 && t < vibrateStart + .55)
+		else if (t > 1 && t < 2)
 			Smarticle::global_GUI_value = 1;
 		else
 			break;
 
 		receiver.drawSuccessful();
 
-		if (bucketType == STRESSSTICK)
+		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER)
 		{
-			PrintStress(&mphysicalSystem, tStep);
+			double zmax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
+			PrintStress(&mphysicalSystem, tStep, zmax,rad);
 		}
 		
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
@@ -2303,7 +2442,7 @@ int main(int argc, char* argv[]) {
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
 	  step_timer.stop("step time");
-		//max_z = 0;
+		
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
 
 	  std::cout.flush();
@@ -2335,53 +2474,4 @@ int main(int argc, char* argv[]) {
 	simParams << "completed"<<std::endl;
   simParams.close();
   return 0;
-}
-
-
-double PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, Smarticle &sPtr,bool lastIdx) { //TODO make zmax proper!
-	const static std::string vol_frac = out_dir + "/volumeFraction.txt";
-	static int stepSave = 10;
-	static double zCom = 0;
-	static double meanOT = 0;
-	static double zMax = 0;
-	static double totalVolume2 = 0;
-	static int countInside2 = 0;
-	static double volumeFraction = 0;
-	ChVector<> bucketMin = bucket_bott->GetPos();
-
-
-
-	// *** remember, 2 * bucket_half_thick is needed since bucket is initialized inclusive. the half dims are extended 2*bucket_half_thick from each side
-
-	ChVector<> bucketCtr = bucketMin + ChVector<>(0, 0, bucket_interior_halfDim.z);
-
-	if (bucketType == CYLINDER)
-	{
-			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
-			if (IsInRadial(sPtr.Get_cm(), bucketCtr, ChVector<>(bucket_rad, bucketMin.z, bucketMin.z + 2.0*bucket_interior_halfDim.z))) {
-				countInside2++;
-				totalVolume2 += sPtr.GetVolume();
-				zCom += sPtr.Get_cm().z + bucketMin.z;
-				meanOT += sPtr.GetReactTorqueLen01() + sPtr.GetReactTorqueLen12();
-				zMax = std::max(zMax, sPtr.GetArm(1)->GetPos().z);
-			}
-	}
-
-	if (lastIdx&& tStep % stepSave == 0)
-	{
-
-		std::ofstream vol_frac_of;
-		if (tStep == 0) {
-			vol_frac_of.open(vol_frac.c_str());
-		}
-		else {
-			vol_frac_of.open(vol_frac.c_str(), std::ios::app);
-		}
-		volumeFraction = totalVolume2 / (CH_C_PI * bucket_rad * bucket_rad * 2.0 * bucket_interior_halfDim.z);
-		zCom = zCom / countInside2;
-		meanOT = meanOT / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
-		vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zCom << ", " << meanOT << ", " << Smarticle::global_GUI_value << std::endl;
-		vol_frac_of.close();
-	}
-	return zMax;
 }
