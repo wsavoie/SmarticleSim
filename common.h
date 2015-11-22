@@ -356,3 +356,83 @@ extern double sizeScale;
 //	sPtr.MoveLoop2(Smarticle::global_GUI_value);
 //}
 ///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+//void drawOTArms(Smarticle &sPtr)
+//{
+//	if (sPtr.GetArm0OT())
+//	{
+//		sPtr.GetArm(0)->AddAsset(Smarticle::mtextureOT);
+//	}
+//	else
+//	{
+//		sPtr.GetArm(0)->AddAsset(Smarticle::mtextureArm);
+//	}
+//	if (sPtr.GetArm2OT())
+//	{
+//		sPtr.GetArm(2)->AddAsset(Smarticle::mtextureOT);
+//	}
+//	else
+//	{
+//		sPtr.GetArm(2)->AddAsset(Smarticle::mtextureArm);
+//	}
+
+//	app->AssetBind(sPtr.GetArm(0));
+//	app->AssetBind(sPtr.GetArm(2));
+//	app->AssetUpdate(sPtr.GetArm(0));
+//	app->AssetUpdate(sPtr.GetArm(2));
+//}
+//void drawOTArms()
+//{
+//	for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
+//	{
+//		Smarticle* sPtr = sv->at(i);
+
+//		if (sPtr->GetArm0OT())
+//		{
+//			sPtr->GetArm(0)->AddAsset(Smarticle::mtextureOT);
+//		}
+//		else
+//		{
+//			sPtr->GetArm(0)->AddAsset(Smarticle::mtextureArm);
+//		}
+//		if (sPtr->GetArm2OT())
+//		{
+//			sPtr->GetArm(2)->AddAsset(Smarticle::mtextureOT);
+//		}
+//		else
+//		{
+//			sPtr->GetArm(2)->AddAsset(Smarticle::mtextureArm);
+//		}
+
+//		app->AssetBind(sPtr->GetArm(0));
+//		app->AssetBind(sPtr->GetArm(2));
+//		app->AssetUpdate(sPtr->GetArm(0));
+//		app->AssetUpdate(sPtr->GetArm(2));
+//	}
+//}
+
+
+// double Find_Z_Region_Heights(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec)
+// {
+// 	double sqSize = w_smarticle/2; // size of squares in grid
+// 	int rowSize = ceil(bucket_rad*2/sqSize);
+// 	static std::vector<double> zHeights(rowSize*rowSize);
+// 	double zmax = 0;
+// 	for (size_t i = 0; i < mySmarticlesVec.size(); i++)
+// 	{
+// 		Smarticle* sPtr = mySmarticlesVec[i];
+// 		zCom += sPtr->Get_cm().z-bucketMin.z;
+//
+// 	//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
+// 		ChVector<> pos = sPtr->Get_cm() - ChVector<>(0,0,bucket->GetPos());
+// 		int xpos = int(pos.x/rowSize);
+// 		int ypos = int(pos.y/rowSize);
+// 		int vecPos = rowSize*xpos+y;
+// 		zHeights[vecPos]=pos.z;
+// 	}
+// 	for (size_t i = 0; i < zHeights.size(); i++)
+// 	{
+// 		zmax= zmax+zHeights.at(i);
+// 	}
+// }
+///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
