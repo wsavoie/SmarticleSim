@@ -145,7 +145,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .5* sizeScale;
 	double tFinal = 6;
-	double vibrateStart= 2;
+	double vibrateStart= 1;
 
 	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -314,7 +314,7 @@ ChSharedPtr<ChBody> bucket_bott;
 
 
 
-							switch (currMoveType) //TODO fix this and put this in a function inside smarticle class
+							switch (currMoveType)
 							{
 							case 0:
 								v = &sPtr->global;
@@ -359,7 +359,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					break;
 
 				case irr::KEY_KEY_T:
-					if (Smarticle::global_GUI_value != 5)//TODO create a boolean and then call a method later which performs this so we don't have to run through smarticle vec here!
+					if (Smarticle::global_GUI_value != 5)
 					{
 						std::pair<double, double> angPair;
 						double ang1;
@@ -770,9 +770,14 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				zpos);
 			break;
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
-			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.2), //TODO for hopper no -w/2.0
+			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.2), 
 				//cos(ang*i + phase)*(bucket_rad / 1.5),
 				cos(ang*i + phase)*(bucket_rad / 2.2),
+				zpos);
+			break;
+		case HOPPER:
+			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand()),
+				cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand()),
 				zpos);
 			break;
 		default:
@@ -915,7 +920,7 @@ ChSharedPtr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* 
 
 	return drum;
 }
-ChSharedPtr<ChBody> create_complex_convex_hull(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat, double numBoxes) //TODO finish this method, currently not being used
+ChSharedPtr<ChBody> create_complex_convex_hull(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat, double numBoxes)
 {
 	ChSharedPtr<ChBody> convexShape;
 	if (USE_PARALLEL) { convexShape = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel)); }
@@ -1535,7 +1540,7 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 
 
 }
-void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad)
+void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad) //TODO include knobs in calculation
 {
 	const static std::string stress = out_dir + "/Stress.txt";
 	std::ofstream stress_of;
@@ -1643,16 +1648,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	vol_frac_of.close();
 	return;
 }
-// =============================================================================
-//void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
-//	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
-//	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
-//		(*myIter)->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-//		myIter++;
-//	}
-//
-//}
-// =============================================================================
+
 // move bucket
 void vibrate_bucket(double t) {
 		double phase = -omega_bucket*vibrateStart;
@@ -1717,6 +1713,28 @@ void UpdateSmarticles(
 	}
 }
 // =============================================================================
+bool SetGait(double time)
+{
+	//if (t < vibrateStart-.4)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (t > vibrateStart-.4 && t < vibrateStart+.25)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (t > vibrateStart + .25 && t < vibrateStart + 4)
+	//	Smarticle::global_GUI_value = 1;
+	//else
+	//	break;
+
+	if (time < .5)
+		Smarticle::global_GUI_value = 2;
+	else if (time > .5 && time < 1)
+		Smarticle::global_GUI_value = 1;
+	else if (time > 1 && time < 3)
+		Smarticle::global_GUI_value = 1;
+	else
+		return true;
+
+	return false;
+}
 
 int main(int argc, char* argv[]) {
 	time_t rawtime;
@@ -1916,7 +1934,6 @@ int main(int argc, char* argv[]) {
 			mphysicalSystem.AddBody(stick);
 			sphereStick.emplace_back(stick);
 		}
-		stickSurfaceArea = CH_C_PI*rad * 2 * sphereStickHeight;
 		if (bucketType == HOOKRAISE)
 		{
 			int hookNum;
@@ -1977,7 +1994,7 @@ int main(int argc, char* argv[]) {
 
 
 		double mult = 4.0;
-
+		double knobRad;
 		double stickLen = bucket_interior_halfDim.z*1.5;
 		int sphereNum = stickLen / (t_smarticle);
 
@@ -2016,14 +2033,7 @@ int main(int argc, char* argv[]) {
 			{
 				for (size_t col = 0; col < kpz; col++)
 				{
-					if (stapleSize)
-					{
-						utils::AddSphereGeometry(knobstick.get_ptr(), t2_smarticle, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*row + rad), QUNIT, true);
-					}
-					else
-					{
-						utils::AddSphereGeometry(knobstick.get_ptr(), t2_smarticle, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*row + rad), QUNIT, true);
-					}
+					utils::AddSphereGeometry(knobstick.get_ptr(), knobRad, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*row), QUNIT, true);
 					sphereStick.emplace_back(knobstick);
 				}
 			}
@@ -2035,9 +2045,6 @@ int main(int argc, char* argv[]) {
 		knobstick->GetPhysicsItem()->SetIdentifier(largeID + 1);
 		mphysicalSystem.AddBody(knobstick);
 	
-
-		stickSurfaceArea = CH_C_PI*rad * 2 * sphereStickHeight 
-			+ kpz*kpr * 4 * CH_C_PI*(t2_smarticle / 2)*(t2_smarticle / 2);//add surface area of all knobs (hemispheres) on side of rod
 		
 		//ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
 		link_engine->Initialize(knobstick, truss,
@@ -2234,24 +2241,9 @@ int main(int argc, char* argv[]) {
 #endif
 #endif
 
-		//if (t < vibrateStart-.4)
-		//	Smarticle::global_GUI_value = 2;
-		//else if (t > vibrateStart-.4 && t < vibrateStart+.25)
-		//	Smarticle::global_GUI_value = 1;
-		//else if (t > vibrateStart + .25 && t < vibrateStart + 4)
-		//	Smarticle::global_GUI_value = 1;
-		//else
-		//	break;
-
-		if (t < .5)
-			Smarticle::global_GUI_value = 2;
-		else if (t > .5 && t < 1)
-			Smarticle::global_GUI_value = 1;
-		else if (t > 1 && t < 2)
-			Smarticle::global_GUI_value = 1;
-		else
+	
+		if (SetGait(t) == true)
 			break;
-
 		receiver.drawSuccessful();
 
 		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER)
@@ -2283,8 +2275,6 @@ int main(int argc, char* argv[]) {
 	  		collisionEnvelope,
 	  		rho_smarticle);
 
-
-		
   }
 	simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "Smarticle OT: " <<	 mySmarticlesVec.at(0)->torqueThresh2 << std::endl;

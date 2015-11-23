@@ -1,5 +1,5 @@
 %plot stress
-filename = 'D:\SimResults\Chrono\SmarticleU\tests\plotStress\knob\PostProcess\Stress.txt';
+filename = 'D:\SimResults\Chrono\SmarticleU\tests\plotStress\second shear test\PostProcess\Stress.txt';
 % filename = 'D:\SimResults\Chrono\SmarticleU\tests\PostProcess\Stress.txt';
 %stressdata
 sd=importdata(filename);
@@ -29,12 +29,13 @@ hold on;
 shapeLines=getShapeLines(time,guid);
 
 plot(time,lineVar)
+yAx=mean(lineVar)*4;
 for i=1:size(shapeLines,1)
-    plot([shapeLines(i,1),shapeLines(i,1)],[min(lineVar) max(lineVar)],'color',shapeLines(i,2:4),'LineWidth',2)
-    text(shapeLines(i,1),max(lineVar)*1.02,plotNames(shapeLines(i,5)))
+    plot([shapeLines(i,1),shapeLines(i,1)],[min(lineVar) yAx],'color',shapeLines(i,2:4),'LineWidth',5)
+    text(shapeLines(i,1),yAx*1.02,plotNames(shapeLines(i,5)))
 end
 
 xlabel('Time (s)');
 ylabel('Stress');
 figText(gcf,14);
-
+axis([0 time(end) 0 yAx]);

@@ -436,3 +436,13 @@ extern double sizeScale;
 // 	}
 // }
 ///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+//void SetEnvelopeForSystemObjects(ChSystem& mphysicalSystem) {
+//	std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
+//	for (int i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+//		(*myIter)->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+//		myIter++;
+//	}
+//
+//}
+///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
