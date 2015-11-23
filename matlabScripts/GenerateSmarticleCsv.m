@@ -8,7 +8,7 @@
 %   angHigh     = highest angle smarticle is allowed to move to
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
 
-stapleSize = false;
+stapleSize = true;
 dt=.0005;
 sizeScale=5;
 omega = 5;

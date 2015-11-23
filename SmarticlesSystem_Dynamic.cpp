@@ -159,7 +159,6 @@ ChSharedPtr<ChBody> bucket_bott;
 	////////////////staple smarticle geometry
 	//double w_smarticle;
 	//bool stapleSize = true;
-	double stickSurfaceArea = 0;
 	#if stapleSize
 		double bucket_rad = sizeScale*0.022;
 		double w_smarticle = sizeScale * 0.0117;
@@ -606,8 +605,8 @@ ChSharedPtr<ChBody> bucket_bott;
 
 					//GetLog() << "running method";
 					//double a = react_forces.Length();
-					//this->m_contact_force+= react_forces.Length()/stickSurfaceArea;
 					this->m_contact_force += react_forces.Length();
+					//TODO get normal forces only!
 
 					//n_contact_force += react_forces.y;
 					//GetLog() << "Normal Force: " << m_contact_force << "\n";
@@ -1883,9 +1882,13 @@ int main(int argc, char* argv[]) {
 
 	ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
 	ChSharedPtr<ChFunction_Sine> knobcylinderfunc(new ChFunction_Sine());
-	ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);;
-	knobcylinderfunc->Set_amp(CH_C_PI);
-	knobcylinderfunc->Set_w(2.0*CH_C_PI);
+	ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);
+	double knobAmp = CH_C_PI		*1;
+	double knobW = 2 * CH_C_PI * 1 / 20;
+	double knobPhase = -knobW*vibrateStart;
+	knobcylinderfunc->Set_amp(knobAmp);
+	knobcylinderfunc->Set_w(knobW);
+	knobcylinderfunc->Set_phase(knobPhase);
 	double rad;
 
 
@@ -2014,18 +2017,20 @@ int main(int argc, char* argv[]) {
 			if (stapleSize)
 			{
 				rad = t_smarticle*mult;
+				knobRad = t2_smarticle;
 			}
 			else
 			{
-				rad = t_smarticle*mult / 4.0;
+				rad = t_smarticle*mult / 2.0;
+				knobRad = t2_smarticle / mult;
+
 			}
 			//if you change z height between spheres, you must change sphereStickHeight above!
 			utils::AddSphereGeometry(knobstick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, sphereStickHeight / sphereNum * (i)), QUNIT, true);
 			sphereStick.emplace_back(knobstick);
 		}
-			unsigned int kpr = 8;//knobs per row
-			unsigned int kpz = 10; //knob per z
-			double knobRad = t2_smarticle;
+			unsigned int kpr = 9;//knobs per row
+			unsigned int kpz = 15; //knob per z
 			double ang = 2 * CH_C_PI / kpr;
 			double hp = (sphereStickHeight - 2 * rad) / kpz;//height between rows
 			double pOffset = CH_C_PI/kpr; //phase offset
@@ -2100,7 +2105,7 @@ int main(int argc, char* argv[]) {
 		{
 			rotate_drum(t);
 		}
-
+		//vibration movement
 		if (t > vibrateStart && t < vibrateStart + 3)
 		{
 			switch (bucketType)
