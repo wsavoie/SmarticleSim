@@ -1705,10 +1705,69 @@ void setUpDrumActuator(CH_SYSTEM& mphysicalSystem)
 void UpdateSmarticles(
 		CH_SYSTEM& mphysicalSystem,
 		std::vector<Smarticle*> mySmarticlesVec) {
+	static double torquethresh = mySmarticlesVec[0]->torqueThresh2;
 
-	double current_time = mphysicalSystem.GetChTime();
+	double t = mphysicalSystem.GetChTime(); 
+	
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
-		mySmarticlesVec[i]->MoveLoop2(Smarticle::global_GUI_value);
+		mySmarticlesVec[i]->updateTorqueDeque();
+		double tor1 = mySmarticlesVec[i]->torqueAvg.first;
+		double tor2 = mySmarticlesVec[i]->torqueAvg.second;
+		mySmarticlesVec[i]->timeSinceLastGait = mySmarticlesVec[i]->timeSinceLastGait + dT;
+		
+		if (t > 1)
+		{
+
+			if (mySmarticlesVec[i]->timeSinceLastGait >= gaitChangeLengthTime) //if timespan necessary to check 
+			{
+				if (tor1 <= torquethresh || tor2 <= torquethresh) //if either are above torque threshold
+				{
+					mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType % 2 + 1, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
+				}
+				else
+				{
+					mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
+				}
+				mySmarticlesVec[i]->timeSinceLastGait = 0;
+			}
+			else
+			{
+				mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
+			}
+		}
+		else
+		{
+			mySmarticlesVec[i]->MoveLoop2(Smarticle::global_GUI_value, tor1, tor2);
+		}
+
+		//double torque01 = mySmarticlesVec[i]->GetReactTorqueLen01();
+		//double torque12 = mySmarticlesVec[i]->GetReactTorqueLen12();
+		//mySmarticlesVec[i]->timeSinceLastGait = mySmarticlesVec[i]->timeSinceLastGait + dT;
+		//if (t > 1)
+		//{
+		//	
+		//	if (mySmarticlesVec[i]->timeSinceLastGait >= gaitChangeLengthTime) //if timespan necessary to check 
+		//	{
+		//		if (torque01 <= torquethresh  && torque12 <= torquethresh)
+		//		{
+		//			mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType % 2 + 1, torque01, torque12);  //if 2 go to 1 if 1 go to 2
+
+		//		}
+		//		else
+		//		{
+		//			mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, torque01, torque12);
+		//		}
+		//		mySmarticlesVec[i]->timeSinceLastGait = 0;
+		//	}
+		//	else
+		//	{
+		//		mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, torque01, torque12);
+		//	}
+		//}
+		//else
+		//{
+		//	mySmarticlesVec[i]->MoveLoop2(Smarticle::global_GUI_value,torque01,torque12);
+		//}
 	}
 }
 // =============================================================================
