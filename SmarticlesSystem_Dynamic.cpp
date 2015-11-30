@@ -1898,10 +1898,10 @@ bool SetGait(double time)
 		Smarticle::global_GUI_value = 2;
 	else if (time > .5 && time < 1)
 		Smarticle::global_GUI_value = 1;
-	else if (time > 1 && time < 3)
-		Smarticle::global_GUI_value = 1;
-	else
-		return true;
+	//else if (time > 1 && time < 3)
+	//	Smarticle::global_GUI_value = 1;
+	//else
+	//	return true;
 
 	return false;
 }
@@ -2229,8 +2229,12 @@ int main(int argc, char* argv[]) {
 		link_engine->Set_rot_funct(knobcylinderfunc);
 		link_engine->SetDisabled(true);
 		mphysicalSystem.AddLink(link_engine);
-
-
+		
+		
+		//ChSharedPtr<ChLinkLockRevolute> link(new ChLinkLockRevolute);
+		//link->Initialize(knobstick, truss, ChCoordsys<>(VNULL,,ChVector<>(1,0,0)));
+		//link->SetMotion_axis(ChVector<>(0, 0,1));
+		//mphysicalSystem.AddLink(link);
 		
 		break;
 
@@ -2385,7 +2389,7 @@ int main(int argc, char* argv[]) {
 
 		//SavePovFilesMBD(mphysicalSystem, tStep);
 		//step_timer.start("step time");
-	
+
 #ifdef CHRONO_OPENGL
 		if (gl_window.Active()) {
 			gl_window.DoStepDynamics(dT);
