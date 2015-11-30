@@ -150,7 +150,53 @@ void Smarticle::Properties(
 	angHigh = 120;
 	dumID = mdumID;
 	armBroken = false;
+	
+	std::pair<double, double> a (0,0);
+	torques = { a, a, a, a,a,a,a }; //probably a better way to do this....
+
+	torqueAvg = std::make_pair(0, 0);
+	//avg1 = 0;
+	//avg2 = 0;
 }
+void Smarticle::updateTorqueDeque(double mtorque1, double mtorque2)
+{
+	//torque1.pop_back();
+	//torque1.push_front(mtorque1);
+	//
+	//torque2.pop_back();
+	//torque2.push_front(mtorque2);
+	
+	std::pair<double, double> oldT = torques.back();
+	torques.pop_back();
+	torques.emplace_front(mtorque1, mtorque2);
+	
+	updateTorqueAvg(oldT);
+}
+void Smarticle::updateTorqueDeque()
+{
+	std::pair<double, double> oldT = torques.back();
+	torques.pop_back();
+	torques.emplace_front(GetReactTorqueLen01(), GetReactTorqueLen12());
+	updateTorqueAvg(oldT);
+}
+void Smarticle::updateTorqueAvg()
+//in case I need to recalculate from all values
+{
+	for (std::deque<std::pair<double, double>>::iterator it = torques.begin(); it != torques.end(); ++it)
+	{
+		torqueAvg = std::make_pair(it->first + torqueAvg.first, it->second + torqueAvg.second);
+	}
+	torqueAvg = std::make_pair(torqueAvg.first / torques.size(), torqueAvg.second / torques.size());
+}
+void Smarticle::updateTorqueAvg(std::pair <double,double > oldT)
+{ //already assuming it is an avg:
+	size_t len = torques.size();
+	torqueAvg = std::make_pair(
+		torqueAvg.first - oldT.first / len + torques.front().first / len,
+		torqueAvg.second - oldT.second / len + torques.front().second / len
+		);
+}
+
 //////////////////////////////////////////////
 void Smarticle::SetDefaultOmega(double omega) {
 	defaultOmega = omega;
@@ -441,6 +487,7 @@ void Smarticle::CreateActuators() {
 
 	// link 1
 	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx*qy1));
+	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 	link_actuator01->SetMotion_axis(ChVector<>(0, 0, 1));
 
@@ -869,8 +916,8 @@ void Smarticle::MoveLoop2(int guiState = 0)
 	double omega1Prev = link_actuator01->Get_mot_rot_dt();
 	double omega2Prev = link_actuator12->Get_mot_rot_dt();
 
-	double torque01 = fabs(link_actuator01->Get_react_torque().z); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
-	double torque12 = fabs(link_actuator12->Get_react_torque().z);
+	double torque01 = fabs(link_actuator01->Get_react_torque().Length2()); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
+	double torque12 = fabs(link_actuator12->Get_react_torque().Length2());
 	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
 
 
@@ -1030,6 +1077,185 @@ void Smarticle::MoveLoop2(int guiState = 0)
 
 	return;
 }
+
+
+void Smarticle::MoveLoop2(int guiState, double torque01, double torque12)
+{
+	//initialize boolean describing same moveType as last step
+	bool sameMoveType = false;
+	//static bool successfulMotion = false;
+	bool prevSucessful = successfulMotion;
+	successfulMotion = false;
+	//this pointer will point to the correct moveType vector
+	std::vector<std::pair<double, double>> *v;
+	//set prevMoveType to previous value
+	this->prevMoveType = this->moveType;
+	//get previous values from last timestep
+	double ang01 = link_actuator01->Get_mot_rot();
+	double ang12 = link_actuator12->Get_mot_rot();
+
+	double omega1Prev = link_actuator01->Get_mot_rot_dt();
+	double omega2Prev = link_actuator12->Get_mot_rot_dt();
+
+	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
+
+
+	//determine moveType
+	switch (guiState)
+	{
+	case 0:
+		this->setCurrentMoveType(GLOBAL);
+		v = &global;
+		break;
+	case 1:
+		this->setCurrentMoveType(GUI1);
+		v = &gui1;
+		break;
+	case 2:
+		this->setCurrentMoveType(GUI2);
+		v = &gui2;
+		break;
+	case 3:
+		this->setCurrentMoveType(GUI3);
+		v = &gui3;
+		break;
+	case 4:
+		this->setCurrentMoveType(VIB);
+		v = &vib;
+		break;
+	case 5:
+		this->setCurrentMoveType(VIB);
+		v = &vib;
+		break;
+	default:
+		this->setCurrentMoveType(GLOBAL);
+		v = &global;
+		break;
+	}
+
+
+
+
+	static ChVector<> rel01 = link_actuator01->GetRelAxis();
+	static ChVector<> rel12 = link_actuator12->GetRelAxis();
+	static double relr01 = link_actuator01->GetDist();
+	static double relr12 = link_actuator12->GetDist();
+	//GetLog() << "\n" << "rel1:" << rel01 << "rel2:" << rel12 << "\n";
+
+
+	//if (fabs(rel01.y) > .05 || fabs(rel12.y) > .05)//if angle in x or y is > .1 radians, it is definitely broken
+	//{
+	//	GetLog() << "angle bad break! \n";
+	//	armBroken = true;
+	//}
+	//if (fabs(relr01) > .075*r2 || fabs(relr12) > .075*r2)//if distance between markers is .025% of thickness, break!
+	//{
+	//	GetLog() << "distance wrong break! \n";
+	//	armBroken = true;
+	//}
+
+	//ChVector<> rel01 = link_actuator01->GetRelRotaxis();
+	//ChVector<> rel12 = link_actuator12->GetRelRotaxis();
+	////GetLog() <<"\n"<< rel01 << "\n";
+	//if (fabs(rel01.x) > .1 || fabs(rel01.y) > .1
+	//	|| fabs(rel12.x) > .1 || fabs(rel12.x) > .1)//if angle in x or y is > .1 radians, it is definitely broken
+	//{
+	//	armBroken = true;
+	//}
+
+	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)//one arm is OT 
+	{
+		this->setCurrentMoveType(OT);
+		v = &ot;
+
+		if (torque01 > torqueThresh2) // arm 0 is overtorqued
+		{
+			if (!arm0OT)//if arm was previously not OT, add color asset
+			{
+				arm0OT = true;
+				arm0->AddAsset(mtextureOT);
+				this->ot.clear();
+				this->ot.emplace_back(GetAngle1(), GetAngle2());
+				this->ot.emplace_back(GetAngle1(), GetAngle2());
+			}
+		}
+		if (torque12 > torqueThresh2)// arm 2 is overtorqued
+		{
+			if (!arm2OT)
+			{
+				arm2OT = true;
+				arm2->AddAsset(mtextureOT);
+				this->ot.clear();
+				this->ot.emplace_back(GetAngle1(), GetAngle2());
+				this->ot.emplace_back(GetAngle1(), GetAngle2());
+			}
+		}
+
+	}
+	else //arms are not OT 
+	{
+		if (arm0OT)//if arm was previously OT, pop off previous armOT color asset
+		{
+			arm0OT = false;
+			arm0->GetAssets().pop_back();
+		}
+		if (arm2OT)
+		{
+			arm2OT = false;
+			arm2->GetAssets().pop_back();
+		}
+
+	}
+
+	sameMoveType = !(moveType^prevMoveType); // !(xor) gives true if values are equal, false if not
+
+	switch (this->moveType) //have this in case I want to add different action based on move type
+	{
+	case GLOBAL://TODO implement different case if sameMoveType was wrong
+
+		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+		break;
+	case OT:
+		//if (sameMoveType){}
+		successfulMotion = MoveToAngle2(v, 0, 0, moveType);
+		break;
+	case GUI1:
+
+		if (sameMoveType)
+		{
+			if (omega1Prev == 0 && omega2Prev == 0)
+			{
+
+				successfulMotion = true;
+				break;
+			}
+		}
+		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+		break;
+	case GUI2:
+
+		//if (sameMoveType){}
+		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+		break;
+	case GUI3:
+
+		//if (sameMoveType){}
+		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+		break;
+	case VIB:
+		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+		//GetLog() << "(0,1,2):" << v->at(0).first << "," << v->at(1).first << "," << v->at(2).first;
+		//exit(-1);
+		break;
+	}
+	//add 1 to size if move was successful (i.e. can move on to next move index if reached previous one)
+	if (successfulMotion&&active && (!arm0OT&&!arm2OT))
+	{
+		moveTypeIdxs.at(moveType) = ((moveTypeIdxs.at(moveType) + 1) % v->size());
+	}
+
+	return;
+}
 ChSharedBodyPtr Smarticle::GetSmarticleBodyPointer()
 {
 	return arm1;
@@ -1053,11 +1279,13 @@ ChVector<> Smarticle::GetReactTorqueVectors12()
 }
 double Smarticle::GetReactTorqueLen01()
 {
-	return (abs(link_actuator01->Get_react_torque().z));
+	//return (link_actuator01->Get_react_torque().Length2());
+	return fabs((link_actuator01->Get_react_torque().z));
 }
 double Smarticle::GetReactTorqueLen12()
 {
-	return (abs(link_actuator12->Get_react_torque().z));
+	//return (link_actuator12->Get_react_torque().Length2());
+	return fabs((link_actuator12->Get_react_torque().z));
 }
 
 void Smarticle::SetBodyFixed(bool mev){

@@ -16,6 +16,7 @@
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
 #include <memory>
+#include <deque>
 #include "common.h"
 
 #ifndef true
@@ -42,6 +43,7 @@ namespace chrono {
 		bool active=false;
 		static double pctActive;
 		bool armBroken;
+		double timeSinceLastGait = 0;
 		// Construct a smarticle and add it to ChSystem.
 		Smarticle(
 				ChSystem* otherSystem
@@ -163,13 +165,8 @@ namespace chrono {
 		virtual bool GetArm0OT();
 		virtual bool GetArm2OT();
 		void MoveLoop();
-
-		bool MoveToRange();
-		void MoveSquare();
-		void MoveCircle();
-		void MoveRelease();
 		////////////Will smarticle implementation////////////
-		////vectors containing move instructions, these will be read in from a csv file, tried to make these static but wont compile...
+
 		static std::vector<std::pair<double, double>> global;
 		static std::vector<std::pair<double, double>> gui1;//gui option 1
 		static std::vector<std::pair<double, double>> gui2;//gui option 2
@@ -179,7 +176,6 @@ namespace chrono {
 		std::vector<std::pair<double, double>> ot; //over torque
 		std::vector<std::pair<double, double>> oa; //over angle
 		std::vector<std::pair<double, double>> vib; //vibrate this HAS to be particle specific so cannot be static?
-
 		std::vector<int> moveTypeIdxs;//this vector keeps the current values of the move types
 		MoveType moveType;
 		MoveType prevMoveType;
@@ -188,6 +184,15 @@ namespace chrono {
 		double angHigh;
 		static double distThresh;
 		static unsigned int global_GUI_value;
+
+		std::deque<std::pair<double,double>> torques;
+		std::deque<double> torque1;
+		std::deque<double> torque2;
+		std::pair<double,double> torqueAvg;
+		void updateTorqueDeque(); 
+		void updateTorqueDeque(double torque1,double torque2);
+		void updateTorqueAvg();
+		void updateTorqueAvg(std::pair <double, double > oldT);
 		///////////////////////////////////////////////////////////
 
 		std::pair<double, double> populateMoveVector();
@@ -197,6 +202,7 @@ namespace chrono {
 		double ChooseOmegaAmount(double momega, double currAng, double destAng);
 		virtual void setCurrentMoveType(MoveType newMoveType);
 		void MoveLoop2(int guiState);
+		void MoveLoop2(int guiState, double torque01, double torque12);
 
 		//////////////////////////////////////////////////////
 	private:
