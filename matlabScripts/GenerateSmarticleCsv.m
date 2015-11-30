@@ -9,7 +9,7 @@
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
 
 stapleSize = true;
-dt=.0005;
+dt=.00025;
 sizeScale=5;
 omega = 5;
 rho = 7850.0/(sizeScale^3);
@@ -22,12 +22,13 @@ if stapleSize
 else
     t   = .0079*sizeScale;
     t2  = .0053*sizeScale;
-    w_s = .0117*1.4*sizeScale;
+    w_s = .0117*sizeScale;
     l_s = w_s;
 end
+
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
-torqueThresh=9.8*mass*w_s*6;%.00005;  4.6657e-04 
+torqueThresh=9.8*mass*w_s*5;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 
