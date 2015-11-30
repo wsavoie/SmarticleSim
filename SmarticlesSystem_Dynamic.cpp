@@ -103,7 +103,7 @@ using namespace gui;
 enum SmarticleType {SMART_ARMS , SMART_U};
 enum BucketType {KNOBCYLINDER,HOOKRAISE,STRESSSTICK,CYLINDER, BOX, HULL,RAMP,HOPPER,DRUM};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = KNOBCYLINDER;
+BucketType bucketType = STRESSSTICK;
 
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 // =============================================================================
@@ -155,19 +155,22 @@ ChSharedPtr<ChBody> bucket_bott;
 	double sOmega = 5;  // smarticle omega
 
 	ChSharedPtr<ChLinkEngine> drum_actuator;
-
+	
 	////////////////staple smarticle geometry
 	//double w_smarticle;
 	//bool stapleSize = true;
+
+	double gaitChangeLengthTime = .5;
 	#if stapleSize
-		double bucket_rad = sizeScale*0.022;
+		double bucket_rad = sizeScale*0.025;
 		double w_smarticle = sizeScale * 0.0117;
 		double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 		double t_smarticle = sizeScale * .00127;
 		double t2_smarticle = sizeScale * .0005;
+		ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2*bucket_rad/sizeScale);
 
 	#else
-		double bucket_rad = sizeScale*0.05;
+		double bucket_rad = sizeScale*0.04;
 		double w_smarticle = sizeScale * 0.0117 / 1;
 		double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 		//real value
@@ -207,7 +210,7 @@ ChSharedPtr<ChBody> bucket_bott;
 	//double bucket_rad = sizeScale*0.02;
 	//double bucket_rad = sizeScale*0.022;
 //	double bucket_rad = sizeScale*0.04;
-	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, bucket_rad*.5);
+
 	std::vector<ChSharedPtr<ChBody>> bucket_bod_vec;
 
 	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
@@ -2069,10 +2072,9 @@ int main(int argc, char* argv[]) {
 			mult = 1/2.0;
 		rad = 0;
 		double stickLen = bucket_interior_halfDim.z*1.5;
-		int sphereNum = stickLen / (t_smarticle);
+		int sphereNum = stickLen / (t_smarticle)*2;
 
 		//double sphereStickHeight = t_smarticle*mult / 2.0 * (sphereNum + 1); //shouldnt need extra 2*rad offset because of how z is defined using i below
-		double sphereStickHeight = bucket_interior_halfDim.z; //shouldnt need extra 2*rad offset because of how z is defined using i below
 		for (size_t i = 0; i < sphereNum; i++)
 		{
 			ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
@@ -2092,7 +2094,7 @@ int main(int argc, char* argv[]) {
 				rad = t_smarticle*mult / 4.0;
 			}
 			//if you change z height between spheres, you must change sphereStickHeight above!
-			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, sphereStickHeight / sphereNum * (i)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
+			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
 			stick->SetMaterialSurface(mat_g);
 			stick->AddAsset(groundTexture);
 			stick->SetMass(2);
