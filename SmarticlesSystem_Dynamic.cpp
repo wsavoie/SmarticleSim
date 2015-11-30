@@ -401,7 +401,7 @@ ChSharedPtr<ChBody> bucket_bott;
 					return true;
 					break;
 
-				case irr::KEY_KEY_Y: //remove conainer or floor
+				case irr::KEY_KEY_Y: //remove container or floor
 					if (bucket_exist)
 					{
 						switch (bucketType)
@@ -413,16 +413,16 @@ ChSharedPtr<ChBody> bucket_bott;
 
 									bucket_bod_vec.at(i)->SetPos(ChVector<>(
 									bucket_bod_vec.at(i)->GetPos().x,
-									bucket_bod_vec.at(i)->GetPos().y,
-									bucket_bod_vec.at(i)->GetPos().z+100));
+									bucket_bod_vec.at(i)->GetPos().y+1,
+									bucket_bod_vec.at(i)->GetPos().z));
 								}
 								
 							break;
 						case HOPPER:
-							bucket_bott->SetPos(ChVector<>(100, 0, 0));
+							bucket_bott->SetPos(ChVector<>(1, 0, 0));
 							break;
 						case RAMP:
-							bucket_bott->SetPos(ChVector<>(100, 0, 0));
+							bucket_bott->SetPos(ChVector<>(1, 0, 0));
 							break;
 						}
 
@@ -431,8 +431,111 @@ ChSharedPtr<ChBody> bucket_bott;
 
 					return true;
 					break;
+				case irr::KEY_KEY_J:
+				{
+					static bool ran = false;
+					switch (bucketType)
+					{
+					case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
+						for (size_t i = 0; i < bucket_bod_vec.size(); i++)
+						{
+							//bucket_bod_vec.at(i)->SetBodyFixed(false);
+							bucket_bod_vec.at(i)->SetBodyFixed(true);
+								
+							double x = bucket_bod_vec.at(i)->GetPos().x;
+							double y = bucket_bod_vec.at(i)->GetPos().y;
+							double z = bucket_bod_vec.at(i)->GetPos().z;
+							//GetLog() << "\n" << bucket_bod_vec.at(i).get_ptr()->GetPos() << "\n";
 
+							double theta = atan2(y,x);
+							//double theta = atan(x/y);
+							double r = sqrt(x*x + y*y);
+							//ChSharedPtr<ChLinkLockPlanePlane> link(new ChLinkLockPlanePlane);
+							//link->Initialize(bucket_bod_vec.at(i), bucket_bott, ChCoordsys<>(VNULL));
+							//link->SetMotion_axis(ChVector<>(0, 1, 0));
+							//GetLog() << "axis: " << link->GetMotion_axis();
+							//link->SetMotion_Y((new ChFunction_Ramp(0, 100)));
+							////link->SetMotion_ang((new ChFunction_Ramp(0, 1)));
+							//app->GetSystem()->AddLink(link);
 
+							//bucket_bod_vec.at(i)->SetPos(ChVector<>(
+							//	r*(.75)*cos(theta),
+							//	r*(.75)*sin(theta),
+							//	0));
+							//ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
+							//ChSharedPtr<ChFunction_Sine> knobcylinderfunc(new ChFunction_Sine());
+							//ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);
+							//double knobAmp = CH_C_PI * 1;
+							//double knobW = 2 * CH_C_PI * 1 / 20;
+							//double knobPhase = -knobW*vibrateStart;
+							//knobcylinderfunc->Set_amp(knobAmp);
+							//knobcylinderfunc->Set_w(knobW);
+							//knobcylinderfunc->Set_phase(knobPhase);
+							
+							//link_engine->Initialize(knobstick, truss,
+							//	ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
+							//link_engine->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_LOCK); // also works as revolute support
+							//link_engine->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+							//link_engine->Set_rot_funct(knobcylinderfunc);
+							//link_engine->SetDisabled(true);
+							//mphysicalSystem.AddLink(link_engine);
+							
+							
+							bucket_bod_vec.at(i)->SetPos(ChVector<>(x - bucket_rad*.01*cos(theta), y - bucket_rad*.01*sin(theta), z));
+							//bucket_bod_vec.at(i)->SetPos_dt(ChVector<>(
+							//	-r*cos(theta),
+							//	-r*sin(theta),
+							//	0));
+						}
+
+						break;
+					case HOPPER:
+						bucket_bott->SetPos(ChVector<>(100, 0, 0));
+						break;
+					case RAMP:
+						bucket_bott->SetPos(ChVector<>(100, 0, 0));
+						break;
+					}
+				
+					//return true;
+					break;
+
+				}
+				case irr::KEY_KEY_K:
+				{
+					static bool ran = false;
+					switch (bucketType)
+					{
+					case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
+						for (size_t i = 0; i < bucket_bod_vec.size(); i++)
+						{
+							//bucket_bod_vec.at(i)->SetBodyFixed(false);
+							bucket_bod_vec.at(i)->SetBodyFixed(true);
+
+							double x = bucket_bod_vec.at(i)->GetPos().x;
+							double y = bucket_bod_vec.at(i)->GetPos().y;
+							double z = bucket_bod_vec.at(i)->GetPos().z;
+							//GetLog() << "\n" << bucket_bod_vec.at(i).get_ptr()->GetPos() << "\n";
+
+							double theta = atan2(y, x);
+							double r = sqrt(x*x + y*y);
+							bucket_bod_vec.at(i)->SetPos(ChVector<>(x + bucket_rad*.01*cos(theta), y + bucket_rad*.01*sin(theta), z));
+
+						}
+
+						break;
+					case HOPPER:
+						bucket_bott->SetPos(ChVector<>(100, 0, 0));
+						break;
+					case RAMP:
+						bucket_bott->SetPos(ChVector<>(100, 0, 0));
+						break;
+					}
+
+					//return true;
+					break;
+
+				}
 				case irr::KEY_KEY_1:
 					switch (bucketType)
 					{
@@ -1098,9 +1201,12 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks2(int num_boxes, int id, bool ove
 			wallPiece->AddAsset(bucketTexture);
 		}
 		wallPiece->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-		utils::AddBoxGeometry(wallPiece.get_ptr(), box_size, pPos, quat, m_visualization);
-
+		wallPiece->SetPos(pPos);
+		wallPiece->GetCollisionModel()->ClearModel();
+		utils::AddBoxGeometry(wallPiece.get_ptr(), box_size, ChVector<>(0,0,0), quat, m_visualization);
 		wallPiece->SetMass(rho_cylinder*cyl_volume);
+		//wallPiece->SetPos(ChVector<>(0,0,0));
+
 
 		//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 		wallPiece->GetCollisionModel()->BuildModel();
@@ -1548,8 +1654,11 @@ void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylra
 	}
 	else {
 		stress_of.open(stress.c_str(), std::ios::app);	}
+	ChVector<> temp = bucket_bod_vec.at(1)->GetPos();
+	double currBuckRad = sqrt(temp.x*temp.x + temp.y*temp.y) - bucket_half_thick / 5.0;//bucket_half_thick/5 is how wall thickness is defined!
+	//GetLog() << bucket_half_thick<< "thick\n";
 	//force/(surface area)
-		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem)/(CH_C_PI*2*cylrad*zmax) <<","<< Smarticle::global_GUI_value << std::endl;
+		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem)/(CH_C_PI*2*cylrad*zmax) <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
 	stress_of.close();
 }
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
@@ -2169,7 +2278,7 @@ int main(int argc, char* argv[]) {
 		{
 			switch (bucketType)
 			{
-			case HOOKRAISE: case STRESSSTICK:
+			case HOOKRAISE: //case STRESSSTICK:
 			{
 
 				for (size_t i = 0; i < sphereStick.size(); i++)
@@ -2294,10 +2403,13 @@ int main(int argc, char* argv[]) {
 		//application.AssetUpdateAll();
 
 		//framerecord
+	
 		application.SetVideoframeSaveInterval(5);//only save every 2 frames
 		application.DrawAll();
+
 		application.AssetBindAll();  //uncomment to visualize vol frac boxes
 		application.AssetUpdateAll();//uncomment to visualize vol frac boxes
+		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 		application.DoStep();//
 		application.GetVideoDriver()->endScene();
 #else
@@ -2317,7 +2429,7 @@ int main(int argc, char* argv[]) {
 		}
 		
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
-		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
+
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
 	  step_timer.stop("step time");
