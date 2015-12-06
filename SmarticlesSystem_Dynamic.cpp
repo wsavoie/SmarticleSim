@@ -603,8 +603,61 @@ ChSharedPtr<ChBody> bucket_bott;
 					drawAngle();
 					return true;
 					break;
+				case irr::KEY_KEY_C:			//decrease p
+					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
+					{
+						Smarticle* sPtr = sv->at(i);
+						sPtr->armsController->p_gain = sPtr->armsController->p_gain - inc;
+					}
+					drawAngle();
+					return true;
+					break;
+				case irr::KEY_KEY_V:			//decrease i
+					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
+					{
+						Smarticle* sPtr = sv->at(i);
+						sPtr->armsController->i_gain = sPtr->armsController->i_gain - inc;
+					}
+					drawAngle();
+					return true;
+					break;
+				case irr::KEY_KEY_B:			//decrease d
+					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
+					{
+						Smarticle* sPtr = sv->at(i);
+						sPtr->armsController->d_gain = sPtr->armsController->d_gain - inc;
+					}
+					drawAngle();
+					return true;
+					break;
+				case irr::KEY_KEY_D:			//increase p
+					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
+					{
+						Smarticle* sPtr = sv->at(i);
+						sPtr->armsController->p_gain = sPtr->armsController->p_gain + inc;
+					}
+					drawAngle();
+					return true;
+					break;
+				case irr::KEY_KEY_F:			//increase i
+					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
+					{
+						Smarticle* sPtr = sv->at(i);
+						sPtr->armsController->i_gain = sPtr->armsController->i_gain + inc;
+					}
+					drawAngle();
+					return true;
+					break;
+				case irr::KEY_KEY_G:			//increase d
+					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
+					{
+						Smarticle* sPtr = sv->at(i);
+						sPtr->armsController->d_gain = sPtr->armsController->d_gain + inc;
+					}
+					drawAngle();
+					return true;
+					break;
 				}
-
 
 			}
 			return false;
@@ -616,8 +669,16 @@ ChSharedPtr<ChBody> bucket_bott;
 		}
 		void drawAngle()
 		{
-
-			if (bucketType == DRUM)
+			if (bucketType == STRESSSTICK)
+			{
+				if (sv->size() > 0)
+				{
+					Smarticle* sPtr = sv->at(0);
+					char message[100]; sprintf(message, "P:%g, I:%g, D:%g", sPtr->armsController->p_gain, sPtr->armsController->i_gain, sPtr->armsController->d_gain);
+					this->text_Angle->setText(core::stringw(message).c_str());
+				}
+			}
+			else if (bucketType == DRUM)
 			{
 				char message[100]; sprintf(message, "AngVel: %g rpm, Increment: %g", drum_freq*60, rampInc*60);
 				this->text_Angle->setText(core::stringw(message).c_str());
@@ -655,7 +716,7 @@ ChSharedPtr<ChBody> bucket_bott;
 			successfulCount = 0;
 		}
 	private:
-
+		double inc = .1;
 		std::vector<Smarticle*> *sv;
 		ChIrrApp* app;
 		IGUIScrollBar* scrollbar_friction;
