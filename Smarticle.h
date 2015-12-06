@@ -8,7 +8,7 @@
 #ifndef SMARTICLE_H_
 #define SMARTICLE_H_
 
-#include "core/ChVector.h"
+//#include "core/ChVector.h"
 #include "assets/ChTexture.h"
 
 #include "chrono_irrlicht/ChIrrApp.h"//changed path from unit to chrono to reflect changes in updated chrono
@@ -16,21 +16,11 @@
 #include <irrlicht.h>
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
-#include "physics/ChShaftsClutch.h"
 #include <memory>
 #include <deque>
 #include "common.h"
 #include "Controller.h"
-#ifndef true
-#define true 1
-#endif
 
-#ifndef false
-#define false 0
-#endif
-
-#define USE_PARALLEL false
-#define irrlichtVisualization true
 namespace chrono {
 
 	enum MoveType { GLOBAL=0, GUI1=1, GUI2=2, GUI3=3, VIB=4, OT=5}; //IF ADDING MORE ALWAYS KEEP OT AS LAST INDEX!!!!

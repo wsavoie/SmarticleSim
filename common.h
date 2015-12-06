@@ -1,21 +1,62 @@
 #ifndef _common_h
 #define _common_h
+
 #include <stdlib.h>  // system, rand, srand, RAND_MAX
+#include "utils/ChUtilsGeometry.h"
+#include "utils/ChUtilsCreators.h"
+#include "core/ChVector.h"
 #include <vector>
 #include <chrono>
 
+#ifndef true
+#define true 1
+#endif
+
+#ifndef false
+#define false 0
+#endif
+
+#define USE_PARALLEL false
+#define irrlichtVisualization true
 #define stapleSize true
+	//extern double sizeScale;
+	//extern double dT;
+	//extern bool bucket_exist;
+	//extern double vibAmp;//vibrate by some amount of degrees back and forth
+
+	////////////
+
 	extern double sizeScale;
 	extern double dT;
 	extern bool bucket_exist;
-	extern double vibAmp;//vibrate by some amount of degrees back and forth
-	
+
+
+
 	enum SmarticleType { SMART_ARMS, SMART_U };
 	enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 	extern SmarticleType smarticleType;
 	extern BucketType bucketType;
 
+
+	////////////
+
+
+	extern double bucket_rad;
+	extern double vibAmp;// = 5 * 3.141592653589793238462643383279 / 180;
+	extern double rampAngle;
+	extern double rampInc;
+	extern double drum_omega;
+	extern double drum_freq;
+	extern double inc;
+	extern chrono::ChVector<> bucket_interior_halfDim;
 	
+	
+	//extern SmarticleType smarticleType;
+	//extern BucketType bucketType;
+	extern chrono::ChSharedPtr<chrono::ChBody> bucket;
+	extern chrono::ChSharedPtr<chrono::ChBody> bucket_bott;
+	extern std::vector<chrono::ChSharedPtr<chrono::ChBody>> bucket_bod_vec;
+
 
 #endif
 

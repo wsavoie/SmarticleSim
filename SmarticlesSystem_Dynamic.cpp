@@ -105,29 +105,18 @@ using namespace gui;
 //enum BucketType {KNOBCYLINDER,HOOKRAISE,STRESSSTICK,CYLINDER, BOX, HULL,RAMP,HOPPER,DRUM};
 //SmarticleType smarticleType = SMART_ARMS;//SMART_U;
 //BucketType bucketType = STRESSSTICK;
-
+	SmarticleType smarticleType = SMART_ARMS;//SMART_U;
+	BucketType bucketType = STRESSSTICK;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
-// =============================================================================
+ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody);
+ChSharedPtr<ChBody> bucket_bott = ChSharedPtr<ChBody>(new ChBody);
 
-
-
-class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
-  public:
-    /// Callback used to report 'near enough' pairs of models.
-    /// This must be implemented by a child class of ChBroadPhaseCallback.
-    /// Return false to skip narrow-phase contact generation for this pair of bodies.
-   virtual bool BroadCallback( collision::ChCollisionModel* mmodelA,  ///< pass 1st model
-    							collision::ChCollisionModel* mmodelB)   ///< pass 2nd model
-		{return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 3));}
-};
-
-// =============================================================================
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
-ChSharedPtr<ChBody> bucket;
-ChSharedPtr<ChBody> bucket_bott;
-	//double sizeScale = 5;
+//ChSharedPtr<ChBody> bucket;
+//ChSharedPtr<ChBody> bucket_bott;
+	double sizeScale = 5;
 	int appWidth = 1280;
 	int appHeight = 720;
 	//double sizeScale = 5;
@@ -143,7 +132,7 @@ ChSharedPtr<ChBody> bucket_bott;
 
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	//double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
+	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .5* sizeScale;
 	double tFinal = 6;
 	double vibrateStart= 1;
@@ -162,27 +151,27 @@ ChSharedPtr<ChBody> bucket_bott;
 	//bool stapleSize = true;
 
 	double gaitChangeLengthTime = .5;
-	#if stapleSize
-		double bucket_rad = sizeScale*0.025;
-		double w_smarticle = sizeScale * 0.0117;
-		double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-		double t_smarticle = sizeScale * .00127;
-		double t2_smarticle = sizeScale * .0005;
-		ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2*bucket_rad/sizeScale);
 
-	#else
-		double bucket_rad = sizeScale*0.04;
-		double w_smarticle = sizeScale * 0.0117 / 1;
-		double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-		//real value
-		double t_smarticle = sizeScale * .0079 / 1;
-		double t2_smarticle = sizeScale * .0053 / 1;
-	
-	#endif
 
 	////////////////rescaled robot geometry (3.93) based on w_smarticle scaling
 	////////////////robot dim is l/w =1, w=.046 t=.031 t2=.021
-	
+#if stapleSize
+	double bucket_rad = sizeScale*0.025;
+	double w_smarticle = sizeScale * 0.0117;
+	double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+	double t_smarticle = sizeScale * .00127;
+	double t2_smarticle = sizeScale * .0005;
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2*bucket_rad/sizeScale);
+
+#else
+	double bucket_rad = sizeScale*0.04;
+	double w_smarticle = sizeScale * 0.0117 / 1;
+	double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+	//real value
+	double t_smarticle = sizeScale * .0079 / 1;
+	double t2_smarticle = sizeScale * .0053 / 1;
+
+#endif
 
 
 
@@ -197,7 +186,7 @@ ChSharedPtr<ChBody> bucket_bott;
 
 	double collisionEnvelope = .1 * t2_smarticle;
 
-	//bool bucket_exist = true;
+	bool bucket_exist = true;
 
 	bool read_from_file = false;
 	bool povray_output = false;
@@ -223,568 +212,80 @@ ChSharedPtr<ChBody> bucket_bott;
 	double drum_freq = 1;
 	double drum_omega = drum_freq*2*CH_C_PI;
 	double pctActive = 1.0;
+	double inc = 0.1;
 	double angle1 = 90;
 	double angle2 = 90;
-	//double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
+	double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
 	ChSharedPtr<ChTexture> sphereTexture(new ChTexture());
 	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
 	ChSharedPtr<ChTexture> floorTexture(new ChTexture());	
-// =============================================================================\
 
-#if irrlichtVisualization
-	class MyEventReceiver : public IEventReceiver {
+
+
+
+
+
+
+	// =====================================================================================================
+	class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
 	public:
-
-		MyEventReceiver(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
-
-			sv = mySmarticlesVec;
-			// store pointer applicaiton
-			app = myapp;
-			// ..add a GUI slider to control friction
-
-
-			text_Angle = app->GetIGUIEnvironment()->addStaticText(L"Angle: 0, Increment: 0",
-				rect<s32>(850, 45, 1050, 60), true);
-			text_SmarticleAmt = app->GetIGUIEnvironment()->addStaticText(L"Layers: 0, Smarticles: 0",
-				rect<s32>(850, 65, 1050, 80), true);
-
-			text_Q = app->GetIGUIEnvironment()->addStaticText(L"Press Q to activate GUI1",
-				rect<s32>(850, 85, 1050, 100), true);
-			text_W = app->GetIGUIEnvironment()->addStaticText(L"Press W to activate GUI2",
-				rect<s32>(850, 105, 1050, 120), true);
-			text_E = app->GetIGUIEnvironment()->addStaticText(L"Press E to activate GUI3",
-				rect<s32>(850, 125, 1050, 140), true);
-			text_R = app->GetIGUIEnvironment()->addStaticText(L"Press R to vibrate around current angle",
-				rect<s32>(850, 145, 1050, 160), true);
-			text_T = app->GetIGUIEnvironment()->addStaticText(L"Press T to vibrate around specified angles",
-				rect<s32>(850, 165, 1050, 180), true);
-
-			angle1Input = app->GetIGUIEnvironment()->addEditBox(L"75",
-				rect<s32>(1050, 165, 1100, 180), true);
-			angle2Input = app->GetIGUIEnvironment()->addEditBox(L"75",
-				rect<s32>(1100, 165, 1150, 180), true);
-
-			text_Y = app->GetIGUIEnvironment()->addStaticText(L"Press Y to move cylinder away",
-				rect<s32>(850, 185, 1050, 200), true);
-			text_successful = app->GetIGUIEnvironment()->addStaticText(L"Successfully moved smarticles",
-				rect<s32>(850, 205, 1050, 220), true);
-			resetSuccessfulCount();
-
-		}
-
-		bool OnEvent(const SEvent& event) {
-			// check if user moved the sliders with mouse..
-			if (event.EventType == irr::EET_KEY_INPUT_EVENT && !event.KeyInput.PressedDown) {
-				switch (event.KeyInput.Key)
-				{
-				case irr::KEY_KEY_Q:
-					if (Smarticle::global_GUI_value != 1)
-						Smarticle::global_GUI_value = 1;
-					else
-						Smarticle::global_GUI_value = 0;
-					return true;
-					break;
-
-				case irr::KEY_KEY_W:
-					if (Smarticle::global_GUI_value != 2)
-						Smarticle::global_GUI_value = 2;
-					else
-						Smarticle::global_GUI_value = 0;
-					return true;
-					break;
-				case irr::KEY_KEY_E:
-					if (Smarticle::global_GUI_value != 3)
-						Smarticle::global_GUI_value = 3;
-					else
-						Smarticle::global_GUI_value = 0;
-					return true;
-					break;
-				case irr::KEY_KEY_R: //vibrate around current theta
-					if (Smarticle::global_GUI_value != 4) //TODO create a boolean and then call a method later which performs this so we don't have to run through smarticle vec here!
-					{
-						
-						double CurrTheta01;
-						double CurrTheta12;
-						Smarticle::global_GUI_value = 4;
-						std::pair<double, double> angPair;
-						for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
-						{
-
-							Smarticle* sPtr = sv->at(i);
-							
-							MoveType currMoveType = sPtr->moveType;
-							std::vector<std::pair<double, double>> *v;
-
-
-
-							switch (currMoveType)
-							{
-							case 0:
-								v = &sPtr->global;
-								break;
-							case 1:
-								v = &sPtr->gui1;
-								break;
-							case 2:
-								v = &sPtr->gui2;
-								break;
-							case 3:
-								v = &sPtr->gui3;
-								break;
-							case 4:
-								v = &sPtr->vib;
-								break;
-							case 5:
-								v = &sPtr->ot;
-								break;
-							default:
-								v = &sPtr->global;
-								break;
-							}
-							
-
-								CurrTheta01=sPtr->GetAngle1();
-								CurrTheta12 = sPtr->GetAngle2();
-								//CurrTheta01 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).first;
-								//CurrTheta12 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).second;
-								sPtr->vib.clear();
-
-								sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
-								sPtr->vib.emplace_back(CurrTheta01 - vibAmp, CurrTheta12 - vibAmp);
-								sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
-								sPtr->vib.emplace_back(CurrTheta01 + vibAmp, CurrTheta12 + vibAmp);
-							}
-						}
-
-					else
-						Smarticle::global_GUI_value = 0;
-					return true;
-					break;
-
-				case irr::KEY_KEY_T:
-					if (Smarticle::global_GUI_value != 5)
-					{
-						std::pair<double, double> angPair;
-						double ang1;
-						double ang2;
-						Smarticle::global_GUI_value = 5;
-						for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
-						{
-							Smarticle* sPtr = sv->at(i);
-
-							ang1 = wcstod(angle1Input->getText(), NULL)*CH_C_PI / 180;
-							ang2 = wcstod(angle2Input->getText(), NULL)*CH_C_PI / 180;
-							sPtr->vib.clear();
-
-							//in case strange values are written
-							if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
-							{
-								Smarticle::global_GUI_value = 0;
-								return true;
-								break;
-							}
-							if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
-							{
-								Smarticle::global_GUI_value = 0;
-								return true;
-								break;
-							}
-
-							sPtr->vib.emplace_back(ang1, ang2);
-
-							sPtr->vib.emplace_back(ang1 - vibAmp, ang2 - vibAmp);
-
-							sPtr->vib.emplace_back(ang1, ang2);
-
-							sPtr->vib.emplace_back(ang1 + vibAmp, ang2 + vibAmp);
-
-						}
-					}
-					else
-						Smarticle::global_GUI_value = 0;
-					return true;
-					break;
-
-				case irr::KEY_KEY_Y: //remove container or floor
-					if (bucket_exist)
-					{
-						switch (bucketType)
-						{
-						case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
-								for (size_t i = 0; i < bucket_bod_vec.size(); i++)
-								{
-									bucket_bod_vec.at(i)->SetBodyFixed(false);
-
-									bucket_bod_vec.at(i)->SetPos(ChVector<>(
-									bucket_bod_vec.at(i)->GetPos().x,
-									bucket_bod_vec.at(i)->GetPos().y+1,
-									bucket_bod_vec.at(i)->GetPos().z));
-								}
-							break;
-						case HOPPER:
-							bucket_bott->SetPos(ChVector<>(1, 0, 0));
-							break;
-						case RAMP:
-							bucket_bott->SetPos(ChVector<>(1, 0, 0));
-							break;
-						}
-
-						bucket_exist = false;
-					}
-
-					return true;
-					break;
-				case irr::KEY_KEY_J:
-				{
-					static bool ran = false;
-					switch (bucketType)
-					{
-					case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
-						for (size_t i = 0; i < bucket_bod_vec.size(); i++)
-						{
-							//bucket_bod_vec.at(i)->SetBodyFixed(false);
-							bucket_bod_vec.at(i)->SetBodyFixed(true);
-								
-							double x = bucket_bod_vec.at(i)->GetPos().x;
-							double y = bucket_bod_vec.at(i)->GetPos().y;
-							double z = bucket_bod_vec.at(i)->GetPos().z;
-							//GetLog() << "\n" << bucket_bod_vec.at(i).get_ptr()->GetPos() << "\n";
-
-							double theta = atan2(y,x);
-							//double theta = atan(x/y);
-							double r = sqrt(x*x + y*y);
-							//ChSharedPtr<ChLinkLockPlanePlane> link(new ChLinkLockPlanePlane);
-							//link->Initialize(bucket_bod_vec.at(i), bucket_bott, ChCoordsys<>(VNULL));
-							//link->SetMotion_axis(ChVector<>(0, 1, 0));
-							//GetLog() << "axis: " << link->GetMotion_axis();
-							//link->SetMotion_Y((new ChFunction_Ramp(0, 100)));
-							////link->SetMotion_ang((new ChFunction_Ramp(0, 1)));
-							//app->GetSystem()->AddLink(link);
-
-							//bucket_bod_vec.at(i)->SetPos(ChVector<>(
-							//	r*(.75)*cos(theta),
-							//	r*(.75)*sin(theta),
-							//	0));
-							//ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
-							//ChSharedPtr<ChFunction_Sine> knobcylinderfunc(new ChFunction_Sine());
-							//ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);
-							//double knobAmp = CH_C_PI * 1;
-							//double knobW = 2 * CH_C_PI * 1 / 20;
-							//double knobPhase = -knobW*vibrateStart;
-							//knobcylinderfunc->Set_amp(knobAmp);
-							//knobcylinderfunc->Set_w(knobW);
-							//knobcylinderfunc->Set_phase(knobPhase);
-							
-							//link_engine->Initialize(knobstick, truss,
-							//	ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
-							//link_engine->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_LOCK); // also works as revolute support
-							//link_engine->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-							//link_engine->Set_rot_funct(knobcylinderfunc);
-							//link_engine->SetDisabled(true);
-							//mphysicalSystem.AddLink(link_engine);
-							
-							
-							bucket_bod_vec.at(i)->SetPos(ChVector<>(x - bucket_rad*.01*cos(theta), y - bucket_rad*.01*sin(theta), z));
-							//bucket_bod_vec.at(i)->SetPos_dt(ChVector<>(
-							//	-r*cos(theta),
-							//	-r*sin(theta),
-							//	0));
-						}
-
-						break;
-					case HOPPER:
-						bucket_bott->SetPos(ChVector<>(100, 0, 0));
-						break;
-					case RAMP:
-						bucket_bott->SetPos(ChVector<>(100, 0, 0));
-						break;
-					}
-				
-					//return true;
-					break;
-
-				}
-				case irr::KEY_KEY_K:
-				{
-					static bool ran = false;
-					switch (bucketType)
-					{
-					case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
-						for (size_t i = 0; i < bucket_bod_vec.size(); i++)
-						{
-							//bucket_bod_vec.at(i)->SetBodyFixed(false);
-							bucket_bod_vec.at(i)->SetBodyFixed(true);
-
-							double x = bucket_bod_vec.at(i)->GetPos().x;
-							double y = bucket_bod_vec.at(i)->GetPos().y;
-							double z = bucket_bod_vec.at(i)->GetPos().z;
-							//GetLog() << "\n" << bucket_bod_vec.at(i).get_ptr()->GetPos() << "\n";
-
-							double theta = atan2(y, x);
-							double r = sqrt(x*x + y*y);
-							bucket_bod_vec.at(i)->SetPos(ChVector<>(x + bucket_rad*.01*cos(theta), y + bucket_rad*.01*sin(theta), z));
-
-						}
-
-						break;
-					case HOPPER:
-						bucket_bott->SetPos(ChVector<>(100, 0, 0));
-						break;
-					case RAMP:
-						bucket_bott->SetPos(ChVector<>(100, 0, 0));
-						break;
-					}
-
-					//return true;
-					break;
-
-				}
-				case irr::KEY_KEY_1:
-					switch (bucketType)
-					{
-					case DRUM:
-						drum_freq = drum_freq - rampInc;
-						break;
-					case RAMP:
-
-						rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0;
-						bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-							Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0
-							, 0, 0)));
-						bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-							Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0
-							, 0, 0)));
-						break;
-					default:
-						rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0;
-						bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-							Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0
-							, 0, 0)));
-						break;
-					}
-					drawAngle();
-					return true;
-					break;
-				case irr::KEY_KEY_2:			//increase angle of bucket by rampInc
-					switch (bucketType)
-					{
-					case DRUM:
-						drum_freq = drum_freq + rampInc;
-						break;
-					case RAMP:
-
-						rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0;
-						bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-							Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0
-							, 0, 0)));
-						bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-							Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0
-							, 0, 0)));
-						break;
-					default:
-						rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0;
-						bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-							Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0
-							, 0, 0)));
-						break;
-					}
-					drawAngle();
-					return true;
-					break;
-				case irr::KEY_KEY_3:			//decrease rampInc
-					rampInc = rampInc-1.0/60.0;
-					drawAngle();
-					return true;
-					break;
-				case irr::KEY_KEY_4:			//increase rampInc
-					rampInc = rampInc + 1.0/60.0;
-					drawAngle();
-					return true;
-					break;
-				case irr::KEY_KEY_C:			//decrease p
-					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
-					{
-						Smarticle* sPtr = sv->at(i);
-						sPtr->armsController->p_gain = sPtr->armsController->p_gain - inc;
-					}
-					drawAngle();
-					return true;
-					break;
-				case irr::KEY_KEY_V:			//decrease i
-					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
-					{
-						Smarticle* sPtr = sv->at(i);
-						sPtr->armsController->i_gain = sPtr->armsController->i_gain - inc;
-					}
-					drawAngle();
-					return true;
-					break;
-				case irr::KEY_KEY_B:			//decrease d
-					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
-					{
-						Smarticle* sPtr = sv->at(i);
-						sPtr->armsController->d_gain = sPtr->armsController->d_gain - inc;
-					}
-					drawAngle();
-					return true;
-					break;
-				case irr::KEY_KEY_D:			//increase p
-					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
-					{
-						Smarticle* sPtr = sv->at(i);
-						sPtr->armsController->p_gain = sPtr->armsController->p_gain + inc;
-					}
-					drawAngle();
-					return true;
-					break;
-				case irr::KEY_KEY_F:			//increase i
-					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
-					{
-						Smarticle* sPtr = sv->at(i);
-						sPtr->armsController->i_gain = sPtr->armsController->i_gain + inc;
-					}
-					drawAngle();
-					return true;
-					break;
-				case irr::KEY_KEY_G:			//increase d
-					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
-					{
-						Smarticle* sPtr = sv->at(i);
-						sPtr->armsController->d_gain = sPtr->armsController->d_gain + inc;
-					}
-					drawAngle();
-					return true;
-					break;
-				}
-
-			}
-			return false;
-		}
-		void drawSmarticleAmt(int numLayers)//nu
+		/// Callback used to report 'near enough' pairs of models.
+		/// This must be implemented by a child class of ChBroadPhaseCallback.
+		/// Return false to skip narrow-phase contact generation for this pair of bodies.
+		virtual bool BroadCallback(collision::ChCollisionModel* mmodelA,  ///< pass 1st model
+			collision::ChCollisionModel* mmodelB)   ///< pass 2nd model
 		{
-			char message[100]; sprintf(message, "Layers: %d, Smarticles: %d, GUI: %d", numLayers, sv->size(),Smarticle::global_GUI_value);
-			this->text_SmarticleAmt->setText(core::stringw(message).c_str());
+			return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 3));
 		}
-		void drawAngle()
+	};
+
+
+	class ext_force :public ChReportContactCallback2{
+
+	public:
+		double n_contact_force = 0;
+		ChVector<> t_contact_force = (0, 0, 0);
+		double m_contact_force = 0;
+		double maxHeight = 0;
+		virtual bool ReportContactCallback2(
+			const ChVector<>& pA,             ///< get contact pA
+			const ChVector<>& pB,             ///< get contact pB
+			const ChMatrix33<>& plane_coord,  ///< get contact plane coordsystem (A column 'X' is contact normal)
+			const double& distance,           ///< get contact distance
+			const ChVector<>& react_forces,   ///< get react.forces (if already computed). In coordsystem 'plane_coord'
+			const ChVector<>& react_torques,  ///< get react.torques, if rolling friction (if already computed).
+			ChContactable* contactobjA,  ///< get model A (note: some containers may not support it and could be zero!)
+			ChContactable* contactobjB   ///< get model B (note: some containers may not support it and could be zero!)
+			)
 		{
-			if (bucketType == STRESSSTICK)
+			unsigned int ia = contactobjA->GetPhysicsItem()->GetIdentifier();// reports force BY ib ON ia.
+			unsigned int ib = contactobjB->GetPhysicsItem()->GetIdentifier();
+			//GetLog() << "Report Callback\n";
+
+			//normal force
+			if (ia >= largeID)
 			{
-				if (sv->size() > 0)
-				{
-					Smarticle* sPtr = sv->at(0);
-					char message[100]; sprintf(message, "P:%g, I:%g, D:%g", sPtr->armsController->p_gain, sPtr->armsController->i_gain, sPtr->armsController->d_gain);
-					this->text_Angle->setText(core::stringw(message).c_str());
-				}
-			}
-			else if (bucketType == DRUM)
-			{
-				char message[100]; sprintf(message, "AngVel: %g rpm, Increment: %g", drum_freq*60, rampInc*60);
-				this->text_Angle->setText(core::stringw(message).c_str());
-			}
-			else{
-				char message[100]; sprintf(message, "Angle: %1.3g, Increment: %1.3g", Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x * 180 / CH_C_PI, rampInc);
-				this->text_Angle->setText(core::stringw(message).c_str());
+
+				//GetLog() << "running method";
+				//double a = react_forces.Length();
+				this->m_contact_force += react_forces.Length();
+				//TODO get normal forces only!
+
+				//n_contact_force += react_forces.y;
+				//GetLog() << "Normal Force: " << m_contact_force << "\n";
+				//t_contact_force += Vector(react_forces.y, react_forces.x, react_forces.z); ///x(output)=y(system) y(output)=x(system)  z(output) = z(sys)
 			}
 
+			return true;
 		}
-		void drawSuccessful()
-		{
-			int count = 0;
-			for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
-			{
-				if(sv->at(i)->successfulMotion) count++;
-			}
-			char message[100]; sprintf(message, "Successfully Moving: %d/%d", count, sv->size());
-			this->text_successful->setText(core::stringw(message).c_str());
-		}
-		void drawSuccessful2()
-		{
-			char message[100]; sprintf(message, "Successfully Moving: %d/%d", successfulCount, sv->size());
-			this->text_successful->setText(core::stringw(message).c_str());
-		}
-		void addSuccessful(Smarticle &sPtr)
-		{
-			if (sPtr.successfulMotion)
-				successfulCount++;
-
-		}
-
-		void resetSuccessfulCount()
-		{
-			successfulCount = 0;
-		}
-	private:
-		double inc = .1;
-		std::vector<Smarticle*> *sv;
-		ChIrrApp* app;
-		IGUIScrollBar* scrollbar_friction;
-		IGUIStaticText* text_Q;
-		IGUIStaticText* text_W;
-		IGUIStaticText* text_E;
-		IGUIStaticText* text_R;
-		IGUIStaticText* text_T;
-		IGUIStaticText* text_Y;
-		IGUIStaticText* text_SmarticleAmt;
-		IGUIStaticText* text_Angle;
-		IGUIScrollBar* scrollbar_cohesion;
-		IGUIStaticText* text_cohesion;
-		IGUIScrollBar* scrollbar_compliance;
-		IGUIStaticText* text_compliance;
-		IGUIStaticText* text_angle1;
-		IGUIStaticText* text_angle2;
-		IGUIEditBox* angle1Input;
-		IGUIEditBox* angle2Input;
-		IGUIStaticText* text_successful;
-		static int successfulCount;
-
 
 	};
-	int MyEventReceiver::successfulCount = 0;
-#endif
+// =============================================================================\
 
 	double showForce(CH_SYSTEM *msys)
 	{
-		class ext_force :public ChReportContactCallback2{
-
-		public:
-			double n_contact_force = 0;
-			ChVector<> t_contact_force = (0, 0, 0);
-			double m_contact_force = 0;
-			double maxHeight = 0;
-			virtual bool ReportContactCallback2(
-				const ChVector<>& pA,             ///< get contact pA
-				const ChVector<>& pB,             ///< get contact pB
-				const ChMatrix33<>& plane_coord,  ///< get contact plane coordsystem (A column 'X' is contact normal)
-				const double& distance,           ///< get contact distance
-				const ChVector<>& react_forces,   ///< get react.forces (if already computed). In coordsystem 'plane_coord'
-				const ChVector<>& react_torques,  ///< get react.torques, if rolling friction (if already computed).
-				ChContactable* contactobjA,  ///< get model A (note: some containers may not support it and could be zero!)
-				ChContactable* contactobjB   ///< get model B (note: some containers may not support it and could be zero!)
-				)
-			{
-				unsigned int ia = contactobjA->GetPhysicsItem()->GetIdentifier();// reports force BY ib ON ia.
-				unsigned int ib = contactobjB->GetPhysicsItem()->GetIdentifier();
-				//GetLog() << "Report Callback\n";
-
-				//normal force
-				if (ia >= largeID)
-				{
-
-					//GetLog() << "running method";
-					//double a = react_forces.Length();
-					this->m_contact_force += react_forces.Length();
-					//TODO get normal forces only!
-
-					//n_contact_force += react_forces.y;
-					//GetLog() << "Normal Force: " << m_contact_force << "\n";
-					//t_contact_force += Vector(react_forces.y, react_forces.x, react_forces.z); ///x(output)=y(system) y(output)=x(system)  z(output) = z(sys)
-				}
-				
-				return true;
-			}
-
-		};
+		
 			ext_force ef;
 			msys->GetContactContainer()->ReportAllContacts2(&ef);
 			return ef.m_contact_force; //TODO return max height too
@@ -1382,14 +883,17 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
 	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*bucket_interior_halfDim.z);
 	ChSharedPtr<ChBody> ground;
+	ChSharedPtr<ChBody> bucket;
+	ChSharedPtr<ChBody> bucket_bott;
 	if (USE_PARALLEL) {
 		ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-		bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-		bucket_bott = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-	} else {
+		ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+		ChSharedPtr<ChBody> bucket_bott = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+	} 
+	else {
 		ground = ChSharedPtr<ChBody>(new ChBody);
-		bucket = ChSharedPtr<ChBody>(new ChBody);
-		bucket_bott = ChSharedPtr<ChBody>(new ChBody);
+		ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody);
+		ChSharedPtr<ChBody> bucket_bott = ChSharedPtr<ChBody>(new ChBody);
 	}
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
@@ -2125,7 +1629,7 @@ int main(int argc, char* argv[]) {
 	application.SetTimestep(dT);  // Arman modify
 
 	std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n" << std::endl;
-	MyEventReceiver receiver(&application, &mySmarticlesVec);
+	IrrGui receiver(&application, &mySmarticlesVec);
 	// scan all contact
 	// note how to add the custom event receiver to the default interface:
 	application.SetUserEventReceiver(&receiver);
