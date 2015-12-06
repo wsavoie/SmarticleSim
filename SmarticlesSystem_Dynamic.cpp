@@ -35,14 +35,15 @@
 #include "utils/ChUtilsCreators.h"     //Arman: why is this
 #include "utils/ChUtilsInputOutput.h"  //Arman: Why is this
 #include "utils/ChUtilsGenerators.h"
-
+#include "common.h"
 #include <ctime>
 #include <stdlib.h>  // system, rand, srand, RAND_MAX
 #include "core/ChFileutils.h" // for MakeDirectory
+#include "IrrGui.h"
 #include "Smarticle.h"
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
-#include "common.h"
+
 #include <memory>
 
 
@@ -100,10 +101,10 @@ using namespace gui;
 //***********************************
 // Use the namespace of Chrono
 
-enum SmarticleType {SMART_ARMS , SMART_U};
-enum BucketType {KNOBCYLINDER,HOOKRAISE,STRESSSTICK,CYLINDER, BOX, HULL,RAMP,HOPPER,DRUM};
-SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = STRESSSTICK;
+//enum SmarticleType {SMART_ARMS , SMART_U};
+//enum BucketType {KNOBCYLINDER,HOOKRAISE,STRESSSTICK,CYLINDER, BOX, HULL,RAMP,HOPPER,DRUM};
+//SmarticleType smarticleType = SMART_ARMS;//SMART_U;
+//BucketType bucketType = STRESSSTICK;
 
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 // =============================================================================
@@ -126,7 +127,7 @@ double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec
 std::ofstream simParams;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
-	double sizeScale = 5;
+	//double sizeScale = 5;
 	int appWidth = 1280;
 	int appHeight = 720;
 	//double sizeScale = 5;
@@ -142,7 +143,7 @@ ChSharedPtr<ChBody> bucket_bott;
 
 
 	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
+	//double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 	double contact_recovery_speed = .5* sizeScale;
 	double tFinal = 6;
 	double vibrateStart= 1;
@@ -196,7 +197,7 @@ ChSharedPtr<ChBody> bucket_bott;
 
 	double collisionEnvelope = .1 * t2_smarticle;
 
-	bool bucket_exist = true;
+	//bool bucket_exist = true;
 
 	bool read_from_file = false;
 	bool povray_output = false;
@@ -224,12 +225,13 @@ ChSharedPtr<ChBody> bucket_bott;
 	double pctActive = 1.0;
 	double angle1 = 90;
 	double angle2 = 90;
-	double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
+	//double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
 	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
 	ChSharedPtr<ChTexture> sphereTexture(new ChTexture());
 	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
 	ChSharedPtr<ChTexture> floorTexture(new ChTexture());	
-// =============================================================================
+// =============================================================================\
+
 #if irrlichtVisualization
 	class MyEventReceiver : public IEventReceiver {
 	public:
