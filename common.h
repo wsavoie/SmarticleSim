@@ -1,7 +1,22 @@
 #ifndef _common_h
 #define _common_h
-extern double sizeScale;
+#include <stdlib.h>  // system, rand, srand, RAND_MAX
+#include <vector>
+#include <chrono>
+
 #define stapleSize true
+	extern double sizeScale;
+	extern double dT;
+	extern bool bucket_exist;
+	extern double vibAmp;//vibrate by some amount of degrees back and forth
+	
+	enum SmarticleType { SMART_ARMS, SMART_U };
+	enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
+	extern SmarticleType smarticleType;
+	extern BucketType bucketType;
+
+	
+
 #endif
 
 
