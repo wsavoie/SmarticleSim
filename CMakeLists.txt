@@ -78,6 +78,7 @@ find_package(Chrono
              OPTIONAL_COMPONENTS OpenGL
              COMPONENTS Irrlicht
              CONFIG
+		
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
@@ -101,13 +102,13 @@ endif()
 # 
 # (B) Path to the top of the source tree for this project
 # - for access to utility headers
-
+set(EIGEN_DIR "D:/ChronoCode/libs/Eigen")
 include_directories(
 
     ${CHRONO_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
+	${EIGEN_DIR}
 )
-
 
 #--------------------------------------------------------------
 # Append to the parent's list of DLLs (and make it visible up)
@@ -125,8 +126,9 @@ message(STATUS "Parallel programs...")
 foreach(PROGRAM ${DEMOS})
 
   message(STATUS "...add ${PROGRAM}")
-
-  add_executable(${PROGRAM}  "${PROGRAM}.cpp" Smarticle.cpp SmarticleU.cpp CheckPointSmarticles.cpp)
+file(GLOB SOURCES "*.cpp")
+file(GLOB HEADERS "*.h")
+  add_executable(${PROGRAM}  "${PROGRAM}.cpp" ${HEADERS} ${SOURCES})
   source_group(""  FILES "${PROGRAM}.cpp")
 
   set_target_properties(${PROGRAM} PROPERTIES
