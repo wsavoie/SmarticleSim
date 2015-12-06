@@ -10,15 +10,17 @@
 
 #include "core/ChVector.h"
 #include "assets/ChTexture.h"
+
 #include "chrono_irrlicht/ChIrrApp.h"//changed path from unit to chrono to reflect changes in updated chrono
 #include "chrono_irrlicht/ChIrrTools.h"
 #include <irrlicht.h>
 //#include "physics/ChSystem.h"  // Arman: take care of this later
 #include "chrono_parallel/physics/ChSystemParallel.h"
+#include "physics/ChShaftsClutch.h"
 #include <memory>
 #include <deque>
 #include "common.h"
-
+#include "Controller.h"
 #ifndef true
 #define true 1
 #endif
@@ -103,18 +105,25 @@ namespace chrono {
 			double other_angHigh=120);
 
 
+		size_t numEngs = 2;
+		size_t numSegs = 3;
+		//Controller armsControl (new Controller());
 		virtual ChVector<> GetReactTorqueVectors01();
 		virtual ChVector<> GetReactTorqueVectors12();
 		virtual double GetReactTorqueLen01();
 		virtual double GetReactTorqueLen12();
-
+		virtual void ChangeArmColor(double torque01, double torque12);
 		virtual void SetDefaultOmega(double omega);
-		virtual void SetOmega(double momega1, double momega2, bool angularFreq = true);
+		
+		virtual void SetOmega(int idx, double momega, bool angularFreq=true);
 		virtual void SetOmega(double momega, bool angularFreq = true);
 		virtual void SetOmega1(double momega1, bool angularFreq = true);
 		virtual void SetOmega2(double momega2, bool angularFreq = true);
+		virtual double GetOmega(int index, bool angularFreq = true);
 		virtual double GetOmega1(bool angularFreq = true);
 		virtual double GetOmega2(bool angularFreq = true);
+		double GetNextOmega(int id);
+		double GetZReactTorque(int id);
 		virtual ChSharedBodyPtr GetSmarticleBodyPointer();
 		// create the smarticle by creating arms, adding joint between them, and functions
 		virtual void Create();
@@ -133,7 +142,7 @@ namespace chrono {
 		virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
 		virtual void SetActuatorFunction(int actuatorID, double omega);
 
-
+		Controller* armsController;
 		// Smarticle volume
 		virtual double GetVolume();
 		virtual ChVector<> Get_cm();
@@ -148,16 +157,19 @@ namespace chrono {
 
 
 		//smarticle arm angle
-		virtual void SetAngle(double mangle1, double mangle2, bool degrees = false);
+		virtual void SetAngles(double mangle1, double mangle2, bool degrees = false);
 		virtual void SetAngle(std::pair<double, double> mangles, bool degrees = false);
 		virtual void SetAngle(double mangle, bool degrees = false);
+		virtual void SetAngle(int id, double mangle, bool degrees = false);
 		virtual void SetAngle1(double mangle1, bool degrees = false);
 		virtual void SetAngle2(double mangle2, bool degrees = false);
+		std::vector<chrono::ChBody *> body_list;
 
 		virtual int GetID();
-
+		virtual double GetAngle(int id, bool degrees = false);
 		virtual double GetAngle1(bool degrees = false);
 		virtual double GetAngle2(bool degrees = false);
+
 		//body fixing
 		virtual void SetBodyFixed(bool mev);
 
@@ -166,7 +178,7 @@ namespace chrono {
 		virtual bool GetArm2OT();
 		void MoveLoop();
 		////////////Will smarticle implementation////////////
-
+		void AssignState(int guiState);
 		static std::vector<std::pair<double, double>> global;
 		static std::vector<std::pair<double, double>> gui1;//gui option 1
 		static std::vector<std::pair<double, double>> gui2;//gui option 2
@@ -184,7 +196,7 @@ namespace chrono {
 		double angHigh;
 		static double distThresh;
 		static unsigned int global_GUI_value;
-
+		std::vector<std::pair<double, double>> *mv;
 		std::deque<std::pair<double,double>> torques;
 		std::deque<double> torque1;
 		std::deque<double> torque2;
@@ -194,7 +206,10 @@ namespace chrono {
 		void updateTorqueAvg();
 		void updateTorqueAvg(std::pair <double, double > oldT);
 		///////////////////////////////////////////////////////////
-
+		double GetNextAngle(int id);
+		double GetCurrAngle(int id);
+		double GetExpAngle(int id);
+		bool CanMoveToNextIdx(int id,double ang);
 		std::pair<double, double> populateMoveVector();
 		//populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
 		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1,double momega2, MoveType mtype);
@@ -203,7 +218,8 @@ namespace chrono {
 		virtual void setCurrentMoveType(MoveType newMoveType);
 		void MoveLoop2(int guiState);
 		void MoveLoop2(int guiState, double torque01, double torque12);
-
+		void ControllerMove(int guiState, double torque01, double torque12);
+		ChSharedPtr<ChLinkEngine> getLinkActuator(int id);
 		//////////////////////////////////////////////////////
 	private:
 		// create smarticle arm, set collision, surface, and mass property.
@@ -231,7 +247,7 @@ namespace chrono {
 		//void CreateJoints1(ChQuaternion<>, ChQuaternion<>);
 		void CreateActuators();
 		//void CreateActuators1(ChQuaternion<>, ChQuaternion<>);
-
+		
 
 	protected:
 		// location and orientation (location of the center of the middle arm)
@@ -258,7 +274,7 @@ namespace chrono {
 
 
 
-
+		
 		///< pointer to the Chrono system
 		ChSystem* m_system;  // Arman : take care of this later
 
@@ -270,8 +286,9 @@ namespace chrono {
 		double defaultOmega;
 		double omega1;
 		double omega2;
-
-
+		std::vector <double> nextOmega;
+		std::vector <double> nextAngle;
+		std::vector <double> currTorque;
 		// bodies
 	 ChSharedBodyPtr arm0;	// left arm
 	 ChSharedBodyPtr arm1;	// middle arm
