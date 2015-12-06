@@ -421,7 +421,6 @@ ChSharedPtr<ChBody> bucket_bott;
 									bucket_bod_vec.at(i)->GetPos().y+1,
 									bucket_bod_vec.at(i)->GetPos().z));
 								}
-								
 							break;
 						case HOPPER:
 							bucket_bott->SetPos(ChVector<>(1, 0, 0));
@@ -1885,34 +1884,58 @@ void UpdateSmarticles(
 	double t = mphysicalSystem.GetChTime(); 
 	
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
-		mySmarticlesVec[i]->updateTorqueDeque();
-		double tor1 = mySmarticlesVec[i]->torqueAvg.first;
-		double tor2 = mySmarticlesVec[i]->torqueAvg.second;
+		//mySmarticlesVec[i]->updateTorqueDeque();
+		//double tor1 = mySmarticlesVec[i]->torqueAvg.first;
+		//double tor2 = mySmarticlesVec[i]->torqueAvg.second;
+
+		double tor1 = mySmarticlesVec[i]->GetZReactTorque(0);
+		double tor2 = mySmarticlesVec[i]->GetZReactTorque(1);
+
 		mySmarticlesVec[i]->timeSinceLastGait = mySmarticlesVec[i]->timeSinceLastGait + dT;
 		
-		if (t > 1)
+		if (t > 100)
 		{
-
 			if (mySmarticlesVec[i]->timeSinceLastGait >= gaitChangeLengthTime) //if timespan necessary to check 
 			{
-				if (tor1 <= torquethresh || tor2 <= torquethresh) //if either are above torque threshold
+				if (tor1 >= torquethresh || tor2 >= torquethresh) //if either are above torque threshold
 				{
-					mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType % 2 + 1, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
+					//mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType % 2 + 1, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
+					mySmarticlesVec[i]->ControllerMove(mySmarticlesVec[i]->moveType % 2 + 1, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
 				}
 				else
 				{
-					mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
+					//mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
+					mySmarticlesVec[i]->ControllerMove(mySmarticlesVec[i]->moveType, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
 				}
 				mySmarticlesVec[i]->timeSinceLastGait = 0;
 			}
 			else
 			{
-				mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
+				mySmarticlesVec[i]->ControllerMove(mySmarticlesVec[i]->moveType, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
+				//mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
 			}
+
+			//if (mySmarticlesVec[i]->timeSinceLastGait >= gaitChangeLengthTime) //if timespan necessary to check 
+			//{
+			//	if (tor1 <= torquethresh || tor2 <= torquethresh) //if either are above torque threshold
+			//	{
+			//		mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType % 2 + 1, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
+			//	}
+			//	else
+			//	{
+			//		mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
+			//	}
+			//	mySmarticlesVec[i]->timeSinceLastGait = 0;
+			//}
+			//else
+			//{
+			//	mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
+			//}
 		}
 		else
 		{
-			mySmarticlesVec[i]->MoveLoop2(Smarticle::global_GUI_value, tor1, tor2);
+			//mySmarticlesVec[i]->MoveLoop2(Smarticle::global_GUI_value, tor1, tor2);
+			mySmarticlesVec[i]->ControllerMove(Smarticle::global_GUI_value, tor1, tor2);
 		}
 
 		//double torque01 = mySmarticlesVec[i]->GetReactTorqueLen01();
@@ -1957,10 +1980,13 @@ bool SetGait(double time)
 	//else
 	//	break;
 
-	if (time < .5)
+	/*if (time < .5)
 		Smarticle::global_GUI_value = 2;
 	else if (time > .5 && time < 1)
 		Smarticle::global_GUI_value = 1;
+*/
+
+
 	//else if (time > 1 && time < 3)
 	//	Smarticle::global_GUI_value = 1;
 	//else
@@ -2480,6 +2506,7 @@ int main(int argc, char* argv[]) {
 		application.AssetUpdateAll();//uncomment to visualize vol frac boxes
 		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 		application.DoStep();//
+
 		application.GetVideoDriver()->endScene();
 #else
 		mphysicalSystem.DoStepDynamics(dT);
