@@ -42,7 +42,7 @@
 
 
 	extern double bucket_rad;
-	extern double vibAmp;// = 5 * 3.141592653589793238462643383279 / 180;
+	extern double vibAmp;
 	extern double rampAngle;
 	extern double rampInc;
 	extern double drum_omega;

@@ -77,7 +77,7 @@ using namespace gui;
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
-	using namespace chrono;
+using namespace chrono;
 
 //#define GLEW_STATIC
 //#include <GL/glew.h>
@@ -100,61 +100,50 @@ using namespace gui;
 
 //***********************************
 // Use the namespace of Chrono
-
-//enum SmarticleType {SMART_ARMS , SMART_U};
-//enum BucketType {KNOBCYLINDER,HOOKRAISE,STRESSSTICK,CYLINDER, BOX, HULL,RAMP,HOPPER,DRUM};
-//SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-//BucketType bucketType = STRESSSTICK;
-	SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-	BucketType bucketType = STRESSSTICK;
+//enum SmarticleType { SMART_ARMS, SMART_U };
+//enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
+SmarticleType smarticleType = SMART_ARMS;//SMART_U;
+BucketType bucketType = DRUM;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
-ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody);
-ChSharedPtr<ChBody> bucket_bott = ChSharedPtr<ChBody>(new ChBody);
+ChSharedPtr<ChBody> bucket;
+ChSharedPtr<ChBody> bucket_bott;
 
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
-//ChSharedPtr<ChBody> bucket;
-//ChSharedPtr<ChBody> bucket_bott;
-	double sizeScale = 5;
-	int appWidth = 1280;
-	int appHeight = 720;
-	//double sizeScale = 5;
-	//double gravity = -9.81 * sizeScale;
-	double gravity = -9.81;
-	double vibration_freq = 30;
+double sizeScale = 5;
+int appWidth = 1280;
+int appHeight = 720;
+//double gravity = -9.81 * sizeScale;
+double gravity = -9.81;
+double vibration_freq = 30;
 
-	double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
-	//double vibration_amp = sizeScale * 0.00055;
-	double mGamma = 2.0 * gravity;
-	double vibration_amp = mGamma / (omega_bucket*omega_bucket);
-	unsigned int largeID = 10000000;
+double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
+double mGamma = 2.0 * gravity;
+double vibration_amp = mGamma / (omega_bucket*omega_bucket);
+unsigned int largeID = 10000000;
 
 
-	//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
-	double contact_recovery_speed = .5* sizeScale;
-	double tFinal = 6;
-	double vibrateStart= 1;
+//double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
+double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
+double contact_recovery_speed = .5* sizeScale;
+double tFinal = 6;
+double vibrateStart= 1;
 
-	double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
-	double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
-	ChSharedPtr<ChMaterialSurface> mat_g;
-	int numLayers = 100;
-	double armAngle = 90;
-	double sOmega = 5;  // smarticle omega
+double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
+double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
+ChSharedPtr<ChMaterialSurface> mat_g;
+int numLayers = 100;
+double armAngle = 90;
+double sOmega = 5;  // smarticle omega
 
-	ChSharedPtr<ChLinkEngine> drum_actuator;
-	
-	////////////////staple smarticle geometry
-	//double w_smarticle;
-	//bool stapleSize = true;
+ChSharedPtr<ChLinkEngine> drum_actuator;
 
-	double gaitChangeLengthTime = .5;
+double gaitChangeLengthTime = .5;
 
 
-	////////////////rescaled robot geometry (3.93) based on w_smarticle scaling
-	////////////////robot dim is l/w =1, w=.046 t=.031 t2=.021
+////////////////rescaled robot geometry (3.93) based on w_smarticle scaling
+////////////////robot dim is l/w =1, w=.046 t=.031 t2=.021
 #if stapleSize
 	double bucket_rad = sizeScale*0.025;
 	double w_smarticle = sizeScale * 0.0117;
@@ -175,121 +164,116 @@ std::ofstream simParams;
 
 
 
-		// double t_smarticle 	= sizeScale * .00254;
-		// double t2_smarticle	= sizeScale * .001;
-	double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
-	////robot smarticle geometry
-	//double w_smarticle = 0.046; //4.6cm
-	//double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
-	//double t_smarticle = .03;
-	//double t2_smarticle = .021;
+	// double t_smarticle 	= sizeScale * .00254;
+	// double t2_smarticle	= sizeScale * .001;
+double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
+////robot smarticle geometry
+//double w_smarticle = 0.046; //4.6cm
+//double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+//double t_smarticle = .03;
+//double t2_smarticle = .021;
 
-	double collisionEnvelope = .1 * t2_smarticle;
+double collisionEnvelope = .1 * t2_smarticle;
 
-	bool bucket_exist = true;
+bool bucket_exist = true;
 
-	bool read_from_file = false;
-	bool povray_output = false;
-	int out_fps = 120;
-	const std::string out_dir = "PostProcess";
-	const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-	int numPerLayer = 4;
-	ChVector<> bucket_ctr = ChVector<>(0,0,0);
-	//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
-	//double bucket_rad = sizeScale*0.034;
-	//double bucket_rad = sizeScale*0.02;
-	//double bucket_rad = sizeScale*0.022;
+bool read_from_file = false;
+bool povray_output = false;
+int out_fps = 120;
+const std::string out_dir = "PostProcess";
+const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
+int numPerLayer = 4;
+ChVector<> bucket_ctr = ChVector<>(0,0,0);
+//ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
+//double bucket_rad = sizeScale*0.034;
+//double bucket_rad = sizeScale*0.02;
+//double bucket_rad = sizeScale*0.022;
 //	double bucket_rad = sizeScale*0.04;
 
-	std::vector<ChSharedPtr<ChBody>> bucket_bod_vec;
+std::vector<ChSharedPtr<ChBody>> bucket_bod_vec;
 
-	//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
-	double bucket_half_thick = sizeScale * .005;
+//ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
+double bucket_half_thick = sizeScale * .005;
 
-	double max_z = 0;
-	double rampAngle = 10 * CH_C_PI / 180;
-	double rampInc = 1.0/60.0;
-	double drum_freq = 1;
-	double drum_omega = drum_freq*2*CH_C_PI;
-	double pctActive = 1.0;
-	double inc = 0.1;
-	double angle1 = 90;
-	double angle2 = 90;
-	double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
-	ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
-	ChSharedPtr<ChTexture> sphereTexture(new ChTexture());
-	ChSharedPtr<ChTexture> groundTexture(new ChTexture());
-	ChSharedPtr<ChTexture> floorTexture(new ChTexture());	
-
-
+double max_z = 0;
+double rampAngle = 10 * CH_C_PI / 180;
+double rampInc = 1.0/60.0;
+double drum_freq = 1;
+double drum_omega = drum_freq*2*CH_C_PI;
+double pctActive = 1.0;
+double inc = 0.1;
+double angle1 = 90;
+double angle2 = 90;
+double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
+ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
+ChSharedPtr<ChTexture> sphereTexture(new ChTexture());
+ChSharedPtr<ChTexture> groundTexture(new ChTexture());
+ChSharedPtr<ChTexture> floorTexture(new ChTexture());	
 
 
+// =====================================================================================================
+class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
+public:
+	/// Callback used to report 'near enough' pairs of models.
+	/// This must be implemented by a child class of ChBroadPhaseCallback.
+	/// Return false to skip narrow-phase contact generation for this pair of bodies.
+	virtual bool BroadCallback(collision::ChCollisionModel* mmodelA,  ///< pass 1st model
+		collision::ChCollisionModel* mmodelB)   ///< pass 2nd model
+	{
+		return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 3));
+	}
+};
 
 
+class ext_force :public ChReportContactCallback2{
 
-	// =====================================================================================================
-	class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
-	public:
-		/// Callback used to report 'near enough' pairs of models.
-		/// This must be implemented by a child class of ChBroadPhaseCallback.
-		/// Return false to skip narrow-phase contact generation for this pair of bodies.
-		virtual bool BroadCallback(collision::ChCollisionModel* mmodelA,  ///< pass 1st model
-			collision::ChCollisionModel* mmodelB)   ///< pass 2nd model
+public:
+	double n_contact_force = 0;
+	ChVector<> t_contact_force = (0, 0, 0);
+	double m_contact_force = 0;
+	double maxHeight = 0;
+	virtual bool ReportContactCallback2(
+		const ChVector<>& pA,             ///< get contact pA
+		const ChVector<>& pB,             ///< get contact pB
+		const ChMatrix33<>& plane_coord,  ///< get contact plane coordsystem (A column 'X' is contact normal)
+		const double& distance,           ///< get contact distance
+		const ChVector<>& react_forces,   ///< get react.forces (if already computed). In coordsystem 'plane_coord'
+		const ChVector<>& react_torques,  ///< get react.torques, if rolling friction (if already computed).
+		ChContactable* contactobjA,  ///< get model A (note: some containers may not support it and could be zero!)
+		ChContactable* contactobjB   ///< get model B (note: some containers may not support it and could be zero!)
+		)
+	{
+		unsigned int ia = contactobjA->GetPhysicsItem()->GetIdentifier();// reports force BY ib ON ia.
+		unsigned int ib = contactobjB->GetPhysicsItem()->GetIdentifier();
+		//GetLog() << "Report Callback\n";
+
+		//normal force
+		if (ia >= largeID)
 		{
-			return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 3));
-		}
-	};
 
+			//GetLog() << "running method";
+			//double a = react_forces.Length();
+			this->m_contact_force += react_forces.Length();
+			//TODO get normal forces only!
 
-	class ext_force :public ChReportContactCallback2{
-
-	public:
-		double n_contact_force = 0;
-		ChVector<> t_contact_force = (0, 0, 0);
-		double m_contact_force = 0;
-		double maxHeight = 0;
-		virtual bool ReportContactCallback2(
-			const ChVector<>& pA,             ///< get contact pA
-			const ChVector<>& pB,             ///< get contact pB
-			const ChMatrix33<>& plane_coord,  ///< get contact plane coordsystem (A column 'X' is contact normal)
-			const double& distance,           ///< get contact distance
-			const ChVector<>& react_forces,   ///< get react.forces (if already computed). In coordsystem 'plane_coord'
-			const ChVector<>& react_torques,  ///< get react.torques, if rolling friction (if already computed).
-			ChContactable* contactobjA,  ///< get model A (note: some containers may not support it and could be zero!)
-			ChContactable* contactobjB   ///< get model B (note: some containers may not support it and could be zero!)
-			)
-		{
-			unsigned int ia = contactobjA->GetPhysicsItem()->GetIdentifier();// reports force BY ib ON ia.
-			unsigned int ib = contactobjB->GetPhysicsItem()->GetIdentifier();
-			//GetLog() << "Report Callback\n";
-
-			//normal force
-			if (ia >= largeID)
-			{
-
-				//GetLog() << "running method";
-				//double a = react_forces.Length();
-				this->m_contact_force += react_forces.Length();
-				//TODO get normal forces only!
-
-				//n_contact_force += react_forces.y;
-				//GetLog() << "Normal Force: " << m_contact_force << "\n";
-				//t_contact_force += Vector(react_forces.y, react_forces.x, react_forces.z); ///x(output)=y(system) y(output)=x(system)  z(output) = z(sys)
-			}
-
-			return true;
+			//n_contact_force += react_forces.y;
+			//GetLog() << "Normal Force: " << m_contact_force << "\n";
+			//t_contact_force += Vector(react_forces.y, react_forces.x, react_forces.z); ///x(output)=y(system) y(output)=x(system)  z(output) = z(sys)
 		}
 
-	};
+		return true;
+	}
+
+};
 // =============================================================================\
 
-	double showForce(CH_SYSTEM *msys)
-	{
+double showForce(CH_SYSTEM *msys)
+{
 		
-			ext_force ef;
-			msys->GetContactContainer()->ReportAllContacts2(&ef);
-			return ef.m_contact_force; //TODO return max height too
-	}
+		ext_force ef;
+		msys->GetContactContainer()->ReportAllContacts2(&ef);
+		return ef.m_contact_force; //TODO return max height too
+}
 // =============================================================================
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
@@ -883,17 +867,15 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
 	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*bucket_interior_halfDim.z);
 	ChSharedPtr<ChBody> ground;
-	ChSharedPtr<ChBody> bucket;
-	ChSharedPtr<ChBody> bucket_bott;
 	if (USE_PARALLEL) {
 		ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-		ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-		ChSharedPtr<ChBody> bucket_bott = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+		bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+		bucket_bott = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
 	} 
 	else {
 		ground = ChSharedPtr<ChBody>(new ChBody);
-		ChSharedPtr<ChBody> bucket = ChSharedPtr<ChBody>(new ChBody);
-		ChSharedPtr<ChBody> bucket_bott = ChSharedPtr<ChBody>(new ChBody);
+		bucket = ChSharedPtr<ChBody>(new ChBody);
+		bucket_bott = ChSharedPtr<ChBody>(new ChBody);
 	}
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
@@ -1989,35 +1971,34 @@ int main(int argc, char* argv[]) {
 			gl_window.Render();
 		}
 #else
-#if irrlichtVisualization
-		if (!(application.GetDevice()->run())) break;
-		application.GetVideoDriver()->beginScene(true, true,
-			video::SColor(255, 140, 161, 192));
-		//    ChIrrTools::drawGrid(
-		//        application.GetVideoDriver(), .2, .2, 150, 150,
-		//        ChCoordsys<>(ChVector<>(0.5 * hdim.x, boxMin.y, 0.5 * hdim.z),
-		//                     Q_from_AngAxis(CH_C_PI / 2, VECT_X)),
-		//        video::SColor(50, 90, 90, 150), true);
-		//application.AssetBindAll();
-		//application.AssetUpdateAll();
+	#if irrlichtVisualization
+			if (!(application.GetDevice()->run())) break;
+			application.GetVideoDriver()->beginScene(true, true,
+				video::SColor(255, 140, 161, 192));
+			//    ChIrrTools::drawGrid(
+			//        application.GetVideoDriver(), .2, .2, 150, 150,
+			//        ChCoordsys<>(ChVector<>(0.5 * hdim.x, boxMin.y, 0.5 * hdim.z),
+			//                     Q_from_AngAxis(CH_C_PI / 2, VECT_X)),
+			//        video::SColor(50, 90, 90, 150), true);
+			//application.AssetBindAll();
+			//application.AssetUpdateAll();
 
-		//framerecord
+			//framerecord
 	
-		application.SetVideoframeSaveInterval(5);//only save every 2 frames
-		application.DrawAll();
+			application.SetVideoframeSaveInterval(5);//only save every 2 frames
+			application.DrawAll();
 
-		application.AssetBindAll();  //uncomment to visualize vol frac boxes
-		application.AssetUpdateAll();//uncomment to visualize vol frac boxes
-		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
-		application.DoStep();//
+			application.AssetBindAll();  //uncomment to visualize vol frac boxes
+			application.AssetUpdateAll();//uncomment to visualize vol frac boxes
+			UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
+			application.DoStep();//
 
-		application.GetVideoDriver()->endScene();
-#else
-		mphysicalSystem.DoStepDynamics(dT);
+			application.GetVideoDriver()->endScene();
+	#else
+			mphysicalSystem.DoStepDynamics(dT);
+	#endif
 #endif
-#endif
 
-	
 		if (SetGait(t) == true)
 			break;
 		receiver.drawSuccessful();
