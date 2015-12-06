@@ -3,11 +3,6 @@
 #include "Smarticle.h"
 #include "Controller.h"
 using namespace chrono;
-// The parameters for the function
-//ChFunctionController::~ChFunctionController()
-//{
-////	delete[] controller_;
-//}
 double ChFunctionController::Get_y(double t) {
 	double output = ComputeOutput(t);
 	

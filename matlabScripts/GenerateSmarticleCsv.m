@@ -11,7 +11,9 @@
 stapleSize = true;
 dt=.00025;
 sizeScale=5;
-omega = 5;
+% omega = 4.9244e-5;
+omega = 4.9244e-2;
+% omega = 10;
 rho = 7850.0/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 if stapleSize
@@ -54,8 +56,10 @@ fprintf(fid,'#\n');
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
 ss= dt*omega; %step size
-
-
+if ss<1e-3
+    ss= .0013; %step siz
+%     error('change back to ss=.0025)');
+end
 
 switch global_gait
     case 1% circle gait
