@@ -6,6 +6,7 @@
 #include <motion_functions/ChFunction_Base.h>
 #include <physics/ChSystem.h>
 #include <physics/ChLinkEngine.h>
+#include "ChFunction_Controller.h"
 #include <utility>      // std::pair, std::make_pair
 
 namespace chrono {
@@ -23,8 +24,8 @@ namespace chrono {
 		// get the toruqe for joint i
 		//size_t GetNumEngines();
 		ChSharedPtr<ChLinkEngine> GetEngine(size_t i);
-		
-		void SetDesiredAngle(size_t i, double desangle);
+		void SetDesiredAngle(size_t i, double desOmeg);
+		void SetDesiredAngularSpeed(size_t i, double desangle);
 		double GetCurrAngle(size_t i, double t);
 		double GetDesiredAngle(size_t i, double t);
 
@@ -33,32 +34,36 @@ namespace chrono {
 		double GetDesiredAngularSpeed2(size_t i, double t, double error);
 		double GetDesiredAngularSpeedForFunction(size_t i, double t);
 		double GetCurrTorque(size_t i, double t);
-		
+		double LinearInterpolate(size_t i, double curr, double desired);
 		double GetMediaTorque(size_t i, double t);
 		double GetContactTorque(size_t i, double t);
 		double GetAngle(size_t i, double t);
 		double GetAngularSpeed(size_t i, double t);
 		bool OT();
-		void UseForceControl();
-		void UseSpeedControl();
+		bool UseForceControl();
+		bool UseSpeedControl();
 		// Change the undultation amplitude of the snake
 		//void SetCommandAmplitude(double amp);
 		//void PushCommandToQueue(const Json::Value &command);
 		//std::vector<std::pair<double, double>>* getMoveVector(unsigned int guiState);
-
+		std::vector <bool> successfulMove_;
+		double omegaLimit = 5;
 		double outputLimit = 0;
 		//double p_gain = 0.0000350;
 		//double i_gain = 0.0000300;
 		//double d_gain = 0.000005;
-		double p_gain = 0;
+		double p_gain = 1;
 		double i_gain = 0;
-		double d_gain = 0;
+		double d_gain = 0.1;
+
 		void setMoveVector(unsigned int guiState);
 	protected:
 		// Process the commands in the queue, one at a time
 		void ProcessCommandQueue(double dt);
 		chrono::ChSystem *ch_system_;
 		Smarticle *smarticle_;
+		ChSharedPtr<ChFunctionController> engine_funct0;
+		ChSharedPtr<ChFunctionController> engine_funct1;
 		// Contact force on each of the robot segment.
 		//chrono::ChReportContactCallback2 *contact_reporter_;
 		//std::vector<chrono::ChVector<> > contact_force_list_;

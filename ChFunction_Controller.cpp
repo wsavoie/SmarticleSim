@@ -3,13 +3,13 @@
 #include "Smarticle.h"
 #include "Controller.h"
 using namespace chrono;
+
 double ChFunctionController::Get_y(double t) {
 	double output = ComputeOutput(t);
-	
-	//double output = controller_->computeOutput();
-	output = std::max(std::min(controller_->outputLimit, output), -controller_->outputLimit);
-	//controller_->~Controller();
-	return output;
+	double output2 = std::max(std::min(controller_->outputLimit, output), -controller_->outputLimit);
+	//if (t>.5)
+	//	GetLog() << "output: " << output << " output2: " << output2 << "\n";
+	return output2;
 }
 
 // The low level PID controller in motor.
@@ -18,25 +18,29 @@ double ChFunctionController::ComputeOutput(double t) {
 
 	//double J = controller_->GetCurrTorque(index_, t) / friction;
 	//double tau = J / friction;
+	
 
+	static bool runOne = false;
 	double p = controller_->p_gain;
 	double i = controller_->i_gain;
 	double d = controller_->d_gain;
 
-	//double curr_angle = controller_->GetCurrAngle(index_, t);
-	//double desired_angle = controller_->GetDesiredAngle(index_, t); ///get the next angle
-	//double curr_angular_speed = controller_->GetCurrAngularSpeed(index_,t);
-	//double output = controller_->GetDesiredAngularSpeed2(index_, t,(desired_angle-curr_angle));
-
-
 	double curr_angle = controller_->GetCurrAngle(index_, t);
 	double desired_angle = controller_->GetDesiredAngle(index_, t); ///get the next angle
-	double curr_angular_speed = controller_->GetCurrAngularSpeed(index_, t);
-	double desired_angular_speed = controller_->GetDesiredAngularSpeedForFunction(index_, t);
-	cum_error_ += (desired_angle - curr_angle)*dT;
-	double output = p * (desired_angle - curr_angle) +
-		d*  (desired_angular_speed - curr_angular_speed) +
-		cum_error_ * i;
 
+	double error = desired_angle - curr_angle;
+
+	cum_error_ += (error)*dT;
+	double output = p*error + d*((error-prevError) / dT) + i*cum_error_;
+	//if (t > .3 && !runOne){
+	//	runOne = true;
+	//	GetLog() << "output: " << output << " output2: " << output << "\n";
+	//	prevError = 0;
+	//}
+	prevError = error;
 	return output;
+}
+void ChFunctionController::ResetCumulative()
+{
+	cum_error_ = 0;
 }

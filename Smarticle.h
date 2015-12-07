@@ -196,6 +196,7 @@ namespace chrono {
 		void updateTorqueAvg();
 		void updateTorqueAvg(std::pair <double, double > oldT);
 		///////////////////////////////////////////////////////////
+		void SetNextAngle(int id,double ang);
 		double GetNextAngle(int id);
 		double GetCurrAngle(int id);
 		double GetExpAngle(int id);

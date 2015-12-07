@@ -9,16 +9,24 @@ using namespace io;
 using namespace gui;
 using namespace chrono;
 
-	IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
+IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 
-		sv = mySmarticlesVec;
-		// store pointer applicaiton
-		app = myapp;
-		// ..add a GUI slider to control friction
+	sv = mySmarticlesVec;
+	// store pointer applicaiton
+	app = myapp;
+	// ..add a GUI slider to control friction
 
 
+	if (bucketType == STRESSSTICK)
+	{
 		text_Angle = app->GetIGUIEnvironment()->addStaticText(L"Angle: 0, Increment: 0",
 			rect<s32>(850, 45, 1050, 60), true);
+	}
+	else
+	{
+		text_Angle = app->GetIGUIEnvironment()->addStaticText(L"Angle: 0, Increment: 0",
+			rect<s32>(850, 45, 1050, 60), true);
+	}
 		text_SmarticleAmt = app->GetIGUIEnvironment()->addStaticText(L"Layers: 0, Smarticles: 0",
 			rect<s32>(850, 65, 1050, 80), true);
 

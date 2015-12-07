@@ -12,7 +12,7 @@ stapleSize = true;
 dt=.00025;
 sizeScale=5;
 % omega = 4.9244e-5;
-omega = 4.9244e-2;
+omega = 5;
 % omega = 10;
 rho = 7850.0/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
@@ -30,7 +30,7 @@ end
 
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
-torqueThresh=9.8*mass*w_s*5;%.00005;  4.6657e-04
+torqueThresh=9.8*mass*w_s*.5;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 

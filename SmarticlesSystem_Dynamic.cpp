@@ -103,7 +103,7 @@ using namespace chrono;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = DRUM;
+BucketType bucketType = STRESSSTICK;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -117,7 +117,7 @@ int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 double vibration_freq = 30;
-
+double fric = 0;
 double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
@@ -127,7 +127,7 @@ unsigned int largeID = 10000000;
 //double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
-double tFinal = 6;
+double tFinal = .5;
 double vibrateStart= 1;
 
 double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
@@ -455,7 +455,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				);
 
 			if (MyRand()<1)
-				smarticle0->visualize = true;
+			smarticle0->visualize = true;
 			smarticle0->populateMoveVector();
 			smarticle0->SetAngle(angle1, angle2, true);
 			smarticle0->Create();
@@ -470,6 +470,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 #if irrlichtVisualization
 			application.AssetBindAll();
 			application.AssetUpdateAll();
+			
 #endif
 	}
 
@@ -897,7 +898,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ground->AddAsset(groundTexture);
 
 	// 1: create bucket
-		mat_g->SetFriction(0.8); //steel- plexiglass   (plexiglass was outer cylinder material)
+		mat_g->SetFriction(fric); //steel- plexiglass   (plexiglass was outer cylinder material)
 		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 		switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 		{
@@ -927,7 +928,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		case DRUM:
 			bucket = create_drum(25, 1, true, &mphysicalSystem, mat_g);
 		}
-		mat_g->SetFriction(0.8); //steel - steel
+		mat_g->SetFriction(fric); //steel - steel
 
 
 	bucket->SetBodyFixed(true);
@@ -1365,7 +1366,7 @@ void setUpDrumActuator(CH_SYSTEM& mphysicalSystem)
 void UpdateSmarticles(
 		CH_SYSTEM& mphysicalSystem,
 		std::vector<Smarticle*> mySmarticlesVec) {
-	static double torquethresh = mySmarticlesVec[0]->torqueThresh2;
+	static double torquethresh = mySmarticlesVec[0]->torqueThresh2; //TODO fix this add to common.h
 
 	double t = mphysicalSystem.GetChTime(); 
 	
@@ -1532,7 +1533,7 @@ int main(int argc, char* argv[]) {
 	simParams.close();
 	// define material property for everything
 	mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
-	mat_g->SetFriction(0.8); // .6 for wall to staple using tan (theta) tested on 7/20
+	mat_g->SetFriction(fric); // .6 for wall to staple using tan (theta) tested on 7/20
 
 	// Create a ChronoENGINE physical system
 	CH_SYSTEM mphysicalSystem;

@@ -13,13 +13,19 @@ namespace chrono {
 
 	class ChFunctionController : public ChFunction {
 	public:
+
 		//ChFunctionController(size_t index, Smarticle* smarticle)
 		//	: index_(index), smarticle_(smarticle) {}
 		ChFunctionController(size_t index, Controller* controller)
 			: index_(index), controller_(controller) {}
+		virtual ~ChFunctionController(){};
 		ChFunction *new_Duplicate() {
 			return new ChFunctionController(index_, controller_);
+
 		}
+
+		
+		void ResetCumulative();
 		//~ChFunctionController();
 		int Get_Type() { return 9527; }
 		double Get_y(double curr_t);
@@ -39,6 +45,7 @@ namespace chrono {
 		// The low level PID controller in motor.
 		double ComputeOutput(double t);
 		double cum_error_ = 0;
+		double prevError = 0;
 		Controller *controller_;
 		size_t index_;
 	};

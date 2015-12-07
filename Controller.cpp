@@ -1,5 +1,5 @@
 #include "Controller.h"
-#include "ChFunction_Controller.h"
+//#include "ChFunction_Controller.h"
 #include "Smarticle.h"
 #include <utility>
 #include <tuple>
@@ -13,10 +13,13 @@ Controller::Controller(chrono::ChSystem *ch_system, Smarticle *smarticle)
 {
 	int len = 2;
 	desiredOmega_.assign(len, 0);
+	successfulMove_.assign(len, false);
 	desiredAngle_.assign(len, 0);
 	currAngle_.assign(len, 0);
 	currOmega_.assign(len, 0);
 	currTorque_.assign(len, 0);
+	engine_funct0 = ChSharedPtr<ChFunctionController>(new ChFunctionController(0, this));
+	engine_funct1 = ChSharedPtr<ChFunctionController>(new ChFunctionController(1, this));
 	/*contact_reporter_ = new ExtractContactForce(&contact_force_list_);
 	for (size_t i = 0; i < amplitudes_.rows(); ++i) {
 		amplitudes_(i) = default_amplitude_;
@@ -26,44 +29,67 @@ Controller::Controller(chrono::ChSystem *ch_system, Smarticle *smarticle)
 }
 Controller::~Controller()
 {
-	
-	smarticle_->~Smarticle();
-	ch_system_->~ChSystem();
+	desiredOmega_.clear();
+	desiredAngle_.clear();
+	currAngle_.clear();
+	currOmega_.clear();
+	currTorque_.clear();
+
+	engine_funct0->~ChFunctionController();
+	engine_funct1->~ChFunctionController();
+
+
+
 	//smarticle_->~Smarticle();
 }
 bool Controller::Step(double dt) {
 	//ProcessCommandQueue(dt);
 	bool result = false;
 	steps_++;
-	if (smarticle_->GetArm0OT() || smarticle_->GetArm2OT())
-	{
-		result = false; //leaving this heere because maybe want to make it true
-	}
+
 
 
 	//TODO omega1prev==0 successful motion for gui1...?
 	double ang01 = smarticle_->GetCurrAngle(0);
 	double ang12 = smarticle_->GetCurrAngle(1);
-
-	bool cannotMoveNext0 = smarticle_->CanMoveToNextIdx(0, ang01); //bad method name
+	
+	smarticle_->SetAngle(0, ang01);
+	smarticle_->SetAngle(1, ang12);
+	//true if curr>(dist thresh)
+	bool cannotMoveNext0 = smarticle_->CanMoveToNextIdx(0, ang01); //bad method name 
 	bool cannotMoveNext1 = smarticle_->CanMoveToNextIdx(1, ang12);
 
 	//set desired angle to current angle if not able to move to next idx yet
-	if (cannotMoveNext0)
-		SetDesiredAngle(0,ang01);
-	if (cannotMoveNext1)
-		SetDesiredAngle(0, ang12);
+	//if (cannotMoveNext0)
+	//	SetDesiredAngle(0,ang01);
+	//if (cannotMoveNext1)
+	//	SetDesiredAngle(1, ang12);
 	
-	if(~cannotMoveNext0 && ~cannotMoveNext1)
-	{
-		GetDesiredAngularSpeed(0, dt);
-		GetDesiredAngularSpeed(1, dt);
-		result = true;
-	}	
+	//if(~cannotMoveNext0 && ~cannotMoveNext1)
+	//{
+	//	double om1 = GetDesiredAngularSpeed(0, dt);
+	//	double om2 = GetDesiredAngularSpeed(1, dt);
+	//	if 
+	//	if (om1>5 || om2>5)
+	//		result = false;
+	//	else{
+			//result = true;
+	//	}
+	//}	
 
-	//TODO fix choose omega amount 
-	UseForceControl();
+	//if (cannotMoveNext0&&cannotMoveNext1)
+	//{
+	//	smarticle_->GetNextAngle(id)
+	//}
+
+
+	result = UseForceControl();
 	//UseSpeedControl();
+
+	if (smarticle_->GetArm0OT() || smarticle_->GetArm2OT())
+	{
+		result = false; //leaving this heere because maybe want to make it true
+	}
 
 	return result;
 }
@@ -93,11 +119,36 @@ void Controller::SetDesiredAngle(size_t index, double desang)
 {
 	desiredAngle_.at(index) = desang;
 }
+void Controller::SetDesiredAngularSpeed(size_t index, double desOmeg)
+{
+	desiredOmega_.at(index) = desOmeg;
+}
 double Controller::GetCurrAngularSpeed(size_t index, double t)
 {
 	currOmega_.at(index) = smarticle_->GetOmega(index);
 	return 	currOmega_.at(index);
 
+}
+double Controller::LinearInterpolate(size_t idx, double curr, double des)
+{
+	double err = (des - curr);
+	double omega = fabs(err / dT);
+	if (omega > omegaLimit)
+	{
+		double newVal = omegaLimit*dT*sign(err) + curr;
+		//smarticle_->SetNextAngle(idx, newVal);
+		SetDesiredAngle(idx, newVal);
+		//SetDesiredAngularSpeed(idx,omegaLimit);
+		successfulMove_.at(idx) = false;
+		return newVal;
+	}
+	successfulMove_.at(idx) = true;
+	if (successfulMove_.at(0) && successfulMove_.at(1))
+	{
+		//complete successfulmove 
+		//successfulMove_.at(idx) = true;
+	}
+	return des;
 }
 double Controller::GetDesiredAngularSpeedForFunction(size_t index, double t)
 {
@@ -127,7 +178,8 @@ bool Controller::OT()
 		return false;
 }
 
-void Controller::UseSpeedControl() {
+bool Controller::UseSpeedControl() {
+	bool res = true;
 	for (size_t i = 0; i < smarticle_->numEngs; ++i) {
 		GetEngine(i)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 		ChSharedPtr<ChFunctionController> engine_funct(new ChFunctionController(i, this));
@@ -136,12 +188,31 @@ void Controller::UseSpeedControl() {
 		//ChSharedPtr<ChFunction_Const> mfun1 = GetEngine(i)->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
 		//mfun1->Set_yconst(desiredOmega_.at(i));
 	}
-}
-void Controller::UseForceControl() {
-	
-	for (size_t i = 0; i < smarticle_->numEngs; ++i) {
-		GetEngine(i)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-		ChSharedPtr<ChFunctionController> engine_funct(new ChFunctionController(i, this));
-		GetEngine(i)->Set_tor_funct(engine_funct);
+	GetEngine(0)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+	GetEngine(1)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+	GetEngine(0)->Set_spe_funct(engine_funct0);
+	GetEngine(1)->Set_spe_funct(engine_funct1);
+	if (successfulMove_.at(0) == false || successfulMove_.at(1) == false)
+	{
+		res = false;
 	}
+	return res;
+}
+bool Controller::UseForceControl() {
+	bool res = true;
+	//for (size_t i = 0; i < smarticle_->numEngs; ++i) {
+		
+		GetEngine(0)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+		GetEngine(1)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+		
+		//ChSharedPtr<ChFunctionController> engine_funct0(new ChFunctionController(0, this));
+		//ChSharedPtr<ChFunctionController> engine_funct1(new ChFunctionController(1, this));
+		GetEngine(0)->Set_tor_funct(engine_funct0);
+		GetEngine(1)->Set_tor_funct(engine_funct1);
+
+		if (successfulMove_.at(0) == false || successfulMove_.at(1)== false)
+		{res = false;}
+
+	//}
+	return res;
 }

@@ -57,7 +57,7 @@ Smarticle::~Smarticle()
 	m_system->RemoveBody(arm0);
 	m_system->RemoveBody(arm1);
 	m_system->RemoveBody(arm2);
-
+	armsController->~Controller();
 	GetLog() << "Removing smarticle\n";
 }
 
@@ -522,14 +522,14 @@ void Smarticle::CreateActuators() {
 	// link 1
 	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx*qy1));
 	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TO_POWERTRAIN_SHAFT);
 	link_actuator01->SetMotion_axis(ChVector<>(0, 0, 1));
 	m_system->AddLink(link_actuator01);
 
 	link_actuator12->Initialize(arm1, arm2, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx*qy2));
 	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 	link_actuator12->SetMotion_axis(ChVector<>(0, 0, 1));
 	m_system->AddLink(link_actuator12);
 
@@ -737,9 +737,7 @@ double Smarticle::GetAngle2(bool degrees)
 }
 bool Smarticle::CanMoveToNextIdx(int id, double ang)//bad method name
 {
-	SetAngle(id, ang);
-	return ChooseOmegaAmount(GetOmega(id), ang, GetExpAngle(id)); //returns true if anything else but 0 is returned from here
-		
+	return ChooseOmegaAmount(GetOmega(id), ang, GetExpAngle(id)); //returns true if anything else but 0 is returned from here	
 }
 double Smarticle::GetExpAngle(int id)
 {
@@ -765,6 +763,10 @@ double Smarticle::GetNextAngle(int id)
 	//	return mv->at((moveTypeIdxs.at(moveType) + 1) % mv->size()).first;
 	//else
 	//	return mv->at((moveTypeIdxs.at(moveType) + 1) % mv->size()).second;
+}
+void Smarticle::SetNextAngle(int id, double ang)
+{
+		nextAngle.at(id) = ang;
 }
 std::pair<double, double> Smarticle::populateMoveVector()
 {
