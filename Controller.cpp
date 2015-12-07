@@ -38,58 +38,27 @@ Controller::~Controller()
 	engine_funct0->~ChFunctionController();
 	engine_funct1->~ChFunctionController();
 
-
-
-	//smarticle_->~Smarticle();
 }
 bool Controller::Step(double dt) {
-	//ProcessCommandQueue(dt);
 	bool result = false;
 	steps_++;
 
 
-
-	//TODO omega1prev==0 successful motion for gui1...?
-	double ang01 = smarticle_->GetCurrAngle(0);
-	double ang12 = smarticle_->GetCurrAngle(1);
-	
-	smarticle_->SetAngle(0, ang01);
-	smarticle_->SetAngle(1, ang12);
-	//true if curr>(dist thresh)
-	bool cannotMoveNext0 = smarticle_->CanMoveToNextIdx(0, ang01); //bad method name 
-	bool cannotMoveNext1 = smarticle_->CanMoveToNextIdx(1, ang12);
-
-	//set desired angle to current angle if not able to move to next idx yet
-	//if (cannotMoveNext0)
-	//	SetDesiredAngle(0,ang01);
-	//if (cannotMoveNext1)
-	//	SetDesiredAngle(1, ang12);
-	
-	//if(~cannotMoveNext0 && ~cannotMoveNext1)
-	//{
-	//	double om1 = GetDesiredAngularSpeed(0, dt);
-	//	double om2 = GetDesiredAngularSpeed(1, dt);
-	//	if 
-	//	if (om1>5 || om2>5)
-	//		result = false;
-	//	else{
-			//result = true;
-	//	}
-	//}	
-
-	//if (cannotMoveNext0&&cannotMoveNext1)
-	//{
-	//	smarticle_->GetNextAngle(id)
-	//}
-
+	for (size_t i = 0; i < smarticle_->numEngs; i++)
+	{
+		double ang = smarticle_->GetCurrAngle(i);
+		smarticle_->SetAngle(i, ang);
+		bool cannotMoveNext = smarticle_->CanMoveToNextIdx(i, ang); //bad method name 
+		successfulMove_.at(i) = cannotMoveNext;
+	}
 
 	result = UseForceControl();
 	//UseSpeedControl();
 
-	if (smarticle_->GetArm0OT() || smarticle_->GetArm2OT())
-	{
-		result = false; //leaving this heere because maybe want to make it true
-	}
+	//if (smarticle_->GetArm0OT() || smarticle_->GetArm2OT())
+	//{
+	//	result = false; //leaving this heere because maybe want to make it true
+	//}
 
 	return result;
 }
@@ -209,6 +178,7 @@ bool Controller::UseForceControl() {
 		//ChSharedPtr<ChFunctionController> engine_funct1(new ChFunctionController(1, this));
 		GetEngine(0)->Set_tor_funct(engine_funct0);
 		GetEngine(1)->Set_tor_funct(engine_funct1);
+
 
 		if (successfulMove_.at(0) == false || successfulMove_.at(1)== false)
 		{res = false;}

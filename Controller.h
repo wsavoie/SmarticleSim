@@ -7,7 +7,7 @@
 #include <physics/ChSystem.h>
 #include <physics/ChLinkEngine.h>
 #include "ChFunction_Controller.h"
-#include <utility>      // std::pair, std::make_pair
+
 
 namespace chrono {
 
@@ -16,7 +16,6 @@ namespace chrono {
 
 	class Controller {
 	public:
-		//Controller(chrono::ChSystem *ch_system, Smarticle *smarticle) : ch_system_(ch_system), smarticle_(smarticle){}
 		Controller(chrono::ChSystem *ch_system, Smarticle *smarticle);
 		~Controller();
 		// Step the controller
@@ -42,16 +41,9 @@ namespace chrono {
 		bool OT();
 		bool UseForceControl();
 		bool UseSpeedControl();
-		// Change the undultation amplitude of the snake
-		//void SetCommandAmplitude(double amp);
-		//void PushCommandToQueue(const Json::Value &command);
-		//std::vector<std::pair<double, double>>* getMoveVector(unsigned int guiState);
 		std::vector <bool> successfulMove_;
 		double omegaLimit = 5;
 		double outputLimit = 0;
-		//double p_gain = 0.0000350;
-		//double i_gain = 0.0000300;
-		//double d_gain = 0.000005;
 		double p_gain = 1;
 		double i_gain = 0;
 		double d_gain = 0.1;
@@ -67,8 +59,6 @@ namespace chrono {
 		// Contact force on each of the robot segment.
 		//chrono::ChReportContactCallback2 *contact_reporter_;
 		//std::vector<chrono::ChVector<> > contact_force_list_;
-		// the torques at joints, computed from contact forces.
-		// Parametr for the CPG
 
 		std::vector <double> desiredOmega_;
 		std::vector <double> desiredAngle_;

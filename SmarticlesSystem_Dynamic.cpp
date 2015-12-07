@@ -43,7 +43,7 @@
 #include "Smarticle.h"
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
-
+#include <vld.h>
 #include <memory>
 
 
@@ -117,7 +117,7 @@ int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 double vibration_freq = 30;
-double fric = 0;
+double fric = .8;
 double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
@@ -127,7 +127,7 @@ unsigned int largeID = 10000000;
 //double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
-double tFinal = .5;
+double tFinal = 6;
 double vibrateStart= 1;
 
 double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);

@@ -40,7 +40,7 @@ double ChFunctionController::ComputeOutput(double t) {
 	prevError = error;
 	return output;
 }
-void ChFunctionController::ResetCumulative()
+void ChFunctionController::ResetCumulative()	////TODO reset cum_error_ on gui change
 {
 	cum_error_ = 0;
 }
