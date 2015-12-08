@@ -43,7 +43,7 @@
 #include "Smarticle.h"
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
-#include <vld.h>
+#include <vld.h> //TODO used to find memory leaks
 #include <memory>
 
 

@@ -242,42 +242,8 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 						double theta = atan2(y, x);
 						//double theta = atan(x/y);
 						double r = sqrt(x*x + y*y);
-						//ChSharedPtr<ChLinkLockPlanePlane> link(new ChLinkLockPlanePlane);
-						//link->Initialize(bucket_bod_vec.at(i), bucket_bott, ChCoordsys<>(VNULL));
-						//link->SetMotion_axis(ChVector<>(0, 1, 0));
-						//GetLog() << "axis: " << link->GetMotion_axis();
-						//link->SetMotion_Y((new ChFunction_Ramp(0, 100)));
-						////link->SetMotion_ang((new ChFunction_Ramp(0, 1)));
-						//app->GetSystem()->AddLink(link);
-
-						//bucket_bod_vec.at(i)->SetPos(ChVector<>(
-						//	r*(.75)*cos(theta),
-						//	r*(.75)*sin(theta),
-						//	0));
-						//ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
-						//ChSharedPtr<ChFunction_Sine> knobcylinderfunc(new ChFunction_Sine());
-						//ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);
-						//double knobAmp = CH_C_PI * 1;
-						//double knobW = 2 * CH_C_PI * 1 / 20;
-						//double knobPhase = -knobW*vibrateStart;
-						//knobcylinderfunc->Set_amp(knobAmp);
-						//knobcylinderfunc->Set_w(knobW);
-						//knobcylinderfunc->Set_phase(knobPhase);
-
-						//link_engine->Initialize(knobstick, truss,
-						//	ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
-						//link_engine->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_LOCK); // also works as revolute support
-						//link_engine->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-						//link_engine->Set_rot_funct(knobcylinderfunc);
-						//link_engine->SetDisabled(true);
-						//mphysicalSystem.AddLink(link_engine);
-
-
 						bucket_bod_vec.at(i)->SetPos(ChVector<>(x - bucket_rad*.01*cos(theta), y - bucket_rad*.01*sin(theta), z));
-						//bucket_bod_vec.at(i)->SetPos_dt(ChVector<>(
-						//	-r*cos(theta),
-						//	-r*sin(theta),
-						//	0));
+
 					}
 
 					break;
