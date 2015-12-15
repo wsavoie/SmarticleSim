@@ -1,3 +1,5 @@
+while 1
+clf;
 %plot stress
 % filename = 'D:\SimResults\Chrono\SmarticleU\tests\s5\PostProcess\Stress.txt';
 filename = 'D:\SimResults\Chrono\SmarticleU\tests\PostProcess\Stress.txt';
@@ -8,7 +10,7 @@ stress=sd(:,2);
 guid=sd(:,3);
 cylRad =sd(:,4);
 
-plotNames = {'Stress','Gait','U-Shape','Straight','Tetris','Vib at \circ','Vib Angle'};
+plotNames = {'Stress','Gait','U-Shape','Straight','n-Shape','Vib at \circ','Vib Angle'};
 
 lineVar= stress;
 dt=time(1);
@@ -33,12 +35,12 @@ hold on;
 plot(time,lineVar);
 line = plot(time,y,'LineWidth',4);
 
-
+yAx=mean(lineVar)*4;
 for i=1:size(shapeLines,1)
     plot([shapeLines(i,1),shapeLines(i,1)],[min(lineVar) yAx],'color',shapeLines(i,2:4),'LineWidth',5)
     text(shapeLines(i,1),yAx*1.02,plotNames(shapeLines(i,5)))
 end
-yAx=mean(lineVar)*4;
+
 axis([0 time(end) 0 yAx]);
 
 
@@ -51,3 +53,5 @@ xlabel('Time (s)');
 ylabel('bucket radius (m)');
 axis auto
 figText(gcf,14);
+pause(1)
+end

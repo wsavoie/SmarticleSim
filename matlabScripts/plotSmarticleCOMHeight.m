@@ -1,6 +1,6 @@
 % directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-17-15--9-18-15\com changing shape\r1\PostProcess\volumeFraction.txt');
-% data = importdata('D:\SimResults\Chrono\SmarticleU\tests\PostProcess\volumeFraction.txt');
+data = importdata('D:\SimResults\Chrono\SmarticleU\tests\PostProcess\volumeFraction.txt');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\9-20\PostProcess\volumeFraction.txt');
 % data = importdata('\\centos\secured\shared_data\diffWidth2VolFracFilling\0.9-20150924-095709\PostProcess\volumeFraction.txt');
 % data = importdata('\\centos\secured\shared_data\diffWidth3VolFracFilling\0.1-20150925-125854\PostProcess\volumeFraction.txt');
@@ -8,7 +8,7 @@
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\fastShapeChange1013\PostProcess\volumeFraction.txt');
 % data = importdata('D:\SimResults\Chrono\SmarticleU\tests\10-19 configChangeWithOTMovie\PostProcess\volumeFraction.txt');
 % data = importdata('\\centos\secured\shared_data\ConfigChangeWithOTColoring\0.5-40-90-20151019-150116\PostProcess\volumeFraction.txt');
-data = importdata('\\centos\secured\shared_data\ConfigChangeWithOTColoring\0.5-40-90-20151020-115542\PostProcess\volumeFraction.txt');
+% data = importdata('\\centos\secured\shared_data\ConfigChangeWithOTColoring\0.5-40-90-20151020-115542\PostProcess\volumeFraction.txt');
 time        = data(:,1);
 smartcount  = data(:,2);
 volfrac     = data(:,3);

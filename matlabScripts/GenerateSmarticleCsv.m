@@ -8,11 +8,23 @@
 %   angHigh     = highest angle smarticle is allowed to move to
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
 
-stapleSize = true;
+%https://www.pololu.com/product/1040/specs
+%servo speed - .12s/60deg (strange units) 8.72 rads/sec
+%stall torque- .008 Nm
+%stall curr-   270 mA
+
+%dimensionless parameter for torque and length=
+%for robot: T=.008, L=.05 arm weight = 11.3 g
+
+%running curr- 100mA
+%Kt = T/I, .008/.27 = .0296 Nm/A
+%J
+stapleSize = false;
 dt=.00025;
-sizeScale=5;
+sizeScale=1;
 % omega = 4.9244e-5;
-omega = 5;
+omega = 5; %%limit speed in sim
+omegades = 5; %distance between points in move list
 % omega = 10;
 rho = 7850.0/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
@@ -30,14 +42,15 @@ end
 
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
-torqueThresh=9.8*mass*w_s*.5;%.00005;  4.6657e-04
+torqueThresh=.0001; %.008
+%torqueThresh=9.8*mass*w_s*1;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 
 global_gait= 2;
 gui1_gait = 1;
 gui2_gait = 1;
-gui3_gait = 1;
+gui3_gait = 2;
 
 
 PON= 1;
@@ -55,7 +68,7 @@ fprintf(fid,'#\n');
 
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
-ss= dt*omega; %step size
+ss= dt*omegades; %step size 
 if ss<1e-3
     ss= .0013; %step siz
 %     error('change back to ss=.0025)');
@@ -150,6 +163,9 @@ for i=1:guiSize
                 case 1
                     GUI_theta_1Pos = [pi/2];
                     GUI_theta_2Pos = [pi/2];
+                case 2
+                    GUI_theta_1Pos = [pi/4];
+                    GUI_theta_2Pos = [pi/4];
             end
         case 2 %gui2
             switch(gui2_gait)
@@ -165,6 +181,9 @@ for i=1:guiSize
                 case 1
                     GUI_theta_1Pos = [pi/2];
                     GUI_theta_2Pos = [-pi/2];
+                 case 2
+                GUI_theta_1Pos = [-pi/2];
+                GUI_theta_2Pos = [-pi/2];
             end
     end
     
