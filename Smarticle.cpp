@@ -577,7 +577,7 @@ void Smarticle::Create() {
 	else
 	{
 		double armt = r;
-		double armt2 = .0022 / 2 * sizeScale;
+		double armt2 = .00806 / 2 * sizeScale; //8.06 mm
 		l_mod = l + 2 * armt2 - jointClearance;
 		CreateArm2(0, l_mod, armt, armt2, ChVector<>(-w / 2.0 - (l_mod / 2.0 - armt2)*cos(angle1), 0, -(l_mod / 2.0 - armt2)*sin(angle1)), quat0);
 		CreateArm2(1, w,r,r2, ChVector<>(0, 0, 0));

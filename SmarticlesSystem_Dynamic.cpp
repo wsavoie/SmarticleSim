@@ -153,19 +153,20 @@ double gaitChangeLengthTime = .5;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2*bucket_rad/sizeScale);
 
 #else
-	double bucket_rad = sizeScale*0.04;
-	double w_smarticle = sizeScale * 0.0117 / 1;
+	
+	double w_smarticle = sizeScale * 0.04669/ 1;
 	double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 	//real value
-	double t_smarticle = sizeScale * .0079 / 1;
-	double t2_smarticle = sizeScale * .0053 / 1;
+	double t_smarticle = sizeScale * .029982 / 1; //height of solar panels
+	double t2_smarticle = sizeScale * .02172 / 1;
+	double bucket_rad = sizeScale*w_smarticle*3;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
 
 #endif
 
-	double p_gain = 0.01;   //3
-	double i_gain = 0.003;	 //1
-	double d_gain = 0.0001; //.1
+	double p_gain = 1;   //3
+	double i_gain = 0.3;	 //1
+	double d_gain = 0.13; //.1
 
 	// double t_smarticle 	= sizeScale * .00254;
 	// double t2_smarticle	= sizeScale * .001;
@@ -388,7 +389,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   mphysicalSystem.SetIterLCPwarmStarting(true);
   mphysicalSystem.SetUseSleeping(false);
   mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
-
+	vol = (t2_smarticle)* (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 	//mphysicalSystem.SetTolForce(.0005);
 	//mphysicalSystem.SetTol(.0001);
 	//mphysicalSystem.SetMinBounceSpeed(.3);
@@ -1981,13 +1982,12 @@ int main(int argc, char* argv[]) {
 			if (!(application.GetDevice()->run())) break;
 			application.GetVideoDriver()->beginScene(true, true,
 				video::SColor(255, 140, 161, 192));
-			//    ChIrrTools::drawGrid(
-			//        application.GetVideoDriver(), .2, .2, 150, 150,
-			//        ChCoordsys<>(ChVector<>(0.5 * hdim.x, boxMin.y, 0.5 * hdim.z),
-			//                     Q_from_AngAxis(CH_C_PI / 2, VECT_X)),
-			//        video::SColor(50, 90, 90, 150), true);
-			//application.AssetBindAll();
-			//application.AssetUpdateAll();
+			ChIrrTools::drawGrid(application.GetVideoDriver(), .01, .01, 150, 150,
+			ChCoordsys<>(ChVector<>(0,0, bucket_bott->GetPos().z*1.001),
+			Q_from_AngAxis(0, VECT_X)),
+			video::SColor(50, 0, 255,0), true);
+			application.AssetBindAll();
+			application.AssetUpdateAll();
 
 			//framerecord
 			
