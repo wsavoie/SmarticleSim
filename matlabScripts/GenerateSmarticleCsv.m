@@ -42,12 +42,12 @@ end
 
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
-torqueThresh=.0001; %.008
+torqueThresh=.001; %.008
 %torqueThresh=9.8*mass*w_s*1;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 
-global_gait= 2;
+global_gait= 5;
 gui1_gait = 1;
 gui2_gait = 1;
 gui3_gait = 2;
@@ -77,7 +77,7 @@ end
 switch global_gait
     case 1% circle gait
         ang = 0:ss:2*pi;
-        r=pi/2;
+        r=pi/4;
         phi = 0;
         global_theta_1Pos=r*cos(ang-phi);
         global_theta_2Pos=r*sin(ang-phi);
@@ -133,6 +133,90 @@ switch global_gait
             title('\pi/2\rightarrow 2\pi/3\rightarrow\pi/2');
             figText(gcf,15);
         end
+      case 4% rectified square gait
+        %not implemented yet!
+        sL = pi/2; %square gait side length
+        len = length(0:ss:sL); %gait length
+        sL2 = pi/2*.8;
+        %theta1
+        amove1 = linspace(0,sL,len);
+        amove2 = linspace(sL,sL,len);
+        amove3 = linspace(sL,0,len);
+        amove4 = linspace(0,0,len);
+%       theta2
+        bmove1 = linspace(0,0,len);
+        bmove2 = linspace(0,sL2,len);%0:ss:sL*.9;
+        bmove3 = linspace(sL2,sL2,len);
+        bmove4 = linspace(sL2,0,len);
+        
+        global_theta_1Pos=[amove1,amove2,amove3,amove4];
+        global_theta_2Pos=[bmove1,bmove2,bmove3,bmove4];
+        if PON
+            figure(1);
+            hold on;
+            plot(global_theta_1Pos,global_theta_2Pos,'.k');
+            xlabel('\theta_1');
+            ylabel('\theta_2');
+            axis([-sL 2*sL -sL 2*sL])
+            axis square
+            title('Rectified Square Gait');
+            figText(gcf,15);
+        end  
+    case 5
+       
+        figure(1);
+        clf;
+        hold on;
+        axis([-1.25*pi/2,1.25*pi/2,-1.25*pi/2,1.25*pi/2]);
+        imr=imread('C:\Users\root\Desktop\geom\xgran.PNG');
+        im2=imagesc(imr);
+        image(linspace(-1.25*pi/2,1.25*pi/2,im2.XData(2)),linspace(1.25*pi/2,-1.25*pi/2,im2.YData(2)),imr)
+        
+        
+        
+        axis square
+        
+        xlabel('\theta_1');
+        ylabel('\theta_2');
+        %%%%%%%%
+        
+        hold on
+%         r=pi/4;
+%         th = 0:pi/50:2*pi;
+%         x=pi/4;
+%         y=pi/4;
+%         xunit = r * cos(th) + x;
+%         yunit = r * sin(th) + y;
+%         plot(xunit, yunit,'k');
+%         plot(-xunit,-yunit,'k');
+%         plot(xunit, -yunit,'k');
+%         plot(-xunit, yunit,'k');
+%         x=-pi/4;
+%         y=-pi/4;
+%         x=[-1.75,1.75];
+%         y=[-1.75,1.75];
+%         plot(x,y,'k');
+%         plot(x,-y,'k');
+%         plot([-1.75,1.75],[0,0],'k');
+%         plot([0,0],[-1.75,1.75],'k');
+        
+
+        hold off
+        %%%%%%%%%%
+        h=imfreehand(gca);
+       
+        customGait= getPosition(h);
+        global_theta_1Pos =customGait(:,1);
+        global_theta_2Pos =customGait(:,2);
+        hold on;
+        title('Custom Drawn Gait');
+        plot(global_theta_1Pos,global_theta_2Pos,'o-k');
+        xlabel('\theta_1');
+        ylabel('\theta_2');
+        axis([-1.25*pi/2,1.25*pi/2,-1.25*pi/2,1.25*pi/2]);
+        axis square
+        figText(gcf,15);
+        
 end
 
 %convert the distance between the points to the proper amount
