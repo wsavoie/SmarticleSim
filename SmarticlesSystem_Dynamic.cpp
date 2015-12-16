@@ -103,7 +103,7 @@ using namespace chrono;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = STRESSSTICK;
+BucketType bucketType = CYLINDER;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -111,13 +111,13 @@ ChSharedPtr<ChBody> bucket_bott;
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
-double sizeScale = 5;
+double sizeScale = 1;
 int appWidth = 1280;
 int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 double vibration_freq = 30;
-double fric = .8;
+double fric =.9;
 double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
@@ -128,7 +128,7 @@ unsigned int largeID = 10000000;
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
 double tFinal = 6;
-double vibrateStart= 1;
+double vibrateStart= 10;
 
 double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -223,7 +223,7 @@ public:
 	virtual bool BroadCallback(collision::ChCollisionModel* mmodelA,  ///< pass 1st model
 		collision::ChCollisionModel* mmodelB)   ///< pass 2nd model
 	{
-		return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 3));
+		return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 2));
 	}
 };
 
@@ -460,9 +460,10 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			if (MyRand()<1)
 			smarticle0->visualize = true;
 			smarticle0->populateMoveVector();
-			smarticle0->SetAngle(angle1, angle2, true);
+			smarticle0->SetAngles(angle1, angle2, true);
+			//smarticle0->SetInitialAngles();
 			smarticle0->Create();
-
+			smarticle0->setCurrentMoveType((MoveType) Smarticle::global_GUI_value);
 			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180, angle2*CH_C_PI / 180);
 			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180 - vibAmp, angle1*CH_C_PI / 180 - vibAmp);
 			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180, angle2*CH_C_PI / 180);
@@ -866,7 +867,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	/////////////////
 	// Ground body
 	/////////////////
-
+	mat_g->SetFriction(fric); //steel- plexiglass   (plexiglass was outer cylinder material)
 	// ground
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
 	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*bucket_interior_halfDim.z);
@@ -901,7 +902,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ground->AddAsset(groundTexture);
 
 	// 1: create bucket
-		mat_g->SetFriction(fric); //steel- plexiglass   (plexiglass was outer cylinder material)
+		
 		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 		switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 		{
@@ -931,7 +932,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		case DRUM:
 			bucket = create_drum(25, 1, true, &mphysicalSystem, mat_g);
 		}
-		mat_g->SetFriction(fric); //steel - steel
+		//mat_g->SetFriction(fric); //steel - steel
 
 
 	bucket->SetBodyFixed(true);
@@ -1031,11 +1032,12 @@ void printFlowRate(double time,int count) //SAVE smarticle gaitType out for refe
 	flowRate_of.close();
 }
 // =============================================================================
-void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem,	///< the chrono::engine physical system
-	double len = w_smarticle,
-	double rad = t_smarticle,
-	ChVector<> pos = bucket_ctr + ChVector<>(2.5*bucket_rad,0,bucket_interior_halfDim.z))
-{
+void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
+{	
+	double len = w_smarticle;
+	double rad = t_smarticle;
+	ChVector<> pos = bucket_ctr + ChVector<>(2.5*bucket_rad, 0, bucket_interior_halfDim.z);
+
 	ChSharedPtr<ChBody> xaxis, yaxis, zaxis;
 	if (USE_PARALLEL) {
 		xaxis = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
@@ -1070,7 +1072,7 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem,	///< the chrono::engi
 void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec)
 {
 	double pos = -.75*bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
-	double ang = 2 * CH_C_PI / 5;
+	double ang = 2 * CH_C_PI / numPerLayer;
 	double rp = MyRand()*ang/4 ; //add slight offset to angInc to allow particles not always fall in nearly same position
 	static int recycledSmarticles = 0;
 	static int inc = 0;
@@ -1104,7 +1106,7 @@ void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySm
 
 
 			recycledSmarticles++;
-			inc = (inc+1)%5;
+			inc = (inc+1)%numPerLayer;
 		}
 	}
 	printFlowRate(mphysicalSystem.GetChTime(), recycledSmarticles);
@@ -1300,7 +1302,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 		}
 		volumeFraction = countInside2*vol / (max2*CH_C_PI*bucket_rad*bucket_rad);
 		//GetLog() << vol << " " << countInside2 << " " << bucket_rad << " " << zMax << " " << volumeFraction << "\n";
-		GetLog() << "phi=" << volumeFraction << "\n";
+		//GetLog() << "phi=" << volumeFraction << "\n";
 		zComz = zComz / countInside2;
 		meanOT = meanOT / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
 		break;
@@ -1375,8 +1377,8 @@ void UpdateSmarticles(
 	
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 		//mySmarticlesVec[i]->updateTorqueDeque();
-		//double tor1 = mySmarticlesVec[i]->torqueAvg.first;
-		//double tor2 = mySmarticlesVec[i]->torqueAvg.second;
+		//double tor1 = std::get<0>(mySmarticlesVec[i]->torqueAvg);
+		//double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);
 
 		double tor1 = mySmarticlesVec[i]->GetZReactTorque(0);
 		double tor2 = mySmarticlesVec[i]->GetZReactTorque(1);
@@ -1470,11 +1472,11 @@ bool SetGait(double time)
 	//else
 	//	break;
 
-	/*if (time < .5)
-		Smarticle::global_GUI_value = 2;
-	else if (time > .5 && time < 1)
-		Smarticle::global_GUI_value = 1;
-*/
+	//if (time < .5)
+	//	Smarticle::global_GUI_value = 0;
+	//else if (time > .5 && time < 1)
+	//	Smarticle::global_GUI_value = 0;
+
 
 
 	//else if (time > 1 && time < 3)
@@ -1594,8 +1596,9 @@ int main(int argc, char* argv[]) {
 	scene::RTSCamera* camera = new scene::RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
 	camera->setUpVector(core::vector3df(0, 0, 1));
-	camera->setPosition(core::vector3df(0, -.05, .03));
-	camera->setTarget(core::vector3df(0, 0, .01));
+//camera->setPosition(core::vector3df(0, -.17, .07));
+	camera->setPosition(core::vector3df(0, -2.3*bucket_rad + bucket_rad, bucket_rad/2.0));
+	camera->setTarget(core::vector3df(0, 0, bucket_rad/2.1)); //	camera->setTarget(core::vector3df(0, 0, .01));
 	camera->setNearValue(0.0005f);
 	camera->setMinZoom(0.1f);
 	camera->setZoomSpeed(0.1f);
@@ -1834,7 +1837,6 @@ int main(int argc, char* argv[]) {
 		numGeneratedLayers = numLayers;
 	}
 //  for (int tStep = 0; tStep < 1; tStep++) {
-	Smarticle::global_GUI_value = 1;
 	//START OF LOOP 
 	for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 		double t = mphysicalSystem.GetChTime();
@@ -1988,13 +1990,13 @@ int main(int argc, char* argv[]) {
 			//application.AssetUpdateAll();
 
 			//framerecord
-	
+			
 			application.SetVideoframeSaveInterval(5);//only save every 2 frames
 			application.DrawAll();
-
+			UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 			application.AssetBindAll();  //uncomment to visualize vol frac boxes
 			application.AssetUpdateAll();//uncomment to visualize vol frac boxes
-			UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
+	
 			application.DoStep();//
 
 			application.GetVideoDriver()->endScene();
