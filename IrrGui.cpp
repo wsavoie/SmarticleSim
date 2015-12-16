@@ -17,9 +17,9 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 	// ..add a GUI slider to control friction
 
 
-	if (bucketType == STRESSSTICK)
+	if (bucketType == STRESSSTICK || bucketType == CYLINDER)
 	{
-		text_Angle = app->GetIGUIEnvironment()->addStaticText(L"Angle: 0, Increment: 0",
+		text_Angle = app->GetIGUIEnvironment()->addStaticText(L"PID CONTROL",
 			rect<s32>(850, 45, 1050, 60), true);
 	}
 	else
@@ -52,7 +52,16 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			rect<s32>(850, 205, 1050, 220), true);
 		resetSuccessfulCount();
 		
-		
+		pgainInput = app->GetIGUIEnvironment()->addEditBox(std::to_wstring(p_gain).c_str(),
+			rect<s32>(1050, 225, 1100, 240), true);
+		igainInput = app->GetIGUIEnvironment()->addEditBox(std::to_wstring(i_gain).c_str(),
+			rect<s32>(1100, 225, 1150, 240), true);
+		dgainInput = app->GetIGUIEnvironment()->addEditBox(std::to_wstring(d_gain).c_str(),
+			rect<s32>(1150, 225, 1200, 240), true);
+
+		pgainInput->setID(1000);
+		igainInput->setID(1001);
+		dgainInput->setID(1002);
 
 		inc = .1;
 		rampAngle = 10 * CH_C_PI / 180;
@@ -63,7 +72,9 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 	int IrrGui::successfulCount = 0;
 	bool IrrGui::OnEvent(const SEvent& event) {
 		// check if user moved the sliders with mouse..
-		if (event.EventType == irr::EET_KEY_INPUT_EVENT && !event.KeyInput.PressedDown) {
+		if (event.EventType == irr::EET_KEY_INPUT_EVENT && !event.KeyInput.PressedDown) 
+		{
+
 			switch (event.KeyInput.Key)
 			{
 			case irr::KEY_KEY_Q:
@@ -360,7 +371,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
 					Smarticle* sPtr = sv->at(i);
-					sPtr->armsController->p_gain = sPtr->armsController->p_gain - inc;
+						p_gain = p_gain - inc;
 				}
 				drawAngle();
 				return true;
@@ -369,7 +380,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
 					Smarticle* sPtr = sv->at(i);
-					sPtr->armsController->i_gain = sPtr->armsController->i_gain - inc;
+					i_gain = i_gain - inc;
 				}
 				drawAngle();
 				return true;
@@ -378,7 +389,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
 					Smarticle* sPtr = sv->at(i);
-					sPtr->armsController->d_gain = sPtr->armsController->d_gain - inc;
+					d_gain = d_gain - inc;
 				}
 				drawAngle();
 				return true;
@@ -387,7 +398,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
 					Smarticle* sPtr = sv->at(i);
-					sPtr->armsController->p_gain = sPtr->armsController->p_gain + inc;
+					p_gain = p_gain + inc;
 				}
 				drawAngle();
 				return true;
@@ -396,7 +407,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
 					Smarticle* sPtr = sv->at(i);
-					sPtr->armsController->i_gain = sPtr->armsController->i_gain + inc;
+					i_gain = i_gain + inc;
 				}
 				drawAngle();
 				return true;
@@ -405,13 +416,29 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
 					Smarticle* sPtr = sv->at(i);
-					sPtr->armsController->d_gain = sPtr->armsController->d_gain + inc;
+					d_gain = d_gain + inc;
 				}
 				drawAngle();
 				return true;
 				break;
 			}
 
+		}
+		if (event.EventType == EET_GUI_EVENT) 
+		{
+			s32 id = event.GUIEvent.Caller->getID();
+			switch (id)
+			{
+				case 1000:
+					p_gain = wcstod(pgainInput->getText(), NULL);
+					break;
+				case 1001:
+					i_gain = wcstod(igainInput->getText(), NULL);
+					break;
+				case 1002:
+					d_gain = wcstod(dgainInput->getText(), NULL);
+					break;
+			}
 		}
 		return false;
 	}
@@ -422,12 +449,12 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 	}
 	void IrrGui::drawAngle()
 	{
-		if (bucketType == STRESSSTICK)
+		if (bucketType == STRESSSTICK || bucketType == CYLINDER)
 		{
 			if (sv->size() > 0)
 			{
 				Smarticle* sPtr = sv->at(0);
-				char message[100]; sprintf(message, "P:%g, I:%g, D:%g", sPtr->armsController->p_gain, sPtr->armsController->i_gain, sPtr->armsController->d_gain);
+				char message[100]; sprintf(message, "P:%g, I:%g, D:%g", p_gain, i_gain,d_gain);
 				this->text_Angle->setText(core::stringw(message).c_str());
 			}
 		}

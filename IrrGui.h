@@ -50,6 +50,11 @@ namespace chrono{
 				irr::gui::IGUIStaticText* text_angle2;
 				irr::gui::IGUIEditBox* angle1Input;
 				irr::gui::IGUIEditBox* angle2Input;
+
+				irr::gui::IGUIEditBox* pgainInput;
+				irr::gui::IGUIEditBox* igainInput;
+				irr::gui::IGUIEditBox* dgainInput;
+				
 				irr::gui::IGUIStaticText* text_successful;
 				static int successfulCount;
 			};

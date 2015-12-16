@@ -18,7 +18,7 @@
 
 #define USE_PARALLEL false
 #define irrlichtVisualization true
-#define stapleSize true
+#define stapleSize false
 	//extern double sizeScale;
 	//extern double dT;
 	//extern bool bucket_exist;
@@ -48,6 +48,10 @@
 	extern double drum_omega;
 	extern double drum_freq;
 	extern double inc;
+	extern double p_gain;
+	extern double i_gain;
+	extern double d_gain;
+	extern double fric;
 	extern chrono::ChVector<> bucket_interior_halfDim;
 	
 	

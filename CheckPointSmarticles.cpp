@@ -213,7 +213,7 @@ void CheckPointSmarticles_Read(
 						  l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						  p3,
 						  q4);
-		smarticle0->SetAngle(angle1, angle2, true);
+		smarticle0->SetAngles(angle1, angle2, true);
 		smarticle0->Create();
 		mySmarticlesVec.emplace_back(smarticle0);
 
@@ -247,7 +247,7 @@ void CheckPointSmarticlesDynamic_Read(
 		rho_smarticle >>
 		friction>>
 		gui_value;
-	
+	//TODO initialize angle1 and angle2
 
 	printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f angle1 %f angle2 %f",
 		l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticle, friction, angle1, angle2);

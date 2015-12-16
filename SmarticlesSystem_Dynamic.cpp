@@ -159,10 +159,13 @@ double gaitChangeLengthTime = .5;
 	//real value
 	double t_smarticle = sizeScale * .0079 / 1;
 	double t2_smarticle = sizeScale * .0053 / 1;
+	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
 
 #endif
 
-
+	double p_gain = 0.01;   //3
+	double i_gain = 0.003;	 //1
+	double d_gain = 0.0001; //.1
 
 	// double t_smarticle 	= sizeScale * .00254;
 	// double t2_smarticle	= sizeScale * .001;
@@ -182,7 +185,7 @@ bool povray_output = false;
 int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-int numPerLayer = 4;
+int numPerLayer = 1;
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 //double bucket_rad = sizeScale*0.034;
@@ -201,7 +204,7 @@ double rampInc = 1.0/60.0;
 double drum_freq = 1;
 double drum_omega = drum_freq*2*CH_C_PI;
 double pctActive = 1.0;
-double inc = 0.1;
+double inc = 0.00001;
 double angle1 = 90;
 double angle2 = 90;
 double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
