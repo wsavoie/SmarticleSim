@@ -34,16 +34,22 @@ if stapleSize
     w_s = .0117*sizeScale;
     l_s = w_s;
 else
-    t   = .0079*sizeScale;
-    t2  = .0053*sizeScale;
-    w_s = .0117*sizeScale;
-    l_s = w_s;
+      %t = height of solar panels
+      t= .022982;
+      w_s = .04669;
+      t2 = .02172;
+      l_s = .04450; 
+%     t   = .0079*sizeScale;
+%     t2  = .0053*sizeScale;
+%     w_s = .0117*sizeScale;
+%     l_s = w_s;
+%1.5424 = lw
 end
 
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
-torqueThresh=.001; %.008
-%torqueThresh=9.8*mass*w_s*1;%.00005;  4.6657e-04
+% torqueThresh=.001; %.008
+torqueThresh=9.8*mass*w_s*1;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 
@@ -168,7 +174,7 @@ switch global_gait
         clf;
         hold on;
         axis([-1.25*pi/2,1.25*pi/2,-1.25*pi/2,1.25*pi/2]);
-        imr=imread('C:\Users\root\Desktop\geom\xgran.PNG');
+        imr=imread('C:\Users\root\Desktop\geom\tgran.PNG');
         im2=imagesc(imr);
         image(linspace(-1.25*pi/2,1.25*pi/2,im2.XData(2)),linspace(1.25*pi/2,-1.25*pi/2,im2.YData(2)),imr)
         
@@ -205,9 +211,11 @@ switch global_gait
         %%%%%%%%%%
         h=imfreehand(gca);
        
-        customGait= getPosition(h);
-        global_theta_1Pos =customGait(:,1);
-        global_theta_2Pos =customGait(:,2);
+        gaitPts= getPosition(h);
+        gaitPts(end+1,:)= gaitPts(1,:);
+        [global_theta_1Pos,global_theta_2Pos] = ...
+            interpolateGait(gaitPts,ss);
+        
         hold on;
         title('Custom Drawn Gait');
         plot(global_theta_1Pos,global_theta_2Pos,'o-k');
