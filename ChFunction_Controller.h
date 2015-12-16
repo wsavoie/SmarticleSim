@@ -15,20 +15,23 @@ namespace chrono {
 		ChFunctionController(size_t index, Controller* controller)
 			: index_(index), controller_(controller) {}
 		virtual ~ChFunctionController(){};
-		ChFunction *new_Duplicate() {
-			return new ChFunctionController(index_, controller_);
+		virtual ChFunction *new_Duplicate() {
+			return 0;
+			//new ChFunctionController(index_, controller_);
 
 		}
 
-		void ResetCumulative();
+		void ResetCumulative(double t);
 		int Get_Type() { return 9527; }
+		double Get_y2(double curr_t);
 		double Get_y(double curr_t);
-		double Get_y_dx(double new_t) { return 0; }
-
+		double Get_y_dx(double new_t) { return 0;};
 	protected:
 		double ComputeOutput(double t);
-		double cum_error_ = 0;
-		double prevError = 0;
+		double OutputToOmega(double t, double out);
+		double OmegaToTorque(double t, double out);
+		//double cum_error_ = 0;
+		//double prevError = 0;
 		Controller *controller_;
 		size_t index_;
 	};
