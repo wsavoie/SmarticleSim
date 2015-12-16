@@ -93,6 +93,7 @@ void Smarticle::Properties(
 
 
 	mtextureOT->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
+
 	mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 	mtextureMid->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlue.png"));
 }
@@ -155,17 +156,19 @@ void Smarticle::Properties(
 	dumID = mdumID;
 	armBroken = false;
 
-	std::pair<double, double> a(0, 0);
+	std::tuple<double, double,double,double> a (0.0, 0.0,0.0,0.0);
 	torques = { a, a, a, a, a, a, a }; //probably a better way to do this....
 	nextOmega = { 0, 0 };
 	nextAngle = { 0,0};
 	currTorque = { 0, 0 };
-	torqueAvg = std::make_pair(0, 0);
+	torqueAvg = std::make_tuple(0, 0, 0, 0);
+	initialAng0 = other_angle;
+	initialAng1 = other_angle2;
 	//avg1 = 0;
 	//avg2 = 0;
 	//armsController = (new Controller(m_system, this));
 }
-void Smarticle::updateTorqueDeque(double mtorque1, double mtorque2)
+void Smarticle::updateTorqueDeque(double mtorque0, double mtorque1,double momega0, double momega1)
 {
 	//torque1.pop_back();
 	//torque1.push_front(mtorque1);
@@ -173,35 +176,40 @@ void Smarticle::updateTorqueDeque(double mtorque1, double mtorque2)
 	//torque2.pop_back();
 	//torque2.push_front(mtorque2);
 	
-	std::pair<double, double> oldT = torques.back();
+	std::tuple<double, double,double,double> oldT = torques.back();
 	torques.pop_back();
-	torques.emplace_front(mtorque1, mtorque2);
-	
+	torques.emplace_front(mtorque0, mtorque1,momega0,momega1);
+	torques.emplace_front(mtorque0, mtorque1, momega0, momega1);
 	updateTorqueAvg(oldT);
 }
 void Smarticle::updateTorqueDeque()
 {
-	std::pair<double, double> oldT = torques.back();
+	std::tuple < double, double, double, double > oldT = torques.back();
 	torques.pop_back();
-	torques.emplace_front(GetReactTorqueLen01(), GetReactTorqueLen12());
+	torques.emplace_front(getLinkActuator(0)->Get_mot_torque(), getLinkActuator(1)->Get_mot_torque(), getLinkActuator(0)->Get_mot_rot_dt(), getLinkActuator(1)->Get_mot_rot_dt());
 	updateTorqueAvg(oldT);
 }
-void Smarticle::updateTorqueAvg()
-//in case I need to recalculate from all values
-{
-	for (std::deque<std::pair<double, double>>::iterator it = torques.begin(); it != torques.end(); ++it)
-	{
-		torqueAvg = std::make_pair(it->first + torqueAvg.first, it->second + torqueAvg.second);
-	}
-	torqueAvg = std::make_pair(torqueAvg.first / torques.size(), torqueAvg.second / torques.size());
-}
-void Smarticle::updateTorqueAvg(std::pair <double,double > oldT)
+//void Smarticle::updateTorqueAvg()
+////in case I need to recalculate from all values
+//{
+//	for (std::deque<std::pair<double, double>>::iterator it = torques.begin(); it != torques.end(); ++it)
+//	{
+//		torqueAvg = std::make_pair(it->first + torqueAvg.first, it->second + torqueAvg.second);
+//	}
+//	torqueAvg = std::make_pair(torqueAvg.first / torques.size(), torqueAvg.second / torques.size());
+//}
+void Smarticle::updateTorqueAvg(std::tuple <double,double,double,double > oldT)
 { //already assuming it is an avg:
 	size_t len = torques.size();
-	torqueAvg = std::make_pair(
-		torqueAvg.first - oldT.first / len + torques.front().first / len,
-		torqueAvg.second - oldT.second / len + torques.front().second / len
-		);
+	std::get<0>(torqueAvg) = std::get<0>(torqueAvg) -std::get<0>(oldT) / len + std::get<0>(torques.front()) / len;
+	std::get<1>(torqueAvg) = std::get<1>(torqueAvg) -std::get<1>(oldT) / len + std::get<1>(torques.front()) / len;
+	std::get<2>(torqueAvg) = std::get<2>(torqueAvg) -std::get<2>(oldT) / len + std::get<2>(torques.front()) / len;
+	std::get<3>(torqueAvg) = std::get<3>(torqueAvg) -std::get<3>(oldT) / len + std::get<3>(torques.front()) / len;
+
+	//torqueAvg = std::make_pair(
+	//	torqueAvg.first - oldT.first / len + torques.front().first / len,
+	//	torqueAvg.second - oldT.second / len + torques.front().second / len
+	//	);
 }
 
 //////////////////////////////////////////////
@@ -263,6 +271,10 @@ double Smarticle::GetOmega(int id, bool angularFreq)
 	else
 		return GetOmega2(angularFreq);
 }
+double Smarticle::GetActuatorOmega(int id)
+{
+	return getLinkActuator(id)->Get_mot_rot_dt();	
+}
 double Smarticle::GetNextOmega(int id)
 {
 	nextOmega.at(id)= this->ChooseOmegaAmount(GetOmega(id), GetCurrAngle(id), GetNextAngle(id));
@@ -313,7 +325,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     arm->SetBodyFixed(false);
     arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
     if (armID == 1) //this was old code from when I was fixing them to fit
-    	arm->SetBodyFixed(false);
+			arm->SetBodyFixed(true);
     else
     	arm->SetBodyFixed(false);
 
@@ -515,6 +527,7 @@ void Smarticle::CreateActuators() {
 	ChVector<> pR01(-w / 2.0, 0, 0);
 	ChVector<> pR12(w / 2.0, 0, 0);
 
+
 	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
 	ChQuaternion<> qy1 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle1()));
 	ChQuaternion<> qy2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle2()));
@@ -537,11 +550,13 @@ void Smarticle::CreateActuators() {
 
 void Smarticle::Create() {
 	//jointClearance =1.0/3.0*r2;
+	double a1 = GetAngle1();
+	double a2 = GetAngle2();
 	jointClearance = 0;
 	double l_mod;
 	//double l_mod = l + 2 * r2 - jointClearance;
 
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0*5*CH_C_PI/180, angle1, 0));
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));
 	quat0.Normalize();
 	quat2.Normalize();
@@ -551,25 +566,23 @@ void Smarticle::Create() {
 	//CreateArm(1, w, ChVector<>(0, 0, 0));
 	//CreateArm(2, l_mod, ChVector<>( w / 2.0 +r2 + (l_mod / 2.0-r2)*cos(angle2), 0, -(l_mod / 2.0-r2)*sin(angle2)), quat2);
 
-
 	////new version
 	if (stapleSize)
 	{
 		l_mod = l + 2 * r2 - jointClearance;
 		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(angle1), 0, -(l_mod / 2.0 - r2)*sin(angle1)), quat0);
 		CreateArm(1, w, ChVector<>(0, 0, 0));
-		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(angle2), 0, -(l_mod / 2.0 - r2)*sin(angle2)), quat2);
+		CreateArm(2, l_mod, ChVector<>(w / 2.0 +  (l / 2.0)*cos(angle2), 0, -(l_mod / 2.0 - r2)*sin(angle2)), quat2);
 	}
 	else
 	{
-		double armt = r / 2;
+		double armt = r;
 		double armt2 = .0022 / 2 * sizeScale;
 		l_mod = l + 2 * armt2 - jointClearance;
 		CreateArm2(0, l_mod, armt, armt2, ChVector<>(-w / 2.0 - (l_mod / 2.0 - armt2)*cos(angle1), 0, -(l_mod / 2.0 - armt2)*sin(angle1)), quat0);
 		CreateArm2(1, w,r,r2, ChVector<>(0, 0, 0));
-		CreateArm2(2, l_mod, armt, armt2, ChVector<>(w / 2.0 + (l_mod / 2.0 - armt2)*cos(angle2), 0, -((l_mod) / 2.0 - armt2)*sin(angle2)), quat2);
+		CreateArm2(2, l_mod, armt, armt2, ChVector<>( w / 2.0 + (l_mod / 2.0 - armt2)*cos(angle2), 0, -(l_mod / 2.0 - armt2)*sin(angle2)), quat2);
 	}
-
 
 	CreateActuators();
 	//CreateJoints(); //TODO do we need joints?
@@ -583,7 +596,17 @@ void Smarticle::Create() {
 		active = true;
 		//controller(omega,force)
 		armsController = (new Controller(m_system,this));
-		armsController->outputLimit= torqueThresh2;
+		armsController->outputLimit= torqueThresh2*2;
+		armsController->omegaLimit = defaultOmega;
+
+		//armsController->SetCurrAngle(0, this->GetCurrAngle(0));
+		//armsController->SetCurrAngle(1, this->GetCurrAngle(1));
+		//link_actuator01->GetLimit_Rz()->Set_min(-CH_C_PI);
+		//link_actuator01->GetLimit_Rz()->Set_max(CH_C_PI);
+		//link_actuator12->GetLimit_Rz()->Set_min(-CH_C_PI);
+		//link_actuator12->GetLimit_Rz()->Set_max(CH_C_PI);
+		//link_actuator01->GetLimit_Rz()->Set_active(true);
+		//link_actuator12->GetLimit_Rz()->Set_active(true);
 	}
 
 }
@@ -670,6 +693,11 @@ void Smarticle::SetAngle(std::pair<double, double> mangles, bool degrees)
 {
 	SetAngles(mangles.first, mangles.second, degrees);
 }
+void Smarticle::SetInitialAngles()
+{
+	initialAng0 = this->GetAngle1();
+	initialAng1 = this->GetAngle2();
+}
 void Smarticle::SetAngles(double mangle1, double mangle2, bool degrees)
 {
 	if (degrees)
@@ -735,9 +763,12 @@ double Smarticle::GetAngle2(bool degrees)
 	else
 		return angle2;
 }
-bool Smarticle::CanMoveToNextIdx(int id, double ang)//bad method name
+bool Smarticle::NotAtDesiredPos(int id, double ang)//bad method name
 {
-	return ChooseOmegaAmount(GetOmega(id), ang, GetExpAngle(id)); //returns true if anything else but 0 is returned from here	
+	//GetLog() << "expAng" << id << ":" << GetExpAngle(id) << "\n    ";
+	double x= ChooseOmegaAmount(GetOmega(id), ang, GetExpAngle(id)); //returns true if anything else but 0 is returned from here	
+	//returns true if anything else but 0 is returned from here
+	return x;
 }
 double Smarticle::GetExpAngle(int id)
 {
@@ -748,7 +779,10 @@ double Smarticle::GetExpAngle(int id)
 }
 double Smarticle::GetCurrAngle(int id)
 {
-	return this->getLinkActuator(id)->Get_mot_rot();
+	if (id ==0)
+		return this->getLinkActuator(id)->Get_mot_rot();
+	else 
+		return this->getLinkActuator(id)->Get_mot_rot();
 }
 double Smarticle::GetNextAngle(int id)
 {
@@ -788,7 +822,7 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	char ddCh2;
 	angHigh = mangHigh;
 	angLow = mangLow;
-	distThresh = mdt*omega1;
+	distThresh = mdt*momega;
 	torqueThresh2 = mtorqueThresh2;
 	ddCh = '!';
 	while (ddCh != '#') {
@@ -827,7 +861,7 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	global.push_back(angPair);
 
 	//SetAngle(ang1, ang2);
-	SetAngles(ang1, ang2);
+	//SetAngles(ang1, ang2);
 	//Global
 
 
@@ -911,8 +945,9 @@ bool Smarticle::GetArm2OT()
 double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng)
 {
 	//since going from -pi to pi:
-	currAng = CH_C_PI + currAng;
-	destAng = CH_C_PI + destAng;
+	currAng = currAng + CH_C_PI;//TODO if starting value is not 0 degs, this can mess thigns up if pi is not added
+	destAng = destAng + CH_C_PI;
+
 	if (fabs(destAng - currAng) > distThresh)
 	{
 		//if destAng is larger, move with positive momega else
@@ -1091,7 +1126,6 @@ void Smarticle::MoveLoop2(int guiState = 0)
 				arm0->AddAsset(mtextureOT);
 				this->ot.clear();
 				this->ot.emplace_back(GetAngle1(), GetAngle2());
-				this->ot.emplace_back(GetAngle1(), GetAngle2());
 			}
 		}
 		if (torque12 > torqueThresh2)// arm 2 is overtorqued
@@ -1101,7 +1135,6 @@ void Smarticle::MoveLoop2(int guiState = 0)
 				arm2OT = true;
 				arm2->AddAsset(mtextureOT);
 				this->ot.clear();
-				this->ot.emplace_back(GetAngle1(), GetAngle2());
 				this->ot.emplace_back(GetAngle1(), GetAngle2());
 			}
 		}
@@ -1173,7 +1206,16 @@ void Smarticle::MoveLoop2(int guiState = 0)
 }
 void Smarticle::ChangeArmColor(double torque01, double torque12)
 {
-	if (torque01 > torqueThresh2)
+	double TT2 = torqueThresh2*1.99;
+	double r0 = fabs(getLinkActuator(0)->Get_mot_rot_dt());
+	double r1 = fabs(getLinkActuator(1)->Get_mot_rot_dt());
+	double LIM = .1;
+	double moveAmt = CH_C_PI / 90; //2 degrees
+	//if (r0 || r1)
+	//{
+	//	GetLog() << "(r0,r1)= (" << r0 << "," <<  r1 << ")\n";
+	//}
+	if (fabs(torque01) > TT2&& r0<LIM)
 	{
 		this->setCurrentMoveType(OT);
 		mv = &ot;
@@ -1182,8 +1224,8 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 			arm0OT = true;
 			arm0->AddAsset(mtextureOT);
 			this->ot.clear();
-			this->ot.emplace_back(GetAngle1(), GetAngle2());
-			this->ot.emplace_back(GetAngle1(), GetAngle2());
+			this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque01)*moveAmt);
+			//this->ot.emplace_back(GetAngle1(), GetAngle2());
 		}
 		//nothing needs to be done if prev OT
 	}
@@ -1199,7 +1241,7 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 
 
 	/////////////////////ARM2///////////////////////
-	if (torque12 > torqueThresh2)
+	if (fabs(torque12) > TT2&& r1<LIM)
 	{
 		this->setCurrentMoveType(OT);
 		mv = &ot;
@@ -1208,8 +1250,8 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 			arm2OT = true;
 			arm2->AddAsset(mtextureOT);
 			this->ot.clear();
-			this->ot.emplace_back(GetAngle1(), GetAngle2());
-			this->ot.emplace_back(GetAngle1(), GetAngle2());
+			this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque01)*moveAmt);
+			//this->ot.emplace_back(GetAngle1(), GetAngle2());
 		}
 		//nothing needs to be done if prev OT
 	}
@@ -1266,41 +1308,15 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	this->prevMoveType = this->moveType;
 	
 	AssignState(guiState);
-
-	/*
-	ChVector<> rel01 = link_actuator01->GetRelAxis();
-	ChVector<> rel12 = link_actuator12->GetRelAxis();
-	double relr01 = link_actuator01->GetDist();
-	double relr12 = link_actuator12->GetDist();
-	//GetLog() << "\n" << "rel1:" << rel01 << "rel2:" << rel12 << "\n";
-
-
-	//if (fabs(rel01.y) > .05 || fabs(rel12.y) > .05)//if angle in x or y is > .1 radians, it is definitely broken
-	//{
-	//	GetLog() << "angle bad break! \n";
-	//	armBroken = true;
-	//}
-	//if (fabs(relr01) > .075*r2 || fabs(relr12) > .075*r2)//if distance between markers is .025% of thickness, break!
-	//{
-	//	GetLog() << "distance wrong break! \n";
-	//	armBroken = true;
-	//}
-
-	//ChVector<> rel01 = link_actuator01->GetRelRotaxis();
-	//ChVector<> rel12 = link_actuator12->GetRelRotaxis();
-	////GetLog() <<"\n"<< rel01 << "\n";
-	//if (fabs(rel01.x) > .1 || fabs(rel01.y) > .1
-	//	|| fabs(rel12.x) > .1 || fabs(rel12.x) > .1)//if angle in x or y is > .1 radians, it is definitely broken
-	//{
-	//	armBroken = true;
-	//}
-	*/
-
 	ChangeArmColor(torque01, torque12);
 
-	
-	sameMoveType = !(moveType^prevMoveType); // !(xor) gives true if values are equal, false if not
-
+	//!(moveType^prevMoveType)
+	sameMoveType = (moveType==prevMoveType); // !(xor) gives true if values are equal, false if not
+	if (!sameMoveType)
+	{
+		if (active)
+			this->armsController->resetCumError = true;	
+	}
 	//successfulMotion = controller->step(sameMoveType,dT);
 	
 	//used to have switch but prob not necessary can just use if:
@@ -1315,6 +1331,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	//{
 	//	
 	//}
+
 	if (successfulMotion)
 		moveTypeIdxs.at(moveType) = ((moveTypeIdxs.at(moveType) + 1) % mv->size());
 	//make sure controller step returns true false for movement!!
@@ -1477,6 +1494,7 @@ int	Smarticle::GetID()
 void Smarticle::setCurrentMoveType(MoveType newMoveType)
 {
 	this->moveType = newMoveType;
+	//global_GUI_value = newMoveType;
 }
 
 ChVector<> Smarticle::GetReactTorqueVectors01()
@@ -1494,7 +1512,7 @@ double Smarticle::GetReactTorqueLen01()
 }
 double Smarticle::GetZReactTorque(int id)
 {
-	return getLinkActuator(id)->Get_react_torque().z;
+	return getLinkActuator(id)->Get_mot_torque();
 }
 double Smarticle::GetReactTorqueLen12()
 {

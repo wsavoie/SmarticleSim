@@ -116,7 +116,7 @@ ChVector<> SmarticleU::Get_cm() {
 double SmarticleU::GetVolume() {
 	return (2 * r) * (2 * r2 )* (w + 2 * l);
 }
-void SmarticleU::SetAngle(double mangle1, double mangle2, bool degrees = false)
+void SmarticleU::SetAngle(double mangle1, double mangle2, bool degrees = false)// &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& make sure on use I supply rads without final arg
 {
 	if (degrees)
 	{
