@@ -23,8 +23,8 @@ stapleSize = false;
 dt=.00025;
 sizeScale=1;
 % omega = 4.9244e-5;
-omega = 5; %%limit speed in sim
-omegades = 5; %distance between points in move list
+omegaLim = 2; %%limit speed in sim
+omega = 8; %distance between points in move list
 % omega = 10;
 rho = 7850.0/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
@@ -49,11 +49,11 @@ end
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
 % torqueThresh=.001; %.008
-torqueThresh=9.8*mass*w_s*1;%.00005;  4.6657e-04
+torqueThresh=9.8*mass*w_s*2;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 
-global_gait= 5;
+global_gait= 4;
 gui1_gait = 1;
 gui2_gait = 1;
 gui3_gait = 2;
@@ -68,13 +68,13 @@ fid = fopen(fileloc,'wt');
 %add in all initial values to top of file
 %square torque so that we can use the square in the program so we can avoid
 %having to use sqrts in the code at each timestep!
-fprintf(fid,'%s\n%f\n%f\n%f\n%f\n',dt,omega,torqueThresh,angLow,angHigh);
+fprintf(fid,'%s\n%f\n%f\n%f\n%f\n%f\n',dt,omega,torqueThresh,angLow,angHigh,omegaLim);
 %add #1 to denote end of first section
 fprintf(fid,'#\n');
 
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
-ss= dt*omegades; %step size 
+ss= dt*omega; %step size 
 if ss<1e-3
     ss= .0013; %step siz
 %     error('change back to ss=.0025)');
@@ -83,7 +83,7 @@ end
 switch global_gait
     case 1% circle gait
         ang = 0:ss:2*pi;
-        r=pi/4;
+        r=pi/2.8;
         phi = 0;
         global_theta_1Pos=r*cos(ang-phi);
         global_theta_2Pos=r*sin(ang-phi);
@@ -116,7 +116,7 @@ switch global_gait
         if PON
             figure(1);
             hold on;
-            plot(global_theta_1Pos,global_theta_2Pos,'.k');
+            plot(global_theta_1Pos,global_theta_2Pos,'.');
             xlabel('\theta_1');
             ylabel('\theta_2');
             axis([-sL sL -sL sL])
@@ -143,17 +143,17 @@ switch global_gait
         %not implemented yet!
         sL = pi/2; %square gait side length
         len = length(0:ss:sL); %gait length
-        sL2 = pi/2*.8;
+        sL2 = pi/2;%*.8;
         %theta1
-        amove1 = linspace(0,sL,len);
-        amove2 = linspace(sL,sL,len);
-        amove3 = linspace(sL,0,len);
-        amove4 = linspace(0,0,len);
+        amove1 = linspace(0,sL,len);    %0   ->  max
+        amove2 = linspace(sL,sL,len);   %max ->  max
+        amove3 = linspace(sL,0,len);    %max ->  0
+        amove4 = linspace(0,0,len);     %0   ->  0
 %       theta2
-        bmove1 = linspace(0,0,len);
-        bmove2 = linspace(0,sL2,len);%0:ss:sL*.9;
-        bmove3 = linspace(sL2,sL2,len);
-        bmove4 = linspace(sL2,0,len);
+        bmove1 = linspace(0,0,len);     %0   ->  0
+        bmove2 = linspace(0,sL2,len);   %0   ->  max
+        bmove3 = linspace(sL2,sL2,len); %max ->  max
+        bmove4 = linspace(sL2,0,len);   %max ->  0
         
         global_theta_1Pos=[amove1,amove2,amove3,amove4];
         global_theta_2Pos=[bmove1,bmove2,bmove3,bmove4];
@@ -164,7 +164,7 @@ switch global_gait
             xlabel('\theta_1');
             ylabel('\theta_2');
             axis([-sL 2*sL -sL 2*sL])
-            axis square
+            axis equal
             title('Rectified Square Gait');
             figText(gcf,15);
         end  

@@ -81,100 +81,74 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			switch (event.KeyInput.Key)
 			{
 			case irr::KEY_KEY_Q:
-				if (Smarticle::global_GUI_value != 1)
-					Smarticle::global_GUI_value = 1;
+				if (Smarticle::global_GUI_value != MoveType::GUI1)
+					Smarticle::global_GUI_value = MoveType::GUI1;
 				else
-					Smarticle::global_GUI_value = 0;
+					Smarticle::global_GUI_value = MoveType::GLOBAL;
 				return true;
 				break;
 
 			case irr::KEY_KEY_W:
-				if (Smarticle::global_GUI_value != 2)
-					Smarticle::global_GUI_value = 2;
+				if (Smarticle::global_GUI_value != MoveType::GUI2)
+					Smarticle::global_GUI_value = MoveType::GUI2;
 				else
-					Smarticle::global_GUI_value = 0;
+					Smarticle::global_GUI_value = MoveType::GLOBAL;
 				return true;
 				break;
 			case irr::KEY_KEY_E:
-				if (Smarticle::global_GUI_value != 3)
-					Smarticle::global_GUI_value = 3;
+				if (Smarticle::global_GUI_value != MoveType::GUI3)
+					Smarticle::global_GUI_value = MoveType::GUI3;
 				else
-					Smarticle::global_GUI_value = 0;
+					Smarticle::global_GUI_value = MoveType::GLOBAL;
 				return true;
 				break;
 			case irr::KEY_KEY_R: //vibrate around current theta
-				if (Smarticle::global_GUI_value != 4) //TODO create a boolean and then call a method later which performs this so we don't have to run through smarticle vec here!
+				if (Smarticle::global_GUI_value != MoveType::VIB) //TODO create a boolean and then call a method later which performs this so we don't have to run through smarticle vec here!
 				{
 
 					double CurrTheta01;
 					double CurrTheta12;
-					Smarticle::global_GUI_value = 4;
+					Smarticle::global_GUI_value = MoveType::VIB;
 					std::pair<double, double> angPair;
 					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 					{
 
 						Smarticle* sPtr = sv->at(i);
 
-						MoveType currMoveType = sPtr->moveType;
-						std::vector<std::pair<double, double>> *v;
-
-
-
-						switch (currMoveType)
-						{
-						case 0:
-							v = &sPtr->global;
-							break;
-						case 1:
-							v = &sPtr->gui1;
-							break;
-						case 2:
-							v = &sPtr->gui2;
-							break;
-						case 3:
-							v = &sPtr->gui3;
-							break;
-						case 4:
-							v = &sPtr->vib;
-							break;
-						case 5:
-							v = &sPtr->ot;
-							break;
-						default:
-							v = &sPtr->global;
-							break;
-						}
-
-
 						CurrTheta01 = sPtr->GetAngle1();
 						CurrTheta12 = sPtr->GetAngle2();
-						//CurrTheta01 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).first;
-						//CurrTheta12 = v->at(sPtr->moveTypeIdxs.at(currMoveType)).second;
-						sPtr->vib.clear();
-
-						sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
-						sPtr->vib.emplace_back(CurrTheta01 - vibAmp, CurrTheta12 - vibAmp);
-						sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
-						sPtr->vib.emplace_back(CurrTheta01 + vibAmp, CurrTheta12 + vibAmp);
+						sPtr->AssignState(MoveType::VIB);
+						sPtr->vib.clear(); //since mv points to address containing current movetype mv clears vib
+						sPtr->GenerateVib(CurrTheta01, CurrTheta12);
+						//sPtr->addInterpolatedPathToVector(CurrTheta01,CurrTheta12, CurrTheta01 + vibAmp, CurrTheta12 + vibAmp); //curr				->		curr+vib
+						//sPtr->addInterpolatedPathToVector(CurrTheta01 + vibAmp, CurrTheta12 + vibAmp, CurrTheta01, CurrTheta12);//curr+vib		->		curr
+						//sPtr->addInterpolatedPathToVector(CurrTheta01, CurrTheta12, CurrTheta01 - vibAmp, CurrTheta12 - vibAmp);//curr				->		curr-vib
+						//sPtr->addInterpolatedPathToVector(CurrTheta01 - vibAmp, CurrTheta12 - vibAmp, CurrTheta01, CurrTheta12);//curr-vib		->		curr
+						//sPtr->vib.clear();
+						//sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
+						//sPtr->vib.emplace_back(CurrTheta01 - vibAmp, CurrTheta12 - vibAmp);
+						//sPtr->vib.emplace_back(CurrTheta01, CurrTheta12);
+						//sPtr->vib.emplace_back(CurrTheta01 + vibAmp, CurrTheta12 + vibAmp);
 					}
 				}
 
 				else
-					Smarticle::global_GUI_value = 0;
+					Smarticle::global_GUI_value = MoveType::GLOBAL;
 				return true;
 				break;
 
 			case irr::KEY_KEY_T:
-				if (Smarticle::global_GUI_value != 5)
+				if (Smarticle::global_GUI_value != MoveType::VIB)
 				{
 					std::pair<double, double> angPair;
 					double ang1;
 					double ang2;
-					Smarticle::global_GUI_value = 5;
+					Smarticle::global_GUI_value = MoveType::VIB;
 					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 					{
-						Smarticle* sPtr = sv->at(i);
 
+						Smarticle* sPtr = sv->at(i);
+						sPtr->AssignState(MoveType::VIB);
 						ang1 = wcstod(angle1Input->getText(), NULL)*CH_C_PI / 180;
 						ang2 = wcstod(angle2Input->getText(), NULL)*CH_C_PI / 180;
 						sPtr->vib.clear();
@@ -182,29 +156,26 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 						//in case strange values are written
 						if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
 						{
-							Smarticle::global_GUI_value = 0;
+							Smarticle::global_GUI_value = MoveType::GLOBAL;
 							return true;
 							break;
 						}
 						if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
 						{
-							Smarticle::global_GUI_value = 0;
+							Smarticle::global_GUI_value = MoveType::GLOBAL;
 							return true;
 							break;
 						}
-
-						sPtr->vib.emplace_back(ang1, ang2);
-
-						sPtr->vib.emplace_back(ang1 - vibAmp, ang2 - vibAmp);
-
-						sPtr->vib.emplace_back(ang1, ang2);
-
-						sPtr->vib.emplace_back(ang1 + vibAmp, ang2 + vibAmp);
+						sPtr->GenerateVib(ang1, ang2);
+						//sPtr->addInterpolatedPathToVector(ang1, ang2, ang1 + vibAmp, ang2 + vibAmp);//curr				->		curr+vib
+						//sPtr->addInterpolatedPathToVector(ang1 + vibAmp, ang2 + vibAmp, ang1, ang2);//curr+vib		->		curr
+						//sPtr->addInterpolatedPathToVector(ang1, ang2, ang1 - vibAmp, ang2 - vibAmp);//curr				->		curr-vib
+						//sPtr->addInterpolatedPathToVector(ang1 - vibAmp, ang2 - vibAmp, ang1, ang2);//curr-vib		->		curr
 
 					}
 				}
 				else
-					Smarticle::global_GUI_value = 0;
+					Smarticle::global_GUI_value = MoveType::GLOBAL;
 				return true;
 				break;
 
@@ -434,6 +405,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			{
 				case 1000:
 					p_gain = wcstod(pgainInput->getText(), NULL);
+
 					break;
 				case 1001:
 					i_gain = wcstod(igainInput->getText(), NULL);
@@ -442,6 +414,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 					d_gain = wcstod(dgainInput->getText(), NULL);
 					break;
 			}
+			drawAngle();
 		}
 		return false;
 	}
@@ -493,7 +466,10 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			successfulCount++;
 
 	}
-
+	void IrrGui::GenerateVibrateGait(Smarticle& sPtr)
+	{
+		
+	}
 	void IrrGui::resetSuccessfulCount()
 	{
 		successfulCount = 0;

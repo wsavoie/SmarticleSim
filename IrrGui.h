@@ -28,6 +28,7 @@ namespace chrono{
 				void drawSuccessful2();
 				void addSuccessful(Smarticle &sPtr);
 				void resetSuccessfulCount();
+				void GenerateVibrateGait(Smarticle& sPtr);
 
 
 			private:

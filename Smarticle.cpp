@@ -763,6 +763,31 @@ double Smarticle::GetAngle2(bool degrees)
 	else
 		return angle2;
 }
+void Smarticle::addInterpolatedPathToVector(double a0i, double a2i, double a0f, double a2f)
+{
+	double dist1 = omega1*dT;
+	double dist2 = omega2*dT;
+	int n = std::max(abs((a0f - a0i) / dist1), abs((a2f - a2i) / dist2));
+	std::vector<double> a0 = linspace(a0i, a0f, n);
+	std::vector<double> a2 = linspace(a2i, a2f, n);
+
+	for (int i = 0; i < n; i++)
+	{
+		mv->emplace_back(a0.at(i), a2.at(i));
+	}
+
+}
+std::vector<double> Smarticle::linspace(double a, double b, int n) {
+	std::vector<double> vec;
+	double step = (b - a) / (n - 1);
+
+	for(int i = 0; i < n; ++i)
+	{
+		vec.push_back(a);
+		a += step;           // could recode to better handle rounding errors
+	}
+	return vec;
+}
 bool Smarticle::NotAtDesiredPos(int id, double ang)//bad method name
 {
 	//GetLog() << "expAng" << id << ":" << GetExpAngle(id) << "\n    ";
@@ -807,16 +832,19 @@ std::pair<double, double> Smarticle::populateMoveVector()
 
 	std::ifstream smarticleMoves;
 	smarticleMoves.open("smarticleMoves.csv");
-	double mdt, momega, mtorqueThresh2, mangLow, mangHigh;
+	double mdt, momega, mtorqueThresh2, mangLow, mangHigh,mOmegaLim;
 	smarticleMoves >>
 		mdt >>
 		momega >>
 		mtorqueThresh2 >>
 		mangLow >>
-		mangHigh;
+		mangHigh>>
+		mOmegaLim;
 	//printf("dt %f omega %f torqueThresh2 %f angLow %f angHigh %f", mdt, momega, mtorqueThresh2, mangLow, mangHigh);
 	SetDefaultOmega(momega);
 	SetOmega(momega);
+	omegaLim = mOmegaLim;
+
 	char ddCh;
 	char ddCh1;
 	char ddCh2;
@@ -1264,6 +1292,13 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 		}
 		// nothing needs to be done if not prev OT
 	}
+}
+void Smarticle::GenerateVib(double ang1, double ang2)
+{
+	this->addInterpolatedPathToVector(ang1, ang2, ang1 + vibAmp, ang2 + vibAmp);//curr				->		curr+vib
+	this->addInterpolatedPathToVector(ang1 + vibAmp, ang2 + vibAmp, ang1, ang2);//curr+vib		->		curr
+	this->addInterpolatedPathToVector(ang1, ang2, ang1 - vibAmp, ang2 - vibAmp);//curr				->		curr-vib
+	this->addInterpolatedPathToVector(ang1 - vibAmp, ang2 - vibAmp, ang1, ang2);//curr-vib		->		curr
 }
 void Smarticle::AssignState(int guiState)
 {
