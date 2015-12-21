@@ -46,9 +46,10 @@ double ChFunctionController::Get_y(double t) {
 	GetLog() << "Torque: " << output;
 	double out_torque = std::max(std::min(controller_->outputLimit, output), -controller_->outputLimit);
 	bool o = false;
-	if (fabs(out_torque) == controller_->outputLimit)
+	if (abs(out_torque) == controller_->outputLimit)
 		o = true;
-	GetLog() << "\tLimited: " << out_torque << " " << "\tLIMIT= " << controller_->outputLimit << "\t" << o<< "\n";
+	GetLog() << "   \tLimited: " << out_torque << " " << "\tLIMIT= " << controller_->outputLimit << "\t" << o<< "\n";
+
 	return out_torque;
 	//return output;
 }
@@ -77,10 +78,13 @@ double ChFunctionController::ComputeOutput(double t) {
 
 	double curr_angle = controller_->GetAngle(index_, t);
 	//GetLog() << "Controller" << index_ << ": " <<curr_angle<<"\n";
+	double exp_angle = controller_->GetExpAngle(index_, t);
 	double desired_angle = controller_->GetDesiredAngle(index_, t); ///get the next angle
 	
-	//desired_angle = controller_->LinearInterpolate(index_, curr_angle, desired_angle);
+	//double desired_angle2 = controller_->LinearInterpolate(index_, curr_angle, desired_angle);
+	desired_angle = controller_->LinearInterpolate(index_, curr_angle, desired_angle);
 	double error = desired_angle - curr_angle;
+	//double error2 = desired_angle2- curr_angle;
 	double prevError = controller_->prevError_.at(index_);
 	
 	//if position was changed resetCumError flag is set to true
@@ -90,6 +94,8 @@ double ChFunctionController::ComputeOutput(double t) {
 	controller_->cumError_.at(index_) += (error)*dT;
 
 	//calculate controller output in position
+	//double deri = d*((error-prevError) / dT); ///fix negative sign vs pos sign error
+	//double integ = i*controller_->cumError_.at(index_);
 	double output = p*error + d*((error - prevError) / dT) + i*controller_->cumError_.at(index_);
 
 	//set current error to previous error
