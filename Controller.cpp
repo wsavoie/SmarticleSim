@@ -57,12 +57,15 @@ bool Controller::Step(double dt) {
 	{
 		double ang = smarticle_->GetCurrAngle(i);
 		double exp = smarticle_->GetExpAngle(i);
+		//int ind = smarticle_->moveTypeIdxs.at(smarticle_->moveType);
 		//GetLog() << " id " << i << ": C:" << ang << " X:"<<exp ;
-		smarticle_->SetAngle(i, ang,true);
+		smarticle_->SetAngle(i, ang,false);
 		
 		//GetLog() << "ANG" << i << ":" << smarticle_->GetAngle(i) << "    ";
 		bool desiredPositionStatus = smarticle_->NotAtDesiredPos(i, ang); //true if not at current position being directed to 
-		successfulMove_.at(i) = ~desiredPositionStatus;
+		//auto a = ~desiredPositionStatus;
+		successfulMove_.at(i) = !desiredPositionStatus;
+
 	}
 	//GetLog() <<" t: " << dt << " " << "\n";
 	//exit(-1);
@@ -70,13 +73,13 @@ bool Controller::Step(double dt) {
 	//UseSpeedControl()
 
 
-	if (successfulMove_.at(0) == false || successfulMove_.at(1) == false)
-	{
-		result = false;
-	}
-	else{
+	//if (successfulMove_.at(0) == false && successfulMove_.at(1) == false)
+	//{
+	//	result = false;
+	//}
+	//else{
 		result = true;
-	}
+	//}
 
 	return result;
 }
@@ -104,6 +107,10 @@ double Controller::GetDesiredAngle(size_t index, double t)
 {
 	//desiredAngle_.at(index) = 
 		return 	smarticle_->GetNextAngle(index);
+}
+double Controller::GetExpAngle(size_t idx, double t)
+{
+	return smarticle_->GetExpAngle(idx);
 }
 //void Controller::SetDesiredAngle(size_t index, double desang)
 //{
@@ -135,17 +142,23 @@ double Controller::GetActuatorOmega(size_t index, double t)
 //}
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
+	double errLim = 5* CH_C_PI/ 180;
 	double err = (des - curr);
-	double om = fabs(err / dT);
-	if (om > omegaLimit)
-	{
-		double newVal = omegaLimit*dT*sign(err) + curr;
-		//SetDesiredAngle(idx, newVal);
-		//smarticle_->SetNextAngle(idx, newVal);
-		return newVal;
-	}
-	return des;
+	err = std::max(std::min(errLim, err), -errLim);
+
+	return err + curr;
+
+	//double om = fabs(err / dT);
+	//if (om > omegaLimit)
+	//{
+	//	double newVal = omegaLimit*dT*sign(err) + curr;
+	//	//SetDesiredAngle(idx, newVal);
+	//	//smarticle_->SetNextAngle(idx, newVal);
+	//	return newVal;
+	//}
+	//return des;
 }
+
 double Controller::OmegaLimiter(size_t idx, double omega)
 {
 	return std::max(std::min(omegaLimit, omega), -omegaLimit);

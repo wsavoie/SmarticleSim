@@ -30,6 +30,7 @@ namespace chrono {
 		//double GetCurrAngle(size_t i, double t);
 		//double SetGetCurrAngle(size_t i, double t);
 		double GetDesiredAngle(size_t i, double t);
+		double GetExpAngle(size_t idx, double t);
 		//void SetCurrAngle(size_t i, double ang);
 		double GetActuatorOmega(size_t i, double t);
 		double GetCurrOmega(size_t i, double t);
