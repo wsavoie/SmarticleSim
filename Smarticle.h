@@ -23,9 +23,8 @@
 
 namespace chrono {
 
-	enum MoveType { GLOBAL=0, GUI1=1, GUI2=2, GUI3=3, VIB=4, OT=5}; //IF ADDING MORE ALWAYS KEEP OT AS LAST INDEX!!!!
+	enum MoveType { GLOBAL=0, GUI1=1, GUI2=2, GUI3=3, VIB=4, MIDT=5,SS=6,OT=7}; //IF ADDING MORE ALWAYS KEEP OT AS LAST INDEX!!!!
 	// structs to attach motion to smarticles
-
 	class Smarticle {
 	public:
 
@@ -104,6 +103,7 @@ namespace chrono {
 		virtual double GetReactTorqueLen01();
 		virtual double GetReactTorqueLen12();
 		virtual void ChangeArmColor(double torque01, double torque12);
+		void ChangeStateBasedOnTorque(double torque01, double torque12);
 		virtual void SetDefaultOmega(double omega);
 		
 		virtual void SetOmega(int idx, double momega, bool angularFreq=true);
@@ -180,13 +180,18 @@ namespace chrono {
 		bool visualize=false;
 		bool successfulMotion = false;
 		std::vector<std::pair<double, double>> ot; //over torque
-		std::vector<std::pair<double, double>> oa; //over angle
+		std::vector<std::pair<double, double>> ss; //over angle
 		std::vector<std::pair<double, double>> vib; //vibrate this HAS to be particle specific so cannot be static?
+		std::vector<std::pair<double, double>> midTorque; //vibrate this HAS to be particle specific so cannot be static?
 		std::vector<int> moveTypeIdxs;//this vector keeps the current values of the move types
 		MoveType moveType;
 		MoveType prevMoveType;
 		double torqueThresh2; //torqueThres^2 to avoid using sqrts
 		double angLow;
+		int specialState = -1;
+		bool lowStressChange = true;
+		double gaitLengthChangeTime=.25;
+
 		double angHigh;
 		static double distThresh;
 		static unsigned int global_GUI_value;
@@ -200,11 +205,14 @@ namespace chrono {
 		void updateTorqueAvg();
 		void updateTorqueAvg(std::tuple <double, double,double,double > oldT);
 		///////////////////////////////////////////////////////////
-		void SetNextAngle(int id,double ang);
+		void SetNextAngle(int id, double ang);
+		void GenerateVib(double angle1, double angle2);
 		double GetNextAngle(int id);
 		double GetCurrAngle(int id);
 		double GetExpAngle(int id);
 		bool NotAtDesiredPos(int id, double ang);
+		void addInterpolatedPathToVector(double arm0i, double arm2i, double arm0f,double arm2f);
+		std::vector<double> linspace(double a, double b, int n);
 		std::pair<double, double> populateMoveVector();
 		//populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
 		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1,double momega2, MoveType mtype);
@@ -214,8 +222,10 @@ namespace chrono {
 		void MoveLoop2(int guiState);
 		void MoveLoop2(int guiState, double torque01, double torque12);
 		void ControllerMove(int guiState, double torque01, double torque12);
+		void CheckLowStressChangeTime();
 		ChSharedPtr<ChLinkEngine> getLinkActuator(int id);
 		double defaultOmega;
+		double omegaLim;
 		//////////////////////////////////////////////////////
 	private:
 		// create smarticle arm, set collision, surface, and mass property.

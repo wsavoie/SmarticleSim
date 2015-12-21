@@ -58,6 +58,7 @@ Smarticle::~Smarticle()
 	m_system->RemoveBody(arm1);
 	m_system->RemoveBody(arm2);
 	armsController->~Controller();
+	
 	GetLog() << "Removing smarticle\n";
 }
 
@@ -216,6 +217,7 @@ void Smarticle::updateTorqueAvg(std::tuple <double,double,double,double > oldT)
 void Smarticle::SetDefaultOmega(double omega) {
 	defaultOmega = omega;
 }
+
 void Smarticle::SetOmega(int idx, double momega, bool angularFreq)
 {
 	if (idx == 0)
@@ -596,8 +598,8 @@ void Smarticle::Create() {
 		active = true;
 		//controller(omega,force)
 		armsController = (new Controller(m_system,this));
-		armsController->outputLimit= torqueThresh2*2;
-		armsController->omegaLimit = defaultOmega;
+		armsController->outputLimit= torqueThresh2;
+		armsController->omegaLimit = omegaLim;
 
 		//armsController->SetCurrAngle(0, this->GetCurrAngle(0));
 		//armsController->SetCurrAngle(1, this->GetCurrAngle(1));
@@ -973,287 +975,88 @@ bool Smarticle::GetArm2OT()
 double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng)
 {
 	//since going from -pi to pi:
-	currAng = currAng + CH_C_PI;//TODO if starting value is not 0 degs, this can mess thigns up if pi is not added
+	currAng = currAng + CH_C_PI;
 	destAng = destAng + CH_C_PI;
-
-	if (fabs(destAng - currAng) > distThresh)
-	{
-		//if destAng is larger, move with positive momega else
-		if (destAng > currAng){return momega;}
-		else{ return -1 * momega; }
+	double deltaAng = destAng - currAng;
+	if (fabs(deltaAng) > 2*distThresh)
+	{		//if destAng is larger, move with positive momega
+		return sign(deltaAng)*momega;
 	}
 	//if <= distThresh dont move, let omega = 0;
 	return 0;
 }
-bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1, double momega2,MoveType mtype)
+
+void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1)
 {
-	if (!active)
-		return false;
-	if (arm0OT || arm2OT) //turn off motion at limit
-	{
-		this->SetActuatorFunction(0, 0);
-		this->SetActuatorFunction(1, 0);
-		return false;
-	}
+	//torque01 and torque02 are averaged torque over some amount of steps
+	//low thresh		= if both torques are < LT*thresh.
+	//med thresh		= if both torques are LT<x<HT
+	//hi  thresh		= if one torque is > HT
+	double LT = .12 * torqueThresh2;
+	double MT = .90 * torqueThresh2;
+	//double HT = 1.99 *torqueThresh2;
 
-	//real ang01 and ang12
-	double ang01 = link_actuator01->Get_mot_rot();
-	double ang12 = link_actuator12->Get_mot_rot();
-
-	SetAngles(ang01, ang12);
-	
-	//next ang01 and ang12
-	double nextAng01 = v->at((moveTypeIdxs.at(moveType) + 1) % v->size()).first;
-	double nextAng12 = v->at((moveTypeIdxs.at(moveType) + 1) % v->size()).second;
-
-
-	double expAng01 = v->at(moveTypeIdxs.at(mtype)).first;
-	double expAng12 = v->at(moveTypeIdxs.at(mtype)).second;
-	
-	
-	//GetLog() << "(ang1,ang2)=(" << ang01 * 180 / CH_C_PI << "," << ang12 * 180 / CH_C_PI << ") (nextang1,nextang2)=(" << nextAng01 << ","<< nextAng12<<")\n";
-	//exit(-1);
-	//different real - expected
-	//double ang01Diff = ang01-expAng01;
-	//double ang12Diff = ang12-expAng12;
-
-	double omega01 = ChooseOmegaAmount(momega1, ang01, expAng01);
-	double omega12 = ChooseOmegaAmount(momega2, ang12, expAng12);
-
-	
-	//if within some threshold distance to where curr angle is supposed to be:
-	if (omega01==0)
-	{
-		if (omega12 == 0)
-		{
-			//arm01=right, arm12=right both angles should try to move to the next angle
-			this->SetActuatorFunction(0, ChooseOmegaAmount(momega1, ang01, nextAng01));
-			this->SetActuatorFunction(1, ChooseOmegaAmount(momega2, ang12, nextAng12));
-			return true;//was able to successfully move to next index
-		}
-		else
-		{
-			//arm01=right, arm12=wrong, arm12 must catch up
-			this->SetActuatorFunction(0, 0); 
-			this->SetActuatorFunction(1, omega12);
-			return false;
-		}
-	}
-	// from this point we know arm01 is wrong
-	if (omega12 == 0)
-	{
-			//arm01=wrong, arm12=right
-		this->SetActuatorFunction(0, omega01);
-		this->SetActuatorFunction(1,0);
-		return false;
+	//double t0 = abs(tor0);
+	//double t1 = abs(tor1);
+	double t0 = (tor0);
+	double t1 = (tor1);
+	if (GetArm0OT() || GetArm2OT())
+	{//highest torque threshold, stop moving
+		//AssignState(OT);
+		specialState = -1;
+		return;
 	}
 	else
-	{
-			//arm01=wrong, arm12=wrong
-		this->SetActuatorFunction(0, omega01);
-		this->SetActuatorFunction(1, omega12);
-		return false;
-	}
-}
-void Smarticle::MoveLoop2(int guiState = 0)
-{
-	//initialize boolean describing same moveType as last step
-	bool sameMoveType = false;
-	//static bool successfulMotion = false;
-	bool prevSucessful = successfulMotion;
-	successfulMotion = false;
-	//this pointer will point to the correct moveType vector
-	std::vector<std::pair<double, double>> *v;
-	//set prevMoveType to previous value
-	this->prevMoveType = this->moveType;
-	//get previous values from last timestep
-	double ang01 = link_actuator01->Get_mot_rot();
-	double ang12 = link_actuator12->Get_mot_rot();
-
-	double omega1Prev = link_actuator01->Get_mot_rot_dt();
-	double omega2Prev = link_actuator12->Get_mot_rot_dt();
-
-	double torque01 = fabs(link_actuator01->Get_react_torque().Length2()); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
-	double torque12 = fabs(link_actuator12->Get_react_torque().Length2());
-	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
-
-
-	//determine moveType
-	switch (guiState)
-	{
-	case 0:
-		this->setCurrentMoveType(GLOBAL);
-		v = &global;
-		break;
-	case 1:
-		this->setCurrentMoveType(GUI1);
-		v = &gui1;
-		break;
-	case 2:
-		this->setCurrentMoveType(GUI2);
-		v = &gui2;
-		break;
-	case 3:
-		this->setCurrentMoveType(GUI3);
-		v = &gui3;
-		break;
-	case 4:
-		this->setCurrentMoveType(VIB);
-		v = &vib;
-		break;
-	case 5:
-		this->setCurrentMoveType(VIB);
-		v = &vib;
-		break;
-	default:
-		this->setCurrentMoveType(GLOBAL);
-		v = &global;
-		break;
-	}
-
-
-
-
-	static ChVector<> rel01 = link_actuator01->GetRelAxis();
-	static ChVector<> rel12 = link_actuator12->GetRelAxis();
-	static double relr01 = link_actuator01->GetDist();
-	static double relr12 = link_actuator12->GetDist();
-	//GetLog() << "\n" << "rel1:" << rel01 << "rel2:" << rel12 << "\n";
-
-
-	//if (fabs(rel01.y) > .05 || fabs(rel12.y) > .05)//if angle in x or y is > .1 radians, it is definitely broken
-	//{
-	//	GetLog() << "angle bad break! \n";
-	//	armBroken = true;
-	//}
-	//if (fabs(relr01) > .075*r2 || fabs(relr12) > .075*r2)//if distance between markers is .025% of thickness, break!
-	//{
-	//	GetLog() << "distance wrong break! \n";
-	//	armBroken = true;
-	//}
-
-	//ChVector<> rel01 = link_actuator01->GetRelRotaxis();
-	//ChVector<> rel12 = link_actuator12->GetRelRotaxis();
-	////GetLog() <<"\n"<< rel01 << "\n";
-	//if (fabs(rel01.x) > .1 || fabs(rel01.y) > .1
-	//	|| fabs(rel12.x) > .1 || fabs(rel12.x) > .1)//if angle in x or y is > .1 radians, it is definitely broken
-	//{
-	//	armBroken = true;
-	//}
-
-	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)//one arm is OT 
-	{
-		this->setCurrentMoveType(OT);
-		v = &ot;
-
-		if (torque01 > torqueThresh2) // arm 0 is overtorqued
+	{//
+		if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if)
 		{
-			if (!arm0OT)//if arm was previously not OT, add color asset
+			AssignState(MIDT);
+			//TODO clear midt and emplace values
+			return;
+			
+		}
+		else if (t0 < LT && t1 < LT) //todo abs value of torque
+		{//LOW TORQUE
+			if (lowStressChange)		//if time to switch states
 			{
-				arm0OT = true;
-				arm0->AddAsset(mtextureOT);
-				this->ot.clear();
-				this->ot.emplace_back(GetAngle1(), GetAngle2());
-			}
-		}
-		if (torque12 > torqueThresh2)// arm 2 is overtorqued
-		{
-			if (!arm2OT)
-			{
-				arm2OT = true;
-				arm2->AddAsset(mtextureOT);
-				this->ot.clear();
-				this->ot.emplace_back(GetAngle1(), GetAngle2());
-			}
-		}
-
-	}
-	else //arms are not OT 
-	{
-		if (arm0OT)//if arm was previously OT, pop off previous armOT color asset
-		{
-			arm0OT = false;
-			arm0->GetAssets().pop_back();
-		}
-		if (arm2OT)
-		{
-			arm2OT = false;
-			arm2->GetAssets().pop_back();
-		}
-
-	}
-
-	sameMoveType = !(moveType^prevMoveType); // !(xor) gives true if values are equal, false if not
-	
-	switch (this->moveType) //have this in case I want to add different action based on move type
-	{
-		case GLOBAL://TODO implement different case if sameMoveType was wrong
-
-			successfulMotion = MoveToAngle2(v, omega1, omega2,moveType);
-			break;
-		case OT:
-			//if (sameMoveType){}
-			successfulMotion = MoveToAngle2(v, 0, 0, moveType);
-			break;
-		case GUI1:
-
-			if (sameMoveType)
-			{
-				if (omega1Prev == 0 && omega2Prev == 0)
+				if (specialState == GUI1 || global_GUI_value==GUI1) //was not already in special state
 				{
-
-					successfulMotion = true;
-					break;
+					specialState = GUI2;
 				}
+				else//if already in special state switch to a different one 
+				{
+					specialState = GUI1;
+				}
+				AssignState(specialState);
+				return;
+				//ss.clear();
+				//addInterpolatedPathToVector()
+
 			}
-			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
-			break;
-		case GUI2:
-
-			//if (sameMoveType){}
-			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
-			break;
-		case GUI3:
-
-			//if (sameMoveType){}
-			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
-			break;
-		case VIB:
-			successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
-			//GetLog() << "(0,1,2):" << v->at(0).first << "," << v->at(1).first << "," << v->at(2).first;
-			//exit(-1);
-			break;
+			return; //maybe to a low torque color change?
 		}
-	//add 1 to size if move was successful (i.e. can move on to next move index if reached previous one)
-	if (successfulMotion&&active&&(!arm0OT&&!arm2OT))
-	{
-		moveTypeIdxs.at(moveType) = ((moveTypeIdxs.at(moveType) + 1) % v->size());
 	}
-
-	return;
+	specialState = -1;
 }
 void Smarticle::ChangeArmColor(double torque01, double torque12)
 {
-	double TT2 = torqueThresh2*1.99;
+	double TT2 = torqueThresh2*.99;
 	double r0 = fabs(getLinkActuator(0)->Get_mot_rot_dt());
 	double r1 = fabs(getLinkActuator(1)->Get_mot_rot_dt());
 	double LIM = .1;
 	double moveAmt = CH_C_PI / 90; //2 degrees
-	//if (r0 || r1)
-	//{
-	//	GetLog() << "(r0,r1)= (" << r0 << "," <<  r1 << ")\n";
-	//}
-	if (fabs(torque01) > TT2&& r0<LIM)
+	if (abs(torque01) > TT2)
 	{
-		this->setCurrentMoveType(OT);
-		mv = &ot;
+		//this->setCurrentMoveType(OT);
+		//mv = &ot;
 		if (!arm0OT)//if not previously OT
 		{
 			arm0OT = true;
 			arm0->AddAsset(mtextureOT);
 			this->ot.clear();
-			this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque01)*moveAmt);
-			//this->ot.emplace_back(GetAngle1(), GetAngle2());
+			//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
+			this->ot.emplace_back(GetAngle1(), GetAngle2());
+			this->ot.emplace_back(GetAngle1(), GetAngle2());
 		}
 		//nothing needs to be done if prev OT
 	}
@@ -1269,17 +1072,18 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 
 
 	/////////////////////ARM2///////////////////////
-	if (fabs(torque12) > TT2&& r1<LIM)
+	if (abs(torque12) > TT2)
 	{
-		this->setCurrentMoveType(OT);
-		mv = &ot;
+		//this->setCurrentMoveType(OT);
+		//mv = &ot;
 		if (!arm2OT)//if not previously OT
 		{
 			arm2OT = true;
 			arm2->AddAsset(mtextureOT);
 			this->ot.clear();
-			this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque01)*moveAmt);
-			//this->ot.emplace_back(GetAngle1(), GetAngle2());
+			//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
+			this->ot.emplace_back(GetAngle1(), GetAngle2());
+			this->ot.emplace_back(GetAngle1(), GetAngle2());
 		}
 		//nothing needs to be done if prev OT
 	}
@@ -1325,8 +1129,16 @@ void Smarticle::AssignState(int guiState)
 		mv = &vib;
 		break;
 	case 5:
-		this->setCurrentMoveType(VIB);
-		mv = &vib;
+		this->setCurrentMoveType(MIDT);
+		mv = &midTorque;
+		break;
+	case 6:
+		this->setCurrentMoveType(SS);
+		mv = &ss;
+		break;
+	case 7:
+		this->setCurrentMoveType(OT);
+		mv = &ot;
 		break;
 	default:
 		this->setCurrentMoveType(GLOBAL);
@@ -1335,15 +1147,31 @@ void Smarticle::AssignState(int guiState)
 	}
 
 }
+void Smarticle::CheckLowStressChangeTime()
+{
+	static double timeSinceLastChange = 0;
+	timeSinceLastChange += dT;
+	lowStressChange = false;//always reset
+	if (timeSinceLastChange > gaitLengthChangeTime)
+	{
+		lowStressChange = true;
+		timeSinceLastChange = 0; //reset value
+	}
+}
 void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 {
 	bool sameMoveType = false;
 	bool prevSucessful = successfulMotion;
 	successfulMotion = false;
 	this->prevMoveType = this->moveType;
-	
-	AssignState(guiState);
+	CheckLowStressChangeTime();
+	if (specialState != -1)
+		AssignState(specialState);
+	else
+		AssignState(guiState);
 	ChangeArmColor(torque01, torque12);
+	ChangeStateBasedOnTorque(torque01,torque12);
+
 
 	//!(moveType^prevMoveType)
 	sameMoveType = (moveType==prevMoveType); // !(xor) gives true if values are equal, false if not
@@ -1372,152 +1200,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	//make sure controller step returns true false for movement!!
 
 }
-void Smarticle::MoveLoop2(int guiState, double torque01, double torque12)
-{
-	//initialize boolean describing same moveType as last step
-	bool sameMoveType = false;
-	//static bool successfulMotion = false;
-	bool prevSucessful = successfulMotion;
-	successfulMotion = false;
-	//this pointer will point to the correct moveType vector
-	std::vector<std::pair<double, double>> *v;
-	//set prevMoveType to previous value
-	this->prevMoveType = this->moveType;
-	//get previous values from last timestep
-	double ang01 = link_actuator01->Get_mot_rot();
-	double ang12 = link_actuator12->Get_mot_rot();
 
-	double omega1Prev = link_actuator01->Get_mot_rot_dt();
-	double omega2Prev = link_actuator12->Get_mot_rot_dt();
-
-	
-
-	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
-
-
-	//determine moveType
-	switch (guiState)
-	{
-	case 0:
-		this->setCurrentMoveType(GLOBAL);
-		v = &global;
-		break;
-	case 1:
-		this->setCurrentMoveType(GUI1);
-		v = &gui1;
-		break;
-	case 2:
-		this->setCurrentMoveType(GUI2);
-		v = &gui2;
-		break;
-	case 3:
-		this->setCurrentMoveType(GUI3);
-		v = &gui3;
-		break;
-	case 4:
-		this->setCurrentMoveType(VIB);
-		v = &vib;
-		break;
-	case 5:
-		this->setCurrentMoveType(VIB);
-		v = &vib;
-		break;
-	default:
-		this->setCurrentMoveType(GLOBAL);
-		v = &global;
-		break;
-	}
-
-
-
-
-	static ChVector<> rel01 = link_actuator01->GetRelAxis();
-	static ChVector<> rel12 = link_actuator12->GetRelAxis();
-	static double relr01 = link_actuator01->GetDist();
-	static double relr12 = link_actuator12->GetDist();
-	//GetLog() << "\n" << "rel1:" << rel01 << "rel2:" << rel12 << "\n";
-
-
-	//if (fabs(rel01.y) > .05 || fabs(rel12.y) > .05)//if angle in x or y is > .1 radians, it is definitely broken
-	//{
-	//	GetLog() << "angle bad break! \n";
-	//	armBroken = true;
-	//}
-	//if (fabs(relr01) > .075*r2 || fabs(relr12) > .075*r2)//if distance between markers is .025% of thickness, break!
-	//{
-	//	GetLog() << "distance wrong break! \n";
-	//	armBroken = true;
-	//}
-
-	//ChVector<> rel01 = link_actuator01->GetRelRotaxis();
-	//ChVector<> rel12 = link_actuator12->GetRelRotaxis();
-	////GetLog() <<"\n"<< rel01 << "\n";
-	//if (fabs(rel01.x) > .1 || fabs(rel01.y) > .1
-	//	|| fabs(rel12.x) > .1 || fabs(rel12.x) > .1)//if angle in x or y is > .1 radians, it is definitely broken
-	//{
-	//	armBroken = true;
-	//}
-
-/////////////torque color change was here/////////////
-	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)//one arm is OT 
-	{
-		this->setCurrentMoveType(OT);
-		v = &ot;
-	}
-	ChangeArmColor(torque01, torque12);
-
-//////////////////////////////////////////////////////
-
-
-	sameMoveType = !(moveType^prevMoveType); // !(xor) gives true if values are equal, false if not
-
-	switch (this->moveType) //have this in case I want to add different action based on move type
-	{
-	case GLOBAL://TODO implement different case if sameMoveType was wrong
-
-		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
-		break;
-	case OT:
-		//if (sameMoveType){}
-		successfulMotion = MoveToAngle2(v, 0, 0, moveType);
-		break;
-	case GUI1:
-
-		//if (sameMoveType)
-		//{
-		//	if (omega1Prev == 0 && omega2Prev == 0)
-		//	{
-
-		//		successfulMotion = true;
-		//		break;
-		//	}
-		//}
-		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
-		break;
-	case GUI2:
-
-		//if (sameMoveType){}
-		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
-		break;
-	case GUI3:
-
-		//if (sameMoveType){}
-		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
-		break;
-	case VIB:
-		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
-		//GetLog() << "(0,1,2):" << v->at(0).first << "," << v->at(1).first << "," << v->at(2).first;
-		//exit(-1);
-		break;
-	}
-	//add 1 to size if move was successful (i.e. can move on to next move index if reached previous one)
-	if (successfulMotion&&active && (!arm0OT&&!arm2OT))
-	{
-		moveTypeIdxs.at(moveType) = ((moveTypeIdxs.at(moveType) + 1) % v->size());
-	}
-
-	return;
-}
 ChSharedBodyPtr Smarticle::GetSmarticleBodyPointer()
 {
 	return arm1;
