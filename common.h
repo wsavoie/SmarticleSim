@@ -68,6 +68,406 @@
 
 ////////////deprecated code which may still be useful in the future////////////////////////////
 ///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1, double momega2, MoveType mtype)
+//{
+//	if (!active)
+//		return false;
+//	if (arm0OT || arm2OT) //turn off motion at limit
+//	{
+//		this->SetActuatorFunction(0, 0);
+//		this->SetActuatorFunction(1, 0);
+//		return false;
+//	}
+//
+//	//real ang01 and ang12
+//	double ang01 = link_actuator01->Get_mot_rot();
+//	double ang12 = link_actuator12->Get_mot_rot();
+//
+//	SetAngles(ang01, ang12);
+//
+//	//next ang01 and ang12
+//	double nextAng01 = v->at((moveTypeIdxs.at(moveType) + 1) % v->size()).first;
+//	double nextAng12 = v->at((moveTypeIdxs.at(moveType) + 1) % v->size()).second;
+//
+//
+//	double expAng01 = v->at(moveTypeIdxs.at(mtype)).first;
+//	double expAng12 = v->at(moveTypeIdxs.at(mtype)).second;
+//
+//
+//	//GetLog() << "(ang1,ang2)=(" << ang01 * 180 / CH_C_PI << "," << ang12 * 180 / CH_C_PI << ") (nextang1,nextang2)=(" << nextAng01 << ","<< nextAng12<<")\n";
+//	//exit(-1);
+//	//different real - expected
+//	//double ang01Diff = ang01-expAng01;
+//	//double ang12Diff = ang12-expAng12;
+//
+//	double omega01 = ChooseOmegaAmount(momega1, ang01, expAng01);
+//	double omega12 = ChooseOmegaAmount(momega2, ang12, expAng12);
+//
+//
+//	//if within some threshold distance to where curr angle is supposed to be:
+//	if (omega01 == 0)
+//	{
+//		if (omega12 == 0)
+//		{
+//			//arm01=right, arm12=right both angles should try to move to the next angle
+//			this->SetActuatorFunction(0, ChooseOmegaAmount(momega1, ang01, nextAng01));
+//			this->SetActuatorFunction(1, ChooseOmegaAmount(momega2, ang12, nextAng12));
+//			return true;//was able to successfully move to next index
+//		}
+//		else
+//		{
+//			//arm01=right, arm12=wrong, arm12 must catch up
+//			this->SetActuatorFunction(0, 0);
+//			this->SetActuatorFunction(1, omega12);
+//			return false;
+//		}
+//	}
+//	// from this point we know arm01 is wrong
+//	if (omega12 == 0)
+//	{
+//		//arm01=wrong, arm12=right
+//		this->SetActuatorFunction(0, omega01);
+//		this->SetActuatorFunction(1, 0);
+//		return false;
+//	}
+//	else
+//	{
+//		//arm01=wrong, arm12=wrong
+//		this->SetActuatorFunction(0, omega01);
+//		this->SetActuatorFunction(1, omega12);
+//		return false;
+//	}
+//}
+//
+///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+//void Smarticle::MoveLoop2(int guiState, double torque01, double torque12)
+//{
+//	//initialize boolean describing same moveType as last step
+//	bool sameMoveType = false;
+//	//static bool successfulMotion = false;
+//	bool prevSucessful = successfulMotion;
+//	successfulMotion = false;
+//	//this pointer will point to the correct moveType vector
+//	std::vector<std::pair<double, double>> *v;
+//	//set prevMoveType to previous value
+//	this->prevMoveType = this->moveType;
+//	//get previous values from last timestep
+//	double ang01 = link_actuator01->Get_mot_rot();
+//	double ang12 = link_actuator12->Get_mot_rot();
+
+//	double omega1Prev = link_actuator01->Get_mot_rot_dt();
+//	double omega2Prev = link_actuator12->Get_mot_rot_dt();
+
+
+
+//	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
+
+
+//	//determine moveType
+//	switch (guiState)
+//	{
+//	case 0:
+//		this->setCurrentMoveType(GLOBAL);
+//		v = &global;
+//		break;
+//	case 1:
+//		this->setCurrentMoveType(GUI1);
+//		v = &gui1;
+//		break;
+//	case 2:
+//		this->setCurrentMoveType(GUI2);
+//		v = &gui2;
+//		break;
+//	case 3:
+//		this->setCurrentMoveType(GUI3);
+//		v = &gui3;
+//		break;
+//	case 4:
+//		this->setCurrentMoveType(VIB);
+//		v = &vib;
+//		break;
+//	case 5:
+//		this->setCurrentMoveType(VIB);
+//		v = &vib;
+//		break;
+//	default:
+//		this->setCurrentMoveType(GLOBAL);
+//		v = &global;
+//		break;
+//	}
+
+
+
+
+//	static ChVector<> rel01 = link_actuator01->GetRelAxis();
+//	static ChVector<> rel12 = link_actuator12->GetRelAxis();
+//	static double relr01 = link_actuator01->GetDist();
+//	static double relr12 = link_actuator12->GetDist();
+//	//GetLog() << "\n" << "rel1:" << rel01 << "rel2:" << rel12 << "\n";
+
+
+//	//if (fabs(rel01.y) > .05 || fabs(rel12.y) > .05)//if angle in x or y is > .1 radians, it is definitely broken
+//	//{
+//	//	GetLog() << "angle bad break! \n";
+//	//	armBroken = true;
+//	//}
+//	//if (fabs(relr01) > .075*r2 || fabs(relr12) > .075*r2)//if distance between markers is .025% of thickness, break!
+//	//{
+//	//	GetLog() << "distance wrong break! \n";
+//	//	armBroken = true;
+//	//}
+
+//	//ChVector<> rel01 = link_actuator01->GetRelRotaxis();
+//	//ChVector<> rel12 = link_actuator12->GetRelRotaxis();
+//	////GetLog() <<"\n"<< rel01 << "\n";
+//	//if (fabs(rel01.x) > .1 || fabs(rel01.y) > .1
+//	//	|| fabs(rel12.x) > .1 || fabs(rel12.x) > .1)//if angle in x or y is > .1 radians, it is definitely broken
+//	//{
+//	//	armBroken = true;
+//	//}
+
+//	/////////////torque color change was here/////////////
+//	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)//one arm is OT 
+//	{
+//		this->setCurrentMoveType(OT);
+//		v = &ot;
+//	}
+//	ChangeArmColor(torque01, torque12);
+
+//	//////////////////////////////////////////////////////
+
+
+//	sameMoveType = !(moveType^prevMoveType); // !(xor) gives true if values are equal, false if not
+
+//	switch (this->moveType) //have this in case I want to add different action based on move type
+//	{
+//	case GLOBAL://TODO implement different case if sameMoveType was wrong
+
+//		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+//		break;
+//	case OT:
+//		//if (sameMoveType){}
+//		successfulMotion = MoveToAngle2(v, 0, 0, moveType);
+//		break;
+//	case GUI1:
+
+//		//if (sameMoveType)
+//		//{
+//		//	if (omega1Prev == 0 && omega2Prev == 0)
+//		//	{
+
+//		//		successfulMotion = true;
+//		//		break;
+//		//	}
+//		//}
+//		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+//		break;
+//	case GUI2:
+
+//		//if (sameMoveType){}
+//		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+//		break;
+//	case GUI3:
+
+//		//if (sameMoveType){}
+//		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+//		break;
+//	case VIB:
+//		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+//		//GetLog() << "(0,1,2):" << v->at(0).first << "," << v->at(1).first << "," << v->at(2).first;
+//		//exit(-1);
+//		break;
+//	}
+//	//add 1 to size if move was successful (i.e. can move on to next move index if reached previous one)
+//	if (successfulMotion&&active && (!arm0OT&&!arm2OT))
+//	{
+//		moveTypeIdxs.at(moveType) = ((moveTypeIdxs.at(moveType) + 1) % v->size());
+//	}
+
+//	return;
+//}
+///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+//void Smarticle::MoveLoop2(int guiState = 0)
+//{
+//	//initialize boolean describing same moveType as last step
+//	bool sameMoveType = false;
+//	//static bool successfulMotion = false;
+//	bool prevSucessful = successfulMotion;
+//	successfulMotion = false;
+//	//this pointer will point to the correct moveType vector
+//	std::vector<std::pair<double, double>> *v;
+//	//set prevMoveType to previous value
+//	this->prevMoveType = this->moveType;
+//	//get previous values from last timestep
+//	double ang01 = link_actuator01->Get_mot_rot();
+//	double ang12 = link_actuator12->Get_mot_rot();
+
+//	double omega1Prev = link_actuator01->Get_mot_rot_dt();
+//	double omega2Prev = link_actuator12->Get_mot_rot_dt();
+
+//	double torque01 = fabs(link_actuator01->Get_react_torque().Length2()); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
+//	double torque12 = fabs(link_actuator12->Get_react_torque().Length2());
+//	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
+
+
+//	//determine moveType
+//	switch (guiState)
+//	{
+//	case 0:
+//		this->setCurrentMoveType(GLOBAL);
+//		v = &global;
+//		break;
+//	case 1:
+//		this->setCurrentMoveType(GUI1);
+//		v = &gui1;
+//		break;
+//	case 2:
+//		this->setCurrentMoveType(GUI2);
+//		v = &gui2;
+//		break;
+//	case 3:
+//		this->setCurrentMoveType(GUI3);
+//		v = &gui3;
+//		break;
+//	case 4:
+//		this->setCurrentMoveType(VIB);
+//		v = &vib;
+//		break;
+//	case 5:
+//		this->setCurrentMoveType(VIB);
+//		v = &vib;
+//		break;
+//	default:
+//		this->setCurrentMoveType(GLOBAL);
+//		v = &global;
+//		break;
+//	}
+
+
+
+
+//	static ChVector<> rel01 = link_actuator01->GetRelAxis();
+//	static ChVector<> rel12 = link_actuator12->GetRelAxis();
+//	static double relr01 = link_actuator01->GetDist();
+//	static double relr12 = link_actuator12->GetDist();
+//	//GetLog() << "\n" << "rel1:" << rel01 << "rel2:" << rel12 << "\n";
+
+
+//	//if (fabs(rel01.y) > .05 || fabs(rel12.y) > .05)//if angle in x or y is > .1 radians, it is definitely broken
+//	//{
+//	//	GetLog() << "angle bad break! \n";
+//	//	armBroken = true;
+//	//}
+//	//if (fabs(relr01) > .075*r2 || fabs(relr12) > .075*r2)//if distance between markers is .025% of thickness, break!
+//	//{
+//	//	GetLog() << "distance wrong break! \n";
+//	//	armBroken = true;
+//	//}
+
+//	//ChVector<> rel01 = link_actuator01->GetRelRotaxis();
+//	//ChVector<> rel12 = link_actuator12->GetRelRotaxis();
+//	////GetLog() <<"\n"<< rel01 << "\n";
+//	//if (fabs(rel01.x) > .1 || fabs(rel01.y) > .1
+//	//	|| fabs(rel12.x) > .1 || fabs(rel12.x) > .1)//if angle in x or y is > .1 radians, it is definitely broken
+//	//{
+//	//	armBroken = true;
+//	//}
+
+//	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)//one arm is OT 
+//	{
+//		this->setCurrentMoveType(OT);
+//		v = &ot;
+
+//		if (torque01 > torqueThresh2) // arm 0 is overtorqued
+//		{
+//			if (!arm0OT)//if arm was previously not OT, add color asset
+//			{
+//				arm0OT = true;
+//				arm0->AddAsset(mtextureOT);
+//				this->ot.clear();
+//				this->ot.emplace_back(GetAngle1(), GetAngle2());
+//			}
+//		}
+//		if (torque12 > torqueThresh2)// arm 2 is overtorqued
+//		{
+//			if (!arm2OT)
+//			{
+//				arm2OT = true;
+//				arm2->AddAsset(mtextureOT);
+//				this->ot.clear();
+//				this->ot.emplace_back(GetAngle1(), GetAngle2());
+//			}
+//		}
+
+//	}
+//	else //arms are not OT 
+//	{
+//		if (arm0OT)//if arm was previously OT, pop off previous armOT color asset
+//		{
+//			arm0OT = false;
+//			arm0->GetAssets().pop_back();
+//		}
+//		if (arm2OT)
+//		{
+//			arm2OT = false;
+//			arm2->GetAssets().pop_back();
+//		}
+
+//	}
+
+//	sameMoveType = !(moveType^prevMoveType); // !(xor) gives true if values are equal, false if not
+
+//	switch (this->moveType) //have this in case I want to add different action based on move type
+//	{
+//	case GLOBAL://TODO implement different case if sameMoveType was wrong
+
+//		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+//		break;
+//	case OT:
+//		//if (sameMoveType){}
+//		successfulMotion = MoveToAngle2(v, 0, 0, moveType);
+//		break;
+//	case GUI1:
+
+//		if (sameMoveType)
+//		{
+//			if (omega1Prev == 0 && omega2Prev == 0)
+//			{
+
+//				successfulMotion = true;
+//				break;
+//			}
+//		}
+//		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+//		break;
+//	case GUI2:
+
+//		//if (sameMoveType){}
+//		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+//		break;
+//	case GUI3:
+
+//		//if (sameMoveType){}
+//		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+//		break;
+//	case VIB:
+//		successfulMotion = MoveToAngle2(v, omega1, omega2, moveType);
+//		//GetLog() << "(0,1,2):" << v->at(0).first << "," << v->at(1).first << "," << v->at(2).first;
+//		//exit(-1);
+//		break;
+//	}
+//	//add 1 to size if move was successful (i.e. can move on to next move index if reached previous one)
+//	if (successfulMotion&&active && (!arm0OT&&!arm2OT))
+//	{
+//		moveTypeIdxs.at(moveType) = ((moveTypeIdxs.at(moveType) + 1) % v->size());
+//	}
+
+//	return;
+//}
+
+
+///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 //this code was so that I could run through smarticle vector only once
 //true if removed, false if not fixed
 //bool FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec, Smarticle &sPtr, int tstep, int idx) //TODO remake method

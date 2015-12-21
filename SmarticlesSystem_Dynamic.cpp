@@ -117,7 +117,7 @@ int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 double vibration_freq = 30;
-double fric =.9;
+double fric =.7;
 double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
@@ -164,9 +164,9 @@ double gaitChangeLengthTime = .5;
 
 #endif
 
-	double p_gain = 1;   //3
-	double i_gain = 0.3;	 //1
-	double d_gain = 0.13; //.1
+	double p_gain = .4;   //3
+	double i_gain = 0.1;	 //1
+	double d_gain = 0.01; //.1
 
 	// double t_smarticle 	= sizeScale * .00254;
 	// double t2_smarticle	= sizeScale * .001;
@@ -403,6 +403,9 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
 #endif
 	
+	bool placeInMiddle = true; // if I want make a single smarticle on bottom surface
+	ChVector<> dropSpeed = VNULL;
+	ChQuaternion<> myRot = QUNIT;
 	double z;
 	double zpos;
 	int smarticleCount = mySmarticlesVec.size();
@@ -426,10 +429,24 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				zpos);
 			break;
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
-			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.2), 
-				//cos(ang*i + phase)*(bucket_rad / 1.5),
+			if (!placeInMiddle)
+			{
+				myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.2),
 				cos(ang*i + phase)*(bucket_rad / 2.2),
 				zpos);
+				dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2 * w_smarticle / timeForDisp);
+				myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
+			}
+			else////////////place in center of bucket on bucket bottom
+			{
+				myPos = bucket_ctr + ChVector<>(0,0,bucket_bott->GetPos().z + t_smarticle / 2);
+				dropSpeed = VNULL;
+				myRot = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
+			}
+			////////////////////////////////////
+
+
+
 			break;
 		case HOPPER:
 			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand()),
@@ -442,10 +459,9 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				zpos);
 			break;
 		}
-
-		ChQuaternion<> myRot = ChQuaternion<>(2*MyRand()-1, 2*MyRand()-1, 2*MyRand()-1, 2*MyRand()-1);
+			
 			myRot.Normalize();
-
+			/////////////////flat rot/////////////////
 			Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 			smarticle0->Properties(mySmarticlesVec.size(), mySmarticlesVec.size() * 4,
 				rho_smarticle, mat_g,
@@ -466,12 +482,18 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			smarticle0->Create();
 			smarticle0->setCurrentMoveType((MoveType) Smarticle::global_GUI_value);
 			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180, angle2*CH_C_PI / 180);
-			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180 - vibAmp, angle1*CH_C_PI / 180 - vibAmp);
-			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180, angle2*CH_C_PI / 180);
-			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180 + vibAmp, angle1*CH_C_PI / 180 + vibAmp);
+			
+			//must put this line because of how linspace is written;
+			smarticle0->AssignState(VIB);
+			smarticle0->GenerateVib(angle1,angle2);
+			smarticle0->AssignState(Smarticle::global_GUI_value);
+			//smarticle0->ss.emplace_back(angle1, angle2);
+			smarticle0->midTorque.emplace_back(angle1*CH_C_PI / 180 + vibAmp, angle2*CH_C_PI / 180 + vibAmp);
+			smarticle0->midTorque.emplace_back(angle1*CH_C_PI / 180 + vibAmp, angle2*CH_C_PI / 180 + vibAmp);
 
 			mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
-			smarticle0->SetSpeed(ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2*w_smarticle / timeForDisp));
+			smarticle0->SetSpeed(dropSpeed);
+			
 #if irrlichtVisualization
 			application.AssetBindAll();
 			application.AssetUpdateAll();
@@ -1377,12 +1399,12 @@ void UpdateSmarticles(
 	double t = mphysicalSystem.GetChTime(); 
 	
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
-		//mySmarticlesVec[i]->updateTorqueDeque();
-		//double tor1 = std::get<0>(mySmarticlesVec[i]->torqueAvg);
-		//double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);
+		mySmarticlesVec[i]->updateTorqueDeque();
+		double tor1 = std::get<0>(mySmarticlesVec[i]->torqueAvg);
+		double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);
 
-		double tor1 = mySmarticlesVec[i]->GetZReactTorque(0);
-		double tor2 = mySmarticlesVec[i]->GetZReactTorque(1);
+		//double tor1 = mySmarticlesVec[i]->GetZReactTorque(0);
+		//double tor2 = mySmarticlesVec[i]->GetZReactTorque(1);
 
 		mySmarticlesVec[i]->timeSinceLastGait = mySmarticlesVec[i]->timeSinceLastGait + dT;
 		
@@ -1586,13 +1608,13 @@ int main(int argc, char* argv[]) {
 	ChIrrWizard::add_typical_Logo(application.GetDevice());
 	ChIrrWizard::add_typical_Sky(application.GetDevice());
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
-		core::vector3df(-.1, 0, .1)*sizeScale,
-		core::vector3df(-.1, 0, 0)*sizeScale);
+		core::vector3df(0, 0, 4*bucket_rad)*sizeScale,
+		core::vector3df(0, 0, 1*bucket_rad)*sizeScale);
 
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
-		core::vector3df(0, -.1, 0)*sizeScale,
-		core::vector3df(0, 0, -.01)*sizeScale);
+		core::vector3df(0, 0, bucket_rad / 2.1)*sizeScale,
+		core::vector3df(0, -2.3*bucket_rad + bucket_rad, bucket_rad / 2.0)*sizeScale);
 
 	scene::RTSCamera* camera = new scene::RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
@@ -1993,13 +2015,14 @@ int main(int argc, char* argv[]) {
 			
 			application.SetVideoframeSaveInterval(5);//only save every 2 frames
 			application.DrawAll();
-			UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
+
 			application.AssetBindAll();  //uncomment to visualize vol frac boxes
 			application.AssetUpdateAll();//uncomment to visualize vol frac boxes
-	
+			
 			application.DoStep();//
-
+			
 			application.GetVideoDriver()->endScene();
+			UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	#else
 			mphysicalSystem.DoStepDynamics(dT);
 	#endif
