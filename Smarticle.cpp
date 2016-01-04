@@ -790,10 +790,10 @@ std::vector<double> Smarticle::linspace(double a, double b, int n) {
 	}
 	return vec;
 }
-bool Smarticle::NotAtDesiredPos(int id, double ang)//bad method name
+bool Smarticle::NotAtDesiredPos(int id, double ang,double exp)//bad method name
 {
 	//GetLog() << "expAng" << id << ":" << GetExpAngle(id) << "\n    ";
-	double x= ChooseOmegaAmount(GetOmega(id), ang, GetExpAngle(id)); //returns true if anything else but 0 is returned from here	
+	double x= ChooseOmegaAmount(GetOmega(id), ang, exp); //returns true if anything else but 0 is returned from here	
 	//returns true if anything else but 0 is returned from here
 	return x;
 }
@@ -978,7 +978,7 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 	currAng = currAng + CH_C_PI;
 	destAng = destAng + CH_C_PI;
 	double deltaAng = destAng - currAng;
-	if (fabs(deltaAng) > 2*distThresh)
+	if (abs(deltaAng) > 2*distThresh)
 	{		//if destAng is larger, move with positive momega
 		return sign(deltaAng)*momega;
 	}
@@ -992,7 +992,7 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1)
 	//low thresh		= if both torques are < LT*thresh.
 	//med thresh		= if both torques are LT<x<HT
 	//hi  thresh		= if one torque is > HT
-	double LT = .12 * torqueThresh2;
+	double LT = .36 * torqueThresh2;
 	double MT = .90 * torqueThresh2;
 	//double HT = 1.99 *torqueThresh2;
 
@@ -1027,12 +1027,13 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1)
 				{
 					specialState = GUI1;
 				}
-				AssignState(specialState);
+				//AssignState(specialState);
 				return;
 				//ss.clear();
 				//addInterpolatedPathToVector()
 
 			}
+			//does specialState = -1; go here?
 			return; //maybe to a low torque color change?
 		}
 	}
@@ -1041,8 +1042,8 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1)
 void Smarticle::ChangeArmColor(double torque01, double torque12)
 {
 	double TT2 = torqueThresh2*.99;
-	double r0 = fabs(getLinkActuator(0)->Get_mot_rot_dt());
-	double r1 = fabs(getLinkActuator(1)->Get_mot_rot_dt());
+	double r0 = abs(getLinkActuator(0)->Get_mot_rot_dt());
+	double r1 = abs(getLinkActuator(1)->Get_mot_rot_dt());
 	double LIM = .1;
 	double moveAmt = CH_C_PI / 90; //2 degrees
 	if (abs(torque01) > TT2)
@@ -1156,39 +1157,41 @@ void Smarticle::CheckLowStressChangeTime()
 	{
 		lowStressChange = true;
 		timeSinceLastChange = 0; //reset value
+		
 	}
 }
 void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 {
+	
+	if (active == false)//TODO put this higher
+	{
+		successfulMotion = false;
+		return;
+	}
+
 	bool sameMoveType = false;
 	bool prevSucessful = successfulMotion;
 	successfulMotion = false;
 	this->prevMoveType = this->moveType;
 	CheckLowStressChangeTime();
-	if (specialState != -1)
-		AssignState(specialState);
-	else
-		AssignState(guiState);
 	ChangeArmColor(torque01, torque12);
 	ChangeStateBasedOnTorque(torque01,torque12);
-
+	//if (specialState != -1)
+	//	AssignState(specialState);
+	//else
+		AssignState(guiState);
 
 	//!(moveType^prevMoveType)
 	sameMoveType = (moveType==prevMoveType); // !(xor) gives true if values are equal, false if not
 	if (!sameMoveType)
 	{
-		if (active)
 			this->armsController->resetCumError = true;	
 	}
 	//successfulMotion = controller->step(sameMoveType,dT);
 	
 	//used to have switch but prob not necessary can just use if:
 
-	if (active == false)
-	{
-		successfulMotion = false;
-		return;
-	}
+	
 	successfulMotion = armsController->Step(m_system->GetChTime());
 	//if (this->moveType == OT); //if OT stop moving!
 	//{

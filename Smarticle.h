@@ -210,7 +210,7 @@ namespace chrono {
 		double GetNextAngle(int id);
 		double GetCurrAngle(int id);
 		double GetExpAngle(int id);
-		bool NotAtDesiredPos(int id, double ang);
+		bool NotAtDesiredPos(int id, double ang, double exp);
 		void addInterpolatedPathToVector(double arm0i, double arm2i, double arm0f,double arm2f);
 		std::vector<double> linspace(double a, double b, int n);
 		std::pair<double, double> populateMoveVector();
