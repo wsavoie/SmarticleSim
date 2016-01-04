@@ -1716,14 +1716,14 @@ int main(int argc, char* argv[]) {
 		ChSharedPtr<ChBody> truss = ChSharedPtr<ChBody>(new ChBody);
 		truss->SetBodyFixed(true);
 		truss->GetCollisionModel()->ClearModel();
-		utils::AddCylinderGeometry(truss.get_ptr(), t2_smarticle, bucket_interior_halfDim.z*1, bucket_ctr+ChVector<>(0,0,bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(CH_C_PI/2.0,0,0)), true);
+		utils::AddCylinderGeometry(truss.get_ptr(), t2_smarticle/2, bucket_interior_halfDim.z*1, bucket_ctr+ChVector<>(0,0,bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(CH_C_PI/2.0,0,0)), true);
 		truss->GetCollisionModel()->BuildModel();
 		truss->AddAsset(sphereTexture);
 		truss->SetCollide(false);
 		mphysicalSystem.AddBody(truss);
 
 
-		double mult = 4.0;
+		double mult = 2.0;
 		double knobRad;
 		double stickLen = bucket_interior_halfDim.z*1.5;
 		int sphereNum = stickLen / (t_smarticle);
@@ -1748,8 +1748,8 @@ int main(int argc, char* argv[]) {
 			}
 			else
 			{
-				rad = t_smarticle*mult / 2.0;
-				knobRad = t2_smarticle / mult;
+				rad = t_smarticle*mult / 1.5;
+				knobRad = t2_smarticle/2 / mult;
 
 			}
 			//if you change z height between spheres, you must change sphereStickHeight above!
@@ -1800,7 +1800,7 @@ int main(int argc, char* argv[]) {
 			break;
 	}
 
-	double timeForVerticalDisplcement = 0.015; // 1.5 for safety proximity
+	double timeForVerticalDisplacement = 0.015; // 1.5 for safety proximity
 	int numGeneratedLayers = 0;
 
 
@@ -1817,10 +1817,10 @@ int main(int argc, char* argv[]) {
 		double t = mphysicalSystem.GetChTime();
 		if (!read_from_file)
 		{
-			if ((fmod(t, timeForVerticalDisplcement) < dT) &&
+			if ((fmod(t, timeForVerticalDisplacement) < dT) &&
 				(numGeneratedLayers < numLayers)){
 #if irrlichtVisualization
-				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplcement);
+				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplacement);
 #else
 				AddParticlesLayer1(mphysicalSystem, mySmarticlesVec);
 #endif
@@ -1939,9 +1939,9 @@ int main(int argc, char* argv[]) {
 
 
 
-		if (fmod(t, timeForVerticalDisplcement) < dT
+		if (fmod(t, timeForVerticalDisplacement) < dT
 			&&mySmarticlesVec.size() < numPerLayer*numLayers && (numGeneratedLayers == numLayers))
-			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplcement);
+			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplacement);
 
 		//SavePovFilesMBD(mphysicalSystem, tStep);
 		//step_timer.start("step time");
