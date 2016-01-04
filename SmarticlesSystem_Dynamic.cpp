@@ -103,7 +103,7 @@ using namespace chrono;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = CYLINDER;
+BucketType bucketType = KNOBCYLINDER;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -439,7 +439,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			}
 			else////////////place in center of bucket on bucket bottom
 			{
-				myPos = bucket_ctr + ChVector<>(0,0,bucket_bott->GetPos().z + t_smarticle / 2);
+				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*1.88,bucket_bott->GetPos().z + t_smarticle / 2);
 				dropSpeed = VNULL;
 				myRot = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
 			}
@@ -1402,56 +1402,8 @@ void UpdateSmarticles(
 		mySmarticlesVec[i]->updateTorqueDeque();
 		double tor1 = std::get<0>(mySmarticlesVec[i]->torqueAvg);
 		double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);
-
-		//double tor1 = mySmarticlesVec[i]->GetZReactTorque(0);
-		//double tor2 = mySmarticlesVec[i]->GetZReactTorque(1);
-
-		mySmarticlesVec[i]->timeSinceLastGait = mySmarticlesVec[i]->timeSinceLastGait + dT;
 		
-		if (t > 100)
-		{
-			if (mySmarticlesVec[i]->timeSinceLastGait >= gaitChangeLengthTime) //if timespan necessary to check 
-			{
-				if (tor1 >= torquethresh || tor2 >= torquethresh) //if either are above torque threshold
-				{
-					//mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType % 2 + 1, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
-					mySmarticlesVec[i]->ControllerMove(mySmarticlesVec[i]->moveType % 2 + 1, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
-				}
-				else
-				{
-					//mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
-					mySmarticlesVec[i]->ControllerMove(mySmarticlesVec[i]->moveType, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
-				}
-				mySmarticlesVec[i]->timeSinceLastGait = 0;
-			}
-			else
-			{
-				mySmarticlesVec[i]->ControllerMove(mySmarticlesVec[i]->moveType, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
-				//mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
-			}
-
-			//if (mySmarticlesVec[i]->timeSinceLastGait >= gaitChangeLengthTime) //if timespan necessary to check 
-			//{
-			//	if (tor1 <= torquethresh || tor2 <= torquethresh) //if either are above torque threshold
-			//	{
-			//		mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType % 2 + 1, tor1, tor2);  //if 2 go to 1 if 1 go to 2,  moves between straight(2) and U(1)
-			//	}
-			//	else
-			//	{
-			//		mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
-			//	}
-			//	mySmarticlesVec[i]->timeSinceLastGait = 0;
-			//}
-			//else
-			//{
-			//	mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, tor1, tor2);
-			//}
-		}
-		else
-		{
-			//mySmarticlesVec[i]->MoveLoop2(Smarticle::global_GUI_value, tor1, tor2);
-			mySmarticlesVec[i]->ControllerMove(Smarticle::global_GUI_value, tor1, tor2);
-		}
+		mySmarticlesVec[i]->ControllerMove(Smarticle::global_GUI_value, tor1, tor2);
 
 		//double torque01 = mySmarticlesVec[i]->GetReactTorqueLen01();
 		//double torque12 = mySmarticlesVec[i]->GetReactTorqueLen12();
@@ -1487,7 +1439,7 @@ void UpdateSmarticles(
 bool SetGait(double time)
 {
 	//if (t < vibrateStart-.4)
-	//	Smarticle::global_GUI_value = 2;
+		Smarticle::global_GUI_value = 1;
 	//else if (t > vibrateStart-.4 && t < vibrateStart+.25)
 	//	Smarticle::global_GUI_value = 1;
 	//else if (t > vibrateStart + .25 && t < vibrateStart + 4)
