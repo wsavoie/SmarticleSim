@@ -62,23 +62,24 @@ bool Controller::Step(double dt) {
 		smarticle_->SetAngle(i, ang,false);
 		
 		//GetLog() << "ANG" << i << ":" << smarticle_->GetAngle(i) << "    ";
-		bool desiredPositionStatus = smarticle_->NotAtDesiredPos(i, ang); //true if not at current position being directed to 
+		bool desiredPositionStatus = smarticle_->NotAtDesiredPos(i, ang,exp); //true if not at current position being directed to 
 		//auto a = ~desiredPositionStatus;
 		successfulMove_.at(i) = !desiredPositionStatus;
-
+		UseForceControl(i);
 	}
 	//GetLog() <<" t: " << dt << " " << "\n";
 	//exit(-1);
-	UseForceControl();
+	
 	//UseSpeedControl()
 
+	result = successfulMove_.at(0) || successfulMove_.at(1);
 
 	//if (successfulMove_.at(0) == false && successfulMove_.at(1) == false)
 	//{
 	//	result = false;
 	//}
 	//else{
-		result = true;
+	//	result = true;
 	//}
 
 	return result;
@@ -142,7 +143,7 @@ double Controller::GetActuatorOmega(size_t index, double t)
 //}
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
-	double errLim = 5* CH_C_PI/ 180;
+	double errLim = 8* CH_C_PI/ 180;
 	double err = (des - curr);
 	err = std::max(std::min(errLim, err), -errLim);
 
@@ -213,33 +214,34 @@ void Controller::UseSpeedControl() {
 	//GetEngine(1)->Set_spe_funct(engine_funct1);
 
 }
-void Controller::UseForceControl() {
+void Controller::UseForceControl(size_t id) {
 	//for (size_t i = 0; i < smarticle_->numEngs; ++i) {
-		GetEngine(0)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-		GetEngine(1)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-		//ChSharedPtr<ChFunction_Const> mfun2 = GetEngine(0)->Get_tor_funct().DynamicCastTo<ChFunction_Const>();
-		//ChSharedPtr<ChFunction_Const> mfun1 = GetEngine(1)->Get_tor_funct().DynamicCastTo<ChFunction_Const>();
-		//mfun2->Set_yconst(.0001);
-		//mfun1->Set_yconst(.0001);
-
-
-
-		//ChSharedPtr<ChFunctionController> engine_funct0(new ChFunctionController(0, this));
-		ChSharedPtr<ChFunctionController> ef0(new ChFunctionController(0, this));
-		ChSharedPtr<ChFunctionController> ef1(new ChFunctionController(1, this));
 		
-		//causes 2 calls per chfunction
-		//GetEngine(0)->Set_tor_funct(ef0);
-		//GetEngine(1)->Set_tor_funct(ef1);
+		GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+		ChSharedPtr<ChFunctionController> ef(new ChFunctionController(id, this));
+		ChSharedPtr<ChFunction_Const> mfun = GetEngine(id)->Get_tor_funct().DynamicCastTo<ChFunction_Const>();
+		double y = ef->Get_y(ch_system_->GetChTime());
+		mfun->Set_yconst(y);
+	
+		//GetEngine(0)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+		//GetEngine(1)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
-		//doing this fixes the multiple chfunction runs
-		ChSharedPtr<ChFunction_Const> mfun0 = GetEngine(0)->Get_tor_funct().DynamicCastTo<ChFunction_Const>();
-		ChSharedPtr<ChFunction_Const> mfun1 = GetEngine(1)->Get_tor_funct().DynamicCastTo<ChFunction_Const>();
-		double y0 = ef0->Get_y(ch_system_->GetChTime());
-		double y1 = ef1->Get_y(ch_system_->GetChTime());
-		//GetLog() << "y0: " << y0 << "y1: " << y1 << "\n";
-		mfun0->Set_yconst(y0);
-		mfun1->Set_yconst(y1);
+		////ChSharedPtr<ChFunctionController> engine_funct0(new ChFunctionController(0, this));
+		//ChSharedPtr<ChFunctionController> ef0(new ChFunctionController(0, this));
+		//ChSharedPtr<ChFunctionController> ef1(new ChFunctionController(1, this));
+		//
+		////causes 2 calls per chfunction
+		////GetEngine(0)->Set_tor_funct(ef0);
+		////GetEngine(1)->Set_tor_funct(ef1);
+
+		////doing this fixes the multiple chfunction runs
+		//ChSharedPtr<ChFunction_Const> mfun0 = GetEngine(0)->Get_tor_funct().DynamicCastTo<ChFunction_Const>();
+		//ChSharedPtr<ChFunction_Const> mfun1 = GetEngine(1)->Get_tor_funct().DynamicCastTo<ChFunction_Const>();
+		//double y0 = ef0->Get_y(ch_system_->GetChTime());
+		//double y1 = ef1->Get_y(ch_system_->GetChTime());
+		////GetLog() << "y0: " << y0 << "y1: " << y1 << "\n";
+		//mfun0->Set_yconst(y0);
+		//mfun1->Set_yconst(y1);
 
 	
 		//smarticle_->~Smarticle();

@@ -44,7 +44,7 @@ namespace chrono {
 		double GetAngularSpeed(size_t i, double t);
 		void CalcCurr_Omega(size_t i, double t);
 		bool OT();
-		void UseForceControl();
+		void UseForceControl(size_t i);
 		void UseSpeedControl();
 
 		double omegaLimit = 5;
