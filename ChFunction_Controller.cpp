@@ -56,19 +56,7 @@ double ChFunctionController::Get_y(double t) {
 
 
 
-double ChFunctionController::Get_y2(double t) {
-	double output = ComputeOutput(t);
-	double out_omega = OutputToOmega(t, output);
-	out_omega=controller_->OmegaLimiter(index_, out_omega);
-	double out_torque = OmegaToTorque(t, out_omega);
 
-	double curr_react_torque = controller_->GetCurrTorque(index_, t);
-	out_torque = curr_react_torque + out_torque; //add the torque already being place on the body to the torque for the next step
-
-	out_torque = std::max(std::min(controller_->outputLimit, out_torque), -controller_->outputLimit);
-	return out_torque;
-	//return output;
-}
 
 
 double ChFunctionController::ComputeOutput(double t) {
@@ -76,14 +64,14 @@ double ChFunctionController::ComputeOutput(double t) {
 	double i =i_gain;
 	double d =d_gain;
 
-	double curr_angle = controller_->GetAngle(index_, t);
+	double curr_ang = controller_->GetAngle(index_, t);
 	//GetLog() << "Controller" << index_ << ": " <<curr_angle<<"\n";
-	double exp_angle = controller_->GetExpAngle(index_, t);
-	double desired_angle = controller_->GetDesiredAngle(index_, t); ///get the next angle
+	double exp_ang = controller_->GetExpAngle(index_, t);
+	double des_ang = controller_->GetDesiredAngle(index_, t); ///get the next angle
 	
 	//double desired_angle2 = controller_->LinearInterpolate(index_, curr_angle, desired_angle);
-	desired_angle = controller_->LinearInterpolate(index_, curr_angle, desired_angle);
-	double error = desired_angle - curr_angle;
+	des_ang = controller_->LinearInterpolate(index_, curr_ang, des_ang);
+	double error = des_ang - curr_ang;
 	//double error2 = desired_angle2- curr_angle;
 	double prevError = controller_->prevError_.at(index_);
 	

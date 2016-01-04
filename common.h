@@ -64,10 +64,22 @@
 
 #endif
 
+	////////////deprecated code which may still be useful in the future////////////////////////////
+	///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+	//double ChFunctionController::Get_y2(double t) {
+	//	double output = ComputeOutput(t);
+	//	double out_omega = OutputToOmega(t, output);
+	//	out_omega = controller_->OmegaLimiter(index_, out_omega);
+	//	double out_torque = OmegaToTorque(t, out_omega);
 
+	//	double curr_react_torque = controller_->GetCurrTorque(index_, t);
+	//	out_torque = curr_react_torque + out_torque; //add the torque already being place on the body to the torque for the next step
 
-////////////deprecated code which may still be useful in the future////////////////////////////
-///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+	//	out_torque = std::max(std::min(controller_->outputLimit, out_torque), -controller_->outputLimit);
+	//	return out_torque;
+	//	//return output;
+	//}
+	///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 //bool Smarticle::MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1, double momega2, MoveType mtype)
 //{
 //	if (!active)
