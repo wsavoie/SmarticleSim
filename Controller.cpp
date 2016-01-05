@@ -18,7 +18,9 @@ Controller::Controller(chrono::ChSystem *ch_system, Smarticle *smarticle)
 	//currOmega_.assign(len, 0);
 	//currTorque_.assign(len, 0);
 	prevError_.assign(len, 0);
+	prevOmegError_.assign(len, 0);
 	cumError_.assign(len, 0);
+	cumOmegError_.assign(len, 0);
 	successfulMove_.assign(len, false);
 	prevAngle_.assign(len, 0);
 	//engine_funct0 = ChSharedPtr<ChFunctionController>(new ChFunctionController(0, this));
@@ -39,10 +41,11 @@ Controller::~Controller()
 	//currTorque_.clear();
 
 	prevError_.~vector();
+	prevOmegError_.~vector();
 	cumError_.~vector();
 	successfulMove_.~vector();
 	prevAngle_.~vector();
-	prevAngle_.~vector();
+
 
 	//engine_funct0->~ChFunctionController();
 	//engine_funct1->~ChFunctionController();
@@ -143,7 +146,7 @@ double Controller::GetActuatorOmega(size_t index, double t)
 //}
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
-	double errLim = 8* CH_C_PI/ 180;
+	double errLim = 10* CH_C_PI/ 180;
 	double err = (des - curr);
 	err = std::max(std::min(errLim, err), -errLim);
 
@@ -164,11 +167,6 @@ double Controller::OmegaLimiter(size_t idx, double omega)
 {
 	return std::max(std::min(omegaLimit, omega), -omegaLimit);
 	
-	//if (omega < 0)
-	//	return -omegaLimit;
-	//else
-	//	return omegaLimit;
-	//return std::max(std::min(omegaLimit, omega), -omegaLimit);
 }
 //double Controller::GetDesiredAngularSpeedForFunction(size_t index, double t)
 //{

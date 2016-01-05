@@ -53,26 +53,14 @@ namespace chrono {
 		bool resetCumError = false;
 		//void setMoveVector(unsigned int guiState);
 		std::vector <double> prevError_;
+		std::vector <double> prevOmegError_;
 		std::vector <double> cumError_;
+		std::vector <double> cumOmegError_;
 		std::vector <double> prevAngle_;
 		std::vector <bool> successfulMove_;
 	protected:
-		// Process the commands in the queue, one at a time
-		void ProcessCommandQueue(double dt);
 		chrono::ChSystem *ch_system_;
 		Smarticle *smarticle_;
-		//ChSharedPtr<ChFunctionController> engine_funct0;
-		//ChSharedPtr<ChFunctionController> engine_funct1;
-		// Contact force on each of the robot segment.
-		//chrono::ChReportContactCallback2 *contact_reporter_;
-		//std::vector<chrono::ChVector<> > contact_force_list_;
-
-		//std::vector <double> desiredOmega_;
-		//std::vector <double> desiredAngle_;
-		//std::vector <double> currAngle_;
-		//std::vector <double> currOmega_;
-		//std::vector <double> currTorque_;
-//		std::vector <double> prevError_;
 		double num_waves_ = 2.0;
 		double default_amplitude_ = 0.1;
 		double command_amplitude_ = default_amplitude_;
