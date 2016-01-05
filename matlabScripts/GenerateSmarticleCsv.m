@@ -23,7 +23,7 @@ stapleSize = false;
 dt=.00025;
 sizeScale=1;
 % omega = 4.9244e-5;
-omegaLim = 2; %%limit speed in sim
+omegaLim = 8; %%limit speed in sim
 omega = 8; %distance between points in move list
 % omega = 10;
 rho = 7850.0/(sizeScale^3);
@@ -49,7 +49,7 @@ end
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
 % torqueThresh=.001; %.008
-torqueThresh=9.8*mass*w_s*2;%.00005;  4.6657e-04
+torqueThresh=9.8*mass*w_s;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 
@@ -83,7 +83,7 @@ end
 switch global_gait
     case 1% circle gait
         ang = 0:ss:2*pi;
-        r=pi/2.8;
+        r=pi/2;
         phi = 0;
         global_theta_1Pos=r*cos(ang-phi);
         global_theta_2Pos=r*sin(ang-phi);
@@ -93,9 +93,10 @@ switch global_gait
             plot(global_theta_1Pos,global_theta_2Pos,'.k');
             xlabel('\theta_1');
             ylabel('\theta_2');
-            axis square
+            
             title('Circle Gait');
             figText(gcf,15);
+            axis square
         end
     case 2% square gait
         %not implemented yet!

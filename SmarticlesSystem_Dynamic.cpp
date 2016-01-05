@@ -164,7 +164,7 @@ double gaitChangeLengthTime = .5;
 
 #endif
 
-	double p_gain = .4;   //3
+	double p_gain = .32;   //3
 	double i_gain = 0.1;	 //1
 	double d_gain = 0.01; //.1
 
@@ -1439,7 +1439,7 @@ void UpdateSmarticles(
 bool SetGait(double time)
 {
 	//if (t < vibrateStart-.4)
-		Smarticle::global_GUI_value = 1;
+		//Smarticle::global_GUI_value = 1;
 	//else if (t > vibrateStart-.4 && t < vibrateStart+.25)
 	//	Smarticle::global_GUI_value = 1;
 	//else if (t > vibrateStart + .25 && t < vibrateStart + 4)
