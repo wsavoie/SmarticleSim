@@ -497,6 +497,9 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 #if irrlichtVisualization
 			application.AssetBindAll();
 			application.AssetUpdateAll();
+			//application.AssetUpdate(smarticle0->GetArm(0));
+			//application.AssetUpdate(smarticle0->GetArm(1));
+			//application.AssetUpdate(smarticle0->GetArm(2));
 			
 #endif
 	}
@@ -1960,16 +1963,22 @@ int main(int argc, char* argv[]) {
 			ChCoordsys<>(ChVector<>(0,0, bucket_bott->GetPos().z*1.001),
 			Q_from_AngAxis(0, VECT_X)),
 			video::SColor(50, 0, 255,0), true);
-			application.AssetBindAll();
-			application.AssetUpdateAll();
+			//application.AssetBindAll();
+			//application.AssetUpdateAll();
 
 			//framerecord
 			
 			application.SetVideoframeSaveInterval(5);//only save every 2 frames
 			application.DrawAll();
 
-			application.AssetBindAll();  //uncomment to visualize vol frac boxes
-			application.AssetUpdateAll();//uncomment to visualize vol frac boxes
+			for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
+			{
+				application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
+				application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
+			}
+			
+			//application.AssetBindAll();  //uncomment to visualize vol frac boxes
+			//application.AssetUpdateAll();//uncomment to visualize vol frac boxes
 			
 			application.DoStep();//
 			
