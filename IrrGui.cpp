@@ -154,7 +154,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 						sPtr->vib.clear();
 
 						//in case strange values are written
-						if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
+						if (ang1 > CH_C_PI || ang1 < -CH_C_PI)
 						{
 							Smarticle::global_GUI_value = MoveType::GLOBAL;
 							return true;
