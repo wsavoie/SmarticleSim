@@ -55,8 +55,8 @@ namespace chrono {
 				double other_r2,
 				ChVector<> pos = ChVector<>(0, 0, 0),
 				ChQuaternion<> rot = QUNIT,
-				double angle1= CH_C_PI/2,
-				double angle2= CH_C_PI/2);
+				double angle1 = PI_2,
+				double angle2 = PI_2);
 
 		virtual void Properties(
 				int sID,
@@ -70,8 +70,8 @@ namespace chrono {
 				double other_omega=0,
 				ChVector<> pos = ChVector<>(0, 0, 0),
 				ChQuaternion<> rot = QUNIT,
-				double angle1= CH_C_PI/2,
-				double angle2= CH_C_PI/2);
+				double angle1 = PI_2,
+				double angle2 = PI_2);
 
 		virtual void Properties(
 			int sID,
@@ -87,8 +87,8 @@ namespace chrono {
 			bool willVersion = true,
 			ChVector<> pos = ChVector<>(0, 0, 0),
 			ChQuaternion<> rot = QUNIT,
-			double angle1 = CH_C_PI / 2,
-			double angle2 = CH_C_PI / 2,
+			double angle1 = PI_2,
+			double angle2 = PI_2,
 			double other_torThresh2=1,
 			double other_angLow=0,
 			double other_angHigh=120);

@@ -36,8 +36,8 @@ void SmarticleU::Create() {
 		(l / 2.0 + r2)*sin(angle2));
 
 	// relative location of the boxes wrt smarticle initPos,
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1 +CH_C_PI/2.0, 0));
-	ChQuaternion<> quat3 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2 -CH_C_PI / 2.0, 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1 +PI_2, 0));
+	ChQuaternion<> quat3 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2 - PI_2, 0));
 
 
 	ChVector<> gyr1 = utils::CalcBoxGyration(box1_dim,box1_loc).Get_Diag();
@@ -120,8 +120,8 @@ void SmarticleU::SetAngle(double mangle1, double mangle2, bool degrees = false)/
 {
 	if (degrees)
 	{
-		angle1 = mangle1*CH_C_PI / 180.0;
-		angle2 = mangle2*CH_C_PI / 180.0;
+		angle1 = mangle1*D2R;
+		angle2 = mangle2*D2R;
 	}
 	else
 	{
@@ -133,8 +133,8 @@ void SmarticleU::SetAngle(double mangle, bool degrees = false)
 {
 	if (degrees)
 	{
-		angle1 = mangle*CH_C_PI / 180.0;
-		angle2 = mangle*CH_C_PI / 180.0;
+		angle1 = mangle*D2R;
+		angle2 = mangle*D2R;
 	}
 	else
 	{
@@ -144,26 +144,26 @@ void SmarticleU::SetAngle(double mangle, bool degrees = false)
 }
 void SmarticleU::SetAngle1(double mangle1, bool degrees = false)
 {
-	if (degrees) { angle1 = mangle1*CH_C_PI / 180.0; }
+	if (degrees) { angle1 = mangle1*D2R; }
 	else{ angle1 = mangle1; }
 }
 void SmarticleU::SetAngle2(double mangle2, bool degrees = false)
 {
-	if (degrees) { angle2 = mangle2*CH_C_PI / 180.0; }
+	if (degrees) { angle2 = mangle2*D2R; }
 	else{ angle2 = mangle2; }
 }
 
-double SmarticleU::GetAngle1(bool degrees = true)
+double SmarticleU::GetAngle1(bool degrees = false)
 {
 	if (degrees)
-		return angle1*180.0 / CH_C_PI;
+		return angle1*R2D;
 	else
 		return angle1;
 }
-double SmarticleU::GetAngle2(bool degrees = true)
+double SmarticleU::GetAngle2(bool degrees = false)
 {
 	if (degrees)
-		return angle2*180.0 / CH_C_PI;
+		return angle2*R2D;
 	else
 		return angle2;
 }

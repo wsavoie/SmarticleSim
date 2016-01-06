@@ -234,8 +234,8 @@ void Smarticle::SetOmega(double momega, bool angularFreq)
 		omega2 = momega;
 		return;
 	}
-	omega1 = (2 * CH_C_PI)*momega;
-	omega2 = (2 * CH_C_PI)*momega;
+	omega1 = (2 * PI)*momega;
+	omega2 = (2 * PI)*momega;
 }
 //void Smarticle::SetOmega(double momega1, double momega2, bool angularFreq)
 //{
@@ -245,8 +245,8 @@ void Smarticle::SetOmega(double momega, bool angularFreq)
 //		omega2 = momega2;
 //		return;
 //	}
-//	omega1 = (2 * CH_C_PI)*momega1;
-//	omega2 = (2 * CH_C_PI)*momega2;
+//	omega1 = (2 * PI)*momega1;
+//	omega2 = (2 * PI)*momega2;
 //}
 void Smarticle::SetOmega1(double momega1, bool angularFreq)
 {
@@ -255,7 +255,7 @@ void Smarticle::SetOmega1(double momega1, bool angularFreq)
 		omega1 = momega1;
 		return;
 	}
-	omega1 = (2 * CH_C_PI)*momega1;
+	omega1 = (2 * PI)*momega1;
 }
 void Smarticle::SetOmega2(double momega2, bool angularFreq)
 {
@@ -264,7 +264,7 @@ void Smarticle::SetOmega2(double momega2, bool angularFreq)
 		omega2=momega2;
 		return;
 	}
-	omega2 = (2 * CH_C_PI)*momega2;
+	omega2 = (2 * PI)*momega2;
 }
 double Smarticle::GetOmega(int id, bool angularFreq)
 {
@@ -288,7 +288,7 @@ double Smarticle::GetOmega1(bool angularFreq)
 	{
 		return omega1;
 	}
-	return omega1 / (2 * CH_C_PI);
+	return omega1 / (2 * PI);
 }
 
 double Smarticle::GetOmega2(bool angularFreq)
@@ -297,7 +297,7 @@ double Smarticle::GetOmega2(bool angularFreq)
 	{
 		return omega2;
 	}
-	return omega2 / (2 * CH_C_PI);
+	return omega2 / (2 * PI);
 }
 
 void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
@@ -337,8 +337,8 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	//double mass = .005;//.043/3.0; //robot weight 43 grams
 	arm->GetCollisionModel()->ClearModel();
 	//arm->SetLimitSpeed(true);
-	//arm->SetMaxSpeed(CH_C_PI * 2 * 5);
-	//arm->SetMaxWvel(CH_C_PI * 2 * 5);
+	//arm->SetMaxSpeed(PI * 2 * 5);
+	//arm->SetMaxWvel(PI * 2 * 5);
 	//arm->ClampSpeed();
 	
 	if (visualize)
@@ -502,7 +502,7 @@ void Smarticle::CreateJoints() {
 	// ChVector<> pR12(w / 2.0-r2, 0, 0);
 	ChVector<> pR01(-w / 2.0-r2, 0, 0);
 	ChVector<> pR12(w / 2.0+r2, 0, 0);
-	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
+	ChQuaternion<> qx = Q_from_AngAxis(PI_2, VECT_X);
 
 	// link 1
 	link_revolute01->Initialize(arm0, arm1, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx));
@@ -530,7 +530,7 @@ void Smarticle::CreateActuators() {
 	ChVector<> pR12(w / 2.0, 0, 0);
 
 
-	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
+	ChQuaternion<> qx = Q_from_AngAxis(PI_2, VECT_X);
 	ChQuaternion<> qy1 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle1()));
 	ChQuaternion<> qy2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle2()));
 
@@ -558,7 +558,7 @@ void Smarticle::Create() {
 	double l_mod;
 	//double l_mod = l + 2 * r2 - jointClearance;
 
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0*5*CH_C_PI/180, angle1, 0));
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0 * 5 * D2R, angle1, 0));
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));
 	quat0.Normalize();
 	quat2.Normalize();
@@ -603,10 +603,10 @@ void Smarticle::Create() {
 
 		//armsController->SetCurrAngle(0, this->GetCurrAngle(0));
 		//armsController->SetCurrAngle(1, this->GetCurrAngle(1));
-		//link_actuator01->GetLimit_Rz()->Set_min(-CH_C_PI);
-		//link_actuator01->GetLimit_Rz()->Set_max(CH_C_PI);
-		//link_actuator12->GetLimit_Rz()->Set_min(-CH_C_PI);
-		//link_actuator12->GetLimit_Rz()->Set_max(CH_C_PI);
+		//link_actuator01->GetLimit_Rz()->Set_min(-PI);
+		//link_actuator01->GetLimit_Rz()->Set_max(PI);
+		//link_actuator12->GetLimit_Rz()->Set_min(-PI);
+		//link_actuator12->GetLimit_Rz()->Set_max(PI);
 		//link_actuator01->GetLimit_Rz()->Set_active(true);
 		//link_actuator12->GetLimit_Rz()->Set_active(true);
 	}
@@ -704,8 +704,8 @@ void Smarticle::SetAngles(double mangle1, double mangle2, bool degrees)
 {
 	if (degrees)
 	{
-		angle1 = mangle1*CH_C_PI / 180.0;
-		angle2 = mangle2*CH_C_PI / 180.0;
+		angle1 = mangle1*D2R;
+		angle2 = mangle2*D2R;
 		return;
 	}
 	else
@@ -725,8 +725,8 @@ void Smarticle::SetAngle(double mangle, bool degrees)
 {
 	if (degrees)
 	{
-		angle1 = mangle*CH_C_PI / 180.0;
-		angle2 = mangle*CH_C_PI / 180.0;
+		angle1 = mangle*D2R;
+		angle2 = mangle*D2R;
 	}
 	else
 	{
@@ -736,12 +736,12 @@ void Smarticle::SetAngle(double mangle, bool degrees)
 }
 void Smarticle::SetAngle1(double mangle1, bool degrees)
 {
-	if (degrees) { angle1 = mangle1*CH_C_PI / 180.0; }
+	if (degrees) { angle1 = mangle1*D2R; }
 	else{ angle1 = mangle1; }
 }
 void Smarticle::SetAngle2(double mangle2, bool degrees)
 {
-	if (degrees) { angle2 = mangle2*CH_C_PI / 180.0; }
+	if (degrees) { angle2 = mangle2*D2R; }
 	else{ angle2 = mangle2; }
 }
 double Smarticle::GetAngle(int id, bool degrees)
@@ -753,15 +753,15 @@ double Smarticle::GetAngle(int id, bool degrees)
 }
 double Smarticle::GetAngle1(bool degrees)
 {
-	if (degrees)
-		return angle1*180.0 / CH_C_PI;
+	if (degrees)				
+		return angle1*R2D;
 	else
 		return angle1;
 }
 double Smarticle::GetAngle2(bool degrees)
 {
 	if (degrees)
-		return angle2*180.0 / CH_C_PI;
+		return angle2*R2D;
 	else
 		return angle2;
 }
@@ -975,8 +975,8 @@ bool Smarticle::GetArm2OT()
 double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAng)
 {
 	//since going from -pi to pi:
-	currAng = currAng + CH_C_PI;
-	destAng = destAng + CH_C_PI;
+	//currAng = currAng + PI;
+	//destAng = destAng + PI;
 	double deltaAng = destAng - currAng;
 	if (abs(deltaAng) > 2*distThresh)
 	{		//if destAng is larger, move with positive momega
@@ -1045,7 +1045,7 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 	double r0 = abs(getLinkActuator(0)->Get_mot_rot_dt());
 	double r1 = abs(getLinkActuator(1)->Get_mot_rot_dt());
 	double LIM = .1;
-	double moveAmt = CH_C_PI / 90; //2 degrees
+	double moveAmt = 2*D2R; //2 degrees
 	if (abs(torque01) > TT2)
 	{
 		//this->setCurrentMoveType(OT);

@@ -146,7 +146,7 @@ double Controller::GetActuatorOmega(size_t index, double t)
 //}
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
-	double errLim = 10* CH_C_PI/ 180;
+	double errLim = 10 * D2R;
 	double err = (des - curr);
 	err = std::max(std::min(errLim, err), -errLim);
 

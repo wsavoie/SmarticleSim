@@ -118,7 +118,7 @@ int appHeight = 720;
 double gravity = -9.81;
 double vibration_freq = 30;
 double fric =.7;
-double omega_bucket = 2 * CH_C_PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
+double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
 unsigned int largeID = 10000000;
@@ -200,15 +200,15 @@ std::vector<ChSharedPtr<ChBody>> bucket_bod_vec;
 double bucket_half_thick = sizeScale * .005;
 
 double max_z = 0;
-double rampAngle = 10 * CH_C_PI / 180;
+double rampAngle = 10 * D2R;
 double rampInc = 1.0/60.0;
 double drum_freq = 1;
-double drum_omega = drum_freq*2*CH_C_PI;
+double drum_omega = drum_freq*2*PI;
 double pctActive = 1.0;
 double inc = 0.00001;
 double angle1 = 90;
 double angle2 = 90;
-double vibAmp = 5 * CH_C_PI / 180; //vibrate by some amount of degrees back and forth
+double vibAmp = 5 * D2R; //vibrate by some amount of degrees back and forth
 ChSharedPtr<ChTexture> bucketTexture(new ChTexture());
 ChSharedPtr<ChTexture> sphereTexture(new ChTexture());
 ChSharedPtr<ChTexture> groundTexture(new ChTexture());
@@ -403,22 +403,22 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
 #endif
 	
-	bool placeInMiddle = true; // if I want make a single smarticle on bottom surface
+	bool placeInMiddle = false; // if I want make a single smarticle on bottom surface
 	ChVector<> dropSpeed = VNULL;
 	ChQuaternion<> myRot = QUNIT;
 	double z;
 	double zpos;
 	int smarticleCount = mySmarticlesVec.size();
-	double ang = 2*CH_C_PI / numPerLayer;
+	double ang = 2*PI / numPerLayer;
 	double w = w_smarticle;
 	if (smarticleCount < numPerLayer){ z = w_smarticle / 1; }
 	//else{ z = max_z; }
 	else{ z = Find_Max_Z(mphysicalSystem,mySmarticlesVec); }
-	double phase = MyRand()*CH_C_PI / 2;
+	double phase = MyRand()*PI_2;
 	ChVector<> myPos;
 	for (int i = 0; i < numPerLayer; i++)
 	{
-		phase = MyRand()*CH_C_PI / 2 - MyRand()*CH_C_PI / 4 ;
+		phase = MyRand()*PI_2 - MyRand()*PI / 4;
 		zpos = std::min(3 * bucket_interior_halfDim.z, z) + w_smarticle;
 		
 		switch (bucketType){
@@ -441,7 +441,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			{
 				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*1.88,bucket_bott->GetPos().z + t_smarticle / 2);
 				dropSpeed = VNULL;
-				myRot = Q_from_AngAxis(CH_C_PI / 2.0, VECT_X);
+				myRot = Q_from_AngAxis(PI_2, VECT_X);
 			}
 			////////////////////////////////////
 
@@ -481,15 +481,15 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			//smarticle0->SetInitialAngles();
 			smarticle0->Create();
 			smarticle0->setCurrentMoveType((MoveType) Smarticle::global_GUI_value);
-			smarticle0->vib.emplace_back(angle1*CH_C_PI / 180, angle2*CH_C_PI / 180);
+			smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
 			
 			//must put this line because of how linspace is written;
 			smarticle0->AssignState(VIB);
 			smarticle0->GenerateVib(angle1,angle2);
 			smarticle0->AssignState(Smarticle::global_GUI_value);
 			//smarticle0->ss.emplace_back(angle1, angle2);
-			smarticle0->midTorque.emplace_back(angle1*CH_C_PI / 180 + vibAmp, angle2*CH_C_PI / 180 + vibAmp);
-			smarticle0->midTorque.emplace_back(angle1*CH_C_PI / 180 + vibAmp, angle2*CH_C_PI / 180 + vibAmp);
+			smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
+			smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
 
 			mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
 			smarticle0->SetSpeed(dropSpeed);
@@ -525,10 +525,10 @@ ChSharedPtr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* 
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double wallt = t / 5.0; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
 	double half_height = bucket_interior_halfDim.z/(radMult*2);
-	double box_side = bucket_rad * radMult*2 * tan(CH_C_PI / num_boxes);//side length of cyl
+	double box_side = bucket_rad * radMult*2 * tan(PI / num_boxes);//side length of cyl
 	double o_lap = 0;
 	if (overlap){ o_lap = t * 2; }
-	double ang = 2.0 * CH_C_PI / num_boxes;
+	double ang = 2.0 * PI / num_boxes;
 	ChVector<> box_size = (0, 0, 0); //size of plates
 	ChVector<> ridge_size = (0, 0, 0); //size of plates
 	ChVector<> pPos = (0, 0, 0);  //position of each plate
@@ -568,7 +568,7 @@ ChSharedPtr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* 
 			drum->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 			//utils::AddBoxGeometry(drum.get_ptr(), ridge_size, pPos, quat);
 		}
-		drum->SetRot(Q_from_AngAxis(CH_C_PI / 2.0, VECT_X));
+		drum->SetRot(Q_from_AngAxis(PI_2, VECT_X));
 
 
 	}
@@ -597,7 +597,7 @@ ChSharedPtr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* 
 
 	bucket_bott->GetCollisionModel()->BuildModel();
 	mphysicalSystem->AddBody(bucket_bott);
-	bucket_bott->SetRot(Q_from_AngAxis(CH_C_PI / 2.0, VECT_X));
+	bucket_bott->SetRot(Q_from_AngAxis(PI_2, VECT_X));
 	bucket_bott->GetCollisionModel()->SetFamily(1);
 	bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
@@ -619,7 +619,7 @@ ChSharedPtr<ChBody> create_complex_convex_hull(CH_SYSTEM* mphysicalSystem, ChSha
 	std::vector<ChVector<>> points;
 
 	convexShape->GetCollisionModel()->ClearModel();
-	double ang = 2 * CH_C_PI / numBoxes;
+	double ang = 2 * PI / numBoxes;
 	for (size_t i = 0; i < numBoxes; i++)
 	{
 		convexShape->GetCollisionModel()->SetEnvelope(collisionEnvelope);
@@ -718,10 +718,10 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks2(int num_boxes, int id, bool ove
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double wallt = t / 5; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
 	double half_height = bucket_interior_halfDim.z;
-	double box_side = bucket_rad * 2.0 * tan(CH_C_PI / num_boxes);//side length of cyl
+	double box_side = bucket_rad * 2.0 * tan(PI / num_boxes);//side length of cyl
 	double o_lap = 0;
 	if (overlap){ o_lap = t * 2; }
-	double ang = 2.0 * CH_C_PI / num_boxes;
+	double ang = 2.0 * PI / num_boxes;
 	ChVector<> box_size = (0, 0, 0); //size of plates
 	ChVector<> pPos = (0, 0, 0);  //position of each plate
 	ChQuaternion<> quat = QUNIT; //rotation of each plate
@@ -743,7 +743,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks2(int num_boxes, int id, bool ove
 
 		//this is here to make half the cylinder invisible.
 		bool m_visualization = false;
-		if (ang*i < 3 * CH_C_PI / 4 || ang*i > 5 * CH_C_PI / 4)
+		if (ang*i < 3 * PI / 4 || ang*i > 5 * PI / 4)
 		{
 			m_visualization = true;
 			cyl_container->AddAsset(bucketTexture);
@@ -753,7 +753,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks2(int num_boxes, int id, bool ove
 
 	}
 
-	double cyl_volume = CH_C_PI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * bucket_rad + 2 * t)*(2 * bucket_rad + 2 * t) - bucket_rad*bucket_rad) + (CH_C_PI)*(bucket_rad + 2 * t)*(bucket_rad + 2 * t) * 2 * t;
+	double cyl_volume = PI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * bucket_rad + 2 * t)*(2 * bucket_rad + 2 * t) - bucket_rad*bucket_rad) + (PI)*(bucket_rad + 2 * t)*(bucket_rad + 2 * t) * 2 * t;
 	cyl_container->SetMass(rho_cylinder*cyl_volume);
 
 	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
@@ -776,7 +776,7 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks2(int num_boxes, int id, bool ove
 
 		//this is here to make half the cylinder invisible.
 		bool m_visualization = false;
-		if (ang*i < 3 * CH_C_PI / 4 || ang*i > 5 * CH_C_PI / 4)
+		if (ang*i < 3 * PI / 4 || ang*i > 5 * PI / 4)
 		{
 			m_visualization = true;
 			wallPiece->AddAsset(bucketTexture);
@@ -818,7 +818,7 @@ ChSharedPtr<ChBody> Create_hopper2(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMat
 	holeSize = holeSize / 2;
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double r = bucket_rad;
-	double ang = theta*CH_C_PI / 180.0;
+	double ang = theta*D2R;
 	double h = bucket_interior_halfDim.z;
 	double sH = (h-t) / sin(ang); //side height
 	//double w = holeSize / 2 + cos(ang)*h;
@@ -917,7 +917,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 
 	ground->GetCollisionModel()->ClearModel();
 	ground->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0,0,0), Q_from_AngAxis(CH_C_PI / 2, VECT_X));
+	utils::AddCylinderGeometry(ground.get_ptr(), boxDim.x, boxDim.z, ChVector<>(0, 0, 0), Q_from_AngAxis(PI_2, VECT_X));
 	ground->GetCollisionModel()->SetFamily(1);
 	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
@@ -1083,9 +1083,9 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
 	yaxis->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	zaxis->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 
-	utils::AddCylinderGeometry(xaxis.get_ptr(), rad, len, ChVector<>(len-rad/2, 0, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, CH_C_PI / 2)), true);//bottom
+	utils::AddCylinderGeometry(xaxis.get_ptr(), rad, len, ChVector<>(len - rad / 2, 0, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, PI_2)), true);//bottom
 	utils::AddCylinderGeometry(yaxis.get_ptr(), rad, len, ChVector<>(0, len-rad/2, 0) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 0)), true);//bottom, true);//bottom
-	utils::AddCylinderGeometry(zaxis.get_ptr(), rad, len, ChVector<>(0, 0, len-rad) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(CH_C_PI / 2, 0, 0)), true);//bottom
+	utils::AddCylinderGeometry(zaxis.get_ptr(), rad, len, ChVector<>(0, 0, len - rad) + pos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI_2, 0, 0)), true);//bottom
 
 	xaxis->AddAsset(ChSharedPtr<ChColorAsset>(new ChColorAsset(1.0f, 0, 0)));
 	yaxis->AddAsset(ChSharedPtr<ChColorAsset>(new ChColorAsset(0, 1.0f, 0)));
@@ -1098,7 +1098,7 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
 void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec)
 {
 	double pos = -.75*bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
-	double ang = 2 * CH_C_PI / numPerLayer;
+	double ang = 2 * PI / numPerLayer;
 	double rp = MyRand()*ang/4 ; //add slight offset to angInc to allow particles not always fall in nearly same position
 	static int recycledSmarticles = 0;
 	static int inc = 0;
@@ -1241,7 +1241,7 @@ void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylra
 	double currBuckRad = sqrt(temp.x*temp.x + temp.y*temp.y) - bucket_half_thick / 5.0;//bucket_half_thick/5 is how wall thickness is defined!
 	//GetLog() << bucket_half_thick<< "thick\n";
 	//force/(surface area)
-		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem)/(CH_C_PI*2*cylrad*zmax) <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
+		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem)/(PI*2*cylrad*zmax) <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
 	stress_of.close();
 }
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
@@ -1326,7 +1326,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 
 			}
 		}
-		volumeFraction = countInside2*vol / (max2*CH_C_PI*bucket_rad*bucket_rad);
+		volumeFraction = countInside2*vol / (max2*PI*bucket_rad*bucket_rad);
 		//GetLog() << vol << " " << countInside2 << " " << bucket_rad << " " << zMax << " " << volumeFraction << "\n";
 		//GetLog() << "phi=" << volumeFraction << "\n";
 		zComz = zComz / countInside2;
@@ -1375,20 +1375,20 @@ void rotate_drum(double t)//method is called on each iteration to rotate drum at
 	bucket->SetBodyFixed(false);
 	bucket_bott->SetBodyFixed(true);
 	static ChSharedPtr<ChFunction_Const> mfun2 = drum_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-	drum_omega = drum_freq*CH_C_PI * 2;
+	drum_omega = drum_freq*PI * 2;
 	mfun2->Set_yconst(drum_omega);
 }
 void setUpDrumActuator(CH_SYSTEM& mphysicalSystem)
 {
 	drum_actuator = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
 	ChVector<> pR01(0, 0, 0);
-	ChQuaternion<> qx = Q_from_AngAxis(CH_C_PI / 2.0, VECT_Z);
+	ChQuaternion<> qx = Q_from_AngAxis(PI_2, VECT_Z);
 	drum_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), bucket->GetRot()));
 	drum_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 	//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
 	mphysicalSystem.AddLink(drum_actuator);
 	ChSharedPtr<ChFunction_Const> mfun2 = drum_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-	drum_omega = drum_freq*CH_C_PI * 2;
+	drum_omega = drum_freq*PI * 2;
 	mfun2->Set_yconst(drum_omega);
 }
 
@@ -1614,8 +1614,8 @@ int main(int argc, char* argv[]) {
 	ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
 	ChSharedPtr<ChFunction_Sine> knobcylinderfunc(new ChFunction_Sine());
 	ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);
-	double knobAmp = CH_C_PI		*1;
-	double knobW = 2 * CH_C_PI * 1 / 20;
+	double knobAmp = PI		*1;
+	double knobW = 2 * PI * 1 / 20;
 	double knobPhase = -knobW*vibrateStart;
 	knobcylinderfunc->Set_amp(knobAmp);
 	knobcylinderfunc->Set_w(knobW);
@@ -1654,7 +1654,7 @@ int main(int argc, char* argv[]) {
 				rad = t_smarticle*mult / 4.0;
 			}
 			//if you change z height between spheres, you must change sphereStickHeight above!
-			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, CH_C_PI)), true);
+			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, PI)), true);
 			stick->SetMaterialSurface(mat_g);
 			stick->AddAsset(groundTexture);
 			stick->SetMass(2);
@@ -1684,11 +1684,11 @@ int main(int argc, char* argv[]) {
 				if (stapleSize)
 				{
 					//AddBoxGeometry
-					utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(t_smarticle*(i + 1), 0, t_smarticle*(1 / 2.0)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(CH_C_PI, 0, 0)), true);
+					utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(t_smarticle*(i + 1), 0, t_smarticle*(1 / 2.0)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(PI, 0, 0)), true);
 				}
 				else
 				{
-					utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 4, bucket_ctr + ChVector<>(t_smarticle*(i + 1) / 2, 0, t_smarticle*(1 / 2.0)) / 2, Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(CH_C_PI, 0, 0)), true);
+					utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 4, bucket_ctr + ChVector<>(t_smarticle*(i + 1) / 2, 0, t_smarticle*(1 / 2.0)) / 2, Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(PI, 0, 0)), true);
 				}
 
 				//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle / 2.0, bucket_ctr + ChVector<>(t2_smarticle*(i + 1),0 , t2_smarticle*(1 / 2.0)), QUNIT, true); // upper part, min_x plate
@@ -1719,7 +1719,7 @@ int main(int argc, char* argv[]) {
 		ChSharedPtr<ChBody> truss = ChSharedPtr<ChBody>(new ChBody);
 		truss->SetBodyFixed(true);
 		truss->GetCollisionModel()->ClearModel();
-		utils::AddCylinderGeometry(truss.get_ptr(), t2_smarticle/2, bucket_interior_halfDim.z*1, bucket_ctr+ChVector<>(0,0,bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(CH_C_PI/2.0,0,0)), true);
+		utils::AddCylinderGeometry(truss.get_ptr(), t2_smarticle/2, bucket_interior_halfDim.z*1, bucket_ctr+ChVector<>(0,0,bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI_2,0,0)), true);
 		truss->GetCollisionModel()->BuildModel();
 		truss->AddAsset(sphereTexture);
 		truss->SetCollide(false);
@@ -1761,9 +1761,9 @@ int main(int argc, char* argv[]) {
 		}
 			unsigned int kpr = 9;//knobs per row
 			unsigned int kpz = 15; //knob per z
-			double ang = 2 * CH_C_PI / kpr;
+			double ang = 2 * PI / kpr;
 			double hp = (sphereStickHeight - 2 * rad) / kpz;//height between rows
-			double pOffset = CH_C_PI/kpr; //phase offset
+			double pOffset = PI/kpr; //phase offset
 			for (size_t row = 0; row < kpr; row++)
 			{
 				for (size_t col = 0; col < kpz; col++)

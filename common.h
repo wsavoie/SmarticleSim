@@ -15,6 +15,10 @@
 #ifndef false
 #define false 0
 #endif
+#define PI CH_C_PI   
+#define D2R CH_C_PI/180.0    //deg to rad
+#define R2D 180.0/CH_C_PI   //rad to deg
+#define PI_2 CH_C_PI/2.0   
 
 #define USE_PARALLEL false
 #define irrlichtVisualization true

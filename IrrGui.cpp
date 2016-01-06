@@ -67,10 +67,10 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 		dgainInput->setID(1002);
 
 		inc = .1;
-		rampAngle = 10 * CH_C_PI / 180;
+		rampAngle = 10 * D2R;
 		rampInc = 1.0 / 60.0;
 		drum_freq = 1;
-		drum_omega = drum_freq * 2 * CH_C_PI;
+		drum_omega = drum_freq * 2 * PI;
 	}
 	int IrrGui::successfulCount = 0;
 	bool IrrGui::OnEvent(const SEvent& event) {
@@ -149,18 +149,18 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 
 						Smarticle* sPtr = sv->at(i);
 						sPtr->AssignState(MoveType::VIB);
-						ang1 = wcstod(angle1Input->getText(), NULL)*CH_C_PI / 180;
-						ang2 = wcstod(angle2Input->getText(), NULL)*CH_C_PI / 180;
+						ang1 = wcstod(angle1Input->getText(), NULL)*D2R;
+						ang2 = wcstod(angle2Input->getText(), NULL)*D2R;
 						sPtr->vib.clear();
 
 						//in case strange values are written
-						if (ang1 > CH_C_PI || ang1 < -CH_C_PI)
+						if (ang1 > PI || ang1 < -PI)
 						{
 							Smarticle::global_GUI_value = MoveType::GLOBAL;
 							return true;
 							break;
 						}
-						if (ang2 > CH_C_PI || ang2 < -CH_C_PI)
+						if (ang2 > PI || ang2 < -PI)
 						{
 							Smarticle::global_GUI_value = MoveType::GLOBAL;
 							return true;
@@ -287,18 +287,18 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 					break;
 				case RAMP:
 
-					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0;
+					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R;
 					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0
+						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R
 						, 0, 0)));
 					bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0
+						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R
 						, 0, 0)));
 					break;
 				default:
-					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0;
+					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R;
 					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * CH_C_PI / 180.0
+						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R
 						, 0, 0)));
 					break;
 				}
@@ -313,18 +313,18 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 					break;
 				case RAMP:
 
-					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0;
+					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R;
 					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0
+						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R
 						, 0, 0)));
 					bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0
+						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R
 						, 0, 0)));
 					break;
 				default:
-					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0;
+					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R;
 					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * CH_C_PI / 180.0
+						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R
 						, 0, 0)));
 					break;
 				}
@@ -440,7 +440,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			this->text_Angle->setText(core::stringw(message).c_str());
 		}
 		else{
-			char message[100]; sprintf(message, "Angle: %1.3g, Increment: %1.3g", Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x * 180 / CH_C_PI, rampInc);
+			char message[100]; sprintf(message, "Angle: %1.3g, Increment: %1.3g", Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x * R2D, rampInc);
 			this->text_Angle->setText(core::stringw(message).c_str());
 		}
 
