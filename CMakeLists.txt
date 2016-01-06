@@ -102,12 +102,11 @@ endif()
 # 
 # (B) Path to the top of the source tree for this project
 # - for access to utility headers
-set(EIGEN_DIR "D:/ChronoCode/libs/Eigen")
+
 include_directories(
 
     ${CHRONO_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
-	${EIGEN_DIR}
 )
 
 #--------------------------------------------------------------
