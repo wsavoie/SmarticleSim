@@ -33,7 +33,7 @@ shapeLines=getShapeLines(time,guid);
 subplot(2,1,1);
 hold on;
 plot(time,lineVar);
-line = plot(time,y,'LineWidth',4);
+line = plot(time,y,'YDataSource','y','LineWidth',4);
 
 yAx=mean(lineVar)*4;
 for i=1:size(shapeLines,1)
@@ -53,5 +53,6 @@ xlabel('Time (s)');
 ylabel('bucket radius (m)');
 axis auto
 figText(gcf,14);
-pause(1)
+refreshdata(line,'caller')
+drawnow
 end
