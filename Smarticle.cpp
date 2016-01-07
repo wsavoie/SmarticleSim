@@ -94,9 +94,8 @@ void Smarticle::Properties(
 
 
 	mtextureOT->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
-
 	mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-	mtextureMid->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlue.png"));
+	mtextureMid->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
 }
 
 void Smarticle::Properties(
@@ -466,7 +465,7 @@ ChSharedBodyPtr Smarticle::GetArm(int armID) {
 		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
 		break;
 	}
-	 return ChSharedBodyPtr();
+	return ChSharedBodyPtr();
 }
 
 ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
