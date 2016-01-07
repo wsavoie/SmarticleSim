@@ -43,7 +43,7 @@
 #include "Smarticle.h"
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
-#include <vld.h> //TODO used to find memory leaks
+//#include <vld.h> //TODO used to find memory leaks
 #include <memory>
 
 
@@ -103,7 +103,7 @@ using namespace chrono;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = KNOBCYLINDER;
+BucketType bucketType = STRESSSTICK;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -1240,8 +1240,8 @@ void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylra
 	ChVector<> temp = bucket_bod_vec.at(1)->GetPos();
 	double currBuckRad = sqrt(temp.x*temp.x + temp.y*temp.y) - bucket_half_thick / 5.0;//bucket_half_thick/5 is how wall thickness is defined!
 	//GetLog() << bucket_half_thick<< "thick\n";
-	//force/(surface area)
-		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem)/(PI*2*cylrad*zmax) <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
+	//showForce(mphysicalSystem)/(PI*2*cylrad*zmax)
+		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
 	stress_of.close();
 }
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {

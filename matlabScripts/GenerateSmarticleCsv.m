@@ -49,7 +49,7 @@ end
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
 % torqueThresh=.001; %.008
-torqueThresh=9.8*mass*w_s;%.00005;  4.6657e-04
+torqueThresh=.5;%9.8*mass*w_s;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 

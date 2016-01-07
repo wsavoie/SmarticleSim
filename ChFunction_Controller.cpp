@@ -15,12 +15,12 @@ double ChFunctionController::Get_y(double t) {
 	bool o = false;
 	if (abs(out_torque) == controller_->outputLimit)
 		o = true;
-	//GetLog() << "   \tLimited: " << out_torque << " " << "\tLIMIT= " << controller_->outputLimit << "\t" << o<< "\n";
+	//GetLog() << "   \tLimited: " << out_torque << " " << "\tLIMIT= " << controller_->outputLimit; //<< "\t" << o<< "\n";
 	
 	////////////
 	//out_torque = SpeedControl(t, out_torque);
 	//double sp = controller_->GetActuatorOmega(index_,t);
-	//GetLog() << "   \tSpeed" << sp << "\n";
+	//GetLog() << "\tSpeed" << controller_->GetActuatorOmega(index_, t) << "\n";
 	/////////
 	return out_torque;
 	//return output;
@@ -75,10 +75,9 @@ double ChFunctionController::ComputeOutput(double t) {
 	double iTerm = i*dT*omLim*controller_->cumOmegError_.at(index_);
 	double dTerm = d*dT*omLim*(omError - prevOmError / dT);
 	double dTerm2 = d*dT*omLim*((omError - prevOmError) / dT);
-
-	double output2 = 100*p*dT*omLim*omError;// +  ///TODO magic number 100?
-										//d*dT*omLim*((omError - prevOmError) / dT) +
-										//i*dT*omLim*controller_->cumOmegError_.at(index_);
+	double output2 = 100 * p*dT*omLim*omError;  ///TODO magic number 100?
+										//+ d*dT*omLim*((omError - prevOmError) / dT);
+										//+ i*dT*omLim*controller_->cumOmegError_.at(index_);
 	//GetLog() << "output" << output << "\toutput2" << output2;
 
 	
