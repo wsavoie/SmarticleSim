@@ -23,6 +23,10 @@
 
 namespace chrono {
 
+	template <typename T> int sgn(T val) {
+		return (T(0) < val) - (val < T(0));
+	}
+
 	enum MoveType { GLOBAL=0, GUI1=1, GUI2=2, GUI3=3, VIB=4, MIDT=5,SS=6,OT=7}; //IF ADDING MORE ALWAYS KEEP OT AS LAST INDEX!!!!
 	// structs to attach motion to smarticles
 	class Smarticle {

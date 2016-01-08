@@ -64,7 +64,7 @@ double ChFunctionController::ComputeOutput(double t) {
 
 	double curr_omeg = controller_->GetActuatorOmega(index_, t);
 
-	double des_omeg = omLim*cond*sign(error);
+	double des_omeg = omLim*cond*sgn(error);
 	
 	double omError = des_omeg - curr_omeg;
 	double prevOmError = controller_->prevOmegError_.at(index_);

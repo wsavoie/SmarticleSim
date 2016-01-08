@@ -14,7 +14,7 @@
 
 
 //#include "physics/ChSystem.h"  // Arman: take care of this later
-#include "chrono_parallel/physics/ChSystemParallel.h"
+//#include "chrono_parallel/physics/ChSystemParallel.h"
 //#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 
@@ -308,11 +308,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
 	gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
-	if (USE_PARALLEL) {
-		arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
-	} else {
-		arm = ChSharedBodyPtr(new ChBody);
-	}
+	arm = ChSharedBodyPtr(new ChBody);
 
 
 	//$$$$$$$$$$$
@@ -388,12 +384,8 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, mr, mr2));
 	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, mr, mr2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
-	if (USE_PARALLEL) {
-		arm = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
-	}
-	else {
-		arm = ChSharedBodyPtr(new ChBody);
-	}
+	arm = ChSharedBodyPtr(new ChBody);
+
 	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
 
 	arm->SetName("smarticle_arm");
@@ -979,7 +971,7 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 	double deltaAng = destAng - currAng;
 	if (abs(deltaAng) > 2*distThresh)
 	{		//if destAng is larger, move with positive momega
-		return sign(deltaAng)*momega;
+		return sgn(deltaAng)*momega;
 	}
 	//if <= distThresh dont move, let omega = 0;
 	return 0;

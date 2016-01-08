@@ -29,8 +29,8 @@
 // ------------------------------------------------
 ////*************** chrono parallel
 #include <omp.h>
-#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
+//#include "chrono_parallel/physics/ChSystemParallel.h"
+//#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 #include "utils/ChUtilsCreators.h"     //Arman: why is this
 #include "utils/ChUtilsInputOutput.h"  //Arman: Why is this
@@ -103,7 +103,7 @@ using namespace chrono;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = STRESSSTICK;
+BucketType bucketType = KNOBCYLINDER;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -510,12 +510,10 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 ChSharedPtr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat,int ridges = 5)
 {//essentially the same as create cyl container except made it bigger and added ridges
 	ChSharedPtr<ChBody> drum;
-	if (USE_PARALLEL) {
-		drum = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-	}
-	else {
+
+
 		drum = ChSharedPtr<ChBody>(new ChBody);
-	}
+
 	double radMult =1.5;
 	drum->SetIdentifier(id);
 	drum->SetPos(bucket_ctr);
@@ -606,8 +604,8 @@ ChSharedPtr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* 
 ChSharedPtr<ChBody> create_complex_convex_hull(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat, double numBoxes)
 {
 	ChSharedPtr<ChBody> convexShape;
-	if (USE_PARALLEL) { convexShape = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel)); }
-	else{ convexShape = ChSharedPtr<ChBody>(new ChBody); }
+
+	convexShape = ChSharedPtr<ChBody>(new ChBody);
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 
 	//cyl_container->SetMass(mass);
@@ -642,8 +640,7 @@ ChSharedPtr<ChBody> create_complex_convex_hull(CH_SYSTEM* mphysicalSystem, ChSha
 ChSharedPtr<ChBody> create_ramp(int id, CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
 {
 	ChSharedPtr<ChBody> ramp;
-	if (USE_PARALLEL) {ramp = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));}
-	else{ramp = ChSharedPtr<ChBody>(new ChBody);}
+	ramp = ChSharedPtr<ChBody>(new ChBody);
 	double t = bucket_half_thick/2; //bucket thickness redefined here for easier to read code
 	double w = w_smarticle *3;
 	double h = w/2;
@@ -703,12 +700,7 @@ ChSharedPtr<ChBody> create_ramp(int id, CH_SYSTEM* mphysicalSystem, ChSharedPtr<
 ChSharedPtr<ChBody> create_cylinder_from_blocks2(int num_boxes, int id, bool overlap, CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
 {
 	ChSharedPtr<ChBody> cyl_container;
-	if (USE_PARALLEL) {
-		cyl_container = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-	}
-	else {
-		cyl_container = ChSharedPtr<ChBody>(new ChBody);
-	}
+	cyl_container = ChSharedPtr<ChBody>(new ChBody);
 	cyl_container->SetIdentifier(id);
 	//cyl_container->SetMass(mass);
 	cyl_container->SetPos(bucket_ctr);
@@ -809,12 +801,8 @@ ChSharedPtr<ChBody> create_cylinder_from_blocks2(int num_boxes, int id, bool ove
 ChSharedPtr<ChBody> Create_hopper2(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat, double theta, double holeSize, bool overlap)
 {
 	ChSharedPtr<ChBody> hopper;
-	if (USE_PARALLEL) {
-		hopper = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-	}
-	else {
 		hopper = ChSharedPtr<ChBody>(new ChBody);
-	}
+
 	holeSize = holeSize / 2;
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double r = bucket_rad;
@@ -898,16 +886,10 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
 	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*bucket_interior_halfDim.z);
 	ChSharedPtr<ChBody> ground;
-	if (USE_PARALLEL) {
-		ground = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-		bucket = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-		bucket_bott = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-	} 
-	else {
-		ground = ChSharedPtr<ChBody>(new ChBody);
-		bucket = ChSharedPtr<ChBody>(new ChBody);
-		bucket_bott = ChSharedPtr<ChBody>(new ChBody);
-	}
+
+	ground = ChSharedPtr<ChBody>(new ChBody);
+	bucket = ChSharedPtr<ChBody>(new ChBody);
+	bucket_bott = ChSharedPtr<ChBody>(new ChBody);
 	ground->SetMaterialSurface(mat_g);
 	ground->SetPos(boxLoc);
 
@@ -1065,16 +1047,11 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
 	ChVector<> pos = bucket_ctr + ChVector<>(2.5*bucket_rad, 0, bucket_interior_halfDim.z);
 
 	ChSharedPtr<ChBody> xaxis, yaxis, zaxis;
-	if (USE_PARALLEL) {
-		xaxis = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-		yaxis = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-		zaxis = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-	}
-	else{
-		xaxis = ChSharedPtr<ChBody>(new ChBody);
-		yaxis = ChSharedPtr<ChBody>(new ChBody);
-		zaxis = ChSharedPtr<ChBody>(new ChBody);
-	}
+
+	xaxis = ChSharedPtr<ChBody>(new ChBody);
+	yaxis = ChSharedPtr<ChBody>(new ChBody);
+	zaxis = ChSharedPtr<ChBody>(new ChBody);
+
 
 	xaxis->SetPos(pos);						yaxis->SetPos(pos);							zaxis->SetPos(pos);
 	xaxis->SetCollide(false);			yaxis->SetCollide(false);				zaxis->SetCollide(false);
@@ -1521,11 +1498,8 @@ int main(int argc, char* argv[]) {
 	// Create a ChronoENGINE physical system
 	CH_SYSTEM mphysicalSystem;
 
-#if (USE_PARALLEL)
-	InitializeMbdPhysicalSystem_Parallel(mphysicalSystem, argc, argv);
-#else
+
 	InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
-#endif
 	GetLog() << "\npctActive" << pctActive << "\n";
 	Smarticle::pctActive = pctActive;
 	MyBroadPhaseCallback mySmarticleBroadphaseCollisionCallback;

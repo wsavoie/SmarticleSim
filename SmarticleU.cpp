@@ -9,7 +9,7 @@
 #include "utils/ChUtilsGeometry.h"
 #include "utils/ChUtilsCreators.h"
 //#include "physics/ChSystem.h"  // Arman: take care of this later
-#include "chrono_parallel/physics/ChSystemParallel.h"
+
 
 
 using namespace chrono;
@@ -74,11 +74,9 @@ void SmarticleU::Create() {
 			m3 * (gyr3.z + ChVector<>(rel_loc3.x, rel_loc3.y, 0).Length2()) ;
 			
 	// create body, set initPos and rotation, add surface property, and clear/make collision model
-	if (USE_PARALLEL) {
-		smarticleU = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
-	} else {
+
 		smarticleU = ChSharedBodyPtr(new ChBody);
-	}
+	
 
 
 //	ChVector<> cm = initPos;		// cm in abs reference frame
