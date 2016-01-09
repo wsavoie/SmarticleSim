@@ -75,6 +75,7 @@ double ChFunctionController::ComputeOutput(double t) {
 	double iTerm = i*dT*omLim*controller_->cumOmegError_.at(index_);
 	double dTerm = d*dT*omLim*(omError - prevOmError / dT);
 	double dTerm2 = d*dT*omLim*((omError - prevOmError) / dT);
+	//double output2 = 100 * p*dT*omLim*omError;  ///TODO magic number 100?
 	double output2 = 100 * p*dT*omLim*omError;  ///TODO magic number 100?
 										//+ d*dT*omLim*((omError - prevOmError) / dT);
 										//+ i*dT*omLim*controller_->cumOmegError_.at(index_);

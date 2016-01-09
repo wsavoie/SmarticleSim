@@ -19,9 +19,9 @@
 %running curr- 100mA
 %Kt = T/I, .008/.27 = .0296 Nm/A
 %J
-stapleSize = false;
+stapleSize = true;
 dt=.00025;
-sizeScale=1;
+sizeScale=10;
 % omega = 4.9244e-5;
 omegaLim = 8; %%limit speed in sim
 omega = 8; %distance between points in move list
@@ -49,11 +49,11 @@ end
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
 % torqueThresh=.001; %.008
-torqueThresh=.5;%9.8*mass*w_s;%.00005;  4.6657e-04
+torqueThresh=9.8*mass*w_s;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 
-global_gait= 4;
+global_gait= 1;
 gui1_gait = 1;
 gui2_gait = 1;
 gui3_gait = 2;

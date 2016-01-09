@@ -322,7 +322,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     arm->SetBodyFixed(false);
     arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
     if (armID == 1) //this was old code from when I was fixing them to fit
-			arm->SetBodyFixed(true);
+			arm->SetBodyFixed(false);
     else
     	arm->SetBodyFixed(false);
 

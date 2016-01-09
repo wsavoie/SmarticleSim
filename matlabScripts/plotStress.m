@@ -33,26 +33,30 @@ shapeLines=getShapeLines(time,guid);
 subplot(2,1,1);
 hold on;
 plot(time,lineVar);
-line = plot(time,y,'YDataSource','y','LineWidth',4);
-
+Force = plot(time,y,'YDataSource','y','LineWidth',4);
+% axis auto
 yAx=mean(lineVar)*4;
 for i=1:size(shapeLines,1)
     plot([shapeLines(i,1),shapeLines(i,1)],[min(lineVar) yAx],'color',shapeLines(i,2:4),'LineWidth',5)
     text(shapeLines(i,1),yAx*1.02,plotNames(shapeLines(i,5)))
 end
 
-axis([0 time(end) 0 yAx]);
+set(gca,'ylim',[0 yAx],'xlim',[0 time(end)]);
 
 
 
 
-ylabel('Stress');
+ylabel('Force (N)');
 subplot(2,1,2);
-plot(time,cylRad,'Color',line.Color);
+hold on;
+Rad=plot(time,cylRad,'YDataSource','cylRad','LineWidth',4,'Color',Force.Color);
+% plot(time,cylRad,'Color',line.Color);
 xlabel('Time (s)');
 ylabel('bucket radius (m)');
-axis auto
+set(gca,'xlim',[0 time(end)]);
 figText(gcf,14);
-refreshdata(line,'caller')
+refreshdata(Force,'caller')
+refreshdata(Rad,'caller')
 drawnow
+set(gca,'XTickLabel',{'1','100'})
 end

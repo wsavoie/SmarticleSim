@@ -103,7 +103,7 @@ using namespace chrono;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = KNOBCYLINDER;
+BucketType bucketType = HOOKRAISE;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -111,7 +111,7 @@ ChSharedPtr<ChBody> bucket_bott;
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
-double sizeScale = 1;
+double sizeScale = 10;
 int appWidth = 1280;
 int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
@@ -128,7 +128,7 @@ unsigned int largeID = 10000000;
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
 double tFinal = 6;
-double vibrateStart= 10;
+double vibrateStart= .75;
 
 double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -403,7 +403,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
 #endif
 	
-	bool placeInMiddle = false; // if I want make a single smarticle on bottom surface
+	bool placeInMiddle = true; // if I want make a single smarticle on bottom surface
 	ChVector<> dropSpeed = VNULL;
 	ChQuaternion<> myRot = QUNIT;
 	double z;
@@ -423,9 +423,9 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		
 		switch (bucketType){
 		case DRUM:
-			zpos = std::min(bucket_interior_halfDim.z / 3, z) + w_smarticle / 4;
-			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand() - w / 2),
-				cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2.0),
+			zpos = std::min(std::max(-bucket_rad, z),bucket_rad);
+			myPos = bucket_ctr + ChVector<>(MyRand()*bucket_interior_halfDim.z/2.5,
+				MyRand()*bucket_interior_halfDim.z/2.5,
 				zpos);
 			break;
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
@@ -433,7 +433,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			{
 				myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.2),
 				cos(ang*i + phase)*(bucket_rad / 2.2),
-				zpos);
+				std::max(bucket_interior_halfDim.z*2,zpos));
 				dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2 * w_smarticle / timeForDisp);
 				myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
 			}
@@ -1177,7 +1177,7 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 		switch (bucketType)
 		{
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
-			if (!IsInRadial(sPtr->Get_cm(), bucket_bott->GetPos() + ChVector<>(0, 0, bucket_interior_halfDim.z), ChVector<>(bucket_rad, bucket_bott->GetPos().z, bucket_bott->GetPos().z + 2 * bucket_interior_halfDim.z)))
+			if (!IsInRadial(sPtr->Get_cm(), bucket_bott->GetPos() + ChVector<>(0, 0, bucket_interior_halfDim.z), ChVector<>(bucket_rad*3, bucket_bott->GetPos().z, bucket_bott->GetPos().z + 4 * bucket_interior_halfDim.z)))
 			{
 				EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
 				GetLog() << "\nRemoving smarticle outside system \n";
@@ -1587,13 +1587,17 @@ int main(int argc, char* argv[]) {
 
 	ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
 	ChSharedPtr<ChFunction_Sine> knobcylinderfunc(new ChFunction_Sine());
+	ChSharedPtr<ChFunction_Const> hookFunc(new ChFunction_Const());
 	ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);
+	ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
+	ChSharedPtr<ChLinkEngine> hook_engine(new ChLinkEngine);
 	double knobAmp = PI		*1;
 	double knobW = 2 * PI * 1 / 20;
 	double knobPhase = -knobW*vibrateStart;
 	knobcylinderfunc->Set_amp(knobAmp);
 	knobcylinderfunc->Set_w(knobW);
 	knobcylinderfunc->Set_phase(knobPhase);
+	hookFunc->Set_yconst(20);
 	double rad;
 
 
@@ -1601,6 +1605,18 @@ int main(int argc, char* argv[]) {
 	{
 	case STRESSSTICK: case HOOKRAISE:// case KNOBCYLINDER:
 	{
+		
+
+		
+
+		stick->SetRot(QUNIT);
+		stick->SetBodyFixed(true);
+		stick->SetMaterialSurface(mat_g);
+		stick->AddAsset(groundTexture);
+		stick->GetCollisionModel()->ClearModel();
+		stick->SetMass(4);
+
+
 		double mult = 4.0;
 		if (bucketType == HOOKRAISE)
 			mult = 1/2.0;
@@ -1611,10 +1627,7 @@ int main(int argc, char* argv[]) {
 		//double sphereStickHeight = t_smarticle*mult / 2.0 * (sphereNum + 1); //shouldnt need extra 2*rad offset because of how z is defined using i below
 		for (size_t i = 0; i < sphereNum; i++)
 		{
-			ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
-			stick->SetRot(QUNIT);
-			stick->SetBodyFixed(true);
-			stick->GetCollisionModel()->ClearModel();
+			
 			stick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 			//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
 			//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate
@@ -1629,56 +1642,76 @@ int main(int argc, char* argv[]) {
 			}
 			//if you change z height between spheres, you must change sphereStickHeight above!
 			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, PI)), true);
-			stick->SetMaterialSurface(mat_g);
-			stick->AddAsset(groundTexture);
-			stick->SetMass(2);
-
-			stick->GetCollisionModel()->BuildModel();
-			stick->GetCollisionModel()->SetFamily(1);
-			stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-			stick->GetPhysicsItem()->SetIdentifier(largeID + i);
-			stick->SetCollide(true);
-			mphysicalSystem.AddBody(stick);
 			sphereStick.emplace_back(stick);
+		
+			
 		}
 		if (bucketType == HOOKRAISE)
 		{
 			int hookNum;
 			hookNum = 8 - stapleSize * 4;
+
 			for (size_t i = 0; i < hookNum; i++)
 			{
-				ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
-				stick->SetRot(QUNIT);
-				stick->SetBodyFixed(true);
-
-				stick->GetCollisionModel()->ClearModel();
-				stick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-				//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
-				//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate]
 				if (stapleSize)
 				{
+
 					//AddBoxGeometry
 					utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(t_smarticle*(i + 1), 0, t_smarticle*(1 / 2.0)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(PI, 0, 0)), true);
+					
 				}
 				else
 				{
 					utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 4, bucket_ctr + ChVector<>(t_smarticle*(i + 1) / 2, 0, t_smarticle*(1 / 2.0)) / 2, Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(PI, 0, 0)), true);
 				}
-
-				//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle / 2.0, bucket_ctr + ChVector<>(t2_smarticle*(i + 1),0 , t2_smarticle*(1 / 2.0)), QUNIT, true); // upper part, min_x plate
-				stick->SetMaterialSurface(mat_g);
-				stick->SetMaterialSurface(mat_g);
-				stick->AddAsset(groundTexture);
-				stick->SetMass(.4);
-
-				stick->GetCollisionModel()->BuildModel();
-				stick->GetCollisionModel()->SetFamily(1);
-				stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-				stick->SetCollide(true);
-				mphysicalSystem.AddBody(stick);
 				sphereStick.emplace_back(stick);
+
+				
+
+
+				
 			}
 		}
+
+		stick->GetCollisionModel()->BuildModel();
+		stick->GetCollisionModel()->SetFamily(1);
+		stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+		stick->GetPhysicsItem()->SetIdentifier(largeID + 1);
+		stick->SetCollide(true);
+		mphysicalSystem.AddBody(stick);
+
+
+
+		ChSharedPtr<ChBody> hookTruss = ChSharedPtr<ChBody>(new ChBody);
+		hookTruss->SetBodyFixed(true);
+		hookTruss->GetCollisionModel()->ClearModel();
+		utils::AddCylinderGeometry(hookTruss.get_ptr(), t2_smarticle / 2, bucket_interior_halfDim.z * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 0)), true);
+		hookTruss->GetCollisionModel()->BuildModel();
+		hookTruss->AddAsset(sphereTexture);
+		hookTruss->SetCollide(false);
+		mphysicalSystem.AddBody(hookTruss);
+
+
+
+
+
+		//ChSharedPtr<ChLinkLockRevolutePrismatic> pl = ChSharedPtr<ChLinkLockRevolutePrismatic>(new ChLinkLockRevolutePrismatic);
+		//pl->Initialize(stick, hookTruss, ChCoordsys<>(ChVector<>(0, 0, 0), Angle_to_Quat(ANGLESET_RXYZ, (0, 0, 0))));
+		//mphysicalSystem.AddLink(pl);
+		
+		
+
+		hook_engine->Initialize(stick, hookTruss,
+		 false,ChCoordsys<>(),ChCoordsys<>());
+		hook_engine->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_PRISM); // also works as revolute support
+		hook_engine->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+		hook_engine->SetMotion_Z(hookFunc.get_ptr());
+		hook_engine->SetMotion_ang(hookFunc.get_ptr());
+		hook_engine->SetMotion_axis(ChVector<>(0, 1, 1));
+		hook_engine->Set_spe_funct(hookFunc);
+		hook_engine->SetDisabled(true);
+		mphysicalSystem.AddLink(hook_engine);
+
 		break;
 	}
 
@@ -1714,6 +1747,7 @@ int main(int argc, char* argv[]) {
 		knobstick->SetMaterialSurface(mat_g);
 		knobstick->AddAsset(groundTexture);
 		knobstick->SetMass(1);
+
 		for (size_t i = 0; i < sphereNum; i++)
 		{
 			knobstick->GetCollisionModel()->SetEnvelope(collisionEnvelope);
@@ -1776,8 +1810,9 @@ int main(int argc, char* argv[]) {
 		default:
 			break;
 	}
-
-	double timeForVerticalDisplacement = 0.015; // 1.5 for safety proximity
+	double timeForVerticalDisplacement = 0.015;
+	if (bucketType == DRUM)
+		timeForVerticalDisplacement = 0.095; // 1.5 for safety proximity .015
 	int numGeneratedLayers = 0;
 
 
@@ -1820,13 +1855,20 @@ int main(int argc, char* argv[]) {
 			case HOOKRAISE: //case STRESSSTICK:
 			{
 
-				for (size_t i = 0; i < sphereStick.size(); i++)
+				//for (size_t i = 0; i < sphereStick.size(); i++)
+				//{
+				//	sphereStick.at(i)->SetBodyFixed(false);
+				//	sphereStick.at(i)->SetPos(ChVector<>(0, 0, sphereStick.at(i)->GetPos().z));
+				//	sphereStick.at(i)->SetPos_dt(ChVector<>(0, 0, .125*sizeScale));
+				//}
+
+				if (hook_engine->IsDisabled())
 				{
-					sphereStick.at(i)->SetBodyFixed(false);
-					sphereStick.at(i)->SetPos(ChVector<>(0, 0, sphereStick.at(i)->GetPos().z));
-					sphereStick.at(i)->SetPos_dt(ChVector<>(0, 0, .125*sizeScale));
+					stick->SetBodyFixed(false);
+					hook_engine->SetDisabled(false);
 				}
 
+				break;
 				//vibrate bucket before doing lifting stick
 				//if (t < vibrateStart + .75)
 				//{
@@ -1947,8 +1989,8 @@ int main(int argc, char* argv[]) {
 
 			for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
 			{
-				application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
-				application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
+				//application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
+				//application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
 			}
 			
 			//application.AssetBindAll();  //uncomment to visualize vol frac boxes
