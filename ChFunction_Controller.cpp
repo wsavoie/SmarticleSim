@@ -16,7 +16,7 @@ double ChFunctionController::Get_y(double t) {
 	if (abs(out_torque) == controller_->outputLimit)
 		o = true;
 	//GetLog() << "   \tLimited: " << out_torque << " " << "\tLIMIT= " << controller_->outputLimit; //<< "\t" << o<< "\n";
-	
+	//GetLog() << "\n";
 	////////////
 	//out_torque = SpeedControl(t, out_torque);
 	//double sp = controller_->GetActuatorOmega(index_,t);
@@ -58,14 +58,26 @@ double ChFunctionController::ComputeOutput(double t) {
 
 	//////////////////
 	//Speed control
+	double curr_omeg;
+	double des_omeg;
+
 	double omLim = controller_->omegaLimit;
-	double omErrCond = omLim*dT;
+	double omErrCond = omLim*dT * 3;
 	int cond = (abs(error) > omErrCond);
-
-	double curr_omeg = controller_->GetActuatorOmega(index_, t);
-
-	double des_omeg = omLim*cond*sgn(error);
+	curr_omeg = controller_->GetActuatorOmega(index_, t);
+	des_omeg = omLim*cond*sgn(error);
 	
+	//if (cond)
+	//{
+	//	curr_omeg = controller_->GetActuatorOmega(index_, t);
+	//	des_omeg = omLim*cond*sgn(error);
+	//}
+	//else
+	//{
+	//	curr_omeg = 0;
+	//	des_omeg = 0;
+	//}
+
 	double omError = des_omeg - curr_omeg;
 	double prevOmError = controller_->prevOmegError_.at(index_);
 	controller_->cumOmegError_.at(index_) += (omError)*dT;
@@ -76,15 +88,15 @@ double ChFunctionController::ComputeOutput(double t) {
 	double dTerm = d*dT*omLim*(omError - prevOmError / dT);
 	double dTerm2 = d*dT*omLim*((omError - prevOmError) / dT);
 	//double output2 = 100 * p*dT*omLim*omError;  ///TODO magic number 100?
-	double output2 = 100 * p*dT*omLim*omError;  ///TODO magic number 100?
-										//+ d*dT*omLim*((omError - prevOmError) / dT);
+	double output2 = 100 * p*dT*omLim*omError;//;  ///TODO magic number 100?
+										//+ 1/5* d*dT*omLim*((omError - prevOmError) / dT);
 										//+ i*dT*omLim*controller_->cumOmegError_.at(index_);
 	//GetLog() << "output" << output << "\toutput2" << output2;
 
 	
 	
 	double output3 = output+output2;
-	//GetLog() << "1: " << output << " " << "\t2: " << output2 << "\t3: " << output3 << "\tom: " << curr_omeg<<"\n";
+	//GetLog() << "1: " << output << " \t2: " << output2 << "\t3: " << output3 << "\tom: " << curr_omeg<<"\n";
 	//////////////////
 
 
