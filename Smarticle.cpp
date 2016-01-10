@@ -977,20 +977,26 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 	return 0;
 }
 
-void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1)
+void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSinceChange)
 {
 	//torque01 and torque02 are averaged torque over some amount of steps
 	//low thresh		= if both torques are < LT*thresh.
 	//med thresh		= if both torques are LT<x<HT
 	//hi  thresh		= if one torque is > HT
-	double LT = .36 * torqueThresh2;
-	double MT = .90 * torqueThresh2;
+	
+	
+	//if (timeSinceChange != 0 && timeSinceChange < 10 * dT) //protects situation where torque increases initially causing LT situations to get out of LT immediately upon shape change
+	//	return;
+
+
+	double LT = .85 * torqueThresh2;
+	double MT = .95 * torqueThresh2;
 	//double HT = 1.99 *torqueThresh2;
 
 	//double t0 = abs(tor0);
 	//double t1 = abs(tor1);
-	double t0 = (tor0);
-	double t1 = (tor1);
+	double t0 = abs(tor0);
+	double t1 = abs(tor1);
 	if (GetArm0OT() || GetArm2OT())
 	{//highest torque threshold, stop moving
 		//AssignState(OT);
@@ -999,14 +1005,15 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1)
 	}
 	else
 	{//
-		if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if)
-		{
-			AssignState(MIDT);
-			//TODO clear midt and emplace values
-			return;
-			
-		}
-		else if (t0 < LT && t1 < LT) //todo abs value of torque
+		//if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if)
+		//{
+		//	//AssignState(MIDT);
+		//	//TODO clear midt and emplace values
+		//	return;
+		//	
+		//}
+		//else if (t0 < LT && t1 < LT) //todo abs value of torque
+		if (t0 < LT && t1 < LT)
 		{//LOW TORQUE
 			if (lowStressChange)		//if time to switch states
 			{
@@ -1139,7 +1146,7 @@ void Smarticle::AssignState(int guiState)
 	}
 
 }
-void Smarticle::CheckLowStressChangeTime()
+double Smarticle::CheckLowStressChangeTime()
 {
 	static double timeSinceLastChange = 0;
 	timeSinceLastChange += dT;
@@ -1148,8 +1155,9 @@ void Smarticle::CheckLowStressChangeTime()
 	{
 		lowStressChange = true;
 		timeSinceLastChange = 0; //reset value
-		
+		return 0;
 	}
+	return timeSinceLastChange;
 }
 void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 {
@@ -1164,9 +1172,9 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	bool prevSucessful = successfulMotion;
 	successfulMotion = false;
 	this->prevMoveType = this->moveType;
-	CheckLowStressChangeTime();
+	double timeSinceChange = CheckLowStressChangeTime();
 	ChangeArmColor(torque01, torque12);
-	ChangeStateBasedOnTorque(torque01,torque12);
+	ChangeStateBasedOnTorque(torque01,torque12,timeSinceChange);
 	//if (specialState != -1)
 	//	AssignState(specialState);
 	//else

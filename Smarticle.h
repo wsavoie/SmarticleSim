@@ -107,7 +107,7 @@ namespace chrono {
 		virtual double GetReactTorqueLen01();
 		virtual double GetReactTorqueLen12();
 		virtual void ChangeArmColor(double torque01, double torque12);
-		void ChangeStateBasedOnTorque(double torque01, double torque12);
+		void ChangeStateBasedOnTorque(double torque01, double torque12,double timeSinceChange);
 		virtual void SetDefaultOmega(double omega);
 		
 		virtual void SetOmega(int idx, double momega, bool angularFreq=true);
@@ -186,7 +186,7 @@ namespace chrono {
 		std::vector<std::pair<double, double>> ot; //over torque
 		std::vector<std::pair<double, double>> ss; //over angle
 		std::vector<std::pair<double, double>> vib; //vibrate this HAS to be particle specific so cannot be static?
-		std::vector<std::pair<double, double>> midTorque; //vibrate this HAS to be particle specific so cannot be static?
+		std::vector<std::pair<double, double>> midTorque;
 		std::vector<int> moveTypeIdxs;//this vector keeps the current values of the move types
 		MoveType moveType;
 		MoveType prevMoveType;
@@ -226,7 +226,7 @@ namespace chrono {
 		void MoveLoop2(int guiState);
 		void MoveLoop2(int guiState, double torque01, double torque12);
 		void ControllerMove(int guiState, double torque01, double torque12);
-		void CheckLowStressChangeTime();
+		double CheckLowStressChangeTime();
 		ChSharedPtr<ChLinkEngine> getLinkActuator(int id);
 		double defaultOmega;
 		double omegaLim;

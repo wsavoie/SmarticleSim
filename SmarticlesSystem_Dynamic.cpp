@@ -103,7 +103,7 @@ using namespace chrono;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = HOOKRAISE;
+BucketType bucketType = KNOBCYLINDER;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -111,7 +111,7 @@ ChSharedPtr<ChBody> bucket_bott;
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
-double sizeScale = 10;
+double sizeScale = 1;
 int appWidth = 1280;
 int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
@@ -128,7 +128,7 @@ unsigned int largeID = 10000000;
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
 double tFinal = 6;
-double vibrateStart= .75;
+double vibrateStart= 1;
 
 double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -186,7 +186,7 @@ bool povray_output = false;
 int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-int numPerLayer = 1;
+int numPerLayer = 4;
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 //double bucket_rad = sizeScale*0.034;
@@ -403,7 +403,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
 #endif
 	
-	bool placeInMiddle = true; // if I want make a single smarticle on bottom surface
+	bool placeInMiddle = false; // if I want make a single smarticle on bottom surface
 	ChVector<> dropSpeed = VNULL;
 	ChQuaternion<> myRot = QUNIT;
 	double z;
@@ -1448,7 +1448,7 @@ int main(int argc, char* argv[]) {
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	//ChTimerParallel step_timer;
-	Smarticle::global_GUI_value = 2;
+	Smarticle::global_GUI_value = 1;
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 #if defined(_WIN64)
 	std::string fp = "D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\";
@@ -1591,8 +1591,8 @@ int main(int argc, char* argv[]) {
 	ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);
 	ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
 	ChSharedPtr<ChLinkEngine> hook_engine(new ChLinkEngine);
-	double knobAmp = PI		*1;
-	double knobW = 2 * PI * 1 / 20;
+	double knobAmp = PI_2;
+	double knobW = PI;
 	double knobPhase = -knobW*vibrateStart;
 	knobcylinderfunc->Set_amp(knobAmp);
 	knobcylinderfunc->Set_w(knobW);
@@ -1701,7 +1701,7 @@ int main(int argc, char* argv[]) {
 		
 		
 
-		hook_engine->Initialize(stick, hookTruss,
+		hook_engine->Initialize(stick, hookTruss, //TODO get this to move up!
 		 false,ChCoordsys<>(),ChCoordsys<>());
 		hook_engine->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_PRISM); // also works as revolute support
 		hook_engine->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
@@ -1736,10 +1736,10 @@ int main(int argc, char* argv[]) {
 		double mult = 2.0;
 		double knobRad;
 		double stickLen = bucket_interior_halfDim.z*1.5;
-		int sphereNum = stickLen / (t_smarticle);
+		int sphereNum = stickLen / (t_smarticle/2);
 
 		//double sphereStickHeight = t_smarticle*mult / 2.0 * (sphereNum + 1); //shouldnt need extra 2*rad offset because of how z is defined using i below
-		double sphereStickHeight = bucket_interior_halfDim.z; //shouldnt need extra 2*rad offset because of how z is defined using i below
+		double sphereStickHeight = 2*bucket_interior_halfDim.z; //shouldnt need extra 2*rad offset because of how z is defined using i below
 		
 		knobstick->GetCollisionModel()->ClearModel();
 		knobstick->SetRot(QUNIT);
@@ -1760,21 +1760,21 @@ int main(int argc, char* argv[]) {
 			else
 			{
 				rad = t_smarticle*mult / 1.5;
-				knobRad = t2_smarticle/2 / mult;
+				knobRad = t2_smarticle / mult;
 
 			}
 			//if you change z height between spheres, you must change sphereStickHeight above!
 			utils::AddSphereGeometry(knobstick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, sphereStickHeight / sphereNum * (i)), QUNIT, true);
 			sphereStick.emplace_back(knobstick);
 		}
-			unsigned int kpr = 9;//knobs per row
-			unsigned int kpz = 15; //knob per z
+			unsigned int kpr = 4;//knobs per row
+			unsigned int rows = 15; //knob per z
 			double ang = 2 * PI / kpr;
-			double hp = (sphereStickHeight - 2 * rad) / kpz;//height between rows
+			double hp = (sphereStickHeight - 2 * rad) / rows;//height between rows
 			double pOffset = PI/kpr; //phase offset
-			for (size_t row = 0; row < kpr; row++)
+			for (size_t row = 0; row < rows; row++)
 			{
-				for (size_t col = 0; col < kpz; col++)
+				for (size_t col = 0; col < kpr; col++)
 				{
 					utils::AddSphereGeometry(knobstick.get_ptr(), knobRad, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*row), QUNIT, true);
 					sphereStick.emplace_back(knobstick);
