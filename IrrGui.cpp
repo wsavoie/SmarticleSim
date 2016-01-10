@@ -52,9 +52,9 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			rect<s32>(850, 205, 1050, 220), true);
 		resetSuccessfulCount();
 		
-		wchar_t pm[100]; swprintf(pm, L"%g", p_gain);
-		wchar_t im[100]; swprintf(im, L"%g", i_gain);
-		wchar_t dm[100]; swprintf(dm, L"%g", d_gain);
+		wchar_t pm[100]; swprintf(pm,100, L"%g", p_gain);
+		wchar_t im[100]; swprintf(im,100, L"%g", i_gain);
+		wchar_t dm[100]; swprintf(dm,100, L"%g", d_gain);
 		pgainInput = app->GetIGUIEnvironment()->addEditBox(pm,
 			rect<s32>(1050, 225, 1100, 240), true);
 		igainInput = app->GetIGUIEnvironment()->addEditBox(im,

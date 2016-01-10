@@ -15,7 +15,7 @@
 #include "chrono_irrlicht/ChIrrTools.h"
 #include <irrlicht.h>
 //#include "physics/ChSystem.h"  // Arman: take care of this later
-#include "chrono_parallel/physics/ChSystemParallel.h"
+//#include "chrono_parallel/physics/ChSystemParallel.h"
 #include <memory>
 #include <deque>
 #include "common.h"

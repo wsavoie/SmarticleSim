@@ -1447,8 +1447,8 @@ int main(int argc, char* argv[]) {
 	struct tm* timeinfo;
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
-	ChTimerParallel step_timer;
-	Smarticle::global_GUI_value = 0;
+	//ChTimerParallel step_timer;
+	Smarticle::global_GUI_value = 2;
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 #if defined(_WIN64)
 	std::string fp = "D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\";
@@ -2019,7 +2019,7 @@ int main(int argc, char* argv[]) {
 
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
-	  step_timer.stop("step time");
+	  //step_timer.stop("step time");
 		
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
 

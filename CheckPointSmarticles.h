@@ -8,7 +8,7 @@
 #ifndef CHECKPOINTSMARTICLES_H_
 #define CHECKPOINTSMARTICLES_H_
 
-#include "chrono_parallel/physics/ChSystemParallel.h"
+//#include "chrono_parallel/physics/ChSystemParallel.h"
 #include "physics/ChSystem.h"
 #include "Smarticle.h" //do we need this if smarticleU imports smarticle?
 #include "SmarticleU.h"
