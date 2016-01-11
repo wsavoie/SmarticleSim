@@ -1,6 +1,17 @@
 #!/bin/bash
+#Notes about script:
+#this script can be run from anywhere, it will save the output into the same folder
+#it needs to have a smarticlesMoves.csv file in the same directory as this file.
+#to create the csv, run matlab file in smarticles folder matlabScripts/GenerateSmarticleCsv.m
+#and direct the dialog window to the directory containing this file.
+#finally you must fill in the else part of the if statement below
+if hostname=='phys42232.physics.gatech.edu'; then
 smartRunFile="/home/wsavoie/Documents/ChronoPkgs/SmarticlesBuild/SmarticlesSystem_Dynamic"
 dataDir="/home/wsavoie/Documents/ChronoPkgs/Smarticles/data";
+else
+smartRunFile="/path/to/SmarticleSystem_Dynamic/here"
+dataDir="/your/data/directory/here"
+fi
 
 if diff ../Smarticles/data/ $dataDir;then #if no differences
 echo "found directory";

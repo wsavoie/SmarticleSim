@@ -95,7 +95,7 @@ switch global_gait
             ylabel('\theta_2');
             
             title('Circle Gait');
-            figText(gcf,15);
+            %%figText(gcf,15);
             axis square
         end
     case 2% square gait
