@@ -130,7 +130,7 @@ unsigned int largeID = 10000000;
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
 double tFinal = 6;
-double vibrateStart= 1;
+double vibrateStart= .2;
 
 double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -1796,15 +1796,15 @@ int main(int argc, char* argv[]) {
 			}
 			else
 			{
-				rad = t_smarticle*mult / 1.5;
+				rad = t_smarticle*mult / 2;
 				knobRad = t2_smarticle / mult/1.4;
 
 			}
 			//if you change z height between spheres, you must change sphereStickHeight above!
-			utils::AddSphereGeometry(knobstick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, sphereStickHeight / sphereNum * (i)), QUNIT, true);
+			utils::AddSphereGeometry(knobstick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, sphereStickHeight / sphereNum * (i)),QUNIT, true);
 			sphereStick.emplace_back(knobstick);
 		}
-			unsigned int kpr = 5;//knobs per row
+			unsigned int kpr = 4;//knobs per row
 			unsigned int rows = 15; //knob per z
 			double ang = 2 * PI / kpr;
 			double hp = (sphereStickHeight - 2 * rad) / rows;//height between rows
@@ -1813,7 +1813,9 @@ int main(int argc, char* argv[]) {
 			{
 				for (size_t col = 0; col < kpr; col++)
 				{
-					utils::AddSphereGeometry(knobstick.get_ptr(), knobRad, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*(row+1)), QUNIT, true);
+					double theta = col*ang +row*pOffset;
+					//utils::AddSphereGeometry(knobstick.get_ptr(), knobRad, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*(row + 1)), Angle_to_Quat(col*ang + row*pOffset, VECT_Y), true);
+					utils::AddBoxGeometry(knobstick.get_ptr(), ChVector<>(rad / 1.5, rad / 4, rad / 8), bucket_ctr + ChVector<>(rad*cos(theta), rad*sin(theta), hp*(row + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, theta+row%2*PI_2)), true);
 					sphereStick.emplace_back(knobstick);
 				}
 			}
