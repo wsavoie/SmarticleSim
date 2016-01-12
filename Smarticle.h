@@ -317,6 +317,11 @@ namespace chrono {
 		ChSharedPtr<ChFunction> function01;
 		ChSharedPtr<ChFunction> function12;
 
+		// Assets
+		ChSharedPtr<ChTexture> arm0_texture;
+		ChSharedPtr<ChTexture> arm1_texture;
+		ChSharedPtr<ChTexture> arm2_texture;
+
 
 
 

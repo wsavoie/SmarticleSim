@@ -95,6 +95,7 @@ void Smarticle::Properties(
 	volume = GetVolume();
 
 
+
 	mtextureOT->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 	mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 	mtextureMid->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
@@ -340,12 +341,31 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	
 	if (visualize)
 	{
-	if (armID == 1)
-		arm->AddAsset(mtextureMid);
-	else
-		arm->AddAsset(mtextureArm);
-
+		arm0_texture = ChSharedPtr<ChTexture>(new ChTexture());
+		arm1_texture = ChSharedPtr<ChTexture>(new ChTexture());
+		arm2_texture = ChSharedPtr<ChTexture>(new ChTexture());
+		switch (armID) {
+		case 0:
+			arm0_texture = ChSharedPtr<ChTexture>(new ChTexture());
+			arm0_texture = mtextureArm;
+			arm->AddAsset(arm0_texture);
+			break;
+		case 1:
+			arm1_texture = ChSharedPtr<ChTexture>(new ChTexture());
+			arm1_texture = mtextureMid;
+			arm->AddAsset(arm1_texture);
+			break;
+		case 2:
+			arm2_texture = ChSharedPtr<ChTexture>(new ChTexture());
+			arm2_texture = mtextureArm;
+			arm->AddAsset(arm2_texture);
+			break;
+		default:
+			std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
+			break;
+		}
 	}
+
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelop);
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0),QUNIT,visualize);
 
@@ -409,11 +429,29 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 
 	if (visualize)
 	{
-		if (armID == 1)
-			arm->AddAsset(mtextureMid);
-		else
-			arm->AddAsset(mtextureArm);
-
+		arm0_texture = ChSharedPtr<ChTexture>(new ChTexture());
+		arm1_texture = ChSharedPtr<ChTexture>(new ChTexture());
+		arm2_texture = ChSharedPtr<ChTexture>(new ChTexture());
+		switch (armID) {
+		case 0:
+			arm0_texture = ChSharedPtr<ChTexture>(new ChTexture());
+			arm0_texture = mtextureArm;
+			arm->AddAsset(arm0_texture);
+			break;
+		case 1:
+			arm1_texture = ChSharedPtr<ChTexture>(new ChTexture());
+			arm1_texture = mtextureMid;
+			arm->AddAsset(arm1_texture);
+			break;
+		case 2:
+			arm2_texture = ChSharedPtr<ChTexture>(new ChTexture());
+			arm2_texture = mtextureArm;
+			arm->AddAsset(arm2_texture);
+			break;
+		default:
+			std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
+			break;
+		}
 	}
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelop);
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
@@ -1064,26 +1102,23 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 	double moveAmt = 2*D2R; //2 degrees
 	if (abs(torque01) > TT2)
 	{
+		arm0_texture = mtextureOT;
 		//this->setCurrentMoveType(OT);
 		//mv = &ot;
 		if (!arm0OT)//if not previously OT
 		{
-			arm0OT = true;
-			arm0->AddAsset(mtextureOT);
 			this->ot.clear();
 			//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
 		}
+		arm0OT = true;
 		//nothing needs to be done if prev OT
 	}
 	else
 	{
-		if (arm0OT) //it prev OT but currently not
-		{
-			arm0OT = false;
-			arm0->GetAssets().pop_back();
-		}
+		arm0_texture = mtextureArm;
+		arm0OT = false;
 		// nothing needs to be done if not prev OT
 	}
 
@@ -1091,26 +1126,23 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 	/////////////////////ARM2///////////////////////
 	if (abs(torque12) > TT2)
 	{
+		arm2_texture = mtextureOT;
 		//this->setCurrentMoveType(OT);
 		//mv = &ot;
 		if (!arm2OT)//if not previously OT
 		{
-			arm2OT = true;
-			arm2->AddAsset(mtextureOT);
 			this->ot.clear();
 			//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
 		}
+		arm2OT = true;
 		//nothing needs to be done if prev OT
 	}
 	else
 	{
-		if (arm2OT) //it prev OT but currently not
-		{
-			arm2OT = false;
-			arm2->GetAssets().pop_back();
-		}
+		arm2_texture = mtextureArm;
+		arm2OT = false;
 		// nothing needs to be done if not prev OT
 	}
 }
