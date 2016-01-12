@@ -505,8 +505,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			smarticle0->GenerateVib(angle1,angle2);
 			smarticle0->AssignState(Smarticle::global_GUI_value);
 			//smarticle0->ss.emplace_back(angle1, angle2);
-			smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
-			smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
+			//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
+			//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
 
 			mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
 			smarticle0->SetSpeed(dropSpeed);
