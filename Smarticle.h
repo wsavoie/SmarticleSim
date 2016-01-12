@@ -180,13 +180,14 @@ namespace chrono {
 		static std::vector<std::pair<double, double>> gui1;//gui option 1
 		static std::vector<std::pair<double, double>> gui2;//gui option 2
 		static std::vector<std::pair<double, double>> gui3;//gui option 3
-		
+		static std::vector<std::pair<double, double>> midTorque;//gui option 3
+
 		bool visualize=false;
 		bool successfulMotion = false;
 		std::vector<std::pair<double, double>> ot; //over torque
 		std::vector<std::pair<double, double>> ss; //over angle
 		std::vector<std::pair<double, double>> vib; //vibrate this HAS to be particle specific so cannot be static?
-		std::vector<std::pair<double, double>> midTorque;
+		
 		std::vector<int> moveTypeIdxs;//this vector keeps the current values of the move types
 		MoveType moveType;
 		MoveType prevMoveType;

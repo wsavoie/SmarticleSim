@@ -40,6 +40,8 @@ std::vector<std::pair<double, double>> Smarticle::global;
 std::vector<std::pair<double, double>> Smarticle::gui1;
 std::vector<std::pair<double, double>> Smarticle::gui2;
 std::vector<std::pair<double, double>> Smarticle::gui3;
+std::vector<std::pair<double, double>> Smarticle::midTorque;
+
 ChSharedPtr<ChTexture> Smarticle::mtextureOT = ChSharedPtr<ChTexture>(new ChTexture());
 ChSharedPtr<ChTexture> Smarticle::mtextureArm = ChSharedPtr<ChTexture>(new ChTexture());
 ChSharedPtr<ChTexture> Smarticle::mtextureMid = ChSharedPtr<ChTexture>(new ChTexture());
@@ -945,6 +947,21 @@ std::pair<double, double> Smarticle::populateMoveVector()
 		}
 	}
 
+	if (midTorque.size() < 1)
+	{
+		//midtorque
+		while (smarticleMoves.good()) {
+			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+			angPair.first = angVals.x;
+			angPair.second = angVals.y;
+
+			midTorque.push_back(angPair);
+			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//exit(-1);
+			if (ddCh == '#')
+				break;
+		}
+	}
 
 	//SetAngle(firstAngPair);
 	//returning first ang pair but can be set here
@@ -1005,15 +1022,16 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSin
 	}
 	else
 	{//
-		//if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if)
-		//{
-		//	//AssignState(MIDT);
-		//	//TODO clear midt and emplace values
-		//	return;
-		//	
-		//}
-		//else if (t0 < LT && t1 < LT) //todo abs value of torque
-		if (t0 < LT && t1 < LT)
+		if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if)
+		{
+			specialState = MIDT;
+			//AssignState(MIDT);
+			//TODO clear midt and emplace values
+			return;
+			
+		}
+		else if (t0 < LT && t1 < LT) //todo abs value of torque
+		//if (t0 < LT && t1 < LT)
 		{//LOW TORQUE
 			if (lowStressChange)		//if time to switch states
 			{
@@ -1175,9 +1193,9 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	double timeSinceChange = CheckLowStressChangeTime();
 	ChangeArmColor(torque01, torque12);
 	ChangeStateBasedOnTorque(torque01,torque12,timeSinceChange);
-	//if (specialState != -1)
-	//	AssignState(specialState);
-	//else
+	if (specialState != -1)
+		AssignState(specialState);
+	else
 		AssignState(guiState);
 
 	//!(moveType^prevMoveType)

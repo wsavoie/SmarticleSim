@@ -927,13 +927,22 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ground->AddAsset(groundTexture);
 
 	// 1: create bucket
-		
+	ChVector<> dim = bucket_interior_halfDim;
 		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 		switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 		{
 		case BOX:
-			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, bucket_interior_halfDim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+			
+			dim.x = 1.5 * dim.x;
+			dim.y = 1.5 * dim.y;
+			dim.z = dim.z / 4;
+			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, 
+				dim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 			bucket->AddAsset(bucketTexture);
+			//bucket->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+			bucket_bott->GetCollisionModel()->SetFamily(1);
+			bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 			break;
 
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:

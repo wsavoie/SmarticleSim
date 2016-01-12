@@ -49,7 +49,7 @@ end
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
 % torqueThresh=.001; %.008cd 
-torqueThresh=2*9.8*mass*w_s;%.00005;  4.6657e-04
+torqueThresh=1.25*9.8*mass*w_s;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 
@@ -57,7 +57,7 @@ global_gait= 1;
 gui1_gait = 1;
 gui2_gait = 1;
 gui3_gait = 2;
-
+midt_gait = 2;
 
 PON= 1;
 
@@ -281,7 +281,7 @@ for i=1:guiSize
     end
     
     if(length(GUI_theta_1Pos)~=length(GUI_theta_2Pos))
-        error('global positions have inequal lengths for the arm position arrays!');
+        error('gui positions have inequal lengths for the arm position arrays!');
     end
     
     for i=1:length(GUI_theta_1Pos)
@@ -292,6 +292,43 @@ for i=1:guiSize
         else
             fprintf(fid,', \n',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
         end
+    end
+end
+
+
+%% MIDT function position definitions
+
+switch(midt_gait)
+    case 1
+        sL = pi/2;
+        sL2 = pi/2;
+        len = length(0:ss:sL); %gait length
+        amove1 = linspace(0,sL,len);    %0   ->  max
+        amove2 = linspace(sL,sL,len);   %max ->  max
+        amove3 = linspace(sL,0,len);    %max ->  0
+        amove4 = linspace(0,0,len);     %0   ->  0
+%       theta2
+        bmove1 = linspace(0,0,len);     %0   ->  0
+        bmove2 = linspace(0,sL2,len);   %0   ->  max
+        bmove3 = linspace(sL2,sL2,len); %max ->  max
+        bmove4 = linspace(sL2,0,len);   %max ->  0
+        
+        MIDT_theta_1Pos=[amove1,amove2,amove3,amove4];
+        MIDT_theta_2Pos=[bmove1,bmove2,bmove3,bmove4];
+    case 2
+        MIDT_theta_1Pos = [pi/2];
+        MIDT_theta_2Pos = [pi/2];
+end          
+   if(length(MIDT_theta_1Pos)~=length(MIDT_theta_2Pos))
+        error('MIDT positions have inequal lengths for the arm position arrays!');
+    end
+for i=1:length(MIDT_theta_1Pos)
+    fprintf(fid,'%f, %f',MIDT_theta_1Pos(i),MIDT_theta_2Pos(i));
+    %denote next area with a # as last char
+    if i == length(MIDT_theta_1Pos)
+        fprintf(fid,'#\n',MIDT_theta_1Pos(i),MIDT_theta_2Pos(i));
+    else
+        fprintf(fid,', \n',MIDT_theta_1Pos(i),MIDT_theta_2Pos(i));
     end
 end
 
