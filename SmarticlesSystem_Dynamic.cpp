@@ -229,7 +229,22 @@ public:
 		return (!(abs(mmodelA->GetPhysicsItem()->GetIdentifier() - mmodelB->GetPhysicsItem()->GetIdentifier()) < 2));
 	}
 };
-
+class ChFunctionCustom : public ChFunction{
+public:
+	ChFunctionCustom(){y, y_dx, y_dxdx = 0;}
+	virtual ~ChFunctionCustom(){};
+	virtual ChFunction *new_Duplicate() {return 0;}
+	void Set_y(double x){ y = x; }
+	void Set_y_dx(double x){y_dx = x;}
+	void Set_y_dxdx(double x){ y_dxdx = x; }
+	virtual double Get_y(double x) {return y;}
+	virtual double Get_y_dx(double x) {return y_dx;}
+	virtual double Get_y_dxdx(double x) { return y_dxdx; }
+private:
+	double y;
+	double y_dx;
+	double y_dxdx;
+};
 
 class ext_force :public ChReportContactCallback2{
 
@@ -1587,19 +1602,17 @@ int main(int argc, char* argv[]) {
 
 	int stepEnd = int(tFinal / dT);  // 1.0e6;//2.4e6;//600000;//2.4e6 * (.02 * paramsH.sizeScale) /
 
+	ChSharedPtr<ChBody> truss = ChSharedPtr<ChBody>(new ChBody);
 	ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
-	ChSharedPtr<ChFunction_Sine> knobcylinderfunc(new ChFunction_Sine());
-	ChSharedPtr<ChFunction_Const> hookFunc(new ChFunction_Const());
+	ChSharedPtr<ChFunction_Sine> sinefunc(new ChFunction_Sine());
+	ChSharedPtr<ChFunction_Const> knobcylinderfunc(new ChFunction_Const());
+	ChSharedPtr<ChFunctionCustom> func(new ChFunctionCustom());
 	ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);
 	ChSharedPtr<ChBody> stick = ChSharedPtr<ChBody>(new ChBody);
-	ChSharedPtr<ChLinkEngine> hook_engine(new ChLinkEngine);
-	double knobAmp = PI_2;
-	double knobW = PI;
-	double knobPhase = -knobW*vibrateStart;
-	knobcylinderfunc->Set_amp(knobAmp);
-	knobcylinderfunc->Set_w(knobW);
-	knobcylinderfunc->Set_phase(knobPhase);
-	hookFunc->Set_yconst(20);
+
+	//ChSharedPtr<ChLinkLinActuator> pris_engine(new ChLinkLinActuator);
+	ChSharedPtr<ChLinkLinActuator> pris_engine;
+	ChSharedPtr<ChLinkLockPrismatic> link_prismatic;
 	double rad;
 
 
@@ -1607,9 +1620,6 @@ int main(int argc, char* argv[]) {
 	{
 	case STRESSSTICK: case HOOKRAISE:// case KNOBCYLINDER:
 	{
-		
-
-		
 
 		stick->SetRot(QUNIT);
 		stick->SetBodyFixed(true);
@@ -1622,9 +1632,17 @@ int main(int argc, char* argv[]) {
 		double mult = 4.0;
 		if (bucketType == HOOKRAISE)
 			mult = 1/2.0;
-		rad = 0;
+		if (stapleSize)
+		{
+			rad = t_smarticle*mult;
+		}
+		else
+		{
+			rad = t_smarticle*mult / 4.0;
+		}
+
 		double stickLen = bucket_interior_halfDim.z*1.5;
-		int sphereNum = stickLen / (t_smarticle)*2;
+		int sphereNum = stickLen / (rad);
 
 		//double sphereStickHeight = t_smarticle*mult / 2.0 * (sphereNum + 1); //shouldnt need extra 2*rad offset because of how z is defined using i below
 		for (size_t i = 0; i < sphereNum; i++)
@@ -1634,16 +1652,9 @@ int main(int argc, char* argv[]) {
 			//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 2.0)), QUNIT, true); // upper part, min_x plate
 			//utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 5, bucket_ctr + ChVector<>(0, 0, t_smarticle*(i + 1 / 5.0)), QUNIT, true); // upper part, min_x plate
 			//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle/2.0, bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
-			if (stapleSize)
-			{
-				rad = t_smarticle*mult;
-			}
-			else
-			{
-				rad = t_smarticle*mult / 4.0;
-			}
+		
 			//if you change z height between spheres, you must change sphereStickHeight above!
-			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, PI)), true);
+			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i+1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, PI)), true);
 			sphereStick.emplace_back(stick);
 		
 			
@@ -1659,12 +1670,12 @@ int main(int argc, char* argv[]) {
 				{
 
 					//AddBoxGeometry
-					utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 2, bucket_ctr + ChVector<>(t_smarticle*(i + 1), 0, t_smarticle*(1 / 2.0)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(PI, 0, 0)), true);
+					utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(rad*(i + 1)*2, 0, stickLen / sphereNum), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(PI, 0, 0)), true);
 					
 				}
 				else
 				{
-					utils::AddSphereGeometry(stick.get_ptr(), t_smarticle / 4, bucket_ctr + ChVector<>(t_smarticle*(i + 1) / 2, 0, t_smarticle*(1 / 2.0)) / 2, Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(PI, 0, 0)), true);
+					utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(rad*(i + 1)*2, 0, stickLen / sphereNum), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(PI, 0, 0)), true);
 				}
 				sphereStick.emplace_back(stick);
 
@@ -1683,36 +1694,27 @@ int main(int argc, char* argv[]) {
 		mphysicalSystem.AddBody(stick);
 
 
+		truss->SetBodyFixed(true);
+		truss->GetCollisionModel()->ClearModel();
+		utils::AddCylinderGeometry(truss.get_ptr(), t2_smarticle / 2, bucket_interior_halfDim.z * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(-PI_2, 0, 0)), false);
+		truss->GetCollisionModel()->BuildModel();
+		truss->AddAsset(sphereTexture);
+		truss->SetCollide(false);
+		mphysicalSystem.AddBody(truss);
 
-		ChSharedPtr<ChBody> hookTruss = ChSharedPtr<ChBody>(new ChBody);
-		hookTruss->SetBodyFixed(true);
-		hookTruss->GetCollisionModel()->ClearModel();
-		utils::AddCylinderGeometry(hookTruss.get_ptr(), t2_smarticle / 2, bucket_interior_halfDim.z * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 0)), true);
-		hookTruss->GetCollisionModel()->BuildModel();
-		hookTruss->AddAsset(sphereTexture);
-		hookTruss->SetCollide(false);
-		mphysicalSystem.AddBody(hookTruss);
-
-
-
-
-
-		//ChSharedPtr<ChLinkLockRevolutePrismatic> pl = ChSharedPtr<ChLinkLockRevolutePrismatic>(new ChLinkLockRevolutePrismatic);
-		//pl->Initialize(stick, hookTruss, ChCoordsys<>(ChVector<>(0, 0, 0), Angle_to_Quat(ANGLESET_RXYZ, (0, 0, 0))));
-		//mphysicalSystem.AddLink(pl);
-		
+		link_prismatic = ChSharedPtr<ChLinkLockPrismatic>(new ChLinkLockPrismatic);
+		link_prismatic->Initialize(stick, truss, false, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
+		mphysicalSystem.AddLink(link_prismatic);
 		
 
-		hook_engine->Initialize(stick, hookTruss, //TODO get this to move up!
-		 false,ChCoordsys<>(),ChCoordsys<>());
-		hook_engine->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_PRISM); // also works as revolute support
-		hook_engine->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-		hook_engine->SetMotion_Z(hookFunc.get_ptr());
-		hook_engine->SetMotion_ang(hookFunc.get_ptr());
-		hook_engine->SetMotion_axis(ChVector<>(0, 1, 1));
-		hook_engine->Set_spe_funct(hookFunc);
-		hook_engine->SetDisabled(true);
-		mphysicalSystem.AddLink(hook_engine);
+		pris_engine = ChSharedPtr<ChLinkLinActuator>(new ChLinkLinActuator);
+		pris_engine->Initialize(stick, truss, false, ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
+		func->Set_y(-stickLen);
+		func->Set_y_dx(-.0001);
+		pris_engine->Set_dist_funct(func);
+
+		pris_engine->SetDisabled(true);
+		mphysicalSystem.AddLink(pris_engine);
 
 		break;
 	}
@@ -1722,10 +1724,34 @@ int main(int argc, char* argv[]) {
 		setUpDrumActuator(mphysicalSystem);
 		break;
 	}
-	case KNOBCYLINDER:
+	case HOPPER:
 	{
+		truss->SetBodyFixed(true);
+		truss->GetCollisionModel()->ClearModel();
+		utils::AddCylinderGeometry(truss.get_ptr(), t2_smarticle / 2, bucket_interior_halfDim.z * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(-PI_2, 0, 0)), false);
+		truss->GetCollisionModel()->BuildModel();
+		truss->AddAsset(sphereTexture);
+		truss->SetCollide(false);
+		mphysicalSystem.AddBody(truss);
 
-		ChSharedPtr<ChBody> truss = ChSharedPtr<ChBody>(new ChBody);
+
+		link_prismatic = ChSharedPtr<ChLinkLockPrismatic>(new ChLinkLockPrismatic);
+		link_prismatic->Initialize(bucket, truss, false, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
+		mphysicalSystem.AddLink(link_prismatic);
+		pris_engine = ChSharedPtr<ChLinkLinActuator>(new ChLinkLinActuator);
+		pris_engine->Initialize(bucket, truss, false, ChCoordsys<>(VNULL, QUNIT), ChCoordsys<>(VNULL, QUNIT));
+		sinefunc->Set_amp(vibAmp);
+		sinefunc->Set_w(omega_bucket);
+		sinefunc->Set_phase(-omega_bucket*vibrateStart);
+		pris_engine->Set_dist_funct(sinefunc);
+
+		pris_engine->SetDisabled(true);
+		mphysicalSystem.AddLink(pris_engine);
+		break;
+
+	}
+	case KNOBCYLINDER:
+	{		
 		truss->SetBodyFixed(true);
 		truss->GetCollisionModel()->ClearModel();
 		utils::AddCylinderGeometry(truss.get_ptr(), t2_smarticle/2, bucket_interior_halfDim.z*1, bucket_ctr+ChVector<>(0,0,bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI_2,0,0)), true);
@@ -1762,14 +1788,14 @@ int main(int argc, char* argv[]) {
 			else
 			{
 				rad = t_smarticle*mult / 1.5;
-				knobRad = t2_smarticle / mult;
+				knobRad = t2_smarticle / mult/1.4;
 
 			}
 			//if you change z height between spheres, you must change sphereStickHeight above!
 			utils::AddSphereGeometry(knobstick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, sphereStickHeight / sphereNum * (i)), QUNIT, true);
 			sphereStick.emplace_back(knobstick);
 		}
-			unsigned int kpr = 4;//knobs per row
+			unsigned int kpr = 5;//knobs per row
 			unsigned int rows = 15; //knob per z
 			double ang = 2 * PI / kpr;
 			double hp = (sphereStickHeight - 2 * rad) / rows;//height between rows
@@ -1778,7 +1804,7 @@ int main(int argc, char* argv[]) {
 			{
 				for (size_t col = 0; col < kpr; col++)
 				{
-					utils::AddSphereGeometry(knobstick.get_ptr(), knobRad, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*row), QUNIT, true);
+					utils::AddSphereGeometry(knobstick.get_ptr(), knobRad, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*(row+1)), QUNIT, true);
 					sphereStick.emplace_back(knobstick);
 				}
 			}
@@ -1792,11 +1818,23 @@ int main(int argc, char* argv[]) {
 	
 		
 		//ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
+
+		double knobAmp = PI_2;
+		double knobW = PI;
+		double knobPhase = -knobW*vibrateStart;
+		//knobcylinderfunc->Set_amp(knobAmp);
+		//knobcylinderfunc->Set_w(knobW);
+		//knobcylinderfunc->Set_phase(knobPhase);
+
+
+
 		link_engine->Initialize(knobstick, truss,
 			ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));
 		link_engine->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_LOCK); // also works as revolute support
-		link_engine->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-		link_engine->Set_rot_funct(knobcylinderfunc);
+		link_engine->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+		//link_engine->Set_rot_funct(knobcylinderfunc);
+		ChSharedPtr<ChFunction_Const> mfun2 = link_engine->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
+		mfun2->Set_yconst(knobW);
 		link_engine->SetDisabled(true);
 		mphysicalSystem.AddLink(link_engine);
 		
@@ -1857,47 +1895,11 @@ int main(int argc, char* argv[]) {
 			case HOOKRAISE: //case STRESSSTICK:
 			{
 
-				//for (size_t i = 0; i < sphereStick.size(); i++)
-				//{
-				//	sphereStick.at(i)->SetBodyFixed(false);
-				//	sphereStick.at(i)->SetPos(ChVector<>(0, 0, sphereStick.at(i)->GetPos().z));
-				//	sphereStick.at(i)->SetPos_dt(ChVector<>(0, 0, .125*sizeScale));
-				//}
-
-				if (hook_engine->IsDisabled())
+				if (pris_engine->IsDisabled())
 				{
 					stick->SetBodyFixed(false);
-					hook_engine->SetDisabled(false);
+					pris_engine->SetDisabled(false);
 				}
-
-				break;
-				//vibrate bucket before doing lifting stick
-				//if (t < vibrateStart + .75)
-				//{
-				//	for (size_t i = 0; i < bucket_bod_vec.size(); i++)
-				//	{
-				//		bucket_bod_vec.at(i)->SetBodyFixed(false);
-				//		vibrate_bucket(t, bucket_bod_vec.at(i));
-				//	}
-				//	bucket_bott->SetBodyFixed(false);
-				//	vibrate_bucket(t, bucket_bott);
-				//	for (size_t i = 0; i < sphereStick.size(); i++)
-				//	{
-				//		sphereStick.at(i)->SetBodyFixed(false);
-				//		vibrate_bucket(t,sphereStick.at(i));
-				//	}
-				//}
-				//if (t > vibrateStart + .75)
-				//{
-
-				//for (size_t i = 0; i < bucket_bod_vec.size(); i++)
-				//{
-				//	bucket_bod_vec.at(i)->SetBodyFixed(true);
-				//	vibrate_bucket(t, bucket_bod_vec.at(i));
-				//}
-				//bucket_bott->SetBodyFixed(true);
-
-				//}
 
 				break;
 			}
@@ -1925,7 +1927,8 @@ int main(int argc, char* argv[]) {
 			}
 			case HOPPER:
 			{
-				vibrate_bucket(t);
+				bucket->SetBodyFixed(false);
+				pris_engine->SetDisabled(false);
 				break;
 			}
 			default:
