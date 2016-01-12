@@ -1,13 +1,15 @@
 #include "IrrGui.h"
 #include <stdlib.h>  // system, rand, srand, RAND_MAX
 
-using namespace irr;
-using namespace core;
-using namespace scene;
-using namespace video;
-using namespace io;
-using namespace gui;
 using namespace chrono;
+using namespace chrono::irrlicht;
+using namespace irr;
+using namespace irr::core;
+using namespace irr::scene;
+using namespace irr::video;
+using namespace irr::io;
+using namespace irr::gui;
+
 
 IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 

@@ -62,13 +62,15 @@
 //#include <irrlicht.h>
 #include "assets/ChTexture.h"
 
-
+using namespace chrono;
+using namespace chrono::irrlicht;
 using namespace irr;
-using namespace core;
-using namespace scene;
-using namespace video;
-using namespace io;
-using namespace gui;
+
+using namespace irr::core;
+using namespace irr::scene;
+using namespace irr::video;
+using namespace irr::io;
+using namespace irr::gui;
 #endif
 
 
@@ -77,7 +79,7 @@ using namespace gui;
 #include "chrono_opengl/ChOpenGLWindow.h"
 #endif
 
-using namespace chrono;
+
 
 //#define GLEW_STATIC
 //#include <GL/glew.h>
@@ -1545,7 +1547,7 @@ int main(int argc, char* argv[]) {
 		core::vector3df(0, 0, bucket_rad / 2.1)*sizeScale,
 		core::vector3df(0, -2.3*bucket_rad + bucket_rad, bucket_rad / 2.0)*sizeScale);
 
-	scene::RTSCamera* camera = new scene::RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
+	RTSCamera* camera = new RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
 	camera->setUpVector(core::vector3df(0, 0, 1));
 //camera->setPosition(core::vector3df(0, -.17, .07));
