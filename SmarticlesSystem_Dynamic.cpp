@@ -147,7 +147,6 @@ double gaitChangeLengthTime = .5;
 ////////////////rescaled robot geometry (3.93) based on w_smarticle scaling
 ////////////////robot dim is l/w =1, w=.046 t=.031 t2=.021
 #if stapleSize
-	double bucket_rad = sizeScale*0.025;
 	double w_smarticle = sizeScale * 0.0117;
 	double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 	double t_smarticle = sizeScale * .00127;
@@ -1792,12 +1791,12 @@ int main(int argc, char* argv[]) {
 			if (stapleSize)
 			{
 				rad = t_smarticle*mult;
-				knobRad = t2_smarticle;
+				knobRad = t_smarticle*2;
 			}
 			else
 			{
 				rad = t_smarticle*mult / 2;
-				knobRad = t2_smarticle / mult/1.4;
+				knobRad = t_smarticle;
 
 			}
 			//if you change z height between spheres, you must change sphereStickHeight above!
@@ -1815,7 +1814,7 @@ int main(int argc, char* argv[]) {
 				{
 					double theta = col*ang +row*pOffset;
 					//utils::AddSphereGeometry(knobstick.get_ptr(), knobRad, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*(row + 1)), Angle_to_Quat(col*ang + row*pOffset, VECT_Y), true);
-					utils::AddBoxGeometry(knobstick.get_ptr(), ChVector<>(rad / 1.5, rad / 4, rad / 8), bucket_ctr + ChVector<>(rad*cos(theta), rad*sin(theta), hp*(row + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, theta+row%2*PI_2)), true);
+					utils::AddBoxGeometry(knobstick.get_ptr(), ChVector<>(knobRad*1.5, rad / 4, rad / 8), bucket_ctr + ChVector<>(rad*cos(theta), rad*sin(theta), hp*(row + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, theta + row % 2 * PI_2)), true);
 					sphereStick.emplace_back(knobstick);
 				}
 			}
@@ -2007,6 +2006,7 @@ int main(int argc, char* argv[]) {
 			{
 				//application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
 				//application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
+				application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
 			}
 			
 			//application.AssetBindAll();  //uncomment to visualize vol frac boxes

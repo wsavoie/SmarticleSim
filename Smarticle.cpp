@@ -1096,23 +1096,28 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 	double moveAmt = 2*D2R; //2 degrees
 	if (abs(torque01) > TT2)
 	{
-		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 		//this->setCurrentMoveType(OT);
 		//mv = &ot;
 		if (!arm0OT)//if not previously OT
 		{
+			arm0OT = true;
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
+
 			this->ot.clear();
 			//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
 		}
-		arm0OT = true;
 		//nothing needs to be done if prev OT
 	}
 	else
 	{
-		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-		arm0OT = false;
+		if (arm0OT) //it prev OT but currently not
+		{
+			arm0OT = false;
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+
+		}
 		// nothing needs to be done if not prev OT
 	}
 
@@ -1120,11 +1125,13 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 	/////////////////////ARM2///////////////////////
 	if (abs(torque12) > TT2)
 	{
-		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 		//this->setCurrentMoveType(OT);
 		//mv = &ot;
 		if (!arm2OT)//if not previously OT
 		{
+			arm2OT = true;
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
+
 			this->ot.clear();
 			//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
@@ -1135,8 +1142,12 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 	}
 	else
 	{
-		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-		arm2OT = false;
+		if (arm2OT) //it prev OT but currently not
+		{
+			arm2OT = false;
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+
+		}
 		// nothing needs to be done if not prev OT
 	}
 }
