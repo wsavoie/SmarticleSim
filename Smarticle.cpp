@@ -341,24 +341,18 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	
 	if (visualize)
 	{
-		arm0_texture = ChSharedPtr<ChTexture>(new ChTexture());
-		arm1_texture = ChSharedPtr<ChTexture>(new ChTexture());
-		arm2_texture = ChSharedPtr<ChTexture>(new ChTexture());
+		arm0_colorAsset = ChSharedPtr<ChColorAsset>(new ChColorAsset(0.5f, 0.5f, 0.5f));
+		arm1_colorAsset = ChSharedPtr<ChColorAsset>(new ChColorAsset(0, 0, 1));
+		arm2_colorAsset = ChSharedPtr<ChColorAsset>(new ChColorAsset(0.5f, 0.5f, 0.5f));
 		switch (armID) {
 		case 0:
-			arm0_texture = ChSharedPtr<ChTexture>(new ChTexture());
-			arm0_texture = mtextureArm;
-			arm->AddAsset(arm0_texture);
+			arm->AddAsset(arm0_colorAsset);
 			break;
 		case 1:
-			arm1_texture = ChSharedPtr<ChTexture>(new ChTexture());
-			arm1_texture = mtextureMid;
-			arm->AddAsset(arm1_texture);
+			arm->AddAsset(arm1_colorAsset);
 			break;
 		case 2:
-			arm2_texture = ChSharedPtr<ChTexture>(new ChTexture());
-			arm2_texture = mtextureArm;
-			arm->AddAsset(arm2_texture);
+			arm->AddAsset(arm2_colorAsset);
 			break;
 		default:
 			std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
@@ -429,24 +423,18 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 
 	if (visualize)
 	{
-		arm0_texture = ChSharedPtr<ChTexture>(new ChTexture());
-		arm1_texture = ChSharedPtr<ChTexture>(new ChTexture());
-		arm2_texture = ChSharedPtr<ChTexture>(new ChTexture());
+		arm0_colorAsset = ChSharedPtr<ChColorAsset>(new ChColorAsset(0.5f, 0.5f, 0.5f));
+		arm1_colorAsset = ChSharedPtr<ChColorAsset>(new ChColorAsset(0, 0, 1));
+		arm2_colorAsset = ChSharedPtr<ChColorAsset>(new ChColorAsset(0.5f, 0.5f, 0.5f));
 		switch (armID) {
 		case 0:
-			arm0_texture = ChSharedPtr<ChTexture>(new ChTexture());
-			arm0_texture = mtextureArm;
-			arm->AddAsset(arm0_texture);
+			arm->AddAsset(arm0_colorAsset);
 			break;
 		case 1:
-			arm1_texture = ChSharedPtr<ChTexture>(new ChTexture());
-			arm1_texture = mtextureMid;
-			arm->AddAsset(arm1_texture);
+			arm->AddAsset(arm1_colorAsset);
 			break;
 		case 2:
-			arm2_texture = ChSharedPtr<ChTexture>(new ChTexture());
-			arm2_texture = mtextureArm;
-			arm->AddAsset(arm2_texture);
+			arm->AddAsset(arm2_colorAsset);
 			break;
 		default:
 			std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
@@ -1102,7 +1090,7 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 	double moveAmt = 2*D2R; //2 degrees
 	if (abs(torque01) > TT2)
 	{
-		arm0_texture = mtextureOT;
+		arm0_colorAsset->SetColor(ChColor(1,0,0));
 		//this->setCurrentMoveType(OT);
 		//mv = &ot;
 		if (!arm0OT)//if not previously OT
@@ -1117,7 +1105,7 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 	}
 	else
 	{
-		arm0_texture = mtextureArm;
+		arm0_colorAsset->SetColor(ChColor(0.5,0.5,0.5));
 		arm0OT = false;
 		// nothing needs to be done if not prev OT
 	}
@@ -1126,7 +1114,7 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 	/////////////////////ARM2///////////////////////
 	if (abs(torque12) > TT2)
 	{
-		arm2_texture = mtextureOT;
+		arm2_colorAsset->SetColor(ChColor(1,0,0));
 		//this->setCurrentMoveType(OT);
 		//mv = &ot;
 		if (!arm2OT)//if not previously OT
@@ -1141,7 +1129,7 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 	}
 	else
 	{
-		arm2_texture = mtextureArm;
+		arm2_colorAsset->SetColor(ChColor(0.5,0.5,0.5));
 		arm2OT = false;
 		// nothing needs to be done if not prev OT
 	}
