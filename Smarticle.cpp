@@ -365,12 +365,24 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	switch (armID) {
 	case 0: {
 		arm0 = arm;
+		arm0_textureAsset = ChSharedPtr<ChTexture>(new ChTexture);
+		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+		arm0->AddAsset(arm0_textureAsset);
+
 	} break;
 	case 1: {
 		arm1 = arm;
+		arm1_textureAsset = ChSharedPtr<ChTexture>(new ChTexture);
+		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
+		arm1->AddAsset(arm1_textureAsset);
+
 	} break;
 	case 2: {
 		arm2 = arm;
+		arm2_textureAsset = ChSharedPtr<ChTexture>(new ChTexture);
+		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+		arm->AddAsset(arm2_textureAsset);
+
 	} break;
 	default:
 		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
@@ -434,12 +446,24 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	switch (armID) {
 	case 0: {
 		arm0 = arm;
+		arm0_textureAsset = ChSharedPtr<ChTexture>(new ChTexture());
+		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+		arm0->AddAsset(arm0_textureAsset);
+
 	} break;
 	case 1: {
 		arm1 = arm;
+		arm1_textureAsset = ChSharedPtr<ChTexture>(new ChTexture());
+		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
+		arm1->AddAsset(arm1_textureAsset);
+
 	} break;
 	case 2: {
 		arm2 = arm;
+		arm2_textureAsset = ChSharedPtr<ChTexture>(new ChTexture());
+		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+		arm2->AddAsset(arm2_textureAsset);
+
 	} break;
 	default:
 		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
@@ -1069,7 +1093,8 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 		if (!arm0OT)//if not previously OT
 		{
 			arm0OT = true;
-			arm0->AddAsset(mtextureOT);
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
+
 			this->ot.clear();
 			//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
@@ -1082,7 +1107,8 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 		if (arm0OT) //it prev OT but currently not
 		{
 			arm0OT = false;
-			arm0->GetAssets().pop_back();
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+
 		}
 		// nothing needs to be done if not prev OT
 	}
@@ -1096,7 +1122,7 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 		if (!arm2OT)//if not previously OT
 		{
 			arm2OT = true;
-			arm2->AddAsset(mtextureOT);
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 			this->ot.clear();
 			//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
@@ -1109,7 +1135,8 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 		if (arm2OT) //it prev OT but currently not
 		{
 			arm2OT = false;
-			arm2->GetAssets().pop_back();
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+
 		}
 		// nothing needs to be done if not prev OT
 	}
