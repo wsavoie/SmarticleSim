@@ -73,10 +73,10 @@ double ChFunctionController::ComputeOutput(double t) {
 	double omErrCond = omLim*dT * 4;
 	bool cond = (abs(error) > omErrCond); //1 if error is less than 4 omegaLimit timesteps
 	curr_omeg = controller_->GetActuatorOmega(index_, t);
-	des_omeg = std::min(abs(curr_omeg + sgn(error)*omLim / 4), omLim*cond)*sgn(error);
+	//des_omeg = std::min(abs(curr_omeg + sgn(error)*omLim / 4), omLim*cond)*sgn(error);
 	//des_omeg = std::min(abs(curr_omeg + sgn(error)*omLim / 4), omLim)*sgn(error);
 
-	//des_omeg = omLim*cond*sgn(error);
+	des_omeg = omLim*cond*sgn(error);
 	if (abs(curr_ang) < omErrCond*2 || !cond)
 	{
 		deadBandActivate = false;
@@ -124,7 +124,7 @@ double ChFunctionController::ComputeOutput(double t) {
 	double output2 = pTerm + iTerm + dTerm;
 	
 	double output3 = output + output2*deadBandActivate;
-	GetLog() << "1: " << output << " \t2: " << output2 << "\t3: " << output3 << "\tom: " << curr_omeg << "\n";
+	//GetLog() << "1: " << output << " \t2: " << output2 << "\t3: " << output3 << "\tom: " << curr_omeg << "\n";
 	//////////////////
 
 

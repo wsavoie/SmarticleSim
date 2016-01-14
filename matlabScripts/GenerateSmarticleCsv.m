@@ -24,7 +24,7 @@ dt=.00025;
 sizeScale=5;
 % omega = 4.9244e-5;
 omegaLim = 8; %%limit speed in sim
-omega = 12; %distance between points in move list
+omega = 8; %distance between points in move list
 % omega = 10;
 rho = 7850.0;%/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
@@ -49,7 +49,7 @@ end
 volume =  t2 * t* (w_s + 2 * (l_s));
 mass = volume*rho;
 % torqueThresh=.001; %.008cd 
-torqueThresh=1.25*9.8*mass*w_s;%.00005;  4.6657e-04
+torqueThresh=2*9.8*mass*w_s;%.00005;  4.6657e-04
 angLow=60;
 angHigh=120;
 
@@ -61,8 +61,15 @@ midt_gait = 2;
 torqueThresh
 PON= 1;
 
+user=getenv('username');
+if user=='root'
+    directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
+    pts('asdfad');
+else
+  directory_name = uigetdir('D:\GT Coursework\smarticledata'); 
+  pts('didnt work');
+end
 
-directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 fileloc = horzcat(directory_name,'\','smarticleMoves.csv');
 fid = fopen(fileloc,'wt');
 %add in all initial values to top of file
@@ -278,8 +285,8 @@ for i=1:guiSize
                 GUI_theta_1Pos = [-pi/2];
                 GUI_theta_2Pos = [-pi/2];
                 case 3
-                GUI_theta_1Pos = [3*pi/2];
-                GUI_theta_2Pos = [3*pi/2];
+                GUI_theta_1Pos = [pi];
+                GUI_theta_2Pos = [pi];
             end
     end
     

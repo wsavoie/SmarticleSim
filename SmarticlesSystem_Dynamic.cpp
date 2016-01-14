@@ -105,7 +105,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = KNOBCYLINDER;
+BucketType bucketType = HOOKRAISE;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -113,7 +113,7 @@ ChSharedPtr<ChBody> bucket_bott;
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
-double sizeScale = 1;
+double sizeScale = 5;
 int appWidth = 1280;
 int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
@@ -130,7 +130,7 @@ unsigned int largeID = 10000000;
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
 double tFinal = 6;
-double vibrateStart= 3;
+double vibrateStart= 1.5;
 
 double rho_smarticle = 7850.0;
 double rho_cylinder = 1180.0;
@@ -191,6 +191,7 @@ int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
 int numPerLayer = 4;
+bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surface
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 //double bucket_rad = sizeScale*0.034;
@@ -233,15 +234,27 @@ public:
 };
 class ChFunctionCustom : public ChFunction{
 public:
-	ChFunctionCustom(){y, y_dx, y_dxdx = 0;}
+	ChFunctionCustom(){ y = 0; y_dx = 0; y_dxdx = 0; }
 	virtual ~ChFunctionCustom(){};
-	virtual ChFunction *new_Duplicate() {return 0;}
+	void Copy(ChFunction* source) {
+		Set_y(source->Get_y(0));
+		Set_y_dx(source->Get_y_dx(0));
+		Set_y_dxdx(source->Get_y_dxdx(0));
+	}
+	virtual ChFunction* new_Duplicate() {
+		ChFunctionCustom* m_func;
+		m_func = new ChFunctionCustom;
+		m_func->Copy(this);
+		return (m_func);
+	}
+	virtual int Get_Type() { return 1; }
 	void Set_y(double x){ y = x; }
-	void Set_y_dx(double x){y_dx = x;}
+	void Set_y_dx(double x){ y_dx = x; }
 	void Set_y_dxdx(double x){ y_dxdx = x; }
 	virtual double Get_y(double x) {return y;}
 	virtual double Get_y_dx(double x) {return y_dx;}
 	virtual double Get_y_dxdx(double x) { return y_dxdx; }
+
 private:
 	double y;
 	double y_dx;
@@ -422,7 +435,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
 #endif
 	
-	bool placeInMiddle = false; // if I want make a single smarticle on bottom surface
+
 	ChVector<> dropSpeed = VNULL;
 	ChQuaternion<> myRot = QUNIT;
 	double z;
@@ -458,7 +471,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			}
 			else////////////place in center of bucket on bucket bottom
 			{
-				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*1.88,bucket_bott->GetPos().z + t_smarticle / 2);
+				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*2.2,bucket_bott->GetPos().z + t_smarticle / 2);
 				dropSpeed = VNULL;
 				myRot = Q_from_AngAxis(PI_2, VECT_X);
 			}
@@ -1478,8 +1491,16 @@ int main(int argc, char* argv[]) {
 	//ChTimerParallel step_timer;
 	Smarticle::global_GUI_value = 1;
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
+
+
 #if defined(_WIN64)
-	std::string fp = "D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\";
+	char* pPath = getenv("USERNAME");
+	GetLog()<<pPath;
+	std::string fp;
+	if(strcmp(pPath,"root")==0)
+		fp = "D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\";
+	else
+		fp = "D:\\GT Coursework\\smarticles\\data\\";
 	//fp = __FILE__+fp;
 	SetChronoDataPath(fp);
 #else
@@ -1616,6 +1637,7 @@ int main(int argc, char* argv[]) {
 	ChSharedPtr<ChBody> truss = ChSharedPtr<ChBody>(new ChBody);
 	ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
 	ChSharedPtr<ChFunction_Sine> sinefunc(new ChFunction_Sine());
+	ChSharedPtr<ChFunction_Const> func2(new ChFunction_Const());
 	ChSharedPtr<ChFunction_Const> knobcylinderfunc(new ChFunction_Const());
 	ChSharedPtr<ChFunctionCustom> func(new ChFunctionCustom());
 	ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);
@@ -1641,8 +1663,7 @@ int main(int argc, char* argv[]) {
 
 
 		double mult = 4.0;
-		if (bucketType == HOOKRAISE)
-			mult = 1/2.0;
+		
 		if (stapleSize)
 		{
 			rad = t_smarticle*mult/10.0;
@@ -1653,7 +1674,10 @@ int main(int argc, char* argv[]) {
 		}
 
 		double stickLen = bucket_interior_halfDim.z*1.5;
+
 		int sphereNum = stickLen / (t_smarticle / 2);
+		if (bucketType==STRESSSTICK)
+			sphereNum = stickLen / (2*rad);
 
 		//double sphereStickHeight = t_smarticle*mult / 2.0 * (sphereNum + 1); //shouldnt need extra 2*rad offset because of how z is defined using i below
 		for (size_t i = 0; i < sphereNum; i++)
@@ -1673,7 +1697,7 @@ int main(int argc, char* argv[]) {
 		if (bucketType == HOOKRAISE)
 		{
 			int hookNum;
-			hookNum = 8 - stapleSize * 4;
+			hookNum = 8 - stapleSize * 2;
 
 			for (size_t i = 0; i < hookNum; i++)
 			{
@@ -1714,7 +1738,7 @@ int main(int argc, char* argv[]) {
 		mphysicalSystem.AddBody(truss);
 
 		link_prismatic = ChSharedPtr<ChLinkLockPrismatic>(new ChLinkLockPrismatic);
-		link_prismatic->Initialize(stick, truss, false, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
+		link_prismatic->Initialize(stick, truss, true, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
 		mphysicalSystem.AddLink(link_prismatic);
 		
 
@@ -1722,10 +1746,15 @@ int main(int argc, char* argv[]) {
 		pris_engine->Initialize(stick, truss, true, ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
 		
 		
-		func->Set_y(-stickLen);
-		func->Set_y_dx(-.001);
-		//func->Set_y_dx(0);
+
+
+		GetLog() << "StickLen:" << stickLen;
+
+		//func = pris_engine->Get_dist_funct().DynamicCastTo<ChFunctionCustom>();
+		func->Set_y(0);
+		func->Set_y_dx(2.5-.5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
 		pris_engine->Set_dist_funct(func);
+
 
 		pris_engine->SetDisabled(true);
 		mphysicalSystem.AddLink(pris_engine);
@@ -1915,8 +1944,11 @@ int main(int argc, char* argv[]) {
 				{
 					stick->SetBodyFixed(false);
 					pris_engine->SetDisabled(false);
+				
 				}
-
+				pris_engine->GetDist_dt();
+				//pris_engine->GetRelC_dt()
+				//GetLog() << pris_engine->GetDist_dt() << "\n";
 				break;
 			}
 			case KNOBCYLINDER:
