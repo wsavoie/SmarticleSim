@@ -149,6 +149,7 @@ double gaitChangeLengthTime = .5;
 ////////////////rescaled robot geometry (3.93) based on w_smarticle scaling
 ////////////////robot dim is l/w =1, w=.046 t=.031 t2=.021
 #if stapleSize
+	double bucket_rad = sizeScale*0.02;
 	double w_smarticle = sizeScale * 0.0117;
 	double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 	double t_smarticle = sizeScale * .00127;
@@ -1644,7 +1645,7 @@ int main(int argc, char* argv[]) {
 			mult = 1/2.0;
 		if (stapleSize)
 		{
-			rad = t_smarticle*mult;
+			rad = t_smarticle*mult/10.0;
 		}
 		else
 		{
@@ -1652,7 +1653,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		double stickLen = bucket_interior_halfDim.z*1.5;
-		int sphereNum = stickLen / (rad);
+		int sphereNum = stickLen / (t_smarticle / 2);
 
 		//double sphereStickHeight = t_smarticle*mult / 2.0 * (sphereNum + 1); //shouldnt need extra 2*rad offset because of how z is defined using i below
 		for (size_t i = 0; i < sphereNum; i++)
@@ -1664,7 +1665,7 @@ int main(int argc, char* argv[]) {
 			//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle/2.0, bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
 		
 			//if you change z height between spheres, you must change sphereStickHeight above!
-			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i+1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, PI)), true);
+			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, PI)), true);
 			sphereStick.emplace_back(stick);
 		
 			
@@ -1718,9 +1719,12 @@ int main(int argc, char* argv[]) {
 		
 
 		pris_engine = ChSharedPtr<ChLinkLinActuator>(new ChLinkLinActuator);
-		pris_engine->Initialize(stick, truss, false, ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
+		pris_engine->Initialize(stick, truss, true, ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
+		
+		
 		func->Set_y(-stickLen);
-		func->Set_y_dx(-.0001);
+		func->Set_y_dx(-.001);
+		//func->Set_y_dx(0);
 		pris_engine->Set_dist_funct(func);
 
 		pris_engine->SetDisabled(true);
@@ -1904,7 +1908,7 @@ int main(int argc, char* argv[]) {
 		{
 			switch (bucketType)
 			{
-			case HOOKRAISE: //case STRESSSTICK:
+			case HOOKRAISE: case STRESSSTICK:
 			{
 
 				if (pris_engine->IsDisabled())
@@ -2006,9 +2010,8 @@ int main(int argc, char* argv[]) {
 
 			for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
 			{
-				//application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
-				//application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
 				application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
+				application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
 			}
 			
 			//application.AssetBindAll();  //uncomment to visualize vol frac boxes

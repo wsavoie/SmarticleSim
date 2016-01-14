@@ -19,14 +19,14 @@
 %running curr- 100mA
 %Kt = T/I, .008/.27 = .0296 Nm/A
 %J
-stapleSize = false;
+stapleSize = true;
 dt=.00025;
-sizeScale=1;
+sizeScale=5;
 % omega = 4.9244e-5;
 omegaLim = 8; %%limit speed in sim
-omega = 8; %distance between points in move list
+omega = 12; %distance between points in move list
 % omega = 10;
-rho = 7850.0/(sizeScale^3);
+rho = 7850.0;%/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 if stapleSize
     t   = .00127*sizeScale;
@@ -58,7 +58,7 @@ gui1_gait = 1;
 gui2_gait = 1;
 gui3_gait = 2;
 midt_gait = 2;
-
+torqueThresh
 PON= 1;
 
 
@@ -175,9 +175,9 @@ switch global_gait
         clf;
         hold on;
         axis([-1.25*pi/2,1.25*pi/2,-1.25*pi/2,1.25*pi/2]);
-        imr=imread('C:\Users\root\Desktop\geom\tgran.PNG');
-        im2=imagesc(imr);
-        image(linspace(-1.25*pi/2,1.25*pi/2,im2.XData(2)),linspace(1.25*pi/2,-1.25*pi/2,im2.YData(2)),imr)
+%         imr=imread('C:\Users\root\Desktop\geom\tgran.PNG');
+%         im2=imagesc(imr);
+%         image(linspace(-1.25*pi/2,1.25*pi/2,im2.XData(2)),linspace(1.25*pi/2,-1.25*pi/2,im2.YData(2)),imr)
         
         
         
@@ -274,9 +274,12 @@ for i=1:guiSize
                 case 1
                     GUI_theta_1Pos = [pi/2];
                     GUI_theta_2Pos = [-pi/2];
-                 case 2
+                case 2
                 GUI_theta_1Pos = [-pi/2];
                 GUI_theta_2Pos = [-pi/2];
+                case 3
+                GUI_theta_1Pos = [3*pi/2];
+                GUI_theta_2Pos = [3*pi/2];
             end
     end
     
