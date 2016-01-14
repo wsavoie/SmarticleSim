@@ -62,12 +62,10 @@ torqueThresh
 PON= 1;
 
 user=getenv('username');
-if user=='root'
+if strcmp(user,'root')
     directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
-    pts('asdfad');
 else
-  directory_name = uigetdir('D:\GT Coursework\smarticledata'); 
-  pts('didnt work');
+    directory_name = uigetdir('D:\GT Coursework\smarticledata'); 
 end
 
 fileloc = horzcat(directory_name,'\','smarticleMoves.csv');
