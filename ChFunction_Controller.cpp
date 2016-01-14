@@ -27,9 +27,14 @@ double ChFunctionController::Get_y(double t) {
 }
 
 double ChFunctionController::ComputeOutput(double t) {
-	double p = p_gain;
-	double i = i_gain;
-	double d = d_gain;
+	double	divScale = 1;
+	if (stapleSize)
+	{
+		divScale = 24; //(mass of servosize/mass of stapleSize with sizescale=5)
+	}
+	double p = p_gain / divScale;
+	double i = i_gain / divScale;
+	double d = d_gain / divScale;
 
 	double curr_ang = controller_->GetAngle(index_, t);
 	double exp_ang = controller_->GetExpAngle(index_, t);
@@ -60,13 +65,31 @@ double ChFunctionController::ComputeOutput(double t) {
 	//Speed control
 	double curr_omeg;
 	double des_omeg;
+	double omError;
+	double prevOmError;
 
+	bool deadBandActivate = true;
 	double omLim = controller_->omegaLimit;
-	double omErrCond = omLim*dT * 3;
-	int cond = (abs(error) > omErrCond);
+	double omErrCond = omLim*dT * 4;
+	bool cond = (abs(error) > omErrCond); //1 if error is less than 4 omegaLimit timesteps
 	curr_omeg = controller_->GetActuatorOmega(index_, t);
-	des_omeg = omLim*cond*sgn(error);
+	des_omeg = std::min(abs(curr_omeg + sgn(error)*omLim / 4), omLim*cond)*sgn(error);
+	//des_omeg = std::min(abs(curr_omeg + sgn(error)*omLim / 4), omLim)*sgn(error);
+
+	//des_omeg = omLim*cond*sgn(error);
+	if (abs(curr_ang) < omErrCond*2 || !cond)
+	{
+		deadBandActivate = false;
+	}
+
+	omError = des_omeg - curr_omeg;
+	prevOmError = controller_->prevOmegError_.at(index_);
+	controller_->cumOmegError_.at(index_) += (omError)*dT;
+	controller_->prevOmegError_.at(index_) = omError;
 	
+	
+
+	//des_omeg = (std::min(omLim, abs))*cond*sgn(error);
 	//if (cond)
 	//{
 	//	curr_omeg = controller_->GetActuatorOmega(index_, t);
@@ -78,25 +101,30 @@ double ChFunctionController::ComputeOutput(double t) {
 	//	des_omeg = 0;
 	//}
 
-	double omError = des_omeg - curr_omeg;
-	double prevOmError = controller_->prevOmegError_.at(index_);
-	controller_->cumOmegError_.at(index_) += (omError)*dT;
-	controller_->prevOmegError_.at(index_) = omError;
-	
-	double pTerm = p*dT*omLim*omError;
-	double iTerm = i*dT*omLim*controller_->cumOmegError_.at(index_);
-	double dTerm = d*dT*omLim*(omError - prevOmError / dT);
-	double dTerm2 = d*dT*omLim*((omError - prevOmError) / dT);
-	//double output2 = 100 * p*dT*omLim*omError;  ///TODO magic number 100?
-	double output2 = 50 * p*dT*omLim*omError//;  ///TODO magic number 100?
-										//+ 1/5* d*dT*omLim*((omError - prevOmError) / dT);
-										+ 50*i*dT*omLim*controller_->cumOmegError_.at(index_);
-	//GetLog() << "output" << output << "\toutput2" << output2;
 
 	
+	//double pTerm = p*dT*omLim*omError;
+	//double iTerm = i*dT*omLim*controller_->cumOmegError_.at(index_);
+	//double dTerm = d*dT*omLim*(omError - prevOmError / dT);
+	//double dTerm2 = d*dT*omLim*((omError - prevOmError) / dT);
+
+
+	double pTerm = 18/divScale*omLim*dT*omError;
+	double iTerm = .0024/divScale*controller_->cumOmegError_.at(index_);
+	double dTerm = 0.0013/divScale*omLim*dT*((omError - prevOmError) / dT);
+	//double dTerm = .01 * dT*(omError - prevOmError / dT);
+
+	//.00015
+	//double output2 = 100 * p*dT*omLim*omError;  ///TODO magic number 100?
+	//double output2 = 1 * p*dT*omLim*omError;//;  ///TODO magic number 100?
+										//+ 1/5* d*dT*omLim*((omError - prevOmError) / dT);
+										//+ 50*i*dT*omLim*controller_->cumOmegError_.at(index_);
+	//GetLog() << "output" << output << "\toutput2" << output2;
+
+	double output2 = pTerm + iTerm + dTerm;
 	
-	double output3 = output+output2;
-	//GetLog() << "1: " << output << " \t2: " << output2 << "\t3: " << output3 << "\tom: " << curr_omeg<<"\n";
+	double output3 = output + output2*deadBandActivate;
+	GetLog() << "1: " << output << " \t2: " << output2 << "\t3: " << output3 << "\tom: " << curr_omeg << "\n";
 	//////////////////
 
 

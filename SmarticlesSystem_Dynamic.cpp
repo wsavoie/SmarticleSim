@@ -130,10 +130,12 @@ unsigned int largeID = 10000000;
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
 double tFinal = 6;
-double vibrateStart= .2;
+double vibrateStart= 3;
 
-double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
-double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
+double rho_smarticle = 7850.0;
+double rho_cylinder = 1180.0;
+//double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
+//double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
 ChSharedPtr<ChMaterialSurface> mat_g;
 int numLayers = 100;
 double armAngle = 90;
