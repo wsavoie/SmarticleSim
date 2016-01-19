@@ -81,7 +81,7 @@ double ChFunctionController::ComputeOutput(double t) {
 	{
 		deadBandActivate = false;
 	}
-
+	//deadBandActivate = true;
 	omError = des_omeg - curr_omeg;
 	prevOmError = controller_->prevOmegError_.at(index_);
 	controller_->cumOmegError_.at(index_) += (omError)*dT;
@@ -109,8 +109,8 @@ double ChFunctionController::ComputeOutput(double t) {
 	//double dTerm2 = d*dT*omLim*((omError - prevOmError) / dT);
 
 
-	double pTerm = 18/divScale*omLim*dT*omError;
-	double iTerm = .0024/divScale*controller_->cumOmegError_.at(index_);
+	double pTerm = 25/divScale*omLim*dT*omError; //20
+	double iTerm = .75/divScale*controller_->cumOmegError_.at(index_);
 	double dTerm = 0.0013/divScale*omLim*dT*((omError - prevOmError) / dT);
 	//double dTerm = .01 * dT*(omError - prevOmError / dT);
 
@@ -121,10 +121,10 @@ double ChFunctionController::ComputeOutput(double t) {
 										//+ 50*i*dT*omLim*controller_->cumOmegError_.at(index_);
 	//GetLog() << "output" << output << "\toutput2" << output2;
 
-	double output2 = pTerm + iTerm + dTerm;
+	double output2 = pTerm + dTerm +iTerm;
 	
 	double output3 = output + output2*deadBandActivate;
-	//GetLog() << "1: " << output << " \t2: " << output2 << "\t3: " << output3 << "\tom: " << curr_omeg << "\n";
+	// GetLog() << "1: " << omError << " \t2: " << output2 << "\t3: " << curr_omeg << "\tom: " << curr_omeg << "\n";
 	//////////////////
 
 

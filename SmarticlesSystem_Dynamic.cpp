@@ -105,7 +105,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = HOOKRAISE;
+BucketType bucketType = STRESSSTICK;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -1468,11 +1468,14 @@ bool SetGait(double time)
 	//else
 	//	break;
 
-	//if (time < .5)
-	//	Smarticle::global_GUI_value = 0;
-	//else if (time > .5 && time < 1)
-	//	Smarticle::global_GUI_value = 0;
-
+	if (time <= .9)
+		Smarticle::global_GUI_value = 1;
+	else if (time > .9 && time <= 1.5)
+		Smarticle::global_GUI_value = 2;
+	else if (time > 1.5 && time <= 5)
+		Smarticle::global_GUI_value = 1;
+	else if (time > 5)
+		return true;
 
 
 	//else if (time > 1 && time < 3)
@@ -1825,7 +1828,7 @@ int main(int argc, char* argv[]) {
 			
 			if (stapleSize)
 			{
-				rad = t_smarticle*mult;
+				rad = t_smarticle*mult*1.5;
 				knobRad = t_smarticle*2;
 			}
 			else
