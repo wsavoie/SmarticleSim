@@ -129,7 +129,7 @@ unsigned int largeID = 10000000;
 //double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
-double tFinal = 6;
+double tFinal = 100;
 double vibrateStart= 1.5;
 
 double rho_smarticle = 7850.0;
@@ -190,7 +190,7 @@ bool povray_output = false;
 int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-int numPerLayer = 4;
+int numPerLayer = 8;
 bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surface
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
@@ -485,10 +485,18 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand()),
 				zpos);
 			break;
+		case BOX:
+			myPos = bucket_ctr + ChVector<>((2*MyRand()-1)*.9*bucket_interior_halfDim.x,
+				(2*MyRand()-1)*.9*bucket_interior_halfDim.y ,
+				bucket_interior_halfDim.z+w_smarticle);
+			myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
+			dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2 * w_smarticle / timeForDisp);
+			break;
 		default:
 			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand() - w / 2),
 				cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2.0),
 				zpos);
+			myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
 			break;
 		}
 			
@@ -948,8 +956,8 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		{
 		case BOX:
 			
-			dim.x = 1.5 * dim.x;
-			dim.y = 1.5 * dim.y;
+			dim.x = 1* dim.x;
+			dim.y = 1 * dim.y;
 			dim.z = dim.z / 4;
 			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, 
 				dim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
@@ -1468,14 +1476,16 @@ bool SetGait(double time)
 	//else
 	//	break;
 
-	if (time <= .9)
+	/*if (time <= 1.5)
 		Smarticle::global_GUI_value = 1;
-	else if (time > .9 && time <= 1.5)
+	else if (time > 1.5 && time <= 3.5)
 		Smarticle::global_GUI_value = 2;
-	else if (time > 1.5 && time <= 5)
+	else if (time > 3.5 && time <= 5.5)
 		Smarticle::global_GUI_value = 1;
-	else if (time > 5)
-		return true;
+	else if (time > 5.5 && time <= 7.5)
+		Smarticle::global_GUI_value = 0;
+	else if (time > 20)
+		return true;*/
 
 
 	//else if (time > 1 && time < 3)
@@ -1492,7 +1502,7 @@ int main(int argc, char* argv[]) {
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	//ChTimerParallel step_timer;
-	Smarticle::global_GUI_value = 1;
+	Smarticle::global_GUI_value = 2;
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 
 
@@ -1584,7 +1594,7 @@ int main(int argc, char* argv[]) {
 	// bind a simple user interface, etc. etc.)
 	ChIrrApp application(&mphysicalSystem, L"Dynamic Smarticles",
 		core::dimension2d<u32>(appWidth, appHeight), false, true);
-
+	////////////!@#$%^
 	// Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
 	ChIrrWizard::add_typical_Logo(application.GetDevice());
 	ChIrrWizard::add_typical_Sky(application.GetDevice());
@@ -2031,16 +2041,16 @@ int main(int argc, char* argv[]) {
 			if (!(application.GetDevice()->run())) break;
 			application.GetVideoDriver()->beginScene(true, true,
 				video::SColor(255, 140, 161, 192));
-			ChIrrTools::drawGrid(application.GetVideoDriver(), .01, .01, 150, 150,
-			ChCoordsys<>(ChVector<>(0,0, bucket_bott->GetPos().z*1.001),
-			Q_from_AngAxis(0, VECT_X)),
-			video::SColor(50, 0, 255,0), true);
+			//ChIrrTools::drawGrid(application.GetVideoDriver(), .01, .01, 150, 150,
+			//	ChCoordsys<>(ChVector<>(0,0, bucket_bott->GetPos().z*1.001),
+			//	Q_from_AngAxis(0, VECT_X)),
+			//	video::SColor(50, 0, 255,0), true);
 			//application.AssetBindAll();
 			//application.AssetUpdateAll();
 
 			//framerecord
 			
-			application.SetVideoframeSaveInterval(5);//only save every 2 frames
+			application.SetVideoframeSaveInterval(50);//only save every 2 frames
 			application.DrawAll();
 
 			for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
@@ -2071,6 +2081,15 @@ int main(int argc, char* argv[]) {
 			PrintStress(&mphysicalSystem, tStep, zmax,rad);
 		}
 		
+
+		//irr::core::vector2d<irr::s32> a;
+		//irr::core::rect<irr::s32> b;
+		//application.GetContainer()->updateAbsolutePosition();
+		//a.X = application.GetContainer()->getAbsolutePosition().X + appWidth;
+		//a.Y = application.GetContainer()->getAbsolutePosition().Y - appHeight;
+		//b.LowerRightCorner = a;
+
+		//application.GetVideoDriver()->setViewPort(b);
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
 
 	  time(&rawtimeCurrent);
