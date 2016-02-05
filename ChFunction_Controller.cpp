@@ -81,7 +81,7 @@ double ChFunctionController::ComputeOutput(double t) {
 	{
 		deadBandActivate = false;
 	}
-	//deadBandActivate = true;
+	deadBandActivate = true;
 	omError = des_omeg - curr_omeg;
 	prevOmError = controller_->prevOmegError_.at(index_);
 	controller_->cumOmegError_.at(index_) += (omError)*dT;
@@ -109,7 +109,7 @@ double ChFunctionController::ComputeOutput(double t) {
 	//double dTerm2 = d*dT*omLim*((omError - prevOmError) / dT);
 
 
-	double pTerm = 25/divScale*omLim*dT*omError; //20
+	double pTerm = 40/divScale*omLim*dT*omError; //20
 	double iTerm = .75/divScale*controller_->cumOmegError_.at(index_);
 	double dTerm = 0.0013/divScale*omLim*dT*((omError - prevOmError) / dT);
 	//double dTerm = .01 * dT*(omError - prevOmError / dT);

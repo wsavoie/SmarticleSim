@@ -105,7 +105,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = STRESSSTICK;
+BucketType bucketType = KNOBCYLINDER;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -129,7 +129,7 @@ unsigned int largeID = 10000000;
 //double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
-double tFinal = 6;
+double tFinal = 100;
 double vibrateStart= 1.5;
 
 double rho_smarticle = 7850.0;
@@ -150,7 +150,7 @@ double gaitChangeLengthTime = .5;
 ////////////////robot dim is l/w =1, w=.046 t=.031 t2=.021
 #if stapleSize
 	double bucket_rad = sizeScale*0.02;
-	double w_smarticle = sizeScale * 0.0117;
+	double w_smarticle = sizeScale * 0.0117; // sizeScale * 0.0117
 	double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 	double t_smarticle = sizeScale * .00127;
 	double t2_smarticle = sizeScale * .0005;
@@ -1468,13 +1468,13 @@ bool SetGait(double time)
 	//else
 	//	break;
 
-	if (time <= .9)
+	if (time <= 5)
 		Smarticle::global_GUI_value = 1;
-	else if (time > .9 && time <= 1.5)
+	/*else if (time > .9 && time <= 1.5)
 		Smarticle::global_GUI_value = 2;
 	else if (time > 1.5 && time <= 5)
-		Smarticle::global_GUI_value = 1;
-	else if (time > 5)
+		Smarticle::global_GUI_value = 1;*/
+	else /*if (time > 20)*/
 		return true;
 
 
@@ -1868,7 +1868,7 @@ int main(int argc, char* argv[]) {
 		//ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
 
 		double knobAmp = PI_2;
-		double knobW = PI;
+		double knobW = 0;//// rod rotating speed knobW = PI
 		double knobPhase = -knobW*vibrateStart;
 		//knobcylinderfunc->Set_amp(knobAmp);
 		//knobcylinderfunc->Set_w(knobW);

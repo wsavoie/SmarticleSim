@@ -1,8 +1,11 @@
-while 1
+filename = 'D:\GT Coursework\smarticledata\DifferentSize';
+[file,path,~]=uigetfile(filename);
+filename= horzcat(path,file);
+% while 1
 clf;
 %plot stress
 % filename = 'D:\SimResults\Chrono\SmarticleU\tests\s5\PostProcess\Stress.txt';
-filename = 'D:\SimResults\Chrono\SmarticleU\tests\PostProcess\Stress.txt';
+
 %stressdata
 sd=importdata(filename);
 time=sd(:,1);
@@ -54,9 +57,9 @@ Rad=plot(time,cylRad,'YDataSource','cylRad','LineWidth',4,'Color',Force.Color);
 xlabel('Time (s)');
 ylabel('bucket radius (m)');
 set(gca,'xlim',[0 time(end)]);
-figText(gcf,14);
+% figText(gcf,14);
 refreshdata(Force,'caller')
 refreshdata(Rad,'caller')
 drawnow
 set(gca,'XTickLabel',{'1','100'})
-end
+% end

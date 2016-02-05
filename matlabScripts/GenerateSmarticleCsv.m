@@ -20,7 +20,7 @@
 %Kt = T/I, .008/.27 = .0296 Nm/A
 %J
 stapleSize = true;
-dt=.00025;
+dt=.00006;
 sizeScale=5;
 % omega = 4.9244e-5;
 omegaLim = 8; %%limit speed in sim
