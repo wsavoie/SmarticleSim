@@ -37,16 +37,16 @@ echo "run vars!: $lw $dt $nl $re $pa"
 # echo ${lwArr[*]};
 # # $smartRunFile $lw $dt $nl $re $pa
 
-foldName=StressArmLwSweep
-lwArr=(0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1);
-dtArr=(0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025);
-nlArr=(40 40 40 40 40 40 40 40 40);
+foldName=ShengkaiForceVsLayer
+lwArr=(0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3);
+dtArr=(0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025);
+nlArr=(40 50 60 70 80 90 100 120 140 160 180 200);
 reArr=(0 0 0 0 0 0 0 0 0 0 0 0);
-paArr=(1 1 1 1 1 1 1 1 1 0 0 0);
+paArr=(1 1 1 1 1 1 1 1 1 1 1 1);
 ang1Arr=(90 90 90 90 90 90 90 90 90 90)
 ang2Arr=(90 90 90 90 90 90 90 90 90 90)
 mkdir $foldName
-for i in `seq 0 8`; do
+for i in `seq 0 11`; do
   echo $i
   a=./$foldName/${lwArr[$i]}-${nlArr[$i]}-${ang1Arr[$i]}-$(date '+%Y%m%d-%H%M%S')
   mkdir $a

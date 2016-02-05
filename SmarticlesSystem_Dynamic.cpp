@@ -1468,7 +1468,7 @@ bool SetGait(double time)
 	//else
 	//	break;
 
-	if (time <= 5)
+	if (time <= 10)
 		Smarticle::global_GUI_value = 1;
 	/*else if (time > .9 && time <= 1.5)
 		Smarticle::global_GUI_value = 2;

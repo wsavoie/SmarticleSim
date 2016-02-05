@@ -1,6 +1,7 @@
-filename = 'D:\GT Coursework\smarticledata\DifferentSize';
-[file,path,~]=uigetfile(filename);
-filename= horzcat(path,file);
+% filename = 'D:\GT Coursework\smarticledata\DifferentSize';
+filename = 'D:\SimResults\Chrono\SmarticleU\tests\ShengkaiForceVsLayer';
+[file]=uigetdir(horzcat(filename));
+filename=horzcat(file,'/PostProcess/Stress.txt')
 % while 1
 clf;
 %plot stress
