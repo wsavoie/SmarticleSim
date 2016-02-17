@@ -107,7 +107,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = CYLINDER;
+BucketType bucketType = BOX;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -115,7 +115,7 @@ ChSharedPtr<ChBody> bucket_bott;
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
-double sizeScale = 5;
+double sizeScale = 1;
 int appWidth = 1280;
 int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
@@ -134,7 +134,7 @@ double contact_recovery_speed = .5* sizeScale;
 double tFinal = 100;
 double vibrateStart= 1.5;
 
-double rho_smarticle = 7850.0;
+
 double rho_cylinder = 1180.0;
 //double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 //double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
@@ -143,7 +143,7 @@ int numLayers = 100;
 double armAngle = 90;
 double sOmega = 5;  // smarticle omega
 
-ChSharedPtr<ChLinkEngine> drum_actuator;
+ChSharedPtr<ChLinkEngine> bucket_actuator;
 
 double gaitChangeLengthTime = .5;
 
@@ -157,7 +157,7 @@ double gaitChangeLengthTime = .5;
 	double t_smarticle = sizeScale * .00127;
 	double t2_smarticle = sizeScale * .0005;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2*bucket_rad/sizeScale);
-
+	double rho_smarticle = 7850.0;
 #else
 	
 	double w_smarticle = sizeScale * 0.04669/ 1;
@@ -167,7 +167,7 @@ double gaitChangeLengthTime = .5;
 	double t2_smarticle = sizeScale * .02172 / 1;
 	double bucket_rad = sizeScale*w_smarticle*3;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
-
+	double rho_smarticle = 443.0;
 #endif
 
 	double p_gain = .32;   //3
@@ -192,7 +192,7 @@ bool povray_output = false;
 int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-int numPerLayer = 8;
+int numPerLayer = 4;
 bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surface
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
@@ -210,6 +210,7 @@ double max_z = 0;
 double rampAngle = 10 * D2R;
 double rampInc = 1.0/60.0;
 double drum_freq = 1;
+double box_ang = 0;
 double drum_omega = drum_freq*2*PI;
 double pctActive = 1.0;
 double inc = 0.00001;
@@ -958,9 +959,9 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		{
 		case BOX:
 			
-			dim.x = 1* dim.x;
-			dim.y = 1 * dim.y;
-			dim.z = dim.z / 4;
+			dim.x = 2* dim.x;
+			dim.y = 2 * dim.y;
+			dim.z = dim.z / 8;
 			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, 
 				dim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
 			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
@@ -1398,26 +1399,59 @@ void vibrate_bucket(double t, ChSharedPtr<ChBody> body) {
 		body->SetRot(QUNIT);
 		bucket->SetPos(ChVector<>(0, 0, x_bucket));
 }
-void rotate_drum(double t)//method is called on each iteration to rotate drum at an angular velocity of drum_omega
+void rotate_bucket(double t)//method is called on each iteration to rotate drum at an angular velocity of drum_omega
 {
-	bucket->SetBodyFixed(false);
-	bucket_bott->SetBodyFixed(true);
-	static ChSharedPtr<ChFunction_Const> mfun2 = drum_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-	drum_omega = drum_freq*PI * 2;
-	mfun2->Set_yconst(drum_omega);
+	static ChSharedPtr<ChFunction_Const> mfun2;
+	if (bucketType == DRUM)
+	{
+		bucket->SetBodyFixed(false);
+		bucket_bott->SetBodyFixed(true);
+		mfun2 = bucket_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
+		drum_omega = drum_freq*PI * 2;
+		mfun2->Set_yconst(drum_omega);
+	}
+	else if (bucketType == BOX)
+	{
+		bucket->SetBodyFixed(false);
+		bucket_bott->SetBodyFixed(true);
+		mfun2 = bucket_actuator->Get_rot_funct().DynamicCastTo<ChFunction_Const>();
+		mfun2->Set_yconst(box_ang);
+	}
 }
-void setUpDrumActuator(CH_SYSTEM& mphysicalSystem)
+//set up actuat
+void setUpBucketActuator(CH_SYSTEM& mphysicalSystem)
 {
-	drum_actuator = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+	ChSharedPtr<ChFunction_Const> mfun2; //needs to be declared outside switch
 	ChVector<> pR01(0, 0, 0);
-	ChQuaternion<> qx = Q_from_AngAxis(PI_2, VECT_Z);
-	drum_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), bucket->GetRot()));
-	drum_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
-	mphysicalSystem.AddLink(drum_actuator);
-	ChSharedPtr<ChFunction_Const> mfun2 = drum_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-	drum_omega = drum_freq*PI * 2;
-	mfun2->Set_yconst(drum_omega);
+	ChQuaternion<> qx;
+	bucket_actuator = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+	switch (bucketType)
+	{
+	case DRUM:
+		
+		
+		qx = Q_from_AngAxis(PI_2, VECT_Z);
+		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), bucket->GetRot()));
+		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
+		mphysicalSystem.AddLink(bucket_actuator);
+		mfun2 = bucket_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
+		drum_omega = drum_freq*PI * 2;
+		mfun2->Set_yconst(drum_omega);
+		break;
+
+	case BOX:
+		qx = Q_from_AngAxis(PI_2, VECT_Y);
+		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), qx));
+		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
+		mphysicalSystem.AddLink(bucket_actuator);
+		mfun2 = bucket_actuator->Get_rot_funct().DynamicCastTo<ChFunction_Const>();
+		mfun2->Set_yconst(0);
+		break;
+	}
+
+
 }
 
 // =============================================================================
@@ -1814,11 +1848,13 @@ int main(int argc, char* argv[]) {
 		break;
 	}
 
-	case DRUM:
+	case DRUM: case BOX:
 	{
-		setUpDrumActuator(mphysicalSystem);
+		setUpBucketActuator(mphysicalSystem);
 		break;
 	}
+
+	
 	case HOPPER:
 	{
 		truss->SetBodyFixed(true);
@@ -1980,10 +2016,11 @@ int main(int argc, char* argv[]) {
 		}
 
 
-		if (bucketType == DRUM)
+		if (bucketType == DRUM || bucketType == BOX)
 		{
-			rotate_drum(t);
+			rotate_bucket(t);
 		}
+
 		//vibration movement
 		if (t > vibrateStart && t < vibrateStart + 3)
 		{
@@ -2100,7 +2137,7 @@ int main(int argc, char* argv[]) {
 			
 			//application.AssetBindAll();  //uncomment to visualize vol frac boxes
 			//application.AssetUpdateAll();//uncomment to visualize vol frac boxes
-			screenshot(application, true);
+			//screenshot(application, true);
 			application.DoStep();//
 			
 			application.GetVideoDriver()->endScene();

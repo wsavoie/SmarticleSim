@@ -19,9 +19,9 @@
 %running curr- 100mA
 %Kt = T/I, .008/.27 = .0296 Nm/A
 %J
-stapleSize = true;
+stapleSize = false;
 dt=.00025; %.00025
-sizeScale=5;
+sizeScale=1;
 % omega = 4.9244e-5;
 omegaLim = 8; %%limit speed in sim
 omega = 8; %distance between points in move list
@@ -33,23 +33,31 @@ if stapleSize
     t2  = .0005*sizeScale;
     w_s = .0117*sizeScale;
     l_s = w_s;
+    rho = 7850.0;%/(sizeScale^3);
+    volume =  t2 * t* (w_s + 2 * (l_s));
+    mass = volume*rho;
+    torqueThresh=2*9.8*mass*w_s;%.00005;  4.6657e-04
 else
       %t = height of solar panels
-      t= .022982;
-      w_s = .04669;
-      t2 = .02172;
-      l_s = .04450; 
+    t= .022982;
+    w_s = .04669;
+    t2 = .02172;
+    l_s = .04450; 
 %     t   = .0079*sizeScale;
 %     t2  = .0053*sizeScale;
 %     w_s = .0117*sizeScale;
 %     l_s = w_s;
 %1.5424 = lw
+    rho = 443.0;%/(sizeScale^3);
+    volume =  t2 * t* (w_s + 2 * (l_s));
+    mass = volume*rho;
+    torqueThresh=.008; %.008cd 
 end
 
-volume =  t2 * t* (w_s + 2 * (l_s));
-mass = volume*rho;
-% torqueThresh=.001; %.008cd 
-torqueThresh=2*9.8*mass*w_s;%.00005;  4.6657e-04
+
+
+
+
 angLow=60;
 angHigh=120;
 

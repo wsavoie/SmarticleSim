@@ -22,7 +22,7 @@
 
 #define USE_PARALLEL false
 #define irrlichtVisualization true
-#define stapleSize true
+#define stapleSize false
 	//extern double sizeScale;
 	//extern double dT;
 	//extern bool bucket_exist;
@@ -49,6 +49,7 @@
 	extern double vibAmp;
 	extern double rampAngle;
 	extern double rampInc;
+	extern double box_ang;
 	extern double drum_omega;
 	extern double drum_freq;
 	extern double inc;

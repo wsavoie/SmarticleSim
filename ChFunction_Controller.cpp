@@ -68,7 +68,7 @@ double ChFunctionController::ComputeOutput(double t) {
 	double omError;
 	double prevOmError;
 
-	bool deadBandActivate = true;
+	bool deadBandOff = true;
 	double omLim = controller_->omegaLimit;
 	double omErrCond = omLim*dT * 4;
 	bool cond = (abs(error) > omErrCond); //1 if error is less than 4 omegaLimit timesteps
@@ -77,11 +77,12 @@ double ChFunctionController::ComputeOutput(double t) {
 	//des_omeg = std::min(abs(curr_omeg + sgn(error)*omLim / 4), omLim)*sgn(error);
 
 	des_omeg = omLim*cond*sgn(error);
-	if (abs(curr_ang) < omErrCond*2 || !cond)
+	if (!cond && Smarticle::global_GUI_value!=0) //if (abs(curr_ang) < omErrCond*2 || !cond)
 	{
-		deadBandActivate = false;
+		deadBandOff = false;
+		
 	}
-	deadBandActivate = true;
+
 	omError = des_omeg - curr_omeg;
 	prevOmError = controller_->prevOmegError_.at(index_);
 	controller_->cumOmegError_.at(index_) += (omError)*dT;
@@ -123,7 +124,7 @@ double ChFunctionController::ComputeOutput(double t) {
 
 	double output2 = pTerm + dTerm +iTerm;
 	
-	double output3 = output + output2*deadBandActivate;
+	double output3 = output + output2*deadBandOff;
 	// GetLog() << "1: " << omError << " \t2: " << output2 << "\t3: " << curr_omeg << "\tom: " << curr_omeg << "\n";
 	//////////////////
 
