@@ -1,6 +1,6 @@
 #!/bin/bash
-smartRunFile="D:\GT Coursework\smarticlesbuild\Release\SmarticlesSystem_Dynamic.exe"
-dataDir="D:/GT Coursework/smarticles/data";
+smartRunFile="D:/ChronoCode/chronoPkgs/SmarticlesBuild/Release/SmarticlesSystem_Dynamic.exe"
+dataDir="D:/ChronoCode/chronoPkgs/Smarticles/data";
 
 if diff ../Smarticles/data $dataDir;then #if no differences
 echo "found directory";

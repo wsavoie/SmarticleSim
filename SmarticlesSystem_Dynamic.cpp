@@ -31,6 +31,8 @@
 #include <omp.h>
 //#include "chrono_parallel/physics/ChSystemParallel.h"
 //#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
+#include <iostream>
+#include <IStream>
 
 #include "utils/ChUtilsCreators.h"     //Arman: why is this
 #include "utils/ChUtilsInputOutput.h"  //Arman: Why is this
@@ -105,7 +107,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = KNOBCYLINDER;
+BucketType bucketType = CYLINDER;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -1411,7 +1413,35 @@ void setUpDrumActuator(CH_SYSTEM& mphysicalSystem)
 }
 
 // =============================================================================
+void screenshot(ChIrrApp& app,bool save)
+{
+	static int frameNum=0;
+	int vidEach = 50;
+	double h = app.GetVideoDriver()->getScreenSize().Height;
+	double w = app.GetVideoDriver()->getScreenSize().Width;
+	auto vp = app.GetVideoDriver()->getViewPort();
+	//app.GetIGUIEnvironment()->saveGUI("lolol.jpeg",irr::gui::wind);
+	double centx = app.GetVideoDriver()->getViewPort().getCenter().X;
+	double centy = app.GetVideoDriver()->getViewPort().getCenter().Y;
+	GetLog() << "Screen Size: " << h << " " << w << "\tScreen: " << centx<< " " << centy;
+	if (save) {
+		if (frameNum % vidEach == 0) {
+			irr::video::IImage* image = app.GetVideoDriver()->createScreenShot();
+			char filename[100];
+			sprintf(filename, "Myscreenshot%05d.jpeg", (frameNum + 1) / vidEach);
+			if (image)
+				app.GetVideoDriver()->writeImageToFile(image, filename);
+			image->drop();
+		}
+		frameNum++;
+	}
+	//CImage image;
+	//image.Attach(hBitmap);
+	//image.Save("c:\\pngPicture.png");
 
+	//hres = CreateStreamOnHGlobal(0, TRUE, &pStream);
+	//hr = myImage.Save(pStream, Gdiplus::ImageFormatPNG);
+}
 void UpdateSmarticles(
 		CH_SYSTEM& mphysicalSystem,
 		std::vector<Smarticle*> mySmarticlesVec) {
@@ -1469,13 +1499,14 @@ bool SetGait(double time)
 	//	break;
 
 	if (time <= 10)
-		Smarticle::global_GUI_value = 1;
+
+		//Smarticle::global_GUI_value = 1;
 	/*else if (time > .9 && time <= 1.5)
 		Smarticle::global_GUI_value = 2;
 	else if (time > 1.5 && time <= 5)
 		Smarticle::global_GUI_value = 1;*/
-	else /*if (time > 20)*/
-		return true;
+	//else /*if (time > 20)*/
+	//	return true;
 
 
 	//else if (time > 1 && time < 3)
@@ -2040,7 +2071,7 @@ int main(int argc, char* argv[]) {
 
 			//framerecord
 			
-			application.SetVideoframeSaveInterval(5);//only save every 2 frames
+			application.SetVideoframeSaveInterval(50);//only save every 2 frames
 			application.DrawAll();
 
 			for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
@@ -2051,7 +2082,7 @@ int main(int argc, char* argv[]) {
 			
 			//application.AssetBindAll();  //uncomment to visualize vol frac boxes
 			//application.AssetUpdateAll();//uncomment to visualize vol frac boxes
-			
+			screenshot(application, true);
 			application.DoStep();//
 			
 			application.GetVideoDriver()->endScene();

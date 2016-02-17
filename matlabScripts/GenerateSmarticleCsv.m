@@ -24,7 +24,7 @@ dt=.00006;
 sizeScale=5;
 % omega = 4.9244e-5;
 omegaLim = 8; %%limit speed in sim
-omega = 6; %distance between points in move list
+omega = 8; %distance between points in move list
 % omega = 10;
 rho = 7850.0;%/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
