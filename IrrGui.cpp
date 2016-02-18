@@ -272,7 +272,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				case HOPPER:
 					bucket_bott->SetPos(ChVector<>(100, 0, 0));
 					break;
-				case RAMP:
+				case RAMP: case BOX:
 					bucket_bott->SetPos(ChVector<>(100, 0, 0));
 					break;
 				}
@@ -287,15 +287,15 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				case DRUM:
 					drum_freq = drum_freq - rampInc;
 					break;
-				case RAMP:
-
-					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R;
-					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R
-						, 0, 0)));
-					bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R
-						, 0, 0)));
+				case RAMP: case BOX:
+					box_ang = box_ang - rampInc* D2R;
+					//rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R;
+					//bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
+					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R
+					//	, 0, 0)));
+					//bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
+					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R
+					//	, 0, 0)));
 					break;
 				default:
 					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R;
@@ -313,15 +313,15 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				case DRUM:
 					drum_freq = drum_freq + rampInc;
 					break;
-				case RAMP:
-
-					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R;
-					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R
-						, 0, 0)));
-					bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R
-						, 0, 0)));
+				case RAMP: case BOX:
+					box_ang = box_ang + rampInc* D2R;
+					//rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R;
+					//bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
+					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R
+					//	, 0, 0)));
+					//bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
+					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R
+					//	, 0, 0)));
 					break;
 				default:
 					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R;
@@ -439,6 +439,11 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 		else if (bucketType == DRUM)
 		{
 			char message[100]; sprintf(message, "AngVel: %g rpm, Increment: %g", drum_freq * 60, rampInc * 60);
+			this->text_Angle->setText(core::stringw(message).c_str());
+		}
+		else if (bucketType == BOX)
+		{
+			char message[100]; sprintf(message, "Angle: %1.3g, Increment: %1.3g", box_ang * R2D, rampInc);
 			this->text_Angle->setText(core::stringw(message).c_str());
 		}
 		else{

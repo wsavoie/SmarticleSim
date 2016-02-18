@@ -31,6 +31,8 @@
 #include <omp.h>
 //#include "chrono_parallel/physics/ChSystemParallel.h"
 //#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
+#include <iostream>
+#include <IStream>
 
 #include "utils/ChUtilsCreators.h"     //Arman: why is this
 #include "utils/ChUtilsInputOutput.h"  //Arman: Why is this
@@ -105,7 +107,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = KNOBCYLINDER;
+BucketType bucketType = BOX;
 std::vector<ChSharedPtr<ChBody>> sphereStick;
 ChSharedPtr<ChBody> bucket;
 ChSharedPtr<ChBody> bucket_bott;
@@ -129,17 +131,19 @@ unsigned int largeID = 10000000;
 //double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
-double tFinal = 6;
-double vibrateStart= .2;
+double tFinal = 100;
+double vibrateStart= 1.5;
 
-double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
-double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
+
+double rho_cylinder = 1180.0;
+//double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
+//double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
 ChSharedPtr<ChMaterialSurface> mat_g;
 int numLayers = 100;
 double armAngle = 90;
 double sOmega = 5;  // smarticle omega
 
-ChSharedPtr<ChLinkEngine> drum_actuator;
+ChSharedPtr<ChLinkEngine> bucket_actuator;
 
 double gaitChangeLengthTime = .5;
 
@@ -147,12 +151,13 @@ double gaitChangeLengthTime = .5;
 ////////////////rescaled robot geometry (3.93) based on w_smarticle scaling
 ////////////////robot dim is l/w =1, w=.046 t=.031 t2=.021
 #if stapleSize
-	double w_smarticle = sizeScale * 0.0117;
+	double bucket_rad = sizeScale*0.02;
+	double w_smarticle = sizeScale * 0.0117; // sizeScale * 0.0117
 	double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 	double t_smarticle = sizeScale * .00127;
 	double t2_smarticle = sizeScale * .0005;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2*bucket_rad/sizeScale);
-
+	double rho_smarticle = 7850.0;
 #else
 	
 	double w_smarticle = sizeScale * 0.04669/ 1;
@@ -162,7 +167,7 @@ double gaitChangeLengthTime = .5;
 	double t2_smarticle = sizeScale * .02172 / 1;
 	double bucket_rad = sizeScale*w_smarticle*3;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
-
+	double rho_smarticle = 443.0;
 #endif
 
 	double p_gain = .32;   //3
@@ -188,6 +193,7 @@ int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
 int numPerLayer = 4;
+bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surface
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
 //double bucket_rad = sizeScale*0.034;
@@ -204,6 +210,7 @@ double max_z = 0;
 double rampAngle = 10 * D2R;
 double rampInc = 1.0/60.0;
 double drum_freq = 1;
+double box_ang = 0;
 double drum_omega = drum_freq*2*PI;
 double pctActive = 1.0;
 double inc = 0.00001;
@@ -230,15 +237,27 @@ public:
 };
 class ChFunctionCustom : public ChFunction{
 public:
-	ChFunctionCustom(){y, y_dx, y_dxdx = 0;}
+	ChFunctionCustom(){ y = 0; y_dx = 0; y_dxdx = 0; }
 	virtual ~ChFunctionCustom(){};
-	virtual ChFunction *new_Duplicate() {return 0;}
+	void Copy(ChFunction* source) {
+		Set_y(source->Get_y(0));
+		Set_y_dx(source->Get_y_dx(0));
+		Set_y_dxdx(source->Get_y_dxdx(0));
+	}
+	virtual ChFunction* new_Duplicate() {
+		ChFunctionCustom* m_func;
+		m_func = new ChFunctionCustom;
+		m_func->Copy(this);
+		return (m_func);
+	}
+	virtual int Get_Type() { return 1; }
 	void Set_y(double x){ y = x; }
-	void Set_y_dx(double x){y_dx = x;}
+	void Set_y_dx(double x){ y_dx = x; }
 	void Set_y_dxdx(double x){ y_dxdx = x; }
 	virtual double Get_y(double x) {return y;}
 	virtual double Get_y_dx(double x) {return y_dx;}
 	virtual double Get_y_dxdx(double x) { return y_dxdx; }
+
 private:
 	double y;
 	double y_dx;
@@ -419,7 +438,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
 #endif
 	
-	bool placeInMiddle = false; // if I want make a single smarticle on bottom surface
+
 	ChVector<> dropSpeed = VNULL;
 	ChQuaternion<> myRot = QUNIT;
 	double z;
@@ -455,7 +474,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			}
 			else////////////place in center of bucket on bucket bottom
 			{
-				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*1.88,bucket_bott->GetPos().z + t_smarticle / 2);
+				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*2.2,bucket_bott->GetPos().z + t_smarticle / 2);
 				dropSpeed = VNULL;
 				myRot = Q_from_AngAxis(PI_2, VECT_X);
 			}
@@ -469,10 +488,18 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand()),
 				zpos);
 			break;
+		case BOX:
+			myPos = bucket_ctr + ChVector<>((2*MyRand()-1)*.9*bucket_interior_halfDim.x,
+				(2*MyRand()-1)*.9*bucket_interior_halfDim.y ,
+				bucket_interior_halfDim.z+w_smarticle);
+			myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
+			dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2 * w_smarticle / timeForDisp);
+			break;
 		default:
 			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand() - w / 2),
 				cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2.0),
 				zpos);
+			myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
 			break;
 		}
 			
@@ -932,9 +959,9 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		{
 		case BOX:
 			
-			dim.x = 1.5 * dim.x;
-			dim.y = 1.5 * dim.y;
-			dim.z = dim.z / 4;
+			dim.x = 2* dim.x;
+			dim.y = 2 * dim.y;
+			dim.z = dim.z / 8;
 			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, 
 				dim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
 			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
@@ -1372,30 +1399,91 @@ void vibrate_bucket(double t, ChSharedPtr<ChBody> body) {
 		body->SetRot(QUNIT);
 		bucket->SetPos(ChVector<>(0, 0, x_bucket));
 }
-void rotate_drum(double t)//method is called on each iteration to rotate drum at an angular velocity of drum_omega
+void rotate_bucket(double t)//method is called on each iteration to rotate drum at an angular velocity of drum_omega
 {
-	bucket->SetBodyFixed(false);
-	bucket_bott->SetBodyFixed(true);
-	static ChSharedPtr<ChFunction_Const> mfun2 = drum_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-	drum_omega = drum_freq*PI * 2;
-	mfun2->Set_yconst(drum_omega);
+	static ChSharedPtr<ChFunction_Const> mfun2;
+	if (bucketType == DRUM)
+	{
+		bucket->SetBodyFixed(false);
+		bucket_bott->SetBodyFixed(true);
+		mfun2 = bucket_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
+		drum_omega = drum_freq*PI * 2;
+		mfun2->Set_yconst(drum_omega);
+	}
+	else if (bucketType == BOX)
+	{
+		bucket->SetBodyFixed(false);
+		bucket_bott->SetBodyFixed(true);
+		mfun2 = bucket_actuator->Get_rot_funct().DynamicCastTo<ChFunction_Const>();
+		mfun2->Set_yconst(box_ang);
+	}
 }
-void setUpDrumActuator(CH_SYSTEM& mphysicalSystem)
+//set up actuat
+void setUpBucketActuator(CH_SYSTEM& mphysicalSystem)
 {
-	drum_actuator = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+	ChSharedPtr<ChFunction_Const> mfun2; //needs to be declared outside switch
 	ChVector<> pR01(0, 0, 0);
-	ChQuaternion<> qx = Q_from_AngAxis(PI_2, VECT_Z);
-	drum_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), bucket->GetRot()));
-	drum_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
-	mphysicalSystem.AddLink(drum_actuator);
-	ChSharedPtr<ChFunction_Const> mfun2 = drum_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-	drum_omega = drum_freq*PI * 2;
-	mfun2->Set_yconst(drum_omega);
+	ChQuaternion<> qx;
+	bucket_actuator = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+	switch (bucketType)
+	{
+	case DRUM:
+		
+		
+		qx = Q_from_AngAxis(PI_2, VECT_Z);
+		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), bucket->GetRot()));
+		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
+		mphysicalSystem.AddLink(bucket_actuator);
+		mfun2 = bucket_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
+		drum_omega = drum_freq*PI * 2;
+		mfun2->Set_yconst(drum_omega);
+		break;
+
+	case BOX:
+		qx = Q_from_AngAxis(PI_2, VECT_Y);
+		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), qx));
+		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
+		mphysicalSystem.AddLink(bucket_actuator);
+		mfun2 = bucket_actuator->Get_rot_funct().DynamicCastTo<ChFunction_Const>();
+		mfun2->Set_yconst(0);
+		break;
+	}
+
+
 }
 
 // =============================================================================
+void screenshot(ChIrrApp& app,bool save)
+{
+	static int frameNum=0;
+	int vidEach = 50;
+	double h = app.GetVideoDriver()->getScreenSize().Height;
+	double w = app.GetVideoDriver()->getScreenSize().Width;
+	auto vp = app.GetVideoDriver()->getViewPort();
+	//app.GetIGUIEnvironment()->saveGUI("lolol.jpeg",irr::gui::wind);
+	double centx = app.GetVideoDriver()->getViewPort().getCenter().X;
+	double centy = app.GetVideoDriver()->getViewPort().getCenter().Y;
+	GetLog() << "Screen Size: " << h << " " << w << "\tScreen: " << centx<< " " << centy;
+	if (save) {
+		if (frameNum % vidEach == 0) {
+			irr::video::IImage* image = app.GetVideoDriver()->createScreenShot();
+			char filename[100];
+			sprintf(filename, "Myscreenshot%05d.jpeg", (frameNum + 1) / vidEach);
+			if (image)
+				app.GetVideoDriver()->writeImageToFile(image, filename);
+			image->drop();
+		}
+		frameNum++;
+	}
+	//CImage image;
+	//image.Attach(hBitmap);
+	//image.Save("c:\\pngPicture.png");
 
+	//hres = CreateStreamOnHGlobal(0, TRUE, &pStream);
+	//hr = myImage.Save(pStream, Gdiplus::ImageFormatPNG);
+}
 void UpdateSmarticles(
 		CH_SYSTEM& mphysicalSystem,
 		std::vector<Smarticle*> mySmarticlesVec) {
@@ -1452,11 +1540,25 @@ bool SetGait(double time)
 	//else
 	//	break;
 
-	//if (time < .5)
-	//	Smarticle::global_GUI_value = 0;
-	//else if (time > .5 && time < 1)
-	//	Smarticle::global_GUI_value = 0;
+	/*if (time <= 1.5)
+		Smarticle::global_GUI_value = 1;
+	else if (time > 1.5 && time <= 3.5)
+		Smarticle::global_GUI_value = 2;
+	else if (time > 3.5 && time <= 5.5)
+		Smarticle::global_GUI_value = 1;
+	else if (time > 5.5 && time <= 7.5)
+		Smarticle::global_GUI_value = 0;
+	else if (time > 20)
+		return true;*/
+	if (time <= 10)
 
+		//Smarticle::global_GUI_value = 1;
+	/*else if (time > .9 && time <= 1.5)
+		Smarticle::global_GUI_value = 2;
+	else if (time > 1.5 && time <= 5)
+		Smarticle::global_GUI_value = 1;*/
+	//else /*if (time > 20)*/
+	//	return true;
 
 
 	//else if (time > 1 && time < 3)
@@ -1473,10 +1575,18 @@ int main(int argc, char* argv[]) {
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	//ChTimerParallel step_timer;
-	Smarticle::global_GUI_value = 1;
+	Smarticle::global_GUI_value = 2;
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
+
+
 #if defined(_WIN64)
-	std::string fp = "D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\";
+	char* pPath = getenv("USERNAME");
+	GetLog()<<pPath;
+	std::string fp;
+	if(strcmp(pPath,"root")==0)
+		fp = "D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\";
+	else
+		fp = "D:\\GT Coursework\\smarticles\\data\\";
 	//fp = __FILE__+fp;
 	SetChronoDataPath(fp);
 #else
@@ -1557,7 +1667,7 @@ int main(int argc, char* argv[]) {
 	// bind a simple user interface, etc. etc.)
 	ChIrrApp application(&mphysicalSystem, L"Dynamic Smarticles",
 		core::dimension2d<u32>(appWidth, appHeight), false, true);
-
+	////////////!@#$%^
 	// Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
 	ChIrrWizard::add_typical_Logo(application.GetDevice());
 	ChIrrWizard::add_typical_Sky(application.GetDevice());
@@ -1613,6 +1723,7 @@ int main(int argc, char* argv[]) {
 	ChSharedPtr<ChBody> truss = ChSharedPtr<ChBody>(new ChBody);
 	ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
 	ChSharedPtr<ChFunction_Sine> sinefunc(new ChFunction_Sine());
+	ChSharedPtr<ChFunction_Const> func2(new ChFunction_Const());
 	ChSharedPtr<ChFunction_Const> knobcylinderfunc(new ChFunction_Const());
 	ChSharedPtr<ChFunctionCustom> func(new ChFunctionCustom());
 	ChSharedPtr<ChBody> knobstick = ChSharedPtr<ChBody>(new ChBody);
@@ -1638,11 +1749,10 @@ int main(int argc, char* argv[]) {
 
 
 		double mult = 4.0;
-		if (bucketType == HOOKRAISE)
-			mult = 1/2.0;
+		
 		if (stapleSize)
 		{
-			rad = t_smarticle*mult;
+			rad = t_smarticle*mult/10.0;
 		}
 		else
 		{
@@ -1650,7 +1760,10 @@ int main(int argc, char* argv[]) {
 		}
 
 		double stickLen = bucket_interior_halfDim.z*1.5;
-		int sphereNum = stickLen / (rad);
+
+		int sphereNum = stickLen / (t_smarticle / 2);
+		if (bucketType==STRESSSTICK)
+			sphereNum = stickLen / (2*rad);
 
 		//double sphereStickHeight = t_smarticle*mult / 2.0 * (sphereNum + 1); //shouldnt need extra 2*rad offset because of how z is defined using i below
 		for (size_t i = 0; i < sphereNum; i++)
@@ -1662,7 +1775,7 @@ int main(int argc, char* argv[]) {
 			//utils::AddSphereGeometry(stick.get_ptr(), t2_smarticle/2.0, bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
 		
 			//if you change z height between spheres, you must change sphereStickHeight above!
-			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i+1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, PI)), true);
+			utils::AddSphereGeometry(stick.get_ptr(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, PI)), true);
 			sphereStick.emplace_back(stick);
 		
 			
@@ -1670,7 +1783,7 @@ int main(int argc, char* argv[]) {
 		if (bucketType == HOOKRAISE)
 		{
 			int hookNum;
-			hookNum = 8 - stapleSize * 4;
+			hookNum = 8 - stapleSize * 2;
 
 			for (size_t i = 0; i < hookNum; i++)
 			{
@@ -1711,15 +1824,23 @@ int main(int argc, char* argv[]) {
 		mphysicalSystem.AddBody(truss);
 
 		link_prismatic = ChSharedPtr<ChLinkLockPrismatic>(new ChLinkLockPrismatic);
-		link_prismatic->Initialize(stick, truss, false, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
+		link_prismatic->Initialize(stick, truss, true, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
 		mphysicalSystem.AddLink(link_prismatic);
 		
 
 		pris_engine = ChSharedPtr<ChLinkLinActuator>(new ChLinkLinActuator);
-		pris_engine->Initialize(stick, truss, false, ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
-		func->Set_y(-stickLen);
-		func->Set_y_dx(-.0001);
+		pris_engine->Initialize(stick, truss, true, ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
+		
+		
+
+
+		GetLog() << "StickLen:" << stickLen;
+
+		//func = pris_engine->Get_dist_funct().DynamicCastTo<ChFunctionCustom>();
+		func->Set_y(0);
+		func->Set_y_dx(2.5-.5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
 		pris_engine->Set_dist_funct(func);
+
 
 		pris_engine->SetDisabled(true);
 		mphysicalSystem.AddLink(pris_engine);
@@ -1727,11 +1848,13 @@ int main(int argc, char* argv[]) {
 		break;
 	}
 
-	case DRUM:
+	case DRUM: case BOX:
 	{
-		setUpDrumActuator(mphysicalSystem);
+		setUpBucketActuator(mphysicalSystem);
 		break;
 	}
+
+	
 	case HOPPER:
 	{
 		truss->SetBodyFixed(true);
@@ -1790,7 +1913,7 @@ int main(int argc, char* argv[]) {
 			
 			if (stapleSize)
 			{
-				rad = t_smarticle*mult;
+				rad = t_smarticle*mult*1.5;
 				knobRad = t_smarticle*2;
 			}
 			else
@@ -1830,7 +1953,7 @@ int main(int argc, char* argv[]) {
 		//ChSharedPtr<ChLinkEngine> link_engine(new ChLinkEngine);
 
 		double knobAmp = PI_2;
-		double knobW = PI;
+		double knobW = 0;//// rod rotating speed knobW = PI
 		double knobPhase = -knobW*vibrateStart;
 		//knobcylinderfunc->Set_amp(knobAmp);
 		//knobcylinderfunc->Set_w(knobW);
@@ -1893,24 +2016,28 @@ int main(int argc, char* argv[]) {
 		}
 
 
-		if (bucketType == DRUM)
+		if (bucketType == DRUM || bucketType == BOX)
 		{
-			rotate_drum(t);
+			rotate_bucket(t);
 		}
+
 		//vibration movement
 		if (t > vibrateStart && t < vibrateStart + 3)
 		{
 			switch (bucketType)
 			{
-			case HOOKRAISE: //case STRESSSTICK:
+			case HOOKRAISE: case STRESSSTICK:
 			{
 
 				if (pris_engine->IsDisabled())
 				{
 					stick->SetBodyFixed(false);
 					pris_engine->SetDisabled(false);
+				
 				}
-
+				pris_engine->GetDist_dt();
+				//pris_engine->GetRelC_dt()
+				//GetLog() << pris_engine->GetDist_dt() << "\n";
 				break;
 			}
 			case KNOBCYLINDER:
@@ -1990,28 +2117,27 @@ int main(int argc, char* argv[]) {
 			if (!(application.GetDevice()->run())) break;
 			application.GetVideoDriver()->beginScene(true, true,
 				video::SColor(255, 140, 161, 192));
-			ChIrrTools::drawGrid(application.GetVideoDriver(), .01, .01, 150, 150,
-			ChCoordsys<>(ChVector<>(0,0, bucket_bott->GetPos().z*1.001),
-			Q_from_AngAxis(0, VECT_X)),
-			video::SColor(50, 0, 255,0), true);
+			//ChIrrTools::drawGrid(application.GetVideoDriver(), .01, .01, 150, 150,
+			//	ChCoordsys<>(ChVector<>(0,0, bucket_bott->GetPos().z*1.001),
+			//	Q_from_AngAxis(0, VECT_X)),
+			//	video::SColor(50, 0, 255,0), true);
 			//application.AssetBindAll();
 			//application.AssetUpdateAll();
 
 			//framerecord
 			
-			application.SetVideoframeSaveInterval(5);//only save every 2 frames
+			application.SetVideoframeSaveInterval(50);//only save every 2 frames
 			application.DrawAll();
 
 			for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
 			{
-				//application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
-				//application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
 				application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
+				application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
 			}
 			
 			//application.AssetBindAll();  //uncomment to visualize vol frac boxes
 			//application.AssetUpdateAll();//uncomment to visualize vol frac boxes
-			
+			//screenshot(application, true);
 			application.DoStep();//
 			
 			application.GetVideoDriver()->endScene();
@@ -2031,6 +2157,15 @@ int main(int argc, char* argv[]) {
 			PrintStress(&mphysicalSystem, tStep, zmax,rad);
 		}
 		
+
+		//irr::core::vector2d<irr::s32> a;
+		//irr::core::rect<irr::s32> b;
+		//application.GetContainer()->updateAbsolutePosition();
+		//a.X = application.GetContainer()->getAbsolutePosition().X + appWidth;
+		//a.Y = application.GetContainer()->getAbsolutePosition().Y - appHeight;
+		//b.LowerRightCorner = a;
+
+		//application.GetVideoDriver()->setViewPort(b);
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
 
 	  time(&rawtimeCurrent);

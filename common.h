@@ -49,6 +49,7 @@
 	extern double vibAmp;
 	extern double rampAngle;
 	extern double rampInc;
+	extern double box_ang;
 	extern double drum_omega;
 	extern double drum_freq;
 	extern double inc;

@@ -583,7 +583,7 @@ void Smarticle::Create() {
 	double l_mod;
 	//double l_mod = l + 2 * r2 - jointClearance;
 
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0 * 5 * D2R, angle1, 0));
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));
 	quat0.Normalize();
 	quat2.Normalize();
@@ -1038,8 +1038,8 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSin
 	//	return;
 
 
-	double LT = .85 * torqueThresh2;
-	double MT = .95 * torqueThresh2;
+	double LT = .01 * torqueThresh2;
+	double MT = 1.85 * torqueThresh2;
 	//double HT = 1.99 *torqueThresh2;
 
 	//double t0 = abs(tor0);

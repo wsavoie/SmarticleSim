@@ -20,36 +20,44 @@
 %Kt = T/I, .008/.27 = .0296 Nm/A
 %J
 stapleSize = false;
-dt=.00025;
+dt=.00025; %.00025
 sizeScale=1;
 % omega = 4.9244e-5;
 omegaLim = 8; %%limit speed in sim
 omega = 8; %distance between points in move list
 % omega = 10;
-rho = 7850.0/(sizeScale^3);
+rho = 7850.0;%/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 if stapleSize
     t   = .00127*sizeScale;
     t2  = .0005*sizeScale;
     w_s = .0117*sizeScale;
     l_s = w_s;
+    rho = 7850.0;%/(sizeScale^3);
+    volume =  t2 * t* (w_s + 2 * (l_s));
+    mass = volume*rho;
+    torqueThresh=2*9.8*mass*w_s;%.00005;  4.6657e-04
 else
       %t = height of solar panels
-      t= .022982;
-      w_s = .04669;
-      t2 = .02172;
-      l_s = .04450; 
+    t= .022982;
+    w_s = .04669;
+    t2 = .02172;
+    l_s = .04450; 
 %     t   = .0079*sizeScale;
 %     t2  = .0053*sizeScale;
 %     w_s = .0117*sizeScale;
 %     l_s = w_s;
 %1.5424 = lw
+    rho = 443.0;%/(sizeScale^3);
+    volume =  t2 * t* (w_s + 2 * (l_s));
+    mass = volume*rho;
+    torqueThresh=.008; %.008cd 
 end
 
-volume =  t2 * t* (w_s + 2 * (l_s));
-mass = volume*rho;
-% torqueThresh=.001; %.008cd 
-torqueThresh=1.25*9.8*mass*w_s;%.00005;  4.6657e-04
+
+
+
+
 angLow=60;
 angHigh=120;
 
@@ -58,11 +66,16 @@ gui1_gait = 1;
 gui2_gait = 1;
 gui3_gait = 2;
 midt_gait = 2;
-
+torqueThresh
 PON= 1;
 
+user=getenv('username');
+if strcmp(user,'root')
+    directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
+else
+    directory_name = uigetdir('D:\GT Coursework\smarticledata'); 
+end
 
-directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 fileloc = horzcat(directory_name,'\','smarticleMoves.csv');
 fid = fopen(fileloc,'wt');
 %add in all initial values to top of file
@@ -175,9 +188,9 @@ switch global_gait
         clf;
         hold on;
         axis([-1.25*pi/2,1.25*pi/2,-1.25*pi/2,1.25*pi/2]);
-        imr=imread('C:\Users\root\Desktop\geom\tgran.PNG');
-        im2=imagesc(imr);
-        image(linspace(-1.25*pi/2,1.25*pi/2,im2.XData(2)),linspace(1.25*pi/2,-1.25*pi/2,im2.YData(2)),imr)
+%         imr=imread('C:\Users\root\Desktop\geom\tgran.PNG');
+%         im2=imagesc(imr);
+%         image(linspace(-1.25*pi/2,1.25*pi/2,im2.XData(2)),linspace(1.25*pi/2,-1.25*pi/2,im2.YData(2)),imr)
         
         
         
@@ -274,9 +287,12 @@ for i=1:guiSize
                 case 1
                     GUI_theta_1Pos = [pi/2];
                     GUI_theta_2Pos = [-pi/2];
-                 case 2
+                case 2
                 GUI_theta_1Pos = [-pi/2];
                 GUI_theta_2Pos = [-pi/2];
+                case 3
+                GUI_theta_1Pos = [pi];
+                GUI_theta_2Pos = [pi];
             end
     end
     
