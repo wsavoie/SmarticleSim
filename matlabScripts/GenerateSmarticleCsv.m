@@ -9,10 +9,14 @@
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
 
 %https://www.pololu.com/product/1040/specs
+%theoretical:
 %servo speed - .12s/60deg (strange units) 8.72 rads/sec
-%stall torque- .008 Nm
+%stall torque- 0.8 kgF·cm= .078 nm=
 %stall curr-   270 mA
 
+%measured: 
+%measured 5.0N with radius of 6.52mm
+%T=5*.00652=.0325
 %dimensionless parameter for torque and length=
 %for robot: T=.008, L=.05 arm weight = 11.3 g
 
@@ -51,7 +55,7 @@ else
     rho = 443.0;%/(sizeScale^3);
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
-    torqueThresh=.008; %.008cd 
+    torqueThresh=.0325; %.008 previously cd 
 end
 
 

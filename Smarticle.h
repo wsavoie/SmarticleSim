@@ -224,8 +224,6 @@ namespace chrono {
 
 		double ChooseOmegaAmount(double momega, double currAng, double destAng);
 		virtual void setCurrentMoveType(MoveType newMoveType);
-		void MoveLoop2(int guiState);
-		void MoveLoop2(int guiState, double torque01, double torque12);
 		void ControllerMove(int guiState, double torque01, double torque12);
 		double CheckLowStressChangeTime();
 		ChSharedPtr<ChLinkEngine> getLinkActuator(int id);

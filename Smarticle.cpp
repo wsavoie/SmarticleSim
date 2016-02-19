@@ -61,7 +61,7 @@ Smarticle::~Smarticle()
 	m_system->RemoveBody(arm2);
 	armsController->~Controller();
 	
-	GetLog() << "Removing smarticle\n";
+	GetLog() << "Deleting Smarticle\n";
 }
 
 
@@ -431,7 +431,6 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
 
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
-
 	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
 
 	// change mass and inertia property
@@ -810,9 +809,8 @@ std::vector<double> Smarticle::linspace(double a, double b, int n) {
 bool Smarticle::NotAtDesiredPos(int id, double ang,double exp)//bad method name
 {
 	//GetLog() << "expAng" << id << ":" << GetExpAngle(id) << "\n    ";
-	double x= ChooseOmegaAmount(GetOmega(id), ang, exp); //returns true if anything else but 0 is returned from here	
 	//returns true if anything else but 0 is returned from here
-	return x;
+	return ChooseOmegaAmount(GetOmega(id), ang, exp);
 }
 double Smarticle::GetExpAngle(int id)
 {
@@ -1023,57 +1021,65 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSin
 	//torque01 and torque02 are averaged torque over some amount of steps
 	//low thresh		= if both torques are < LT*thresh.
 	//med thresh		= if both torques are LT<x<HT
-	//hi  thresh		= if one torque is > HT
+	//high thresh		= if one torque is > HT
 	
-	
-	//if (timeSinceChange != 0 && timeSinceChange < 10 * dT) //protects situation where torque increases initially causing LT situations to get out of LT immediately upon shape change
-	//	return;
-
-
+	//keeps track if in LT
+	static bool LTactive = false;
+	//TODO reimplement this?
+	if (timeSinceChange != 0 && timeSinceChange < 10 * dT) //protects situation where torque increases initially causing LT situations to get out of LT immediately upon shape change
+	{
+		if (LTactive)
+		{
+			//GetLog() << "activated low stress saver\n";
+			return;
+		}
+	}
+	LTactive = false;
 	double LT = .01 * torqueThresh2;
 	double MT = 1.85 * torqueThresh2;
 	//double HT = 1.99 *torqueThresh2;
-
-	//double t0 = abs(tor0);
-	//double t1 = abs(tor1);
 	double t0 = abs(tor0);
 	double t1 = abs(tor1);
 	if (GetArm0OT() || GetArm2OT())
 	{//highest torque threshold, stop moving
 		//AssignState(OT);
-		specialState = -1;
+		//specialState = -1;
+
+		specialState = OT;
 		return;
 	}
 	else
-	{//
-		if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if)
-		{
+	{//not overtorqued for both,  t0<OT and t1<OT
+		if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if) 
+		{// MT<t0<OT //TODO perhaps make this function if(t0+t1>2*MT) since servo can only sense stress from both
 			specialState = MIDT;
 			//AssignState(MIDT);
 			//TODO clear midt and emplace values
 			return;
 			
 		}
-		else if (t0 < LT && t1 < LT) //todo abs value of torque
-		//if (t0 < LT && t1 < LT)
+		else if (t0 < LT && t1 < LT)
+		///TODO perhaps make this function if(t0+t1<2*LT) since servo can only sense stress from both
 		{//LOW TORQUE
+			
 			if (lowStressChange)		//if time to switch states
 			{
-				if (specialState == GUI1 || global_GUI_value==GUI1) //was not already in special state
-				{
-					specialState = GUI2;
-				}
-				else//if already in special state switch to a different one 
-				{
-					specialState = GUI1;
-				}
-				//AssignState(specialState);
+			//
+			//	if (specialState == GUI1 || global_GUI_value==GUI1) //was not already in special state
+			//	{
+			//		specialState = GUI2;
+			//	}
+			//	else//if already in special state switch to a different one 
+			//	{
+			//		specialState = GUI1;
+			//	}
+			//	
+			//	LTactive = true;
+			//	return;
+				//GetLog() << "\nlow stress change, specialState:" << specialState;
 				return;
-				//ss.clear();
-				//addInterpolatedPathToVector()
-
 			}
-			//does specialState = -1; go here?
+			//GetLog() << "\nLT but no lowStressChange";
 			return; //maybe to a low torque color change?
 		}
 	}
@@ -1082,10 +1088,12 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSin
 void Smarticle::ChangeArmColor(double torque01, double torque12)
 {
 	double TT2 = torqueThresh2*.99;
-	double r0 = abs(getLinkActuator(0)->Get_mot_rot_dt());
-	double r1 = abs(getLinkActuator(1)->Get_mot_rot_dt());
-	double LIM = .1;
-	double moveAmt = 2*D2R; //2 degrees
+	
+	//for vibration upon OT, change degreesToVibrate to amount you wish to vibrate
+	double degreesToVibrate = 0;
+	double moveAmt = degreesToVibrate*D2R;
+	
+	
 	if (abs(torque01) > TT2)
 	{
 		//this->setCurrentMoveType(OT);
@@ -1097,8 +1105,9 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 
 			this->ot.clear();
 			//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
+			this->ot.emplace_back(GetAngle1() + moveAmt, GetAngle2() + moveAmt);
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
-			this->ot.emplace_back(GetAngle1(), GetAngle2());
+			this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
 		}
 		//nothing needs to be done if prev OT
 	}
@@ -1124,9 +1133,9 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 			arm2OT = true;
 			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 			this->ot.clear();
-			//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
+			this->ot.emplace_back(GetAngle1() + moveAmt, GetAngle2() + moveAmt);
 			this->ot.emplace_back(GetAngle1(), GetAngle2());
-			this->ot.emplace_back(GetAngle1(), GetAngle2());
+			this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
 		}
 		//nothing needs to be done if prev OT
 	}
@@ -1199,7 +1208,7 @@ double Smarticle::CheckLowStressChangeTime()
 	if (timeSinceLastChange > gaitLengthChangeTime)
 	{
 		lowStressChange = true;
-		timeSinceLastChange = 0; //reset value
+		timeSinceLastChange = 0; //reset value when activated
 		return 0;
 	}
 	return timeSinceLastChange;

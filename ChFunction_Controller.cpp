@@ -27,7 +27,7 @@ double ChFunctionController::Get_y(double t) {
 }
 
 double ChFunctionController::ComputeOutput(double t) {
-	double	divScale = 1;
+	double	divScale = 40;
 	if (stapleSize)
 	{
 		divScale = 24; //(mass of servosize/mass of stapleSize with sizescale=5)
@@ -125,6 +125,7 @@ double ChFunctionController::ComputeOutput(double t) {
 	double output2 = pTerm + dTerm +iTerm;
 	
 	double output3 = output + output2*deadBandOff;
+
 	// GetLog() << "1: " << omError << " \t2: " << output2 << "\t3: " << curr_omeg << "\tom: " << curr_omeg << "\n";
 	//////////////////
 

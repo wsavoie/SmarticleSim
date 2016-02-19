@@ -121,7 +121,7 @@ int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 double vibration_freq = 30;
-double fric =.7;
+double fric =.3;
 double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
@@ -170,9 +170,9 @@ double gaitChangeLengthTime = .5;
 	double rho_smarticle = 443.0;
 #endif
 
-	double p_gain = .32;   //3
-	double i_gain = 0.1;	 //1
-	double d_gain = 0.01; //.1
+	double p_gain = .32;   //.32
+	double i_gain = 0.4;	 //1
+	double d_gain = 0.01; //.1  //.01
 
 	// double t_smarticle 	= sizeScale * .00254;
 	// double t2_smarticle	= sizeScale * .001;
@@ -192,7 +192,7 @@ bool povray_output = false;
 int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-int numPerLayer = 4;
+int numPerLayer = 1;
 bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surface
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
@@ -210,7 +210,7 @@ double max_z = 0;
 double rampAngle = 10 * D2R;
 double rampInc = 1.0/60.0;
 double drum_freq = 1;
-double box_ang = 0;
+double box_ang = 10*D2R;
 double drum_omega = drum_freq*2*PI;
 double pctActive = 1.0;
 double inc = 0.00001;
@@ -517,8 +517,9 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				myRot
 				);
 
-			if (MyRand()<1)
-			smarticle0->visualize = true;
+			if (MyRand()<1)//to reduce amount visualized amount
+				smarticle0->visualize = true;
+
 			smarticle0->populateMoveVector();
 			smarticle0->SetAngles(angle1, angle2, true);
 			//smarticle0->SetInitialAngles();
@@ -958,15 +959,18 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 		{
 		case BOX:
-			
-			dim.x = 2* dim.x;
+			//dim = (2 * dim.x, 2 * dim.y, dim.z / 8);
+			dim.x = dim.x;
 			dim.y = 2 * dim.y;
 			dim.z = dim.z / 8;
-			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_g, 
-				dim, bucket_half_thick, bucket_ctr, QUNIT, true, false, true, false);
+
+
+			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1000000000, mat_g, 
+				dim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0,0 )), true, false, true, false);
 			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 			bucket->AddAsset(bucketTexture);
-			//bucket->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+			bucket->SetCollide(true);
+			bucket->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 			bucket_bott->GetCollisionModel()->SetFamily(1);
 			bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 			break;
@@ -1577,8 +1581,6 @@ int main(int argc, char* argv[]) {
 	//ChTimerParallel step_timer;
 	Smarticle::global_GUI_value = 2;
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
-
-
 #if defined(_WIN64)
 	char* pPath = getenv("USERNAME");
 	GetLog()<<pPath;
