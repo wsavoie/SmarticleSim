@@ -42,9 +42,9 @@ std::vector<std::pair<double, double>> Smarticle::gui2;
 std::vector<std::pair<double, double>> Smarticle::gui3;
 std::vector<std::pair<double, double>> Smarticle::midTorque;
 
-ChSharedPtr<ChTexture> Smarticle::mtextureOT = ChSharedPtr<ChTexture>(new ChTexture());
-ChSharedPtr<ChTexture> Smarticle::mtextureArm = ChSharedPtr<ChTexture>(new ChTexture());
-ChSharedPtr<ChTexture> Smarticle::mtextureMid = ChSharedPtr<ChTexture>(new ChTexture());
+std::shared_ptr<ChTexture> Smarticle::mtextureOT = std::make_shared<ChTexture>();
+std::shared_ptr<ChTexture> Smarticle::mtextureArm = std::make_shared<ChTexture>();
+std::shared_ptr<ChTexture> Smarticle::mtextureMid = std::make_shared<ChTexture>();
 double Smarticle::pctActive = 1.0;
 double Smarticle::distThresh;
 unsigned int Smarticle::global_GUI_value;
@@ -69,7 +69,7 @@ Smarticle::~Smarticle()
 void Smarticle::Properties(
 		int sID,
 		double other_density,
-		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+		std::shared_ptr<ChMaterialSurface> surfaceMaterial,
 		double other_envelop,
 		double other_l,
 		double other_w,
@@ -103,7 +103,7 @@ void Smarticle::Properties(
 void Smarticle::Properties(
 		int sID,
 		double other_density,
-		ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+		std::shared_ptr<ChMaterialSurface> surfaceMaterial,
 		double other_envelop,
 		double other_l,
 		double other_w,
@@ -124,7 +124,7 @@ void Smarticle::Properties(
 	int sID,
 	int mdumID,
 	double other_density,
-	ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+	std::shared_ptr<ChMaterialSurface> surfaceMaterial,
 	double other_envelop,
 	double other_l,
 	double other_w,
@@ -305,12 +305,12 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
 
-	ChSharedBodyPtr arm;
+	std::shared_ptr<ChBody>  arm;
 
 	vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
 	gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
-	arm = ChSharedBodyPtr(new ChBody);
+	arm = std::make_shared<ChBody>();
 
 
 	//$$$$$$$$$$$
@@ -347,7 +347,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 
 	}
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelop);
-	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0),QUNIT,visualize);
+	utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0),QUNIT,visualize);
 
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 
@@ -365,21 +365,21 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	switch (armID) {
 	case 0: {
 		arm0 = arm;
-		arm0_textureAsset = ChSharedPtr<ChTexture>(new ChTexture);
+		arm0_textureAsset = std::make_shared<ChTexture>();
 		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 		arm0->AddAsset(arm0_textureAsset);
 
 	} break;
 	case 1: {
 		arm1 = arm;
-		arm1_textureAsset = ChSharedPtr<ChTexture>(new ChTexture);
+		arm1_textureAsset = std::make_shared<ChTexture>();
 		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
 		arm1->AddAsset(arm1_textureAsset);
 
 	} break;
 	case 2: {
 		arm2 = arm;
-		arm2_textureAsset = ChSharedPtr<ChTexture>(new ChTexture);
+		arm2_textureAsset = std::make_shared<ChTexture>();
 		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 		arm->AddAsset(arm2_textureAsset);
 
@@ -393,12 +393,12 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
 
-	ChSharedBodyPtr arm;
+	std::shared_ptr<ChBody> arm;
 
 	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, mr, mr2));
 	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, mr, mr2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
-	arm = ChSharedBodyPtr(new ChBody);
+	arm = std::make_shared<ChBody>();
 
 	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
 
@@ -428,7 +428,7 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 
 	}
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelop);
-	utils::AddBoxGeometry(arm.get_ptr(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
+	utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
 
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
@@ -445,21 +445,21 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	switch (armID) {
 	case 0: {
 		arm0 = arm;
-		arm0_textureAsset = ChSharedPtr<ChTexture>(new ChTexture());
+		arm0_textureAsset = std::make_shared<ChTexture>();
 		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 		arm0->AddAsset(arm0_textureAsset);
 
 	} break;
 	case 1: {
 		arm1 = arm;
-		arm1_textureAsset = ChSharedPtr<ChTexture>(new ChTexture());
+		arm1_textureAsset = std::make_shared<ChTexture>();
 		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
 		arm1->AddAsset(arm1_textureAsset);
 
 	} break;
 	case 2: {
 		arm2 = arm;
-		arm2_textureAsset = ChSharedPtr<ChTexture>(new ChTexture());
+		arm2_textureAsset = std::make_shared<ChTexture>();
 		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 		arm2->AddAsset(arm2_textureAsset);
 
@@ -470,7 +470,7 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	}
 }
 
-ChSharedBodyPtr Smarticle::GetArm(int armID) {
+std::shared_ptr<ChBody>  Smarticle::GetArm(int armID) {
 	switch (armID) {
 	case 0:
 		return arm0;
@@ -482,10 +482,10 @@ ChSharedBodyPtr Smarticle::GetArm(int armID) {
 		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
 		break;
 	}
-	return ChSharedBodyPtr();
+	return std::shared_ptr<ChBody>();
 }
 
-ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
+std::shared_ptr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
 
 	switch (jointID) {
 	case 0:
@@ -496,7 +496,7 @@ ChSharedPtr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
 		std::cerr << "Error! smarticle can only have joints with ids from {0, 1}" << std::endl;
 		break;
 	}
-	return ChSharedPtr<ChLinkLockRevolute>();
+	return std::shared_ptr<ChLinkLockRevolute>();
 }
 void Smarticle::SetSpeed(ChVector<> newSpeed)
 {
@@ -512,8 +512,8 @@ void Smarticle::TransportSmarticle(ChVector<> newPosition)
 }
 void Smarticle::CreateJoints() {
 	// link 1
-	link_revolute01 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
-	link_revolute12 = ChSharedPtr<ChLinkLockRevolute>(new ChLinkLockRevolute);
+	link_revolute01 = std::make_shared<ChLinkLockRevolute>();
+	link_revolute12 = std::make_shared<ChLinkLockRevolute>();
 	// ChVector<> pR01(-w / 2.0+r2, 0, 0);
 	// ChVector<> pR12(w / 2.0-r2, 0, 0);
 	ChVector<> pR01(-w / 2.0-r2, 0, 0);
@@ -535,8 +535,8 @@ void Smarticle::CreateJoints() {
 
 void Smarticle::CreateActuators() {
 
-	link_actuator01 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
-	link_actuator12 = ChSharedPtr<ChLinkEngine>(new ChLinkEngine);
+	link_actuator01 = std::make_shared<ChLinkEngine>();
+	link_actuator12 = std::make_shared<ChLinkEngine>();
 
 	//current sim
 	//ChVector<> pR01(-w / 2.0-r2, 0, 0);
@@ -629,7 +629,7 @@ void Smarticle::Create() {
 
 }
 
-ChSharedPtr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
+std::shared_ptr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
 	if (actuatorID == 0) {
 		return function01;
 	} else if (actuatorID == 1) {
@@ -637,10 +637,10 @@ ChSharedPtr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
 	} else {
 		std::cout << "Error! smarticle can only have actuators with ids from {0, 1}" << std::endl;
 	}
-	return ChSharedPtr<ChFunction>(NULL);
+	return std::shared_ptr<ChFunction>(NULL);
 }
 
-void Smarticle::SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction) {
+void Smarticle::SetActuatorFunction(int actuatorID, std::shared_ptr<ChFunction> actuatorFunction) {
 	if (actuatorID == 0) {
 		function01 = actuatorFunction;
 		link_actuator01->Set_rot_funct(function01);
@@ -654,16 +654,16 @@ void Smarticle::SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actu
 
 void Smarticle::SetActuatorFunction(int actuatorID, double omega, double dT) {
 	double diffTheta = dT * omega;
-	ChSharedPtr<ChLinkEngine> mlink_actuator;
+	std::shared_ptr<ChLinkEngine> mlink_actuator;
 	if (actuatorID == 0) {
 		mlink_actuator = link_actuator01;
 	} else {
 		mlink_actuator = link_actuator12;
 	}
-//	ChSharedPtr<ChFunction_Const> mfun1 = mlink_actuator->Get_rot_funct().DynamicCastTo<ChFunction_Const>();
+//	std::shared_ptr<ChFunction_Const> mfun1 = mlink_actuator->Get_rot_funct().DynamicCastTo<ChFunction_Const>();
 //	mfun1->Set_yconst(diffTheta + mfun1->Get_yconst());
-	ChSharedPtr<ChFunction_Const> mfun2 = mlink_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-	ChSharedPtr<ChFunction_Const> mfun1 = mlink_actuator->Get_tor_funct().DynamicCastTo<ChFunction_Const>();
+	std::shared_ptr<ChFunction_Const> mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
+	std::shared_ptr<ChFunction_Const> mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_tor_funct());
 
 	
 	mfun2->Set_yconst(omega);
@@ -671,19 +671,20 @@ void Smarticle::SetActuatorFunction(int actuatorID, double omega, double dT) {
 }
 
 void Smarticle::SetActuatorFunction(int actuatorID, double omega) {
-	ChSharedPtr<ChLinkEngine> mlink_actuator;
+	std::shared_ptr<ChLinkEngine> mlink_actuator;
 	if (actuatorID == 0) {
 		mlink_actuator = link_actuator01;
 	} else {
 		mlink_actuator = link_actuator12;
 	}
-	ChSharedPtr<ChFunction_Const> mfun2 = mlink_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-	ChSharedPtr<ChFunction_Const> mfun1 = mlink_actuator->Get_tor_funct().DynamicCastTo<ChFunction_Const>();
+
+	std::shared_ptr<ChFunction_Const> mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
+	std::shared_ptr<ChFunction_Const> mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_tor_funct());
 	mfun2->Set_yconst(omega);
 	mfun1->Set_yconst(omega);
 }
 
-ChSharedPtr<ChLinkEngine> Smarticle::getLinkActuator(int id)
+std::shared_ptr<ChLinkEngine> Smarticle::getLinkActuator(int id)
 {
 	if (id == 0)
 		return link_actuator01;
@@ -1257,7 +1258,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 
 }
 
-ChSharedBodyPtr Smarticle::GetSmarticleBodyPointer()
+std::shared_ptr<ChBody> Smarticle::GetSmarticleBodyPointer()
 {
 	return arm1;
 }

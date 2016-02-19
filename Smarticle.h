@@ -32,9 +32,9 @@ namespace chrono {
 	class Smarticle {
 	public:
 
-		static ChSharedPtr<ChTexture> mtextureOT;
-		static ChSharedPtr<ChTexture> mtextureMid;
-		static ChSharedPtr<ChTexture> mtextureArm;
+		static std::shared_ptr<ChTexture> mtextureOT;
+		static std::shared_ptr<ChTexture> mtextureMid;
+		static std::shared_ptr<ChTexture> mtextureArm;
 		bool active=false;
 		static double pctActive;
 		bool armBroken;
@@ -51,7 +51,7 @@ namespace chrono {
 		virtual void Properties(
 				int sID,
 				double other_density,
-				ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+				std::shared_ptr<ChMaterialSurface> surfaceMaterial,
 				double other_envelop,
 				double other_l,
 				double other_w,
@@ -65,7 +65,7 @@ namespace chrono {
 		virtual void Properties(
 				int sID,
 				double other_density,
-				ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+				std::shared_ptr<ChMaterialSurface> surfaceMaterial,
 				double other_envelop,
 				double other_l,
 				double other_w,
@@ -81,7 +81,7 @@ namespace chrono {
 			int sID,
 			int mdumID,
 			double other_density,
-			ChSharedPtr<ChMaterialSurface> surfaceMaterial,
+			std::shared_ptr<ChMaterialSurface> surfaceMaterial,
 			double other_envelop,
 			double other_l,
 			double other_w,
@@ -120,21 +120,21 @@ namespace chrono {
 		virtual double GetOmega2(bool angularFreq = true);
 		double GetNextOmega(int id);
 		double GetZReactTorque(int id);
-		virtual ChSharedBodyPtr GetSmarticleBodyPointer();
+		virtual std::shared_ptr<ChBody>  GetSmarticleBodyPointer();
 		// create the smarticle by creating arms, adding joint between them, and functions
 		virtual void Create();
 
 		// get arm shared pointer
-		virtual ChSharedBodyPtr GetArm(int armID);
+		virtual std::shared_ptr<ChBody>  GetArm(int armID);
 
 		// get joint shared pointer
 		// jointID belongs to {0, 1}, i.e. the joint between 0 and 1, or between 1 and 2
-		virtual ChSharedPtr<ChLinkLockRevolute> GetRevoluteJoint(int jointID);
+		virtual std::shared_ptr<ChLinkLockRevolute> GetRevoluteJoint(int jointID);
 
 		// get actuator function
 		// actuatorID belongs to {0, 1}, i.e. the actuatorID between 0 and 1, or between 1 and 2
-		virtual ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID);
-		virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction);
+		virtual std::shared_ptr<ChFunction> GetActuatorFunction(int actuatorID);
+		virtual void SetActuatorFunction(int actuatorID, std::shared_ptr<ChFunction> actuatorFunction);
 		virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
 		virtual void SetActuatorFunction(int actuatorID, double omega);
 
@@ -146,8 +146,8 @@ namespace chrono {
 
 		virtual double GetMass();
 		virtual double GetDensity() {return density;};
-		//	virtual void SetCurrentMotion(ChSharedPtr<SmarticleMotionPiece> s_motionPiece); // to be implemented
-		//	virtual ChSharedPtr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
+		//	virtual void SetCurrentMotion(std::shared_ptr<SmarticleMotionPiece> s_motionPiece); // to be implemented
+		//	virtual std::shared_ptr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
 		virtual void TransportSmarticle(ChVector<>);
 		virtual void SetSpeed(ChVector<> newSpeed);
 
@@ -226,7 +226,7 @@ namespace chrono {
 		virtual void setCurrentMoveType(MoveType newMoveType);
 		void ControllerMove(int guiState, double torque01, double torque12);
 		double CheckLowStressChangeTime();
-		ChSharedPtr<ChLinkEngine> getLinkActuator(int id);
+		std::shared_ptr<ChLinkEngine> getLinkActuator(int id);
 		double defaultOmega;
 		double omegaLim;
 		//////////////////////////////////////////////////////
@@ -278,7 +278,7 @@ namespace chrono {
 
 		// material property
 		double density;
-		ChSharedPtr<ChMaterialSurface> mat_g;
+		std::shared_ptr<ChMaterialSurface> mat_g;
 
 
 
@@ -299,26 +299,26 @@ namespace chrono {
 		std::vector <double> nextAngle;
 		std::vector <double> currTorque;
 		// bodies
-	 ChSharedBodyPtr arm0;	// left arm
-	 ChSharedBodyPtr arm1;	// middle arm
-	 ChSharedBodyPtr arm2;	// right arm
-	 ChSharedBodyPtr smarticle;
+		std::shared_ptr<ChBody> arm0;	// left arm
+		std::shared_ptr<ChBody> arm1;	// middle arm
+		std::shared_ptr<ChBody> arm2;	// right arm
+		std::shared_ptr<ChBody> smarticle;
 		// joints
-		ChSharedPtr<ChLinkLockRevolute> link_revolute01; 	// revolute joint between arms 0 and 1
-		ChSharedPtr<ChLinkLockRevolute> link_revolute12; 	// revolute joint between arms 0 and 1
+		std::shared_ptr<ChLinkLockRevolute> link_revolute01; 	// revolute joint between arms 0 and 1
+		std::shared_ptr<ChLinkLockRevolute> link_revolute12; 	// revolute joint between arms 0 and 1
 
 		// Actuators
-		ChSharedPtr<ChLinkEngine> link_actuator01;	// actuator joint between arms 0 and 1
-		ChSharedPtr<ChLinkEngine> link_actuator12;	// actuator joint between arms 0 and 1
+		std::shared_ptr<ChLinkEngine> link_actuator01;	// actuator joint between arms 0 and 1
+		std::shared_ptr<ChLinkEngine> link_actuator12;	// actuator joint between arms 0 and 1
 
 		// joints functions
-		ChSharedPtr<ChFunction> function01;
-		ChSharedPtr<ChFunction> function12;
+		std::shared_ptr<ChFunction> function01;
+		std::shared_ptr<ChFunction> function12;
 
 		// assets
-		ChSharedPtr<ChTexture> arm0_textureAsset;
-		ChSharedPtr<ChTexture> arm1_textureAsset;
-		ChSharedPtr<ChTexture> arm2_textureAsset;
+		std::shared_ptr<ChTexture> arm0_textureAsset;
+		std::shared_ptr<ChTexture> arm1_textureAsset;
+		std::shared_ptr<ChTexture> arm2_textureAsset;
 
 
 

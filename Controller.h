@@ -22,9 +22,9 @@ namespace chrono {
 		bool Step(double dt);
 		// get the toruqe for joint i
 		//size_t GetNumEngines();
-		ChSharedPtr<ChLinkEngine> GetEngine(size_t i);
-		ChSharedPtr<ChFunctionController> engine_funct0;
-		ChSharedPtr<ChFunctionController> engine_funct1;
+		std::shared_ptr<ChLinkEngine> GetEngine(size_t i);
+		std::shared_ptr<ChFunctionController> engine_funct0;
+		std::shared_ptr<ChFunctionController> engine_funct1;
 		void SetDesiredAngle(size_t i, double desOmeg);
 		void SetDesiredAngularSpeed(size_t i, double desangle);
 		//double GetCurrAngle(size_t i, double t);

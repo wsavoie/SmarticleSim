@@ -75,7 +75,7 @@ void SmarticleU::Create() {
 			
 	// create body, set initPos and rotation, add surface property, and clear/make collision model
 
-		smarticleU = ChSharedBodyPtr(new ChBody);
+	smarticleU = std::make_shared<ChBody>();
 	
 
 
@@ -91,9 +91,9 @@ void SmarticleU::Create() {
 	//smarticleU->GetCollisionModel()->SetDefaultSuggestedEnvelope(.4*r2);
 	// initialize collision geometry wrt cm
 	
-	utils::AddBoxGeometry(smarticleU.get_ptr(), box1_dim, rel_loc1);
-	utils::AddBoxGeometry(smarticleU.get_ptr(), box2_dim, rel_loc2,quat2);
-	utils::AddBoxGeometry(smarticleU.get_ptr(), box3_dim, rel_loc3,quat3);
+	utils::AddBoxGeometry(smarticleU.get(), box1_dim, rel_loc1);
+	utils::AddBoxGeometry(smarticleU.get(), box2_dim, rel_loc2,quat2);
+	utils::AddBoxGeometry(smarticleU.get(), box3_dim, rel_loc3,quat3);
 	smarticleU->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 
 	smarticleU->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);

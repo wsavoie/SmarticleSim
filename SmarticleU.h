@@ -32,7 +32,7 @@ public:
 	// get center of mass
 	virtual ChVector<> Get_cm();
 	virtual double GetVolume();
-	virtual ChSharedBodyPtr GetSmarticleBodyPointer() {
+	virtual std::shared_ptr<ChBody> GetSmarticleBodyPointer() {
 		return smarticleU;
 	}
 	virtual void SetAngle(double mangle1, double mangle2, bool degrees);
@@ -48,25 +48,25 @@ public:
 	// no support zone
 	//////////////////////
 
-	virtual ChSharedBodyPtr GetArm(int armID) {
+	virtual std::shared_ptr<ChBody>  GetArm(int armID) {
 		printf("Warning!! SmarticleU does not have independent arms\n");
-		ChSharedBodyPtr tmpPtr;
+		std::shared_ptr<ChBody>  tmpPtr;
 		return tmpPtr;
 	}
 
-	virtual ChSharedPtr<ChLinkLockRevolute> GetRevoluteJoint(int jointID) {
+	virtual std::shared_ptr<ChLinkLockRevolute> GetRevoluteJoint(int jointID) {
 		printf("Warning!! SmarticleU does not have joint\n");
-		ChSharedPtr<ChLinkLockRevolute> tmpPtr;
+		std::shared_ptr<ChLinkLockRevolute> tmpPtr;
 		return tmpPtr;
 	}
 
-	virtual ChSharedPtr<ChFunction> GetActuatorFunction(int actuatorID) {
+	virtual std::shared_ptr<ChFunction> GetActuatorFunction(int actuatorID) {
 		printf("Warning!! SmarticleU does not have actuator\n");
-		ChSharedPtr<ChFunction> tmpPtr;
+		std::shared_ptr<ChFunction> tmpPtr;
 		return tmpPtr;
 	}
 
-	virtual void SetActuatorFunction(int actuatorID, ChSharedPtr<ChFunction> actuatorFunction) {
+	virtual void SetActuatorFunction(int actuatorID, std::shared_ptr<ChFunction> actuatorFunction) {
 		printf("Warning!! SmarticleU does not have actuator. Actuator cannot be set.\n");
 	}
 	
@@ -74,7 +74,7 @@ public:
 
 private:
 	  // bodies
-	ChSharedBodyPtr smarticleU;
+	std::shared_ptr<ChBody>  smarticleU;
 };
 }
 
