@@ -9,7 +9,7 @@
 #include "utils/ChUtilsGeometry.h"
 #include "utils/ChUtilsCreators.h"
 //#include "physics/ChSystem.h"  // Arman: take care of this later
-#include "chrono_parallel/physics/ChSystemParallel.h"
+
 
 
 using namespace chrono;
@@ -36,8 +36,8 @@ void SmarticleU::Create() {
 		(l / 2.0 + r2)*sin(angle2));
 
 	// relative location of the boxes wrt smarticle initPos,
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1 +CH_C_PI/2.0, 0));
-	ChQuaternion<> quat3 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2 -CH_C_PI / 2.0, 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1 +PI_2, 0));
+	ChQuaternion<> quat3 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2 - PI_2, 0));
 
 
 	ChVector<> gyr1 = utils::CalcBoxGyration(box1_dim,box1_loc).Get_Diag();
@@ -74,11 +74,9 @@ void SmarticleU::Create() {
 			m3 * (gyr3.z + ChVector<>(rel_loc3.x, rel_loc3.y, 0).Length2()) ;
 			
 	// create body, set initPos and rotation, add surface property, and clear/make collision model
-	if (USE_PARALLEL) {
-		smarticleU = ChSharedBodyPtr(new ChBody(new collision::ChCollisionModelParallel));
-	} else {
-		smarticleU = ChSharedBodyPtr(new ChBody);
-	}
+
+		smarticleU = std::make_shared<ChBody>();
+	
 
 
 //	ChVector<> cm = initPos;		// cm in abs reference frame
@@ -93,9 +91,9 @@ void SmarticleU::Create() {
 	//smarticleU->GetCollisionModel()->SetDefaultSuggestedEnvelope(.4*r2);
 	// initialize collision geometry wrt cm
 	
-	utils::AddBoxGeometry(smarticleU.get_ptr(), box1_dim, rel_loc1);
-	utils::AddBoxGeometry(smarticleU.get_ptr(), box2_dim, rel_loc2,quat2);
-	utils::AddBoxGeometry(smarticleU.get_ptr(), box3_dim, rel_loc3,quat3);
+	utils::AddBoxGeometry(smarticleU.get(), box1_dim, rel_loc1);
+	utils::AddBoxGeometry(smarticleU.get(), box2_dim, rel_loc2,quat2);
+	utils::AddBoxGeometry(smarticleU.get(), box3_dim, rel_loc3,quat3);
 	smarticleU->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 
 	smarticleU->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelop);
@@ -116,12 +114,12 @@ ChVector<> SmarticleU::Get_cm() {
 double SmarticleU::GetVolume() {
 	return (2 * r) * (2 * r2 )* (w + 2 * l);
 }
-void SmarticleU::SetAngle(double mangle1, double mangle2, bool degrees = false)
+void SmarticleU::SetAngle(double mangle1, double mangle2, bool degrees = false)// &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& make sure on use I supply rads without final arg
 {
 	if (degrees)
 	{
-		angle1 = mangle1*CH_C_PI / 180.0;
-		angle2 = mangle2*CH_C_PI / 180.0;
+		angle1 = mangle1*D2R;
+		angle2 = mangle2*D2R;
 	}
 	else
 	{
@@ -133,8 +131,8 @@ void SmarticleU::SetAngle(double mangle, bool degrees = false)
 {
 	if (degrees)
 	{
-		angle1 = mangle*CH_C_PI / 180.0;
-		angle2 = mangle*CH_C_PI / 180.0;
+		angle1 = mangle*D2R;
+		angle2 = mangle*D2R;
 	}
 	else
 	{
@@ -144,26 +142,26 @@ void SmarticleU::SetAngle(double mangle, bool degrees = false)
 }
 void SmarticleU::SetAngle1(double mangle1, bool degrees = false)
 {
-	if (degrees) { angle1 = mangle1*CH_C_PI / 180.0; }
+	if (degrees) { angle1 = mangle1*D2R; }
 	else{ angle1 = mangle1; }
 }
 void SmarticleU::SetAngle2(double mangle2, bool degrees = false)
 {
-	if (degrees) { angle2 = mangle2*CH_C_PI / 180.0; }
+	if (degrees) { angle2 = mangle2*D2R; }
 	else{ angle2 = mangle2; }
 }
 
-double SmarticleU::GetAngle1(bool degrees = true)
+double SmarticleU::GetAngle1(bool degrees = false)
 {
 	if (degrees)
-		return angle1*180.0 / CH_C_PI;
+		return angle1*R2D;
 	else
 		return angle1;
 }
-double SmarticleU::GetAngle2(bool degrees = true)
+double SmarticleU::GetAngle2(bool degrees = false)
 {
 	if (degrees)
-		return angle2*180.0 / CH_C_PI;
+		return angle2*R2D;
 	else
 		return angle2;
 }

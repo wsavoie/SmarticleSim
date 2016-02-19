@@ -15,7 +15,7 @@ namespace chrono {
 void CheckPointSmarticles_Write(
 		std::vector<Smarticle*> & mySmarticlesVec,
 		int tStep,
-		ChSharedPtr<ChMaterialSurface> mat_g,
+		std::shared_ptr<ChMaterialSurface> mat_g,
 		double l_smarticle,
 		double w_smarticle,
 		double t_smarticle,
@@ -87,7 +87,7 @@ void CheckPointSmarticles_Write(
 void CheckPointSmarticlesDynamic_Write(
 	std::vector<Smarticle*> & mySmarticlesVec,
 	int tStep,
-	ChSharedPtr<ChMaterialSurface> mat_g,
+	std::shared_ptr<ChMaterialSurface> mat_g,
 	double l_smarticle,
 	double w_smarticle,
 	double t_smarticle,
@@ -177,7 +177,7 @@ void CheckPointSmarticles_Read(
 	inSmarticles.open("smarticles.csv");
 	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction,angle1,angle2;
 	double rho_smarticle;
-	ChSharedPtr<ChMaterialSurface> mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
+	auto mat_g = std::make_shared<ChMaterialSurface>();
 	char ddCh;
 	inSmarticles >>
 	l_smarticle >>
@@ -212,7 +212,7 @@ void CheckPointSmarticles_Read(
 						  l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						  p3,
 						  q4);
-		smarticle0->SetAngle(angle1, angle2, true);
+		smarticle0->SetAngles(angle1, angle2, true);
 		smarticle0->Create();
 		mySmarticlesVec.emplace_back(smarticle0);
 
@@ -233,7 +233,7 @@ void CheckPointSmarticlesDynamic_Read(
 	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction, angle1, angle2, globalidx, gui1idx, gui2idx, gui3idx, dumId;
 	unsigned int currMoveType, prevMoveType, gui_value;
 	double rho_smarticle;
-	ChSharedPtr<ChMaterialSurface> mat_g = ChSharedPtr<ChMaterialSurface>(new ChMaterialSurface);
+	auto mat_g = std::make_shared<ChMaterialSurface>();
 	char ddCh;
 	double omega;
 	inSmarticles >>
@@ -245,7 +245,7 @@ void CheckPointSmarticlesDynamic_Read(
 		rho_smarticle >>
 		friction>>
 		gui_value;
-	
+	//TODO initialize angle1 and angle2
 
 	printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f angle1 %f angle2 %f",
 		l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticle, friction, angle1, angle2);

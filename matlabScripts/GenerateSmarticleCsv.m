@@ -8,36 +8,90 @@
 %   angHigh     = highest angle smarticle is allowed to move to
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
 
-dt=.0005;
-omega = 10;
-torqueThresh=50;%.00005;
+%https://www.pololu.com/product/1040/specs
+%servo speed - .12s/60deg (strange units) 8.72 rads/sec
+%stall torque- .008 Nm
+%stall curr-   270 mA
+
+%dimensionless parameter for torque and length=
+%for robot: T=.008, L=.05 arm weight = 11.3 g
+
+%running curr- 100mA
+%Kt = T/I, .008/.27 = .0296 Nm/A
+%J
+stapleSize = false;
+dt=.00025; %.00025
+sizeScale=1;
+% omega = 4.9244e-5;
+omegaLim = 8; %%limit speed in sim
+omega = 8; %distance between points in move list
+% omega = 10;
+rho = 7850.0;%/(sizeScale^3);
+%(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
+if stapleSize
+    t   = .00127*sizeScale;
+    t2  = .0005*sizeScale;
+    w_s = .0117*sizeScale;
+    l_s = w_s;
+    rho = 7850.0;%/(sizeScale^3);
+    volume =  t2 * t* (w_s + 2 * (l_s));
+    mass = volume*rho;
+    torqueThresh=2*9.8*mass*w_s;%.00005;  4.6657e-04
+else
+      %t = height of solar panels
+    t= .022982;
+    w_s = .04669;
+    t2 = .02172;
+    l_s = .04450; 
+%     t   = .0079*sizeScale;
+%     t2  = .0053*sizeScale;
+%     w_s = .0117*sizeScale;
+%     l_s = w_s;
+%1.5424 = lw
+    rho = 443.0;%/(sizeScale^3);
+    volume =  t2 * t* (w_s + 2 * (l_s));
+    mass = volume*rho;
+    torqueThresh=.008; %.008cd 
+end
+
+
+
+
+
 angLow=60;
 angHigh=120;
 
 global_gait= 1;
 gui1_gait = 1;
 gui2_gait = 1;
-gui3_gait = 1;
-
-
+gui3_gait = 2;
+midt_gait = 2;
+torqueThresh
 PON= 1;
 
+user=getenv('username');
+if strcmp(user,'root')
+    directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
+else
+    directory_name = uigetdir('D:\GT Coursework\smarticledata'); 
+end
 
-directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 fileloc = horzcat(directory_name,'\','smarticleMoves.csv');
 fid = fopen(fileloc,'wt');
 %add in all initial values to top of file
 %square torque so that we can use the square in the program so we can avoid
 %having to use sqrts in the code at each timestep!
-fprintf(fid,'%s\n%f\n%f\n%f\n%f\n',dt,omega,torqueThresh,angLow,angHigh);
+fprintf(fid,'%s\n%f\n%f\n%f\n%f\n%f\n',dt,omega,torqueThresh,angLow,angHigh,omegaLim);
 %add #1 to denote end of first section
 fprintf(fid,'#\n');
 
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
-ss= dt*omega; %step size
-
-
+ss= dt*omega; %step size 
+if ss<1e-3
+    ss= .0013; %step siz
+%     error('change back to ss=.0025)');
+end
 
 switch global_gait
     case 1% circle gait
@@ -52,9 +106,10 @@ switch global_gait
             plot(global_theta_1Pos,global_theta_2Pos,'.k');
             xlabel('\theta_1');
             ylabel('\theta_2');
-            axis square
+            
             title('Circle Gait');
-            figText(gcf,15);
+            %%figText(gcf,15);
+            axis square
         end
     case 2% square gait
         %not implemented yet!
@@ -75,7 +130,7 @@ switch global_gait
         if PON
             figure(1);
             hold on;
-            plot(global_theta_1Pos,global_theta_2Pos,'.k');
+            plot(global_theta_1Pos,global_theta_2Pos,'.');
             xlabel('\theta_1');
             ylabel('\theta_2');
             axis([-sL sL -sL sL])
@@ -98,6 +153,92 @@ switch global_gait
             title('\pi/2\rightarrow 2\pi/3\rightarrow\pi/2');
             figText(gcf,15);
         end
+      case 4% rectified square gait
+        %not implemented yet!
+        sL = pi/2; %square gait side length
+        len = length(0:ss:sL); %gait length
+        sL2 = pi/2;%*.8;
+        %theta1
+        amove1 = linspace(0,sL,len);    %0   ->  max
+        amove2 = linspace(sL,sL,len);   %max ->  max
+        amove3 = linspace(sL,0,len);    %max ->  0
+        amove4 = linspace(0,0,len);     %0   ->  0
+%       theta2
+        bmove1 = linspace(0,0,len);     %0   ->  0
+        bmove2 = linspace(0,sL2,len);   %0   ->  max
+        bmove3 = linspace(sL2,sL2,len); %max ->  max
+        bmove4 = linspace(sL2,0,len);   %max ->  0
+        
+        global_theta_1Pos=[amove1,amove2,amove3,amove4];
+        global_theta_2Pos=[bmove1,bmove2,bmove3,bmove4];
+        if PON
+            figure(1);
+            hold on;
+            plot(global_theta_1Pos,global_theta_2Pos,'.k');
+            xlabel('\theta_1');
+            ylabel('\theta_2');
+            axis([-sL 2*sL -sL 2*sL])
+            axis equal
+            title('Rectified Square Gait');
+            figText(gcf,15);
+        end  
+    case 5
+       
+        figure(1);
+        clf;
+        hold on;
+        axis([-1.25*pi/2,1.25*pi/2,-1.25*pi/2,1.25*pi/2]);
+%         imr=imread('C:\Users\root\Desktop\geom\tgran.PNG');
+%         im2=imagesc(imr);
+%         image(linspace(-1.25*pi/2,1.25*pi/2,im2.XData(2)),linspace(1.25*pi/2,-1.25*pi/2,im2.YData(2)),imr)
+        
+        
+        
+        axis square
+        
+        xlabel('\theta_1');
+        ylabel('\theta_2');
+        %%%%%%%%
+        
+        hold on
+%         r=pi/4;
+%         th = 0:pi/50:2*pi;
+%         x=pi/4;
+%         y=pi/4;
+%         xunit = r * cos(th) + x;
+%         yunit = r * sin(th) + y;
+%         plot(xunit, yunit,'k');
+%         plot(-xunit,-yunit,'k');
+%         plot(xunit, -yunit,'k');
+%         plot(-xunit, yunit,'k');
+%         x=-pi/4;
+%         y=-pi/4;
+%         x=[-1.75,1.75];
+%         y=[-1.75,1.75];
+%         plot(x,y,'k');
+%         plot(x,-y,'k');
+%         plot([-1.75,1.75],[0,0],'k');
+%         plot([0,0],[-1.75,1.75],'k');
+        
+
+        hold off
+        %%%%%%%%%%
+        h=imfreehand(gca);
+       
+        gaitPts= getPosition(h);
+        gaitPts(end+1,:)= gaitPts(1,:);
+        [global_theta_1Pos,global_theta_2Pos] = ...
+            interpolateGait(gaitPts,ss);
+        
+        hold on;
+        title('Custom Drawn Gait');
+        plot(global_theta_1Pos,global_theta_2Pos,'o-k');
+        xlabel('\theta_1');
+        ylabel('\theta_2');
+        axis([-1.25*pi/2,1.25*pi/2,-1.25*pi/2,1.25*pi/2]);
+        axis square
+        figText(gcf,15);
+        
 end
 
 %convert the distance between the points to the proper amount
@@ -128,6 +269,9 @@ for i=1:guiSize
                 case 1
                     GUI_theta_1Pos = [pi/2];
                     GUI_theta_2Pos = [pi/2];
+                case 2
+                    GUI_theta_1Pos = [pi/4];
+                    GUI_theta_2Pos = [pi/4];
             end
         case 2 %gui2
             switch(gui2_gait)
@@ -143,11 +287,17 @@ for i=1:guiSize
                 case 1
                     GUI_theta_1Pos = [pi/2];
                     GUI_theta_2Pos = [-pi/2];
+                case 2
+                GUI_theta_1Pos = [-pi/2];
+                GUI_theta_2Pos = [-pi/2];
+                case 3
+                GUI_theta_1Pos = [pi];
+                GUI_theta_2Pos = [pi];
             end
     end
     
     if(length(GUI_theta_1Pos)~=length(GUI_theta_2Pos))
-        error('global positions have inequal lengths for the arm position arrays!');
+        error('gui positions have inequal lengths for the arm position arrays!');
     end
     
     for i=1:length(GUI_theta_1Pos)
@@ -158,6 +308,43 @@ for i=1:guiSize
         else
             fprintf(fid,', \n',GUI_theta_1Pos(i),GUI_theta_2Pos(i));
         end
+    end
+end
+
+
+%% MIDT function position definitions
+
+switch(midt_gait)
+    case 1
+        sL = pi/2;
+        sL2 = pi/2;
+        len = length(0:ss:sL); %gait length
+        amove1 = linspace(0,sL,len);    %0   ->  max
+        amove2 = linspace(sL,sL,len);   %max ->  max
+        amove3 = linspace(sL,0,len);    %max ->  0
+        amove4 = linspace(0,0,len);     %0   ->  0
+%       theta2
+        bmove1 = linspace(0,0,len);     %0   ->  0
+        bmove2 = linspace(0,sL2,len);   %0   ->  max
+        bmove3 = linspace(sL2,sL2,len); %max ->  max
+        bmove4 = linspace(sL2,0,len);   %max ->  0
+        
+        MIDT_theta_1Pos=[amove1,amove2,amove3,amove4];
+        MIDT_theta_2Pos=[bmove1,bmove2,bmove3,bmove4];
+    case 2
+        MIDT_theta_1Pos = [pi/2];
+        MIDT_theta_2Pos = [pi/2];
+end          
+   if(length(MIDT_theta_1Pos)~=length(MIDT_theta_2Pos))
+        error('MIDT positions have inequal lengths for the arm position arrays!');
+    end
+for i=1:length(MIDT_theta_1Pos)
+    fprintf(fid,'%f, %f',MIDT_theta_1Pos(i),MIDT_theta_2Pos(i));
+    %denote next area with a # as last char
+    if i == length(MIDT_theta_1Pos)
+        fprintf(fid,'#\n',MIDT_theta_1Pos(i),MIDT_theta_2Pos(i));
+    else
+        fprintf(fid,', \n',MIDT_theta_1Pos(i),MIDT_theta_2Pos(i));
     end
 end
 

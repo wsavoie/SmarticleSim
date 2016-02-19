@@ -78,6 +78,7 @@ find_package(Chrono
              OPTIONAL_COMPONENTS OpenGL
              COMPONENTS Irrlicht
              CONFIG
+		
 )
 
 # If Chrono and/or the required component(s) were not found, return now.
@@ -108,7 +109,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}
 )
 
-
 #--------------------------------------------------------------
 # Append to the parent's list of DLLs (and make it visible up)
 #--------------------------------------------------------------
@@ -125,8 +125,9 @@ message(STATUS "Parallel programs...")
 foreach(PROGRAM ${DEMOS})
 
   message(STATUS "...add ${PROGRAM}")
-
-  add_executable(${PROGRAM}  "${PROGRAM}.cpp" Smarticle.cpp SmarticleU.cpp CheckPointSmarticles.cpp)
+file(GLOB SOURCES "*.cpp")
+file(GLOB HEADERS "*.h")
+  add_executable(${PROGRAM}  "${PROGRAM}.cpp" ${HEADERS} ${SOURCES})
   source_group(""  FILES "${PROGRAM}.cpp")
 
   set_target_properties(${PROGRAM} PROPERTIES
@@ -169,9 +170,15 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     # directory (depending on the configuration selected at build time in VS)
     add_custom_command(
         TARGET COPY_DLLS POST_BUILD
+		if(MSVC)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${DLL}"
+            "${CMAKE_BINARY_DIR}/$<CONFIGURATION>"
+			else()
+			            "${DLL}"
             "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>"
+			
+		endif()
     )
 
   endforeach()
