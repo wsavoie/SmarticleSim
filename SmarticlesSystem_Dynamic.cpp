@@ -217,18 +217,11 @@ double inc = 0.00001;
 double angle1 = 90;
 double angle2 = 90;
 double vibAmp = 5 * D2R; //vibrate by some amount of degrees back and forth
-<<<<<<< HEAD
-std::shared_ptr<ChTexture> bucketTexture = std::make_shared<ChTexture>();
-std::shared_ptr<ChTexture> sphereTexture = std::make_shared<ChTexture>();
-std::shared_ptr<ChTexture> groundTexture = std::make_shared<ChTexture>();
-std::shared_ptr<ChTexture> floorTexture = std::make_shared<ChTexture>();
 
-=======
 auto bucketTexture = std::make_shared<ChTexture>();
 auto sphereTexture = std::make_shared<ChTexture>();
 auto groundTexture = std::make_shared<ChTexture>();
 auto floorTexture = std::make_shared<ChTexture>();
->>>>>>> develop
 
 // =====================================================================================================
 class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
@@ -560,14 +553,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 
 std::shared_ptr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYSTEM* mphysicalSystem, std::shared_ptr<ChMaterialSurfaceBase> wallMat,int ridges = 5)
 {//essentially the same as create cyl container except made it bigger and added ridges
-<<<<<<< HEAD
-	std::shared_ptr<ChBody> drum;
 
-
-	drum = std::make_shared<ChBody>();
-=======
 	auto drum = std::make_shared<ChBody>();
->>>>>>> develop
 
 	double radMult =1.5;
 	drum->SetIdentifier(id);
@@ -658,13 +645,8 @@ std::shared_ptr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYST
 }
 std::shared_ptr<ChBody> create_complex_convex_hull(CH_SYSTEM* mphysicalSystem, std::shared_ptr<ChMaterialSurfaceBase> wallMat, double numBoxes)
 {
-<<<<<<< HEAD
-	std::shared_ptr<ChBody> convexShape;
 
-	convexShape = std::make_shared<ChBody>();
-=======
 	auto convexShape = std::make_shared<ChBody>();
->>>>>>> develop
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 
 	//cyl_container->SetMass(mass);
@@ -759,12 +741,7 @@ std::shared_ptr<ChBody> create_ramp(int id, CH_SYSTEM* mphysicalSystem, std::sha
 
 std::shared_ptr<ChBody> create_cylinder_from_blocks2(int num_boxes, int id, bool overlap, CH_SYSTEM* mphysicalSystem, std::shared_ptr<ChMaterialSurfaceBase> wallMat)
 {
-<<<<<<< HEAD
-	std::shared_ptr<ChBody> cyl_container;
-	cyl_container = std::make_shared<ChBody>();
-=======
 	auto cyl_container = std::make_shared<ChBody>();
->>>>>>> develop
 	cyl_container->SetIdentifier(id);
 	//cyl_container->SetMass(mass);
 	cyl_container->SetPos(bucket_ctr);
@@ -818,12 +795,7 @@ std::shared_ptr<ChBody> create_cylinder_from_blocks2(int num_boxes, int id, bool
 
 	for (int i = 0; i < num_boxes; i++)
 	{
-<<<<<<< HEAD
-		std::shared_ptr<ChBody> wallPiece = std::make_shared<ChBody>();
-=======
 		auto wallPiece = std::make_shared<ChBody>();
->>>>>>> develop
-
 		box_size = ChVector<>((box_side + wallt) / 2.0,
 			wallt,
 			half_height + o_lap);
@@ -868,12 +840,7 @@ std::shared_ptr<ChBody> create_cylinder_from_blocks2(int num_boxes, int id, bool
 // =============================================================================
 std::shared_ptr<ChBody> Create_hopper2(CH_SYSTEM* mphysicalSystem, std::shared_ptr<ChMaterialSurfaceBase> wallMat, double theta, double holeSize, bool overlap)
 {
-<<<<<<< HEAD
-	std::shared_ptr<ChBody> hopper;
-	hopper = std::make_shared<ChBody>();
-=======
 	auto hopper = std::make_shared<ChBody>();
->>>>>>> develop
 
 	holeSize = holeSize / 2;
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
@@ -957,14 +924,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	// ground
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
 	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*bucket_interior_halfDim.z);
-<<<<<<< HEAD
-	std::shared_ptr<ChBody> ground;
-
-	ground = std::make_shared<ChBody>();
-=======
 	auto ground = std::make_shared<ChBody>();
-
->>>>>>> develop
 	bucket = std::make_shared<ChBody>();
 	bucket_bott = std::make_shared<ChBody>();
 	ground->SetMaterialSurface(mat_g);
@@ -1135,17 +1095,9 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
 	double rad = t_smarticle/2;
 	ChVector<> pos = bucket_ctr + ChVector<>(2.5*bucket_rad, 0, bucket_interior_halfDim.z);
 
-<<<<<<< HEAD
-	std::shared_ptr<ChBody> xaxis, yaxis, zaxis;
-
-	xaxis = std::make_shared<ChBody>();
-	yaxis = std::make_shared<ChBody>();
-	zaxis = std::make_shared<ChBody>();
-=======
 	auto xaxis = std::make_shared<ChBody>();
 	auto yaxis = std::make_shared<ChBody>();
 	auto zaxis = std::make_shared<ChBody>();
->>>>>>> develop
 
 
 	xaxis->SetPos(pos);						yaxis->SetPos(pos);							zaxis->SetPos(pos);
@@ -1217,11 +1169,7 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 
 	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 		//ChBody* bodyPtr = *(myIter + i);
-<<<<<<< HEAD
-		std::shared_ptr<ChBody> bodyPtr = *(ibody + i);
-=======
 		auto bodyPtr = *(ibody + i);
->>>>>>> develop
 		if (bodyPtr->GetPos().z < -5.0*bucket_interior_halfDim.z) {
 			bodyPtr->SetBodyFixed(true);
 		}
@@ -1454,10 +1402,6 @@ void rotate_bucket(double t)//method is called on each iteration to rotate drum 
 	{
 		bucket->SetBodyFixed(false);
 		bucket_bott->SetBodyFixed(true);
-<<<<<<< HEAD
-		//mfun2 = bucket_actuator->Get_spe_funct().DynamicCastTo<ChFunction_Const>();
-=======
->>>>>>> develop
 		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_spe_funct());
 		drum_omega = drum_freq*PI * 2;
 		mfun2->Set_yconst(drum_omega);
@@ -1466,10 +1410,6 @@ void rotate_bucket(double t)//method is called on each iteration to rotate drum 
 	{
 		bucket->SetBodyFixed(false);
 		bucket_bott->SetBodyFixed(true);
-<<<<<<< HEAD
-		//		mfun2 = bucket_actuator->Get_rot_funct().DynamicCastTo<ChFunction_Const>();
-=======
->>>>>>> develop
 		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_rot_funct());
 		mfun2->Set_yconst(box_ang);
 	}
@@ -1773,20 +1713,6 @@ int main(int argc, char* argv[]) {
 
 	int stepEnd = int(tFinal / dT);  // 1.0e6;//2.4e6;//600000;//2.4e6 * (.02 * paramsH.sizeScale) /
 
-<<<<<<< HEAD
-	std::shared_ptr<ChBody> truss = std::make_shared<ChBody>();
-	std::shared_ptr<ChLinkEngine> link_engine = std::make_shared<ChLinkEngine>();
-	std::shared_ptr<ChFunction_Sine> sinefunc = std::make_shared<ChFunction_Sine>();
-	std::shared_ptr<ChFunction_Const> func2 = std::make_shared<ChFunction_Const>();
-	std::shared_ptr<ChFunction_Const> knobcylinderfunc = std::make_shared<ChFunction_Const>();
-	std::shared_ptr<ChFunctionCustom> func = std::make_shared<ChFunctionCustom>();
-	std::shared_ptr<ChBody> knobstick = std::make_shared<ChBody>();
-	std::shared_ptr<ChBody> stick = std::make_shared<ChBody>();
-
-
-
-
-=======
 	auto truss = std::make_shared<ChBody>();
 	auto link_engine = std::make_shared<ChLinkEngine>();
 	auto sinefunc = std::make_shared<ChFunction_Sine>();
@@ -1795,7 +1721,6 @@ int main(int argc, char* argv[]) {
 	auto func = std::make_shared<ChFunctionCustom>();
 	auto knobstick = std::make_shared<ChBody>();
 	auto stick = std::make_shared<ChBody>();
->>>>>>> develop
 
 	//std::shared_ptr<ChLinkLinActuator> pris_engine(new ChLinkLinActuator);
 	std::shared_ptr<ChLinkLinActuator> pris_engine;
@@ -2018,11 +1943,8 @@ int main(int argc, char* argv[]) {
 		mphysicalSystem.AddBody(knobstick);
 	
 		
-<<<<<<< HEAD
-		//std::shared_ptr<ChLinkEngine> link_engine(new ChLinkEngine);
-=======
+
 		//auto link_engine = std::make_shared<ChLinkEngine>();
->>>>>>> develop
 
 		double knobAmp = PI_2;
 		double knobW = 0;//// rod rotating speed knobW = PI
@@ -2038,24 +1960,13 @@ int main(int argc, char* argv[]) {
 		link_engine->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_LOCK); // also works as revolute support
 		link_engine->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 		//link_engine->Set_rot_funct(knobcylinderfunc);
-<<<<<<< HEAD
 
-		
-
-		std::shared_ptr<ChFunction_Const> mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(link_engine->Get_spe_funct());
-=======
 		auto mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(link_engine->Get_spe_funct());
->>>>>>> develop
 		mfun2->Set_yconst(knobW);
 		link_engine->SetDisabled(true);
 		mphysicalSystem.AddLink(link_engine);
 		
-		
-<<<<<<< HEAD
-		//std::shared_ptr<ChLinkLockRevolute> link(new ChLinkLockRevolute);
-=======
 		//auto link = std::make_shared<ChLinkLockRevolute>();
->>>>>>> develop
 		//link->Initialize(knobstick, truss, ChCoordsys<>(VNULL,,ChVector<>(1,0,0)));
 		//link->SetMotion_axis(ChVector<>(0, 0,1));
 		//mphysicalSystem.AddLink(link);

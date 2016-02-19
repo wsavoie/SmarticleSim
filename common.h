@@ -554,11 +554,9 @@
 //	std::vector<std::shared_ptr<ChBody> >::iterator ibody = mphysicalSystem.Get_bodylist()->begin();
 //	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 //		//ChBody* bodyPtr = *(myIter + i);
-<<<<<<< HEAD
-//		std::shared_ptr<ChBody> bodyPtr = *(ibody + i);
-=======
+
 //		auto bodyPtr = *(ibody + i);
->>>>>>> develop
+
 //		if (strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0) {
 //			if (zMax < bodyPtr->GetPos().z) {
 //				//zMax = bodyPtr->GetPos().z;
@@ -622,17 +620,10 @@
 //{
 //	std::shared_ptr<ChBody> cyl_container;
 //	if (USE_PARALLEL) {
-<<<<<<< HEAD
-//		cyl_container = std::shared_ptr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-//	}
-//	else {
-//		cyl_container = std::shared_ptr<ChBody>(new ChBody);
-=======
 //		cyl_container = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
 //	}
 //	else {
 //		cyl_container = std::make_shared<ChBody>();
->>>>>>> develop
 //	}
 //	cyl_container->SetIdentifier(id);
 //	//cyl_container->SetMass(mass);
@@ -706,17 +697,12 @@
 //{
 //	std::shared_ptr<ChBody> hopper;
 //	if (USE_PARALLEL) {
-<<<<<<< HEAD
-//		hopper = std::shared_ptr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
-//	}
-//	else {
-//		hopper = std::shared_ptr<ChBody>(new ChBody);
-=======
+
 //		hopper = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
 //	}
 //	else {
 //		hopper = std::make_shared<ChBody>();
->>>>>>> develop
+
 //	}
 //
 //

@@ -306,20 +306,10 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
 
-<<<<<<< HEAD
-	std::shared_ptr<ChBody>  arm;
-
-	vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
-	gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
-	// create body, set position and rotation, add surface property, and clear/make collision model
-	arm = std::make_shared<ChBody>();
-=======
 	vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
 	gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
 	auto arm = std::make_shared<ChBody>();
->>>>>>> develop
-
 
 	//$$$$$$$$$$$
 	//$$$$$$$$$$$
@@ -331,10 +321,6 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     arm->SetCollide(true);
     arm->SetBodyFixed(false);
     arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
-<<<<<<< HEAD
-=======
-
->>>>>>> develop
     if (armID == 1) //this was old code from when I was fixing them to fit
 			arm->SetBodyFixed(false);
     else
@@ -392,33 +378,12 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	switch (armID) {
 	case 0: {
 		arm0 = arm;
-<<<<<<< HEAD
-		arm0_textureAsset = std::make_shared<ChTexture>();
-		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-		arm0->AddAsset(arm0_textureAsset);
-
-	} break;
-	case 1: {
-		arm1 = arm;
-		arm1_textureAsset = std::make_shared<ChTexture>();
-		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
-		arm1->AddAsset(arm1_textureAsset);
-
-	} break;
-	case 2: {
-		arm2 = arm;
-		arm2_textureAsset = std::make_shared<ChTexture>();
-		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-		arm->AddAsset(arm2_textureAsset);
-
-=======
 	} break;
 	case 1: {
 		arm1 = arm;
 	} break;
 	case 2: {
 		arm2 = arm;
->>>>>>> develop
 	} break;
 	default:
 		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
@@ -428,20 +393,10 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
-
-<<<<<<< HEAD
-	std::shared_ptr<ChBody> arm;
-
-	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, mr, mr2));
-	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, mr, mr2)).Get_Diag();
-	// create body, set position and rotation, add surface property, and clear/make collision model
-	arm = std::make_shared<ChBody>();
-=======
 	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, mr, mr2));
 	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, mr, mr2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
 	auto arm = std::make_shared<ChBody>();
->>>>>>> develop
 
 	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
 
@@ -503,33 +458,12 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	switch (armID) {
 	case 0: {
 		arm0 = arm;
-<<<<<<< HEAD
-		arm0_textureAsset = std::make_shared<ChTexture>();
-		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-		arm0->AddAsset(arm0_textureAsset);
-
-	} break;
-	case 1: {
-		arm1 = arm;
-		arm1_textureAsset = std::make_shared<ChTexture>();
-		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
-		arm1->AddAsset(arm1_textureAsset);
-
-	} break;
-	case 2: {
-		arm2 = arm;
-		arm2_textureAsset = std::make_shared<ChTexture>();
-		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
-		arm2->AddAsset(arm2_textureAsset);
-
-=======
 	} break;
 	case 1: {
 		arm1 = arm;
 	} break;
 	case 2: {
 		arm2 = arm;
->>>>>>> develop
 	} break;
 	default:
 		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
@@ -537,11 +471,7 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	}
 }
 
-<<<<<<< HEAD
-std::shared_ptr<ChBody>  Smarticle::GetArm(int armID) {
-=======
 std::shared_ptr<ChBody> Smarticle::GetArm(int armID) {
->>>>>>> develop
 	switch (armID) {
 	case 0:
 		return arm0;
@@ -553,11 +483,7 @@ std::shared_ptr<ChBody> Smarticle::GetArm(int armID) {
 		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
 		break;
 	}
-<<<<<<< HEAD
-	return std::shared_ptr<ChBody>();
-=======
 	return std::make_shared<ChBody>();
->>>>>>> develop
 }
 
 std::shared_ptr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
@@ -735,17 +661,11 @@ void Smarticle::SetActuatorFunction(int actuatorID, double omega, double dT) {
 	} else {
 		mlink_actuator = link_actuator12;
 	}
-<<<<<<< HEAD
-//	std::shared_ptr<ChFunction_Const> mfun1 = mlink_actuator->Get_rot_funct().DynamicCastTo<ChFunction_Const>();
-//	mfun1->Set_yconst(diffTheta + mfun1->Get_yconst());
-	std::shared_ptr<ChFunction_Const> mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
-	std::shared_ptr<ChFunction_Const> mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_tor_funct());
-=======
+
 //	auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_rot_funct());
 //	mfun1->Set_yconst(diffTheta + mfun1->Get_yconst());
 	auto mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
 	auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_tor_funct());
->>>>>>> develop
 
 	
 	mfun2->Set_yconst(omega);
@@ -759,14 +679,9 @@ void Smarticle::SetActuatorFunction(int actuatorID, double omega) {
 	} else {
 		mlink_actuator = link_actuator12;
 	}
-<<<<<<< HEAD
 
-	std::shared_ptr<ChFunction_Const> mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
-	std::shared_ptr<ChFunction_Const> mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_tor_funct());
-=======
 	auto mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
 	auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_tor_funct());
->>>>>>> develop
 	mfun2->Set_yconst(omega);
 	mfun1->Set_yconst(omega);
 }
