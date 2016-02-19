@@ -75,7 +75,11 @@ void SmarticleU::Create() {
 			
 	// create body, set initPos and rotation, add surface property, and clear/make collision model
 
+<<<<<<< HEAD
 	smarticleU = std::make_shared<ChBody>();
+=======
+		smarticleU = std::make_shared<ChBody>();
+>>>>>>> develop
 	
 
 

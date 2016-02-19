@@ -48,9 +48,15 @@ public:
 	// no support zone
 	//////////////////////
 
+<<<<<<< HEAD
 	virtual std::shared_ptr<ChBody>  GetArm(int armID) {
 		printf("Warning!! SmarticleU does not have independent arms\n");
 		std::shared_ptr<ChBody>  tmpPtr;
+=======
+	virtual std::shared_ptr<ChBody> GetArm(int armID) {
+		printf("Warning!! SmarticleU does not have independent arms\n");
+		std::shared_ptr<ChBody> tmpPtr;
+>>>>>>> develop
 		return tmpPtr;
 	}
 
@@ -74,7 +80,11 @@ public:
 
 private:
 	  // bodies
+<<<<<<< HEAD
 	std::shared_ptr<ChBody>  smarticleU;
+=======
+	std::shared_ptr<ChBody> smarticleU;
+>>>>>>> develop
 };
 }
 

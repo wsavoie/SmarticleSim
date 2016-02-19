@@ -119,12 +119,20 @@ namespace chrono {
 		virtual double GetOmega2(bool angularFreq = true);
 		double GetNextOmega(int id);
 		double GetZReactTorque(int id);
+<<<<<<< HEAD
 		virtual std::shared_ptr<ChBody>  GetSmarticleBodyPointer();
+=======
+		virtual std::shared_ptr<ChBody> GetSmarticleBodyPointer();
+>>>>>>> develop
 		// create the smarticle by creating arms, adding joint between them, and functions
 		virtual void Create();
 
 		// get arm shared pointer
+<<<<<<< HEAD
 		virtual std::shared_ptr<ChBody>  GetArm(int armID);
+=======
+		virtual std::shared_ptr<ChBody> GetArm(int armID);
+>>>>>>> develop
 
 		// get joint shared pointer
 		// jointID belongs to {0, 1}, i.e. the joint between 0 and 1, or between 1 and 2
@@ -298,10 +306,17 @@ namespace chrono {
 		std::vector <double> nextAngle;
 		std::vector <double> currTorque;
 		// bodies
+<<<<<<< HEAD
 		std::shared_ptr<ChBody> arm0;	// left arm
 		std::shared_ptr<ChBody> arm1;	// middle arm
 		std::shared_ptr<ChBody> arm2;	// right arm
 		std::shared_ptr<ChBody> smarticle;
+=======
+	 std::shared_ptr<ChBody> arm0;	// left arm
+	 std::shared_ptr<ChBody> arm1;	// middle arm
+	 std::shared_ptr<ChBody> arm2;	// right arm
+	 std::shared_ptr<ChBody> smarticle;
+>>>>>>> develop
 		// joints
 		std::shared_ptr<ChLinkLockRevolute> link_revolute01; 	// revolute joint between arms 0 and 1
 		std::shared_ptr<ChLinkLockRevolute> link_revolute12; 	// revolute joint between arms 0 and 1
@@ -318,6 +333,10 @@ namespace chrono {
 		std::shared_ptr<ChTexture> arm0_textureAsset;
 		std::shared_ptr<ChTexture> arm1_textureAsset;
 		std::shared_ptr<ChTexture> arm2_textureAsset;
+<<<<<<< HEAD
+=======
+
+>>>>>>> develop
 
 
 
