@@ -200,14 +200,13 @@ void CheckPointSmarticles_Read(
 	std::string ddSt;
 	getline(inSmarticles, ddSt);
 
-	int smarticleCount = 0;
 	ChVector<> p3;
 	ChQuaternion<> q4;
 	inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
 	q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >>  q4.e3 >> ddCh;
 	while (inSmarticles.good()) {
 		SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
-		smarticle0->Properties(smarticleCount,
+		smarticle0->Properties(mySmarticlesVec.size(),
 						  rho_smarticle, mat_g,
 						  collisionEnvelop,
 						  l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
@@ -217,7 +216,6 @@ void CheckPointSmarticles_Read(
 		smarticle0->Create();
 		mySmarticlesVec.emplace_back(smarticle0);
 
-		smarticleCount ++;
 		inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
 		q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >>  q4.e3 >> ddCh;
 	}
@@ -260,7 +258,6 @@ void CheckPointSmarticlesDynamic_Read(
 	}
 	std::string ddSt;
 	getline(inSmarticles, ddSt);
-	int smarticleCount = 0;
 	ChVector<> p3;
 	ChQuaternion<> q4;
 	//TODO torque threshold
@@ -273,7 +270,7 @@ void CheckPointSmarticlesDynamic_Read(
 		
 		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 
-		smarticle0->Properties(smarticleCount,dumId,
+		smarticle0->Properties(mySmarticlesVec.size(),dumId,
 			rho_smarticle, mat_g,
 			collisionEnvelop,
 			l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
@@ -290,7 +287,6 @@ void CheckPointSmarticlesDynamic_Read(
 		
 		mySmarticlesVec.emplace_back(smarticle0);
 
-		smarticleCount++;
 		inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
 			q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >> q4.e3 >> ddCh >>
 			angle1 >> ddCh >> angle2 >> ddCh >> dumId >> ddCh >>

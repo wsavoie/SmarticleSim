@@ -661,6 +661,7 @@ std::shared_ptr<ChBody> create_complex_convex_hull(CH_SYSTEM* mphysicalSystem, s
 	std::vector<ChVector<>> points;
 
 	convexShape->GetCollisionModel()->ClearModel();
+
 	double ang = 2 * PI / numBoxes;
 	for (size_t i = 0; i < numBoxes; i++)
 	{

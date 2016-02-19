@@ -10,7 +10,6 @@
 
 //#include "core/ChVector.h"
 #include "assets/ChTexture.h"
-
 #include "chrono_irrlicht/ChIrrApp.h"//changed path from unit to chrono to reflect changes in updated chrono
 #include "chrono_irrlicht/ChIrrTools.h"
 #include <irrlicht.h>

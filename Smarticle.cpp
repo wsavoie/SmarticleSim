@@ -327,7 +327,6 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 			arm->SetBodyFixed(false);
     else
     	arm->SetBodyFixed(false);
-
 	arm->SetMaterialSurface(mat_g);
 
 	double mass = density * vol;
