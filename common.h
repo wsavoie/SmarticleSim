@@ -62,9 +62,9 @@
 	
 	//extern SmarticleType smarticleType;
 	//extern BucketType bucketType;
-	extern chrono::ChSharedPtr<chrono::ChBody> bucket;
-	extern chrono::ChSharedPtr<chrono::ChBody> bucket_bott;
-	extern std::vector<chrono::ChSharedPtr<chrono::ChBody>> bucket_bod_vec;
+	extern std::shared_ptr<chrono::ChBody> bucket;
+	extern std::shared_ptr<chrono::ChBody> bucket_bott;
+	extern std::vector<std::shared_ptr<chrono::ChBody>> bucket_bod_vec;
 
 
 #endif
@@ -551,10 +551,10 @@
 //
 //
 //	//std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
-//	std::vector<ChSharedPtr<ChBody> >::iterator ibody = mphysicalSystem.Get_bodylist()->begin();
+//	std::vector<std::shared_ptr<ChBody> >::iterator ibody = mphysicalSystem.Get_bodylist()->begin();
 //	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
 //		//ChBody* bodyPtr = *(myIter + i);
-//		ChSharedPtr<ChBody> bodyPtr = *(ibody + i);
+//		auto bodyPtr = *(ibody + i);
 //		if (strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0) {
 //			if (zMax < bodyPtr->GetPos().z) {
 //				//zMax = bodyPtr->GetPos().z;
@@ -614,14 +614,14 @@
 //creates an approximate cylinder from a n-sided regular polygon
 //num_boxes = number of boxes to use
 //bucket_rad = radius of cylinder, center point to midpoint of side a side
-//ChSharedPtr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool overlap, CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat)
+//std::shared_ptr<ChBody> create_cylinder_from_blocks(int num_boxes, int id, bool overlap, CH_SYSTEM* mphysicalSystem, std::shared_ptr<ChMaterialSurfaceBase> wallMat)
 //{
-//	ChSharedPtr<ChBody> cyl_container;
+//	std::shared_ptr<ChBody> cyl_container;
 //	if (USE_PARALLEL) {
-//		cyl_container = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+//		cyl_container = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
 //	}
 //	else {
-//		cyl_container = ChSharedPtr<ChBody>(new ChBody);
+//		cyl_container = std::make_shared<ChBody>();
 //	}
 //	cyl_container->SetIdentifier(id);
 //	//cyl_container->SetMass(mass);
@@ -691,14 +691,14 @@
 //}
 ///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-//ChSharedPtr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, ChSharedPtr<ChMaterialSurfaceBase> wallMat, double w1, double w2, double w3, double h1, double h2, bool overlap)
+//std::shared_ptr<ChBody> Create_hopper(CH_SYSTEM* mphysicalSystem, std::shared_ptr<ChMaterialSurfaceBase> wallMat, double w1, double w2, double w3, double h1, double h2, bool overlap)
 //{
-//	ChSharedPtr<ChBody> hopper;
+//	std::shared_ptr<ChBody> hopper;
 //	if (USE_PARALLEL) {
-//		hopper = ChSharedPtr<ChBody>(new ChBody(new collision::ChCollisionModelParallel));
+//		hopper = std::make_shared<ChBody>(new collision::ChCollisionModelParallel);
 //	}
 //	else {
-//		hopper = ChSharedPtr<ChBody>(new ChBody);
+//		hopper = std::make_shared<ChBody>();
 //	}
 //
 //
