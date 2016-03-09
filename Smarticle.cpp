@@ -543,9 +543,14 @@ void Smarticle::CreateActuators() {
 	//ChVector<> pR01(-w / 2.0-r2, 0, 0);
 	//ChVector<> pR12(w / 2.0+r2, 0, 0);
 	
-	ChVector<> pR01(-w / 2.0, 0, 0);
-	ChVector<> pR12(w / 2.0, 0, 0);
-
+	ChVector<> pR01 (-w / 2.0, 0, 0);
+	ChVector<> pR12 (w / 2.0, 0, 0);
+	if (!stapleSize)
+	{
+		pR01 = ChVector<>(-(w / 2 - jointClearance), 0, 0);
+		pR12 = ChVector<>(w / 2 - jointClearance, 0, 0);
+	}
+	
 
 	ChQuaternion<> qx = Q_from_AngAxis(PI_2, VECT_X);
 	ChQuaternion<> qy1 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle1()));
@@ -588,6 +593,7 @@ void Smarticle::Create() {
 	////new version
 	if (stapleSize)
 	{
+		
 		l_mod = l + 2 * r2 - jointClearance;
 		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(angle1), 0, -(l_mod / 2.0 - r2)*sin(angle1)), quat0);
 		CreateArm(1, w, ChVector<>(0, 0, 0));
@@ -595,12 +601,12 @@ void Smarticle::Create() {
 	}
 	else
 	{
+		jointClearance = .0065;//6.5 mm in x dir jc in y dir is r2
 		double armt = r;
 		double armt2 = .00806 / 2 * sizeScale; //8.06 mm
-		l_mod = l + 2 * armt2 - jointClearance;
-		CreateArm2(0, l_mod, armt, armt2, ChVector<>(-w / 2.0 - (l_mod / 2.0 - armt2)*cos(angle1), 0, -(l_mod / 2.0 - armt2)*sin(angle1)), quat0);
+		CreateArm2(0, l, armt, armt2, ChVector<>(-(w / 2.0-(jointClearance)+cos(angle1)*l/2), 0, -(l / 2.0)*sin(angle1)), quat0);
 		CreateArm2(1, w,r,r2, ChVector<>(0, 0, 0));
-		CreateArm2(2, l_mod, armt, armt2, ChVector<>( w / 2.0 + (l_mod / 2.0 - armt2)*cos(angle2), 0, -(l_mod / 2.0 - armt2)*sin(angle2)), quat2);
+		CreateArm2(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(angle2)*l/2), 0, -(l / 2.0)*sin(angle2)), quat2);
 	}
 
 	CreateActuators();
@@ -1038,8 +1044,8 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSin
 		}
 	}
 	LTactive = false;
-	double LT = .01 * torqueThresh2;
-	double MT = 1.85 * torqueThresh2;
+	double LT = .1 * torqueThresh2;
+	double MT = .5 * torqueThresh2;
 	//double HT = 1.99 *torqueThresh2;
 	double t0 = abs(tor0);
 	double t1 = abs(tor1);
@@ -1049,13 +1055,12 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSin
 		//specialState = -1;
 
 		specialState = OT;
-		return;
 	}
 	else
 	{//not overtorqued for both,  t0<OT and t1<OT
 		if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if) 
 		{// MT<t0<OT //TODO perhaps make this function if(t0+t1>2*MT) since servo can only sense stress from both
-			specialState = MIDT;
+			//specialState = MIDT;
 			//AssignState(MIDT);
 			//TODO clear midt and emplace values
 			return;
@@ -1090,7 +1095,7 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSin
 }
 void Smarticle::ChangeArmColor(double torque01, double torque12)
 {
-	double TT2 = torqueThresh2*.99;
+	double TT2 = torqueThresh2*.55;
 	
 	//for vibration upon OT, change degreesToVibrate to amount you wish to vibrate
 	double degreesToVibrate = 0;

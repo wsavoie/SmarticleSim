@@ -70,7 +70,8 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 
 		inc = .1;
 		rampAngle = 10 * D2R;
-		rampInc = 1.0 / 60.0;
+		//rampInc = 1.0 / 60.0;
+		rampInc = .5;
 		drum_freq = 1;
 		drum_omega = drum_freq * 2 * PI;
 	}

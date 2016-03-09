@@ -107,7 +107,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = BOX;
+BucketType bucketType = STRESSSTICK;
 std::vector<std::shared_ptr<ChBody>> sphereStick;
 std::shared_ptr<ChBody> bucket;
 std::shared_ptr<ChBody> bucket_bott;
@@ -160,11 +160,11 @@ double gaitChangeLengthTime = .5;
 	double rho_smarticle = 7850.0;
 #else
 	
-	double w_smarticle = sizeScale * 0.04669/ 1;
+	double w_smarticle = sizeScale * 0.05316/ 1;
 	double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 	//real value
 	double t_smarticle = sizeScale * .029982 / 1; //height of solar panels
-	double t2_smarticle = sizeScale * .02172 / 1;
+	double t2_smarticle = sizeScale * .02122 / 1;
 	double bucket_rad = sizeScale*w_smarticle*3;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
 	double rho_smarticle = 443.0;
@@ -1756,7 +1756,7 @@ int main(int argc, char* argv[]) {
 
 		int sphereNum = stickLen / (t_smarticle / 2);
 		if (bucketType==STRESSSTICK)
-			sphereNum = stickLen / (2*rad);
+			sphereNum = stickLen / (t_smarticle / 2);;
 
 		//double sphereStickHeight = t_smarticle*mult / 2.0 * (sphereNum + 1); //shouldnt need extra 2*rad offset because of how z is defined using i below
 		for (size_t i = 0; i < sphereNum; i++)

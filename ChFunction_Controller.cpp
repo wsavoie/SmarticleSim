@@ -110,9 +110,9 @@ double ChFunctionController::ComputeOutput(double t) {
 	//double dTerm2 = d*dT*omLim*((omError - prevOmError) / dT);
 
 
-	double pTerm = 40/divScale*omLim*dT*omError; //20
-	double iTerm = .75/divScale*controller_->cumOmegError_.at(index_);
-	double dTerm = 0.0013/divScale*omLim*dT*((omError - prevOmError) / dT);
+	double pTerm = 24/divScale*omLim*dT*omError; //30
+	double iTerm = 2/divScale*controller_->cumOmegError_.at(index_);//.75
+	double dTerm = 0.00052/divScale*omLim*dT*((omError - prevOmError) / dT);//.0013
 	//double dTerm = .01 * dT*(omError - prevOmError / dT);
 
 	//.00015
