@@ -410,7 +410,7 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 		arm->SetBodyFixed(false);
 	else
 		arm->SetBodyFixed(false);
-
+	mat_g->SetFriction(.05);
 	arm->SetMaterialSurface(mat_g);
 
 	double mass = density * vol;
@@ -547,8 +547,8 @@ void Smarticle::CreateActuators() {
 	ChVector<> pR12 (w / 2.0, 0, 0);
 	if (!stapleSize)
 	{
-		pR01 = ChVector<>(-(w / 2 - jointClearance), 0, 0);
-		pR12 = ChVector<>(w / 2 - jointClearance, 0, 0);
+		pR01 = ChVector<>(-(w / 2 - jointClearance), 0, -offPlaneoffset);
+		pR12 = ChVector<>(w / 2 - jointClearance, 0, -offPlaneoffset);
 	}
 	
 
@@ -593,7 +593,7 @@ void Smarticle::Create() {
 	////new version
 	if (stapleSize)
 	{
-		
+		offPlaneoffset = 0;
 		l_mod = l + 2 * r2 - jointClearance;
 		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(angle1), 0, -(l_mod / 2.0 - r2)*sin(angle1)), quat0);
 		CreateArm(1, w, ChVector<>(0, 0, 0));
@@ -601,12 +601,13 @@ void Smarticle::Create() {
 	}
 	else
 	{
+		offPlaneoffset = .00825-r2;//smarticle arms arent centered in plane, arm is offset 8.25mm from front or offPlaneoffset-t2
 		jointClearance = .0065;//6.5 mm in x dir jc in y dir is r2
 		double armt = r;
-		double armt2 = .00806 / 2 * sizeScale; //8.06 mm
-		CreateArm2(0, l, armt, armt2, ChVector<>(-(w / 2.0-(jointClearance)+cos(angle1)*l/2), 0, -(l / 2.0)*sin(angle1)), quat0);
+		double armt2 = .0032 / 2 * sizeScale; //8.06 mm with solar 3.2 without
+		CreateArm2(0, l, armt, armt2, ChVector<>(-(w / 2.0 - (jointClearance)+cos(angle1)*l / 2), 0, -(l / 2.0)*sin(angle1) -offPlaneoffset), quat0);
 		CreateArm2(1, w,r,r2, ChVector<>(0, 0, 0));
-		CreateArm2(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(angle2)*l/2), 0, -(l / 2.0)*sin(angle2)), quat2);
+		CreateArm2(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(angle2)*l / 2), 0, -(l / 2.0)*sin(angle2) -offPlaneoffset), quat2);
 	}
 
 	CreateActuators();

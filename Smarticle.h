@@ -293,7 +293,7 @@ namespace chrono {
 		int smarticleID;			// smarticleID is not bodyID. smarticle is composed of 3 bodies.
 		int dumID;
 		double jointClearance; // space at joint
-	
+		double offPlaneoffset;
 		double omega1;
 		double omega2;
 		std::vector <double> nextOmega;
