@@ -69,7 +69,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 		dgainInput->setID(1002);
 
 		inc = .1;
-		rampAngle = 10 * D2R;
+		//box_ang = 10 * D2R;
 		//rampInc = 1.0 / 60.0;
 		rampInc = .5;
 		drum_freq = 1;
@@ -299,7 +299,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 					//	, 0, 0)));
 					break;
 				default:
-					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R;
+					box_ang = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R;
 					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
 						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R
 						, 0, 0)));
@@ -325,7 +325,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 					//	, 0, 0)));
 					break;
 				default:
-					rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R;
+					box_ang = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R;
 					bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
 						Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R
 						, 0, 0)));

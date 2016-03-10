@@ -47,7 +47,6 @@
 
 	extern double bucket_rad;
 	extern double vibAmp;
-	extern double rampAngle;
 	extern double rampInc;
 	extern double box_ang;
 	extern double drum_omega;
