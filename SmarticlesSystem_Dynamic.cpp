@@ -100,13 +100,12 @@ using namespace irr::gui;
 #define CH_SYSTEM ChSystem
 #endif
 
-
 //***********************************
 // Use the namespace of Chrono
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = STRESSSTICK;
+BucketType bucketType = BOX;
 std::vector<std::shared_ptr<ChBody>> sphereStick;
 std::shared_ptr<ChBody> bucket;
 std::shared_ptr<ChBody> bucket_bott;
@@ -120,7 +119,7 @@ int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 double vibration_freq = 30;
-double fric =.3;
+double fric =.3814; //keyboard box friction = .3814
 double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
@@ -169,8 +168,8 @@ double gaitChangeLengthTime = .5;
 	double rho_smarticle = 443.0;
 #endif
 
-	double p_gain = .32;   //.32
-	double i_gain = 0.4;	 //1
+	double p_gain = .15;   //.32
+	double i_gain = .5;	 //.4
 	double d_gain = 0.01; //.1  //.01
 
 	// double t_smarticle 	= sizeScale * .00254;
@@ -191,7 +190,7 @@ bool povray_output = false;
 int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-int numPerLayer = 1;
+int numPerLayer =3;
 bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surface
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
@@ -468,7 +467,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				cos(ang*i + phase)*(bucket_rad / 2.2),
 				std::max(bucket_interior_halfDim.z*2,zpos));
 				dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2 * w_smarticle / timeForDisp);
-				myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
+				myRot = ChQuaternion<>(genRand(-1, 1), genRand(-1, 1), genRand(-1, 1), genRand(-1, 1));
 			}
 			else////////////place in center of bucket on bucket bottom
 			{
@@ -1428,7 +1427,8 @@ void rotate_bucket(double t)//method is called on each iteration to rotate drum 
 		bucket->SetBodyFixed(false);
 		bucket_bott->SetBodyFixed(true);
 		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_rot_funct());
-		mfun2->Set_yconst(box_ang);
+		//set rotation amount equal to box_ang-currentangle, therefore no rotation if 2 values are equal
+		mfun2->Set_yconst(box_ang-Quat_to_Angle(ANGLESET_RXYZ,bucket->GetRot()).x);
 	}
 }
 //set up actuat
@@ -1563,17 +1563,57 @@ bool SetGait(double time)
 	//else
 	//	break;
 
-	/*if (time <= 1.5)
-		Smarticle::global_GUI_value = 1;
-	else if (time > 1.5 && time <= 3.5)
-		Smarticle::global_GUI_value = 2;
-	else if (time > 3.5 && time <= 5.5)
-		Smarticle::global_GUI_value = 1;
-	else if (time > 5.5 && time <= 7.5)
-		Smarticle::global_GUI_value = 0;
-	else if (time > 20)
-		return true;*/
-	if (time <= 10)
+	//if (time <= 2)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 2 && time <= 4)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 4 && time <= 6)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 6 && time <= 8)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 8 && time <= 10)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 10 && time <= 12)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 12 && time <= 14)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 14 && time <= 16)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 16 && time <= 18)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 18 && time <= 20)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 20 && time <= 22)
+	//	Smarticle::global_GUI_value = 2;
+	//else
+	//	return true;
+
+	//if (time <= 5)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 5 && time <= 10)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 10 && time <= 15)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 15 && time <= 20)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 20 && time <= 25)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 25 && time <= 30)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 30 && time <= 35)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 35 && time <= 40)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 40 && time <= 45)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 45 && time <= 50)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 50 && time <= 55)
+	//	Smarticle::global_GUI_value = 2;
+	//else	
+	//	return true;
+
+	return false;
 
 		//Smarticle::global_GUI_value = 1;
 	/*else if (time > .9 && time <= 1.5)
@@ -1589,7 +1629,7 @@ bool SetGait(double time)
 	//else
 	//	return true;
 
-	return false;
+	// false;
 }
 
 int main(int argc, char* argv[]) {
@@ -2043,7 +2083,6 @@ int main(int argc, char* argv[]) {
 #endif
 				numGeneratedLayers++;
 			}
-
 
 		}
 
