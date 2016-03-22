@@ -112,16 +112,7 @@ double Controller::GetCurrTorque(size_t index, double t)
 {
 	return smarticle_->GetZReactTorque(index);
 }
-//double Controller::SetGetCurrAngle(size_t index, double t)
-//{
-//	currAngle_.at(index) = smarticle_->GetCurrAngle(index);
-//	return currAngle_.at(index);
-//}
 
-//double Controller::GetCurrAngle(size_t index, double t) 
-//{
-//	return currAngle_.at(index);
-//}
 double Controller::GetDesiredAngle(size_t index, double t)
 {
 	//desiredAngle_.at(index) = 
@@ -131,34 +122,17 @@ double Controller::GetExpAngle(size_t idx, double t)
 {
 	return smarticle_->GetExpAngle(idx);
 }
-//void Controller::SetDesiredAngle(size_t index, double desang)
-//{
-//	desiredAngle_.at(index) = desang;
-//}
-//void Controller::SetDesiredAngularSpeed(size_t index, double desOmeg)
-//{
-//	desiredOmega_.at(index) = desOmeg;
-//}
+
 double Controller::GetAngle(size_t index, double t)
 {
 	return smarticle_->GetCurrAngle(index);
 }
-//void Controller::SetCurrAngle(size_t index, double ang)
-//{
-//	currAngle_.at(index) = ang;
-//}
-//void Controller::CalcCurr_Omega(size_t index, double t)
-//{
-//	currOmega_.at(index) = smarticle_->GetActuatorOmega(index);
-//}
+
 double Controller::GetActuatorOmega(size_t index, double t)
 {
 	return smarticle_->GetActuatorOmega(index);
 }
-//double Controller::GetCurrOmega(size_t index, double t)
-//{
-//	return 	currOmega_.at(index);
-//}
+
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
 	double errLim = 10 * D2R;
@@ -166,41 +140,13 @@ double Controller::LinearInterpolate(size_t idx, double curr, double des)
 	err = SaturateValue(err, errLim);
 
 	return err + curr;
-
-	//double om = fabs(err / dT);
-	//if (om > omegaLimit)
-	//{
-	//	double newVal = omegaLimit*dT*sign(err) + curr;
-	//	//SetDesiredAngle(idx, newVal);
-	//	//smarticle_->SetNextAngle(idx, newVal);
-	//	return newVal;
-	//}
-	//return des;
 }
 
 double Controller::OmegaLimiter(size_t idx, double omega)
 {
 	return SaturateValue(omega, omegaLimit);	
 }
-//double Controller::GetDesiredAngularSpeedForFunction(size_t index, double t)
-//{
-//	return desiredOmega_.at(index);
-//}
-//double Controller::GetDesiredAngularSpeed(size_t index, double t)
-//{
-//	desiredOmega_.at(index) = smarticle_->GetNextOmega(index); 
-//	return desiredOmega_.at(index);
-//}
-//
-//double Controller::GetDesiredAngularSpeed2(size_t index, double t,double error)
-//{
-//	double J = this->GetCurrTorque(index, t);
-//	double tau = J / friction;
-//	double s = currOmega_.at(index);
-//	double noK = error / (s*(tau*s + 1));
-//	desiredOmega_.at(index) = noK*(p_gain + d_gain*s);
-//	return desiredOmega_.at(index);
-//}
+
 
 bool Controller::OT()
 {
@@ -235,28 +181,4 @@ void Controller::UseForceControl(size_t id) {
 		double y = ef->Get_y(ch_system_->GetChTime());
 		mfun->Set_yconst(y);
 	
-		//GetEngine(0)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-		//GetEngine(1)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-		////auto engine_funct0 = std::make_shared<ChFunctionController>(0, this);
-		//auto ef0 = std::make_shared<ChFunctionController>(0, this);
-		//auto ef1 = std::make_shared<ChFunctionController>(1, this);
-		//
-		////causes 2 calls per chfunction
-		////GetEngine(0)->Set_tor_funct(ef0);
-		////GetEngine(1)->Set_tor_funct(ef1);
-
-		////doing this fixes the multiple chfunction runs
-		//auto mfun0 = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(0)->Get_tor_funct());
-		//auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(1)->Get_tor_funct());
-		//double y0 = ef0->Get_y(ch_system_->GetChTime());
-		//double y1 = ef1->Get_y(ch_system_->GetChTime());
-		////GetLog() << "y0: " << y0 << "y1: " << y1 << "\n";
-		//mfun0->Set_yconst(y0);
-		//mfun1->Set_yconst(y1);
-
-	
-		//smarticle_->~Smarticle();
-
-	//}
-
 }

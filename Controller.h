@@ -29,16 +29,10 @@ namespace chrono {
 		std::shared_ptr<ChFunctionController> engine_funct1;
 		void SetDesiredAngle(size_t i, double desOmeg);
 		void SetDesiredAngularSpeed(size_t i, double desangle);
-		//double GetCurrAngle(size_t i, double t);
-		//double SetGetCurrAngle(size_t i, double t);
 		double GetDesiredAngle(size_t i, double t);
 		double GetExpAngle(size_t idx, double t);
-		//void SetCurrAngle(size_t i, double ang);
 		double GetActuatorOmega(size_t i, double t);
 		double GetCurrOmega(size_t i, double t);
-		double GetDesiredAngularSpeed(size_t i, double t);
-		double GetDesiredAngularSpeed2(size_t i, double t, double error);
-		double GetDesiredAngularSpeedForFunction(size_t i, double t);
 		double GetCurrTorque(size_t i, double t);
 		double LinearInterpolate(size_t i, double curr, double desired);
 		double OmegaLimiter(size_t i, double omega);
