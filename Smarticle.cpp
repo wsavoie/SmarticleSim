@@ -169,27 +169,36 @@ void Smarticle::Properties(
 	torqueAvg = std::make_tuple(0, 0, 0, 0);
 	initialAng0 = other_angle;
 	initialAng1 = other_angle2;
-	percentToChangeOT = .25;
-
-	//avg1 = 0;
+	percentToChangeStressState = .25;
+	
+	OTThresh = .65;//for single arm
+	MTThresh = .5;//for both arms?
+	LTThresh = .05;//for both arms?
+		//avg1 = 0;
 	//avg2 = 0;
 	//armsController = (new Controller(m_system, this));
+
+	//initialize OT timer params
+	this->OTTimer = 0;
+	this->OTMaxTime = .25;
+	this->OTRunning = false;
+	this->OTVal.emplace_back(GUI1);
+	this->OTVal.emplace_back(EXTRA1);
+	this->OTVal.emplace_back(EXTRA2);
+	this->OTValIdx = genRandInt(0, OTVal.size() - 1);
+	GetLog() << "smartRandidx:" << this->OTValIdx << "\n";
+
+	//initialize LT timer params
+	this->LTTimer = 0;
+	this->LTMaxTime = .25;
+	this->LTRunning = false;
+	this->LTVal.emplace_back(GUI1);
+	this->LTVal.emplace_back(GUI3);
+	this->LTValIdx = genRandInt(0, LTVal.size() - 1);
+
 }
 
-void Smarticle::updateTorqueDeque(double mtorque0, double mtorque1,double momega0, double momega1)
-{
-	//torque1.pop_back();
-	//torque1.push_front(mtorque1);
-	//
-	//torque2.pop_back();
-	//torque2.push_front(mtorque2);
-	
-	std::tuple<double, double,double,double> oldT = torques.back();
-	torques.pop_back();
-	torques.emplace_front(mtorque0, mtorque1,momega0,momega1);
-	torques.emplace_front(mtorque0, mtorque1, momega0, momega1);
-	updateTorqueAvg(oldT);
-}
+
 void Smarticle::updateTorqueDeque()
 {
 	std::tuple < double, double, double, double > oldT = torques.back();
@@ -197,15 +206,6 @@ void Smarticle::updateTorqueDeque()
 	torques.emplace_front(getLinkActuator(0)->Get_mot_torque(), getLinkActuator(1)->Get_mot_torque(), getLinkActuator(0)->Get_mot_rot_dt(), getLinkActuator(1)->Get_mot_rot_dt());
 	updateTorqueAvg(oldT);
 }
-//void Smarticle::updateTorqueAvg()
-////in case I need to recalculate from all values
-//{
-//	for (std::deque<std::pair<double, double>>::iterator it = torques.begin(); it != torques.end(); ++it)
-//	{
-//		torqueAvg = std::make_pair(it->first + torqueAvg.first, it->second + torqueAvg.second);
-//	}
-//	torqueAvg = std::make_pair(torqueAvg.first / torques.size(), torqueAvg.second / torques.size());
-//}
 void Smarticle::updateTorqueAvg(std::tuple <double,double,double,double > oldT)
 { //already assuming it is an avg:
 	size_t len = torques.size();
@@ -590,14 +590,7 @@ void Smarticle::Create() {
 	quat0.Normalize();
 	quat2.Normalize();
 
-	this->OTTimer = 0;
-	this->OTMaxTime = .25;
-	this->OTRunning = false;
-	this->OTVal.emplace_back(GUI1);
-	this->OTVal.emplace_back(EXTRA1);
-	this->OTVal.emplace_back(EXTRA2);
-	this->OTValIdx = genRandInt(0, OTVal.size()-1);
-	GetLog()<< "smartRandidx:"<<this->OTValIdx<<"\n";
+
 	if (stapleSize)
 	{
 		offPlaneoffset = 0;
@@ -888,6 +881,9 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	angLow = mangLow;
 	distThresh = mdt*momega;
 	torqueThresh2 = mtorqueThresh2;
+	OTThresh = OTThresh*torqueThresh2;
+	MTThresh = MTThresh*torqueThresh2;
+	LTThresh = LTThresh*torqueThresh2;
 	ddCh = '!';
 	while (ddCh != '#') {
 		smarticleMoves >> ddCh;
@@ -1064,126 +1060,62 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 	//if <= distThresh dont move, let omega = 0;
 	return 0;
 }
-
-void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSinceChange)
+bool Smarticle::MoveLowStress(double tor0, double tor1, double timeSinceLastChange)
 {
-
-	//torque01 and torque02 are averaged torque over some amount of steps
-	//low thresh		= if both torques are < LT*thresh.
-	//med thresh		= if both torques are LT<x<HT
-	//high thresh		= if one torque is > HT
-	static int OTmoveType = 1;
-	static bool OTMoved = true;
-	static bool stayOT = false;
-	//keeps track if in LT
-	static bool LTactive = false;
-	
-	//if (timeSinceChange != 0 && timeSinceChange < 10 * dT) //protects situation where torque increases initially causing LT situations to get out of LT immediately upon shape change
-	//{
-	//	if (LTactive)
-	//	{
-	//		//GetLog() << "activated low stress saver\n";
-	//		return;
-	//	}
-	//}
-	
-	
-	LTactive = false;
-	double LT = .1 * torqueThresh2;
-	double MT = .5 * torqueThresh2;
-	//double HT = 1.99 *torqueThresh2;
 	double t0 = abs(tor0);
 	double t1 = abs(tor1);
 
-	if (GetArm0OT() || GetArm2OT())
-	{//highest torque threshold, stop moving
-		specialState = OT;
-		//AssignState(specialState);
-		//if (lowStressChange || OTMoved == false)		//if time to switch states
-		//{
-		//	//stayOT = true;
-		//	//if (lowStressChange)
-		//	//{
-		//	//	OTmoveType = (OTmoveType + 1) % 2;
-		//	//	OTMoved = false;
-		//	//	
-		//	//}
-		//	if (OTmoveType == 0)
-		//	{
-		//		specialState=GUI1;
-		//		//this->ot.clear();
-		//		//this->addInterpolatedPathToVector(GetAngle1(), GetAngle2(), PI / 2, PI / 2);
-		//		OTMoved = true; 
-		//		return;
 
-		//	}
-		//	else
-		//	{
-		//		specialState = GUI3;
-		//		//this->ot.clear();
-		//		//this->addInterpolatedPathToVector(GetAngle1(), GetAngle2(), -PI / 2, -PI / 2);//curr				->		curr+vib
-		//		OTMoved = true;
-		//		return;
-		//	}
-		//	OTMoved = false;
-		//	return;
-		//}
-		
-		return;
-			
+	if (LTRunning)
+	{
+		specialState = LTVal.at(LTValIdx);
+		return true;
 	}
+
+	specialState = -1;
+	return false;
+}
+bool Smarticle::MoveMidStress(double tor0, double tor1)
+{
+	double t0 = abs(tor0);
+	double t1 = abs(tor1);
+
+	if (t0+t1 > MTThresh)
+	{// MT<t0<OT //TODO perhaps make this function if(t0+t1>2*MT) since servo can only sense stress from both
+		if (genRand() < percentToChangeStressState)
+		{
+			specialState = MIDT;
+			return true;
+		}
+	}
+	return false;
+}
+bool Smarticle::MoveOverStress(double tor0, double tor1)
+{
+
+	double t0 = abs(tor0);
+	double t1 = abs(tor1);
+
+	
 	if (OTRunning)
 	{
 		specialState = OTVal.at(OTValIdx);
-		return;
+		return true;
 	}
-	//if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if) 
-	//{// MT<t0<OT //TODO perhaps make this function if(t0+t1>2*MT) since servo can only sense stress from both
-	//	//specialState = MIDT;
-	//	//AssignState(MIDT);
-	//	//TODO clear midt and emplace values
-	//	return;
-	//		
-	//}
-	//else if (t0 < LT && t1 < LT)
-	/////TODO perhaps make this function if(t0+t1<2*LT) since servo can only sense stress from both
-	//{//LOW TORQUE
-	//		
-	//	if (lowStressChange)		//if time to switch states
-	//	{
-	//	//
-	//	//	if (specialState == GUI1 || global_GUI_value==GUI1) //was not already in special state
-	//	//	{
-	//	//		specialState = GUI2;
-	//	//	}
-	//	//	else//if already in special state switch to a different one 
-	//	//	{
-	//	//		specialState = GUI1;
-	//	//	}
-	//	//	
-	//	//	LTactive = true;
-	//	//	return;
-	//		//GetLog() << "\nlow stress change, specialState:" << specialState;
-	//		return;
-	//	}
-	//	//GetLog() << "\nLT but no lowStressChange";
-	//	return; //maybe to a low torque color change?
-	//}
 	
 	specialState = -1;
+	return false;
 }
 
-
-void Smarticle::ChangeArmColor(double torque01, double torque12)
+//returns true if either arm is OT
+bool Smarticle::ChangeArmColor(double torque01, double torque12)
 {
-	double TT2 = torqueThresh2*.65;
-
 	//for vibration upon OT, change degreesToVibrate to amount you wish to vibrate
 	double degreesToVibrate = 0;
 	double moveAmt = degreesToVibrate*D2R;
+	
 
-
-	if (abs(torque01) > TT2)
+	if (abs(torque01) > OTThresh)
 	{
 		//this->setCurrentMoveType(OT);
 		//mv = &ot;
@@ -1201,6 +1133,7 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 		//nothing needs to be done if prev OT
 
 		//setstate OT
+		specialState = OT;
 	}
 	else
 	{
@@ -1213,9 +1146,8 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 		// nothing needs to be done if not prev OT
 	}
 
-
 	/////////////////////ARM2///////////////////////
-	if (abs(torque12) > TT2)
+	if (abs(torque12) > OTThresh)
 	{
 		//this->setCurrentMoveType(OT);
 		//mv = &ot;
@@ -1230,7 +1162,7 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 			this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
 		}
 		arm2OT = true;
-		//nothing needs to be done if prev OT
+		specialState = OT;
 	}
 	else
 	{
@@ -1242,6 +1174,24 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 		}
 		// nothing needs to be done if not prev OT
 	}
+	
+	
+	if (abs(torque01) + abs(torque12) > MTThresh && !arm2OT && !arm0OT)
+	{
+		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
+		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
+	}
+	if (abs(torque01) + abs(torque12) < LTThresh)
+	{
+		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
+		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
+	}
+
+	if (specialState == OT)
+		return true;
+	else
+		return false;
+
 }
 
 
@@ -1301,24 +1251,42 @@ void Smarticle::AssignState(int guiState)
 	}
 
 }
-double Smarticle::CheckLowStressChangeTime()
+
+void Smarticle::CheckLTTimer(double t1, double t2)
 {
-	static double timeSinceLastChange = 0;
-	timeSinceLastChange += dT;
-	lowStressChange = false;//always reset
-	if (timeSinceLastChange > gaitLengthChangeTime)
+	//time between switchs = 2*LTMaxTime
+	static double switchTime = 2 * LTMaxTime;
+	if ((abs(t1)+abs(t2))<LTThresh)
 	{
-		lowStressChange = true;
-		timeSinceLastChange = 0; //reset value when activated
-		return 0;
+		if (genRand() < percentToChangeStressState)
+		{
+			LTRunning = true;
+		}
+
 	}
-	return timeSinceLastChange;
+	if ((LTTimer > LTMaxTime)) //|| previousSuccessful
+	{
+		LTRunning = false;
+		if (LTTimer > switchTime)
+		{
+			LTTimer = 0;
+			LTRunning = false;
+			this->LTValIdx = (LTValIdx + 1) % LTVal.size();//change OTval to next value in vector
+		}
+
+	}
+
+	//if (LTRunning)
+	//{
+		LTTimer += dT;
+	//}
+	
 }
-void Smarticle::CheckTimer()
+void Smarticle::CheckOTTimer()
 {
 	if (GetArm0OT() || GetArm2OT())
 	{
-		if (genRand() < percentToChangeOT)
+		if (genRand() < percentToChangeStressState)
 		{
 			OTRunning = true;
 		}
@@ -1339,7 +1307,16 @@ void Smarticle::CheckTimer()
 
 void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 {
-		
+
+	////////determine which actions stress related actions are turned on////////
+	static const bool LowStressActive = true;
+	static const bool MidStressActive = false;
+	static const bool OverStressActive = false;
+	////////////////////////////////////////////////////////////////////////////
+
+
+	bool moveDecided = false;
+
 	if (active == false)//TODO put this higher
 	{
 		successfulMotion = false;
@@ -1350,14 +1327,35 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	prevSuccessful = successfulMotion;
 	successfulMotion = false;
 	this->prevMoveType = this->moveType;
-	double timeSinceChange = CheckLowStressChangeTime();
-	
-	///
-	CheckTimer();
-	///
 
+
+	///double t1 = abs(torque01);
+	///double t2 = abs(torque12);
+
+	//assigns OT and specialState to OT
 	ChangeArmColor(torque01, torque12);
-	ChangeStateBasedOnTorque(torque01,torque12,timeSinceChange);
+	
+	if (OverStressActive && !moveDecided)
+	{
+		CheckOTTimer();
+		moveDecided = MoveOverStress(torque01, torque12);
+	}
+	else
+	{
+		if (!arm0OT || !arm2OT)
+			specialState = -1;
+	}
+	
+	if (MidStressActive  && !moveDecided)
+	{
+		moveDecided = MoveMidStress(torque01, torque12);
+	}
+
+	if (LowStressActive  && !moveDecided)
+	{
+		CheckLTTimer(torque01,torque12);
+		moveDecided = MoveLowStress(torque01, torque12, LTTimer);
+	}
 
 	if (specialState != -1)
 		AssignState(specialState);

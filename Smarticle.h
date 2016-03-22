@@ -103,8 +103,11 @@ namespace chrono {
 		virtual ChVector<> GetReactTorqueVectors12();
 		virtual double GetReactTorqueLen01();
 		virtual double GetReactTorqueLen12();
-		virtual void ChangeArmColor(double torque01, double torque12);
-		void ChangeStateBasedOnTorque(double torque01, double torque12,double timeSinceChange);
+		virtual bool ChangeArmColor(double torque01, double torque12);
+		bool MoveOverStress(double torque01, double torque12);
+		bool MoveMidStress(double torque01, double torque12);
+		bool MoveLowStress(double torque01, double torque12,double timeSinceChanged);
+
 		virtual void SetDefaultOmega(double omega);
 		
 		virtual void SetOmega(int idx, double momega, bool angularFreq=true);
@@ -200,15 +203,15 @@ namespace chrono {
 		double angHigh;
 		static double distThresh;
 		static unsigned int global_GUI_value;
-		void CheckTimer();
+		void CheckLTTimer(double torque1, double torque2);
+		void CheckOTTimer();
+
 		std::vector<std::pair<double, double>> *mv;
 		std::deque<std::tuple<double,double,double,double>> torques;
 		std::deque<double> torque1;
 		std::deque<double> torque2;
 		std::tuple<double,double,double,double> torqueAvg;
 		void updateTorqueDeque(); 
-		void updateTorqueDeque(double mtorque0, double mtorque1, double momega0, double momega1);
-		void updateTorqueAvg();
 		void updateTorqueAvg(std::tuple <double, double,double,double > oldT);
 		///////////////////////////////////////////////////////////
 		void SetNextAngle(int id, double ang);
@@ -226,7 +229,6 @@ namespace chrono {
 		double ChooseOmegaAmount(double momega, double currAng, double destAng);
 		virtual void setCurrentMoveType(MoveType newMoveType);
 		void ControllerMove(int guiState, double torque01, double torque12);
-		double CheckLowStressChangeTime();
 		std::shared_ptr<ChLinkEngine> getLinkActuator(int id);
 		double defaultOmega;
 		double omegaLim;
@@ -276,7 +278,10 @@ namespace chrono {
 		double collisionEnvelop;
 		bool arm0OT;
 		bool arm2OT;
-		double percentToChangeOT;
+		double percentToChangeStressState;
+		double LTThresh; //Low  torque threshold
+		double MTThresh; //Mid  torque threshold
+		double OTThresh; //Over torque threshold
 		// material property
 		double density;
 		std::shared_ptr<ChMaterialSurface> mat_g;
@@ -296,6 +301,12 @@ namespace chrono {
 	
 		std::vector<int> OTVal;//vector containing OT moves to switch between
 		int OTValIdx;					//current index of OTVal
+
+		double LTTimer;//timer which keeps current value of time in the LT phase
+		double LTMaxTime; //time for smarticle to be in the LT phase
+		bool LTRunning; //if LT is running
+		std::vector<int> LTVal;//vector containing LT moves to switch between
+		int LTValIdx;					//current index of LTVal
 
 		int smarticleID;			// smarticleID is not bodyID. smarticle is composed of 3 bodies.
 		int dumID;

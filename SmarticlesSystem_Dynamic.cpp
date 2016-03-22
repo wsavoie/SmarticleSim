@@ -190,7 +190,7 @@ bool povray_output = false;
 int out_fps = 120;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-int numPerLayer =3;
+int numPerLayer =6;
 bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surface
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
@@ -1511,9 +1511,9 @@ void UpdateSmarticles(
 		double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);
 		
 
-		/////////////////random chance at current timestep for smarticle to not move to globalValue, models real life slowness for all to start to try current state
+		
 		int moveType=0;
-
+		/////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
 		if (genRand() < percentToMoveToGlobal)
 			moveType = mySmarticlesVec[i]->prevMoveType;
 		else
