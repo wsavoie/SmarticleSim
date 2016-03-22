@@ -29,6 +29,8 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 		text_Angle = app->GetIGUIEnvironment()->addStaticText(L"Angle: 0, Increment: 0",
 			rect<s32>(850, 45, 1050, 60), true);
 	}
+	text_cameraPos = app->GetIGUIEnvironment()->addStaticText(L"Camera Pos and Target",
+		rect<s32>(850, 25, 1150, 40),true);
 		text_SmarticleAmt = app->GetIGUIEnvironment()->addStaticText(L"Layers: 0, Smarticles: 0",
 			rect<s32>(850, 65, 1050, 80), true);
 
@@ -71,7 +73,6 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 		inc = .1;
 		//box_ang = 10 * D2R;
 		//rampInc = 1.0 / 60.0;
-		rampInc = .5;
 		drum_freq = 1;
 		drum_omega = drum_freq * 2 * PI;
 	}
@@ -101,6 +102,13 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			case irr::KEY_KEY_E:
 				if (Smarticle::global_GUI_value != MoveType::GUI3)
 					Smarticle::global_GUI_value = MoveType::GUI3;
+				else
+					Smarticle::global_GUI_value = MoveType::GLOBAL;
+				return true;
+				break;
+			case irr::KEY_KEY_N:
+				if (Smarticle::global_GUI_value != MoveType::MIDT)
+					Smarticle::global_GUI_value = MoveType::MIDT;
 				else
 					Smarticle::global_GUI_value = MoveType::GLOBAL;
 				return true;
@@ -335,12 +343,12 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				return true;
 				break;
 			case irr::KEY_KEY_3:			//decrease rampInc
-				rampInc = rampInc - 1.0 / 60.0;
+				rampInc = rampInc - 1;
 				drawAngle();
 				return true;
 				break;
 			case irr::KEY_KEY_4:			//increase rampInc
-				rampInc = rampInc + 1.0 / 60.0;
+				rampInc = rampInc + 1;
 				drawAngle();
 				return true;
 				break;
@@ -452,6 +460,14 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			this->text_Angle->setText(core::stringw(message).c_str());
 		}
 
+	}
+	void IrrGui::drawCamera()
+	{
+		//application.GetDevice()->getSceneManager()->getRootSceneNode()
+		vector3df camPos = app->GetSceneManager()->getActiveCamera()->getAbsolutePosition();
+		vector3df camTarget = app->GetSceneManager()->getActiveCamera()->getTarget();
+		char message[100]; sprintf(message, "P(%2.3g, %2.3g, %2.3g), T(%2.3g, %2.3g, %2.3g)", camPos.X, camPos.Y, camPos.Z, camTarget.X, camTarget.Y, camTarget.Z);
+		this->text_cameraPos->setText(core::stringw(message).c_str());
 	}
 	void IrrGui::drawSuccessful()
 	{

@@ -27,6 +27,7 @@ namespace chrono{
 			void drawAngle();
 			void drawSuccessful();
 			void drawSuccessful2();
+			void drawCamera();
 			void addSuccessful(Smarticle &sPtr);
 			void resetSuccessfulCount();
 			void GenerateVibrateGait(Smarticle& sPtr);
@@ -44,6 +45,7 @@ namespace chrono{
 			irr::gui::IGUIStaticText* text_Y;
 			irr::gui::IGUIStaticText* text_SmarticleAmt;
 			irr::gui::IGUIStaticText* text_Angle;
+			irr::gui::IGUIStaticText* text_cameraPos;
 			irr::gui::IGUIScrollBar* scrollbar_cohesion;
 			irr::gui::IGUIStaticText* text_cohesion;
 			irr::gui::IGUIScrollBar* scrollbar_compliance;
