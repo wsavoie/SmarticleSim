@@ -1094,40 +1094,9 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSin
 	//double HT = 1.99 *torqueThresh2;
 	double t0 = abs(tor0);
 	double t1 = abs(tor1);
-	//if (stayOT)
-	//{
-	//	if (lowStressChange)
-	//	{
-	//		stayOT = false;
-	//	}
-	//	else
-	//	{
-	//		if (OTmoveType == 0)
-	//		{
-	//			specialState = GUI1;
-	//			//AssignState(GUI1);
-	//			//this->ot.clear();
-	//			//this->addInterpolatedPathToVector(GetAngle1(), GetAngle2(), PI / 2, PI / 2);
-	//			OTMoved = true;
-	//			return;
-
-	//		}
-	//		else
-	//		{
-	//			specialState = GUI3;
-	//			//AssignState(GUI3);
-	//			//this->ot.clear();
-	//			//this->addInterpolatedPathToVector(GetAngle1(), GetAngle2(), -PI / 2, -PI / 2);//curr				->		curr+vib
-	//			OTMoved = true;
-	//			return;
-	//		}
-	//	}
-	//}
 
 	if (GetArm0OT() || GetArm2OT())
 	{//highest torque threshold, stop moving
-		//AssignState(OT);
-		//specialState = -1;
 		specialState = OT;
 		//AssignState(specialState);
 		//if (lowStressChange || OTMoved == false)		//if time to switch states
@@ -1168,38 +1137,38 @@ void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSin
 		specialState = OTVal.at(OTValIdx);
 		return;
 	}
-	if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if) 
-	{// MT<t0<OT //TODO perhaps make this function if(t0+t1>2*MT) since servo can only sense stress from both
-		//specialState = MIDT;
-		//AssignState(MIDT);
-		//TODO clear midt and emplace values
-		return;
-			
-	}
-	else if (t0 < LT && t1 < LT)
-	///TODO perhaps make this function if(t0+t1<2*LT) since servo can only sense stress from both
-	{//LOW TORQUE
-			
-		if (lowStressChange)		//if time to switch states
-		{
-		//
-		//	if (specialState == GUI1 || global_GUI_value==GUI1) //was not already in special state
-		//	{
-		//		specialState = GUI2;
-		//	}
-		//	else//if already in special state switch to a different one 
-		//	{
-		//		specialState = GUI1;
-		//	}
-		//	
-		//	LTactive = true;
-		//	return;
-			//GetLog() << "\nlow stress change, specialState:" << specialState;
-			return;
-		}
-		//GetLog() << "\nLT but no lowStressChange";
-		return; //maybe to a low torque color change?
-	}
+	//if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if) 
+	//{// MT<t0<OT //TODO perhaps make this function if(t0+t1>2*MT) since servo can only sense stress from both
+	//	//specialState = MIDT;
+	//	//AssignState(MIDT);
+	//	//TODO clear midt and emplace values
+	//	return;
+	//		
+	//}
+	//else if (t0 < LT && t1 < LT)
+	/////TODO perhaps make this function if(t0+t1<2*LT) since servo can only sense stress from both
+	//{//LOW TORQUE
+	//		
+	//	if (lowStressChange)		//if time to switch states
+	//	{
+	//	//
+	//	//	if (specialState == GUI1 || global_GUI_value==GUI1) //was not already in special state
+	//	//	{
+	//	//		specialState = GUI2;
+	//	//	}
+	//	//	else//if already in special state switch to a different one 
+	//	//	{
+	//	//		specialState = GUI1;
+	//	//	}
+	//	//	
+	//	//	LTactive = true;
+	//	//	return;
+	//		//GetLog() << "\nlow stress change, specialState:" << specialState;
+	//		return;
+	//	}
+	//	//GetLog() << "\nLT but no lowStressChange";
+	//	return; //maybe to a low torque color change?
+	//}
 	
 	specialState = -1;
 }
@@ -1388,8 +1357,8 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	///
 
 	ChangeArmColor(torque01, torque12);
-
 	ChangeStateBasedOnTorque(torque01,torque12,timeSinceChange);
+
 	if (specialState != -1)
 		AssignState(specialState);
 	else

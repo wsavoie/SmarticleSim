@@ -1500,7 +1500,8 @@ void screenshot(ChIrrApp& app,bool save)
 void UpdateSmarticles(
 		CH_SYSTEM& mphysicalSystem,
 		std::vector<Smarticle*> mySmarticlesVec) {
-	static double torquethresh = mySmarticlesVec[0]->torqueThresh2; //TODO fix this add to common.h
+
+	//static double torquethresh = mySmarticlesVec[0]->torqueThresh2;
 
 	double t = mphysicalSystem.GetChTime(); 
 	
@@ -1512,43 +1513,13 @@ void UpdateSmarticles(
 
 		/////////////////random chance at current timestep for smarticle to not move to globalValue, models real life slowness for all to start to try current state
 		int moveType=0;
+
 		if (genRand() < percentToMoveToGlobal)
-		{
 			moveType = mySmarticlesVec[i]->prevMoveType;
-		}
-		else{
+		else
 			moveType = Smarticle::global_GUI_value;
-		}
+
 		mySmarticlesVec[i]->ControllerMove(moveType, tor1, tor2);
-
-		//double torque01 = mySmarticlesVec[i]->GetReactTorqueLen01();
-		//double torque12 = mySmarticlesVec[i]->GetReactTorqueLen12();
-		//mySmarticlesVec[i]->timeSinceLastGait = mySmarticlesVec[i]->timeSinceLastGait + dT;
-		//if (t > 1)
-		//{
-		//	
-		//	if (mySmarticlesVec[i]->timeSinceLastGait >= gaitChangeLengthTime) //if timespan necessary to check 
-		//	{
-		//		if (torque01 <= torquethresh  && torque12 <= torquethresh)
-		//		{
-		//			mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType % 2 + 1, torque01, torque12);  //if 2 go to 1 if 1 go to 2
-
-		//		}
-		//		else
-		//		{
-		//			mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, torque01, torque12);
-		//		}
-		//		mySmarticlesVec[i]->timeSinceLastGait = 0;
-		//	}
-		//	else
-		//	{
-		//		mySmarticlesVec[i]->MoveLoop2(mySmarticlesVec[i]->moveType, torque01, torque12);
-		//	}
-		//}
-		//else
-		//{
-		//	mySmarticlesVec[i]->MoveLoop2(Smarticle::global_GUI_value,torque01,torque12);
-		//}
 	}
 }
 // =============================================================================
