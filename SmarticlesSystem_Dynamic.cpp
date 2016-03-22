@@ -39,7 +39,6 @@
 #include "utils/ChUtilsGenerators.h"
 #include "common.h"
 #include <ctime>
-#include <stdlib.h>  // system, rand, srand, RAND_MAX
 #include "core/ChFileutils.h" // for MakeDirectory
 #include "IrrGui.h"
 #include "Smarticle.h"
@@ -205,12 +204,11 @@ std::vector<std::shared_ptr<ChBody>> bucket_bod_vec;
 
 //ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 double bucket_half_thick = sizeScale * .005;
-
+double percentToMoveToGlobal = .25;
 double max_z = 0;
-double rampAngle = 10 * D2R;
-double rampInc = 1.0/60.0;
+double rampInc = 1;
 double drum_freq = 1;
-double box_ang = 10*D2R;
+double box_ang =-40 *D2R;
 double drum_omega = drum_freq*2*PI;
 double pctActive = 1.0;
 double inc = 0.00001;
@@ -449,18 +447,18 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 	if (smarticleCount < numPerLayer){ z = w_smarticle / 1; }
 	//else{ z = max_z; }
 	else{ z = Find_Max_Z(mphysicalSystem,mySmarticlesVec); }
-	double phase = MyRand()*PI_2;
+	double phase = genRand(PI_2);
 	ChVector<> myPos;
 	for (int i = 0; i < numPerLayer; i++)
 	{
-		phase = MyRand()*PI_2 - MyRand()*PI / 4;
+		phase = genRand(PI_2);
 		zpos = std::min(3 * bucket_interior_halfDim.z, z) + w_smarticle;
 		
 		switch (bucketType){
 		case DRUM:
-			zpos = std::min(std::max(-bucket_rad, z),bucket_rad);
-			myPos = bucket_ctr + ChVector<>(MyRand()*bucket_interior_halfDim.z/2.5,
-				MyRand()*bucket_interior_halfDim.z/2.5,
+			zpos = SaturateValue(z, bucket_rad);
+			myPos = bucket_ctr + ChVector<>(genRand(bucket_interior_halfDim.z / 2.5),
+				genRand(bucket_interior_halfDim.z / 2.5),
 				zpos);
 			break;
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
@@ -484,22 +482,39 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 
 			break;
 		case HOPPER:
-			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand()),
-				cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand()),
+			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + genRand(w)),
+				cos(ang*i + phase)*(bucket_rad / 2 + genRand(w)),
 				zpos);
 			break;
 		case BOX:
-			myPos = bucket_ctr + ChVector<>((2*MyRand()-1)*.9*bucket_interior_halfDim.x,
-				(2*MyRand()-1)*.9*bucket_interior_halfDim.y ,
-				bucket_interior_halfDim.z+w_smarticle);
-			myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
-			dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2 * w_smarticle / timeForDisp);
+		{
+			//myPos = bucket_ctr + ChVector<>((2*MyRand()-1)*.9*bucket_interior_halfDim.x,
+			//	(2*MyRand()-1)*.9*bucket_interior_halfDim.y ,
+			//	bucket_interior_halfDim.z+w_smarticle);
+			//myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
+			////dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2 * w_smarticle / timeForDisp);
+			//dropSpeed = VNULL;
+			///////////////////////////place in specific location///////////////////////////
+			dropSpeed = VNULL;
+			myRot = Q_from_AngAxis(PI_2, VECT_X);
+			ChQuaternion<> buckRot = bucket->GetRot();
+			double buckRotAngx = Quat_to_Angle(ANGLESET_RXYZ,buckRot).x;
+			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI/2,PI,0));
+			
+			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, PI*(i % 2), 0));
+			double xPos = genRand(-1,1)*t2_smarticle/1.25;
+			double yPos = (i-4.2) * 2 * t2_smarticle;
+			myPos = bucket_ctr + ChVector<>(xPos, yPos, ( - yPos - 2*bucket_half_thick)*tan(buckRotAngx)+t_smarticle/1.99);
+
+			///////////////////////////place in specific location///////////////////////////
 			break;
+		}
+
 		default:
-			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + w*MyRand() - w / 2),
-				cos(ang*i + phase)*(bucket_rad / 2 + w*MyRand() - w / 2.0),
+			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + genRand(-w/2,w/2)),
+				cos(ang*i + phase)*(bucket_rad / 2 + genRand(-w / 2, w / 2)),
 				zpos);
-			myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
+			myRot = ChQuaternion<>(genRand(-1, 1), genRand(-1, 1), genRand(-1, 1), genRand(-1, 1));
 			break;
 		}
 			
@@ -517,7 +532,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				myRot
 				);
 
-			if (MyRand()<1)//to reduce amount visualized amount
+			if (genRand()<1)//to reduce amount visualized amount
 				smarticle0->visualize = true;
 
 			smarticle0->populateMoveVector();
@@ -670,7 +685,7 @@ std::shared_ptr<ChBody> create_complex_convex_hull(CH_SYSTEM* mphysicalSystem, s
 	ChVector<> rampSize(w_smarticle * 5, w_smarticle * 5, t);
 
 
-	//utils::AddBoxGeometry(convexShape.get(), rampSize, rampPos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)), true);
+	//utils::AddBoxGeometry(convexShape.get(), rampSize, rampPos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true);
 
 
 
@@ -695,7 +710,7 @@ std::shared_ptr<ChBody> create_ramp(int id, CH_SYSTEM* mphysicalSystem, std::sha
 	ramp->SetBodyFixed(false);
 	ramp->SetCollide(true);
 
-	ChVector<> rampPos(0, 0, -sin(rampAngle)*w - t);
+	ChVector<> rampPos(0, 0, -sin(box_ang)*w - t);
 
 	ramp->GetCollisionModel()->ClearModel();
 	ramp->SetMaterialSurface(wallMat);
@@ -726,12 +741,11 @@ std::shared_ptr<ChBody> create_ramp(int id, CH_SYSTEM* mphysicalSystem, std::sha
 	bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
 	bucket_bott->GetCollisionModel()->BuildModel();
-	bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)));
+	bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)));
 	mphysicalSystem->AddBody(bucket_bott);
-	bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)));
 
 	ramp->GetCollisionModel()->BuildModel();
-	ramp->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(rampAngle, 0, 0)));
+	ramp->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)));
 	ramp->AddAsset(floorTexture);
 	mphysicalSystem->AddBody(ramp);
 	return ramp;
@@ -919,8 +933,9 @@ void CreateBucket_bott(CH_SYSTEM& mphysicalSystem)
 void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
 	/////////////////
 	// Ground body
-	/////////////////
+	////////////////
 	mat_g->SetFriction(fric); //steel- plexiglass   (plexiglass was outer cylinder material)
+	mat_g->SetKfriction(fric);
 	// ground
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
 	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*bucket_interior_halfDim.z);
@@ -952,22 +967,24 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 		{
 		case BOX:
+		{
 			//dim = (2 * dim.x, 2 * dim.y, dim.z / 8);
-			dim.x = dim.x;
-			dim.y = 2 * dim.y;
+			//dim.x = dim.x;
+			dim = (.28 / 2);//28 cm across
+			dim.y = .55245/2;
 			dim.z = dim.z / 8;
-
-
-			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1000000000, mat_g, 
-				dim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0,0 )), true, false, true, false);
-			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1000000000, mat_g,
+				dim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
+			//bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 			bucket->AddAsset(bucketTexture);
 			bucket->SetCollide(true);
 			bucket->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 			bucket_bott->GetCollisionModel()->SetFamily(1);
 			bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+		
 			break;
-
+		}
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
 			CreateBucket_bott(mphysicalSystem);
 			bucket = create_cylinder_from_blocks2(25, 1, true, &mphysicalSystem, mat_g);
@@ -1124,7 +1141,7 @@ void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySm
 {
 	double pos = -.75*bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
 	double ang = 2 * PI / numPerLayer;
-	double rp = MyRand()*ang/4 ; //add slight offset to angInc to allow particles not always fall in nearly same position
+	double rp = genRand(ang/4) ; //add slight offset to angInc to allow particles not always fall in nearly same position
 	static int recycledSmarticles = 0;
 	static int inc = 0;
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++)
@@ -1137,8 +1154,8 @@ void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySm
 			if (bucketType == HOPPER)
 			{
 				sPtr->TransportSmarticle(bucket_ctr + ChVector<>(
-					sin(ang*inc + rp)*(bucket_rad / 2 + 4*w_smarticle*(MyRand() - 1/2.0)),
-					cos(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(MyRand() - 1 / 2.0)),
+					sin(ang*inc + rp)*(bucket_rad / 2 + 4*w_smarticle*(genRand(-0.5,0.5))),
+					cos(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(genRand(-0.5, 0.5))),
 					bucket_interior_halfDim.z*2
 					));
 
@@ -1149,8 +1166,8 @@ void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySm
 			{
 
 				sPtr->TransportSmarticle(bucket_ctr + ChVector<>(
-					sin(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(MyRand() - 1 / 2.0)),
-					cos(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(MyRand() - 1 / 2.0)),
+					sin(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(genRand(-0.5, 0.5))),
+					cos(ang*inc + rp)*(bucket_rad / 2 + w_smarticle*(genRand(-0.5, 0.5))),
 					bucket_interior_halfDim.z*1.75
 					));
 			}
@@ -1313,7 +1330,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	double totalVolume2 = 0;
 	int countInside2 = 0;
 	double volumeFraction = 0;
-
+	
 
 	switch (bucketType)
 	{
@@ -1492,7 +1509,17 @@ void UpdateSmarticles(
 		double tor1 = std::get<0>(mySmarticlesVec[i]->torqueAvg);
 		double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);
 		
-		mySmarticlesVec[i]->ControllerMove(Smarticle::global_GUI_value, tor1, tor2);
+
+		/////////////////random chance at current timestep for smarticle to not move to globalValue, models real life slowness for all to start to try current state
+		int moveType=0;
+		if (genRand() < percentToMoveToGlobal)
+		{
+			moveType = mySmarticlesVec[i]->prevMoveType;
+		}
+		else{
+			moveType = Smarticle::global_GUI_value;
+		}
+		mySmarticlesVec[i]->ControllerMove(moveType, tor1, tor2);
 
 		//double torque01 = mySmarticlesVec[i]->GetReactTorqueLen01();
 		//double torque12 = mySmarticlesVec[i]->GetReactTorqueLen12();
@@ -1669,17 +1696,28 @@ int main(int argc, char* argv[]) {
 		core::vector3df(0, 0, 4*bucket_rad)*sizeScale,
 		core::vector3df(0, 0, 1*bucket_rad)*sizeScale);
 
-	ChIrrWizard::add_typical_Lights(application.GetDevice());
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
-		core::vector3df(0, 0, bucket_rad / 2.1)*sizeScale,
-		core::vector3df(0, -2.3*bucket_rad + bucket_rad, bucket_rad / 2.0)*sizeScale);
+		core::vector3df(.0139, -.39, -.0281)*sizeScale,
+		core::vector3df(0.0139, .298, -.195)*sizeScale);
+
+	ChIrrWizard::add_typical_Lights(application.GetDevice());
+	
 
 	RTSCamera* camera = new RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
 	camera->setUpVector(core::vector3df(0, 0, 1));
 //camera->setPosition(core::vector3df(0, -.17, .07));
-	camera->setPosition(core::vector3df(0, -2.3*bucket_rad + bucket_rad, bucket_rad/2.0));
-	camera->setTarget(core::vector3df(0, 0, bucket_rad/2.1)); //	camera->setTarget(core::vector3df(0, 0, .01));
+	//camera->setPosition(core::vector3df(0, bucket_interior_halfDim.y, 4 * bucket_rad / 2.0));
+	//camera->setTarget(core::vector3df(0, 2*bucket_interior_halfDim.y, -bucket_rad / 2.1)); //	camera->setTarget(core::vector3df(0, 0, .01));
+
+	camera->setPosition(core::vector3df(.0139, -.39, -.0281));
+	camera->setTarget(core::vector3df(0.0139, .298, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+
+
+	ChIrrWizard::add_typical_Lights(application.GetDevice(),
+		camera->getPosition(),
+		camera->getTarget());
+
 	camera->setNearValue(0.0005f);
 	camera->setMinZoom(0.1f);
 	camera->setZoomSpeed(0.1f);
@@ -2120,7 +2158,7 @@ int main(int argc, char* argv[]) {
 
 			//framerecord
 			
-			application.SetVideoframeSaveInterval(50);//only save every 2 frames
+			application.SetVideoframeSaveInterval(134);//only save out frames to make it 30fps
 			application.DrawAll();
 
 			for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
@@ -2165,7 +2203,7 @@ int main(int argc, char* argv[]) {
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
 	  //step_timer.stop("step time");
-		
+		receiver.drawCamera();
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
 
 	  std::cout.flush();

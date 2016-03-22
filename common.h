@@ -7,6 +7,7 @@
 #include "core/ChVector.h"
 #include <vector>
 #include <chrono>
+#include <random>
 
 #ifndef true
 #define true 1
@@ -41,7 +42,6 @@
 	extern SmarticleType smarticleType;
 	extern BucketType bucketType;
 
-
 	////////////
 
 
@@ -64,6 +64,36 @@
 	extern std::shared_ptr<chrono::ChBody> bucket;
 	extern std::shared_ptr<chrono::ChBody> bucket_bott;
 	extern std::vector<std::shared_ptr<chrono::ChBody>> bucket_bod_vec;
+
+	//common functions
+
+
+	//template <typename T> int sgn(T val);
+	
+	//had to do implementation here otherwise I get a linker error
+	template <typename T> int sgn(T val)
+	{
+		return (T(0) < val) - (val < T(0));
+	}
+	double SaturateValue(double val, double low, double high);
+	double SaturateValue(double val, double zeroCenteredVal);
+	//generates random [min,max]
+	double genRand(double min, double max);
+	//generates random [0,max]
+	double genRand(double max);
+	//generates random [0-1]
+	double genRand();
+	int genRandInt(int min, int max);
+	//template <typename B> B genRand<B>(B min, B max);
+
+	//template <typename T>
+	//T genRand(T min, T max)
+	//{
+	//	std::random_device rd;
+	//	std::mt19937 gen(rd());
+	//	std::uniform_real_distribution<> dis(min, max);
+	//	return T(dis(gen));
+	//}
 
 
 #endif
