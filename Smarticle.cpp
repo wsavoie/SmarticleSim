@@ -9,7 +9,6 @@
 #include "utils/ChUtilsGeometry.h"
 #include "utils/ChUtilsCreators.h"
 
-
 #include <math.h>  /* asin */
 
 
@@ -40,7 +39,10 @@ std::vector<std::pair<double, double>> Smarticle::global;
 std::vector<std::pair<double, double>> Smarticle::gui1;
 std::vector<std::pair<double, double>> Smarticle::gui2;
 std::vector<std::pair<double, double>> Smarticle::gui3;
+std::vector<std::pair<double, double>> Smarticle::extra1;
+std::vector<std::pair<double, double>> Smarticle::extra2;
 std::vector<std::pair<double, double>> Smarticle::midTorque;
+
 
 std::shared_ptr<ChTexture> Smarticle::mtextureOT = std::make_shared<ChTexture>();
 std::shared_ptr<ChTexture> Smarticle::mtextureArm = std::make_shared<ChTexture>();
@@ -48,7 +50,6 @@ std::shared_ptr<ChTexture> Smarticle::mtextureMid = std::make_shared<ChTexture>(
 double Smarticle::pctActive = 1.0;
 double Smarticle::distThresh;
 unsigned int Smarticle::global_GUI_value;
-
 Smarticle::~Smarticle()
 {
 	//this->armsController->~Controller();
@@ -97,7 +98,8 @@ void Smarticle::Properties(
 
 
 	mtextureOT->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
-	mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+	//mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
+	mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 	mtextureMid->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
 }
 
@@ -167,10 +169,13 @@ void Smarticle::Properties(
 	torqueAvg = std::make_tuple(0, 0, 0, 0);
 	initialAng0 = other_angle;
 	initialAng1 = other_angle2;
+	percentToChangeOT = .25;
+
 	//avg1 = 0;
 	//avg2 = 0;
 	//armsController = (new Controller(m_system, this));
 }
+
 void Smarticle::updateTorqueDeque(double mtorque0, double mtorque1,double momega0, double momega1)
 {
 	//torque1.pop_back();
@@ -340,7 +345,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 		switch (armID) {
 		case 0:
 			arm0_textureAsset = std::make_shared<ChTexture>();
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 			arm->AddAsset(arm0_textureAsset);
 			break;
 		case 1:
@@ -350,7 +355,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 			break;
 		case 2:
 			arm2_textureAsset = std::make_shared<ChTexture>();
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 			arm->AddAsset(arm2_textureAsset);
 			break;
 		default:
@@ -410,7 +415,7 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 		arm->SetBodyFixed(false);
 	else
 		arm->SetBodyFixed(false);
-	mat_g->SetFriction(.05);
+	//mat_g->SetFriction(.05);
 	arm->SetMaterialSurface(mat_g);
 
 	double mass = density * vol;
@@ -422,7 +427,7 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 		switch (armID) {
 		case 0:
 			arm0_textureAsset = std::make_shared<ChTexture>();
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 			arm->AddAsset(arm0_textureAsset);
 			break;
 		case 1:
@@ -432,7 +437,7 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 			break;
 		case 2:
 			arm2_textureAsset = std::make_shared<ChTexture>();
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 			arm->AddAsset(arm2_textureAsset);
 			break;
 		default:
@@ -543,12 +548,12 @@ void Smarticle::CreateActuators() {
 	//ChVector<> pR01(-w / 2.0-r2, 0, 0);
 	//ChVector<> pR12(w / 2.0+r2, 0, 0);
 	
-	ChVector<> pR01 (-w / 2.0, 0, 0);
-	ChVector<> pR12 (w / 2.0, 0, 0);
+	ChVector<> pR01 (w / 2.0, 0, 0);
+	ChVector<> pR12 (-w / 2.0, 0, 0);
 	if (!stapleSize)
 	{
-		pR01 = ChVector<>(-(w / 2 - jointClearance), 0, -offPlaneoffset);
-		pR12 = ChVector<>(w / 2 - jointClearance, 0, -offPlaneoffset);
+		pR01 = ChVector<>((w / 2 - jointClearance), 0, -offPlaneoffset);
+		pR12 = ChVector<>(-(w / 2 - jointClearance), 0, -offPlaneoffset);
 	}
 	
 
@@ -580,17 +585,19 @@ void Smarticle::Create() {
 	double l_mod;
 	//double l_mod = l + 2 * r2 - jointClearance;
 
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle1, 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle2, 0));
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1, 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2, 0));
 	quat0.Normalize();
 	quat2.Normalize();
 
-	//current sim version
-	//CreateArm(0, l_mod, ChVector<>(-w / 2.0 -r2- (l_mod / 2.0-r2)*cos(angle1), 0, -(l_mod / 2.0-r2)*sin(angle1)), quat0);
-	//CreateArm(1, w, ChVector<>(0, 0, 0));
-	//CreateArm(2, l_mod, ChVector<>( w / 2.0 +r2 + (l_mod / 2.0-r2)*cos(angle2), 0, -(l_mod / 2.0-r2)*sin(angle2)), quat2);
-
-	////new version
+	this->OTTimer = 0;
+	this->OTMaxTime = .25;
+	this->OTRunning = false;
+	this->OTVal.emplace_back(GUI1);
+	this->OTVal.emplace_back(EXTRA1);
+	this->OTVal.emplace_back(EXTRA2);
+	this->OTValIdx = genRandInt(0, OTVal.size()-1);
+	GetLog()<< "smartRandidx:"<<this->OTValIdx<<"\n";
 	if (stapleSize)
 	{
 		offPlaneoffset = 0;
@@ -605,9 +612,9 @@ void Smarticle::Create() {
 		jointClearance = .0065;//6.5 mm in x dir jc in y dir is r2
 		double armt = r;
 		double armt2 = .0032 / 2 * sizeScale; //8.06 mm with solar 3.2 without
-		CreateArm2(0, l, armt, armt2, ChVector<>(-(w / 2.0 - (jointClearance)+cos(angle1)*l / 2), 0, -(l / 2.0)*sin(angle1) -offPlaneoffset), quat0);
+		CreateArm2(0, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(angle1)*l / 2), 0, -(l / 2.0)*sin(angle1) -offPlaneoffset), quat0);
 		CreateArm2(1, w,r,r2, ChVector<>(0, 0, 0));
-		CreateArm2(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(angle2)*l / 2), 0, -(l / 2.0)*sin(angle2) -offPlaneoffset), quat2);
+		CreateArm2(2, l, armt, armt2, ChVector<>(-(w / 2.0 - (jointClearance)+cos(angle2)*l / 2), 0, -(l / 2.0)*sin(angle2) -offPlaneoffset), quat2);
 	}
 
 	CreateActuators();
@@ -615,9 +622,11 @@ void Smarticle::Create() {
 
 	// mass property
 	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
-	double r = ChRandom();
-	//GetLog() << "rand number=" << r << "pctActive="<<pctActive <<"\n";
-	if (r <= pctActive)
+
+
+
+
+	if (genRand() < pctActive)
 	{
 		active = true;
 		//controller(omega,force)
@@ -978,7 +987,35 @@ std::pair<double, double> Smarticle::populateMoveVector()
 				break;
 		}
 	}
+	if (extra1.size() < 1)
+	{
+		while (smarticleMoves.good()) {
+			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+			angPair.first = angVals.x;
+			angPair.second = angVals.y;
 
+			extra1.push_back(angPair);
+			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//exit(-1);
+			if (ddCh == '#')
+				break;
+		}
+	}
+
+	if (extra2.size() < 1)
+	{
+		while (smarticleMoves.good()) {
+			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
+			angPair.first = angVals.x;
+			angPair.second = angVals.y;
+
+			extra2.push_back(angPair);
+			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//exit(-1);
+			if (ddCh == '#')
+				break;
+		}
+	}
 	if (midTorque.size() < 1)
 	{
 		//midtorque
@@ -994,6 +1031,8 @@ std::pair<double, double> Smarticle::populateMoveVector()
 				break;
 		}
 	}
+
+
 
 	//SetAngle(firstAngPair);
 	//returning first ang pair but can be set here
@@ -1028,81 +1067,153 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 
 void Smarticle::ChangeStateBasedOnTorque(double tor0, double tor1,double timeSinceChange)
 {
+
 	//torque01 and torque02 are averaged torque over some amount of steps
 	//low thresh		= if both torques are < LT*thresh.
 	//med thresh		= if both torques are LT<x<HT
 	//high thresh		= if one torque is > HT
-	
+	static int OTmoveType = 1;
+	static bool OTMoved = true;
+	static bool stayOT = false;
 	//keeps track if in LT
 	static bool LTactive = false;
-	//TODO reimplement this?
-	if (timeSinceChange != 0 && timeSinceChange < 10 * dT) //protects situation where torque increases initially causing LT situations to get out of LT immediately upon shape change
-	{
-		if (LTactive)
-		{
-			//GetLog() << "activated low stress saver\n";
-			return;
-		}
-	}
+	
+	//if (timeSinceChange != 0 && timeSinceChange < 10 * dT) //protects situation where torque increases initially causing LT situations to get out of LT immediately upon shape change
+	//{
+	//	if (LTactive)
+	//	{
+	//		//GetLog() << "activated low stress saver\n";
+	//		return;
+	//	}
+	//}
+	
+	
 	LTactive = false;
 	double LT = .1 * torqueThresh2;
 	double MT = .5 * torqueThresh2;
 	//double HT = 1.99 *torqueThresh2;
 	double t0 = abs(tor0);
 	double t1 = abs(tor1);
+	//if (stayOT)
+	//{
+	//	if (lowStressChange)
+	//	{
+	//		stayOT = false;
+	//	}
+	//	else
+	//	{
+	//		if (OTmoveType == 0)
+	//		{
+	//			specialState = GUI1;
+	//			//AssignState(GUI1);
+	//			//this->ot.clear();
+	//			//this->addInterpolatedPathToVector(GetAngle1(), GetAngle2(), PI / 2, PI / 2);
+	//			OTMoved = true;
+	//			return;
+
+	//		}
+	//		else
+	//		{
+	//			specialState = GUI3;
+	//			//AssignState(GUI3);
+	//			//this->ot.clear();
+	//			//this->addInterpolatedPathToVector(GetAngle1(), GetAngle2(), -PI / 2, -PI / 2);//curr				->		curr+vib
+	//			OTMoved = true;
+	//			return;
+	//		}
+	//	}
+	//}
+
 	if (GetArm0OT() || GetArm2OT())
 	{//highest torque threshold, stop moving
 		//AssignState(OT);
 		//specialState = -1;
-
 		specialState = OT;
+		//AssignState(specialState);
+		//if (lowStressChange || OTMoved == false)		//if time to switch states
+		//{
+		//	//stayOT = true;
+		//	//if (lowStressChange)
+		//	//{
+		//	//	OTmoveType = (OTmoveType + 1) % 2;
+		//	//	OTMoved = false;
+		//	//	
+		//	//}
+		//	if (OTmoveType == 0)
+		//	{
+		//		specialState=GUI1;
+		//		//this->ot.clear();
+		//		//this->addInterpolatedPathToVector(GetAngle1(), GetAngle2(), PI / 2, PI / 2);
+		//		OTMoved = true; 
+		//		return;
+
+		//	}
+		//	else
+		//	{
+		//		specialState = GUI3;
+		//		//this->ot.clear();
+		//		//this->addInterpolatedPathToVector(GetAngle1(), GetAngle2(), -PI / 2, -PI / 2);//curr				->		curr+vib
+		//		OTMoved = true;
+		//		return;
+		//	}
+		//	OTMoved = false;
+		//	return;
+		//}
+		
+		return;
+			
 	}
-	else
-	{//not overtorqued for both,  t0<OT and t1<OT
-		if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if) 
-		{// MT<t0<OT //TODO perhaps make this function if(t0+t1>2*MT) since servo can only sense stress from both
-			//specialState = MIDT;
-			//AssignState(MIDT);
-			//TODO clear midt and emplace values
+	if (OTRunning)
+	{
+		specialState = OTVal.at(OTValIdx);
+		return;
+	}
+	if (t0 > MT && t1 > MT) //if greater than MT, (and less than OT because above if) 
+	{// MT<t0<OT //TODO perhaps make this function if(t0+t1>2*MT) since servo can only sense stress from both
+		//specialState = MIDT;
+		//AssignState(MIDT);
+		//TODO clear midt and emplace values
+		return;
+			
+	}
+	else if (t0 < LT && t1 < LT)
+	///TODO perhaps make this function if(t0+t1<2*LT) since servo can only sense stress from both
+	{//LOW TORQUE
+			
+		if (lowStressChange)		//if time to switch states
+		{
+		//
+		//	if (specialState == GUI1 || global_GUI_value==GUI1) //was not already in special state
+		//	{
+		//		specialState = GUI2;
+		//	}
+		//	else//if already in special state switch to a different one 
+		//	{
+		//		specialState = GUI1;
+		//	}
+		//	
+		//	LTactive = true;
+		//	return;
+			//GetLog() << "\nlow stress change, specialState:" << specialState;
 			return;
-			
 		}
-		else if (t0 < LT && t1 < LT)
-		///TODO perhaps make this function if(t0+t1<2*LT) since servo can only sense stress from both
-		{//LOW TORQUE
-			
-			if (lowStressChange)		//if time to switch states
-			{
-			//
-			//	if (specialState == GUI1 || global_GUI_value==GUI1) //was not already in special state
-			//	{
-			//		specialState = GUI2;
-			//	}
-			//	else//if already in special state switch to a different one 
-			//	{
-			//		specialState = GUI1;
-			//	}
-			//	
-			//	LTactive = true;
-			//	return;
-				//GetLog() << "\nlow stress change, specialState:" << specialState;
-				return;
-			}
-			//GetLog() << "\nLT but no lowStressChange";
-			return; //maybe to a low torque color change?
-		}
+		//GetLog() << "\nLT but no lowStressChange";
+		return; //maybe to a low torque color change?
 	}
+	
 	specialState = -1;
 }
+
+
 void Smarticle::ChangeArmColor(double torque01, double torque12)
 {
-	double TT2 = torqueThresh2*.55;
-	
+	double TT2 = torqueThresh2*.65;
+
 	//for vibration upon OT, change degreesToVibrate to amount you wish to vibrate
 	double degreesToVibrate = 0;
 	double moveAmt = degreesToVibrate*D2R;
-	
-	
+
+
 	if (abs(torque01) > TT2)
 	{
 		//this->setCurrentMoveType(OT);
@@ -1119,13 +1230,15 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 			this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
 		}
 		//nothing needs to be done if prev OT
+
+		//setstate OT
 	}
 	else
 	{
 		if (arm0OT) //it prev OT but currently not
 		{
 			arm0OT = false;
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 
 		}
 		// nothing needs to be done if not prev OT
@@ -1155,12 +1268,16 @@ void Smarticle::ChangeArmColor(double torque01, double torque12)
 		if (arm2OT) //it prev OT but currently not
 		{
 			arm2OT = false;
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 
 		}
 		// nothing needs to be done if not prev OT
 	}
 }
+
+
+
+
 void Smarticle::GenerateVib(double ang1, double ang2)
 {
 	this->addInterpolatedPathToVector(ang1, ang2, ang1 + vibAmp, ang2 + vibAmp);//curr				->		curr+vib
@@ -1193,14 +1310,18 @@ void Smarticle::AssignState(int guiState)
 		mv = &vib;
 		break;
 	case 5:
+		this->setCurrentMoveType(EXTRA1);
+		mv = &extra1;
+		break;
+	case 6:
+		this->setCurrentMoveType(EXTRA2);
+		mv = &extra2;
+		break;
+	case 7:
 		this->setCurrentMoveType(MIDT);
 		mv = &midTorque;
 		break;
-	case 6:
-		this->setCurrentMoveType(SS);
-		mv = &ss;
-		break;
-	case 7:
+	case 8:
 		this->setCurrentMoveType(OT);
 		mv = &ot;
 		break;
@@ -1224,9 +1345,32 @@ double Smarticle::CheckLowStressChangeTime()
 	}
 	return timeSinceLastChange;
 }
+void Smarticle::CheckTimer()
+{
+	if (GetArm0OT() || GetArm2OT())
+	{
+		if (genRand() < percentToChangeOT)
+		{
+			OTRunning = true;
+		}
+		
+	}
+	if (OTTimer > OTMaxTime) //|| previousSuccessful
+	{
+		OTTimer = 0;
+		OTRunning = false;
+		this->OTValIdx = (OTValIdx + 1) % OTVal.size();//change OTval to next value in vector
+	}
+
+	if (OTRunning)
+	{
+		OTTimer += dT;
+	}
+}
+
 void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 {
-	
+		
 	if (active == false)//TODO put this higher
 	{
 		successfulMotion = false;
@@ -1234,11 +1378,17 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	}
 
 	bool sameMoveType = false;
-	bool prevSucessful = successfulMotion;
+	prevSuccessful = successfulMotion;
 	successfulMotion = false;
 	this->prevMoveType = this->moveType;
 	double timeSinceChange = CheckLowStressChangeTime();
+	
+	///
+	CheckTimer();
+	///
+
 	ChangeArmColor(torque01, torque12);
+
 	ChangeStateBasedOnTorque(torque01,torque12,timeSinceChange);
 	if (specialState != -1)
 		AssignState(specialState);

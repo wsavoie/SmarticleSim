@@ -136,7 +136,6 @@ namespace chrono {
 		virtual void SetActuatorFunction(int actuatorID, std::shared_ptr<ChFunction> actuatorFunction);
 		virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
 		virtual void SetActuatorFunction(int actuatorID, double omega);
-
 		Controller* armsController;
 		// Smarticle volume
 		virtual double GetVolume();
@@ -201,6 +200,7 @@ namespace chrono {
 		double angHigh;
 		static double distThresh;
 		static unsigned int global_GUI_value;
+		void CheckTimer();
 		std::vector<std::pair<double, double>> *mv;
 		std::deque<std::tuple<double,double,double,double>> torques;
 		std::deque<double> torque1;
@@ -276,7 +276,7 @@ namespace chrono {
 		double collisionEnvelop;
 		bool arm0OT;
 		bool arm2OT;
-
+		double percentToChangeOT;
 		// material property
 		double density;
 		std::shared_ptr<ChMaterialSurface> mat_g;
@@ -289,7 +289,14 @@ namespace chrono {
 		ChSystem* m_system;  // Arman : take care of this later
 
 	 private:
-		// ID
+		double OTTimer;//timer which keeps current value of time in the OT phase
+		double OTMaxTime; //time for smarticle to be in the OT phase
+		bool OTRunning; //if OT is running
+
+	
+		std::vector<int> OTVal;//vector containing OT moves to switch between
+		int OTValIdx;					//current index of OTVal
+
 		int smarticleID;			// smarticleID is not bodyID. smarticle is composed of 3 bodies.
 		int dumID;
 		double jointClearance; // space at joint
