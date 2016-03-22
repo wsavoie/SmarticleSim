@@ -11,6 +11,7 @@
 
 namespace chrono {
 
+
 	//class ChReportContactCallback2;
 	class Smarticle;
 
@@ -22,6 +23,7 @@ namespace chrono {
 		bool Step(double dt);
 		// get the toruqe for joint i
 		//size_t GetNumEngines();
+
 		std::shared_ptr<ChLinkEngine> GetEngine(size_t i);
 		std::shared_ptr<ChFunctionController> engine_funct0;
 		std::shared_ptr<ChFunctionController> engine_funct1;
@@ -46,10 +48,13 @@ namespace chrono {
 		bool OT();
 		void UseForceControl(size_t i);
 		void UseSpeedControl();
-
+		double velOld[2];
+		double DD[2];
+		double II[2];
+		double yold[2];
 		double omegaLimit = 5;
 		double outputLimit = 0;
-
+		Smarticle *smarticle_;
 		bool resetCumError = false;
 		//void setMoveVector(unsigned int guiState);
 		std::vector <double> prevError_;
@@ -60,7 +65,7 @@ namespace chrono {
 		std::vector <bool> successfulMove_;
 	protected:
 		chrono::ChSystem *ch_system_;
-		Smarticle *smarticle_;
+
 		double num_waves_ = 2.0;
 		double default_amplitude_ = 0.1;
 		double command_amplitude_ = default_amplitude_;

@@ -23,6 +23,21 @@ Controller::Controller(chrono::ChSystem *ch_system, Smarticle *smarticle)
 	cumOmegError_.assign(len, 0);
 	successfulMove_.assign(len, false);
 	prevAngle_.assign(len, 0);
+
+	//have to define this way because VS is not completely C++11 compliant
+	velOld[0] = 0;
+	velOld[1] = 0;
+
+	DD[0] = 0;
+	DD[1] = 0;
+
+	II[0] = 0;
+	II[1] = 0;
+
+	yold[0] = 0;
+	yold[1] = 0;
+
+
 	//engine_funct0 = std::make_shared<ChFunctionController>(0, this);
 	//engine_funct1 = std::make_shared<ChFunctionController>(1, this);
 	/*contact_reporter_ = new ExtractContactForce(&contact_force_list_);
@@ -148,7 +163,7 @@ double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
 	double errLim = 10 * D2R;
 	double err = (des - curr);
-	err = std::max(std::min(errLim, err), -errLim);
+	err = SaturateValue(err, errLim);
 
 	return err + curr;
 
@@ -165,8 +180,7 @@ double Controller::LinearInterpolate(size_t idx, double curr, double des)
 
 double Controller::OmegaLimiter(size_t idx, double omega)
 {
-	return std::max(std::min(omegaLimit, omega), -omegaLimit);
-	
+	return SaturateValue(omega, omegaLimit);	
 }
 //double Controller::GetDesiredAngularSpeedForFunction(size_t index, double t)
 //{

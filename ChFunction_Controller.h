@@ -6,7 +6,6 @@
 
 #include <motion_functions/ChFunction_Base.h>
 
-
 namespace chrono {
 	class Controller;
 
@@ -26,6 +25,7 @@ namespace chrono {
 		double Get_y2(double curr_t);
 		double Get_y(double curr_t);
 		double Get_y_dx(double new_t) { return 0;};
+
 	protected:
 		double ComputeOutput(double t);
 		double OutputToOmega(double t, double out);
