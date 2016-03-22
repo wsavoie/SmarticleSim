@@ -55,14 +55,14 @@ else
     rho = 443.0;%/(sizeScale^3);
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
-    torqueThresh=.0325; %.008 previously cd 
+    torqueThresh=.035; %.008 previously cd 
 end
 
 
 
 
 
-angLow=60;
+angLow=-120;
 angHigh=120;
 
 global_gait= 1;
@@ -70,6 +70,8 @@ gui1_gait = 1;
 gui2_gait = 1;
 gui3_gait = 2;
 midt_gait = 2;
+extra1_gait=1;
+extra2_gait=1;
 torqueThresh
 PON= 1;
 
@@ -91,7 +93,7 @@ fprintf(fid,'#\n');
 
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
-ss= dt*omega; %step size 
+ss= dt*omega*35; %step size 
 if ss<1e-3
     ss= .0013; %step siz
 %     error('change back to ss=.0025)');
@@ -265,7 +267,7 @@ end
 
 %% GUI function position definitions
 
-guiSize = 3;
+guiSize = 5;
 for i=1:guiSize
     switch(i)
         case 1 %gui1
@@ -292,12 +294,24 @@ for i=1:guiSize
                     GUI_theta_1Pos = [pi/2];
                     GUI_theta_2Pos = [-pi/2];
                 case 2
-                GUI_theta_1Pos = [-pi/2];
-                GUI_theta_2Pos = [-pi/2];
+                    GUI_theta_1Pos = [-pi/2];
+                    GUI_theta_2Pos = [-pi/2];
                 case 3
-                GUI_theta_1Pos = [pi];
-                GUI_theta_2Pos = [pi];
+                    GUI_theta_1Pos = [pi];
+                    GUI_theta_2Pos = [pi];
             end
+        case 4 %extra1
+           switch(extra1_gait)
+               case 1
+                   GUI_theta_1Pos = [pi/4];
+                   GUI_theta_2Pos = [pi/4];
+           end     
+        case 5 %extra2
+           switch(extra2_gait)
+           case 1
+                   GUI_theta_1Pos = [-pi/4];
+                   GUI_theta_2Pos = [-pi/4];
+           end     
     end
     
     if(length(GUI_theta_1Pos)~=length(GUI_theta_2Pos))
@@ -337,7 +351,7 @@ switch(midt_gait)
         MIDT_theta_2Pos=[bmove1,bmove2,bmove3,bmove4];
     case 2
         MIDT_theta_1Pos = [pi/2];
-        MIDT_theta_2Pos = [pi/2];
+        MIDT_theta_2Pos = [-pi/2];
 end          
    if(length(MIDT_theta_1Pos)~=length(MIDT_theta_2Pos))
         error('MIDT positions have inequal lengths for the arm position arrays!');

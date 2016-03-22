@@ -22,11 +22,9 @@
 
 namespace chrono {
 
-	template <typename T> int sgn(T val) {
-		return (T(0) < val) - (val < T(0));
-	}
 
-	enum MoveType { GLOBAL=0, GUI1=1, GUI2=2, GUI3=3, VIB=4, MIDT=5,SS=6,OT=7}; //IF ADDING MORE ALWAYS KEEP OT AS LAST INDEX!!!!
+	enum MoveType { GLOBAL = 0, GUI1 = 1, GUI2 = 2, GUI3 = 3, VIB = 4, EXTRA1 = 5, EXTRA2 = 6, MIDT = 7, OT = 8 }; //IF ADDING MORE ALWAYS KEEP OT AS LAST INDEX!!!!
+
 	// structs to attach motion to smarticles
 	class Smarticle {
 	public:
@@ -181,12 +179,14 @@ namespace chrono {
 		static std::vector<std::pair<double, double>> gui1;//gui option 1
 		static std::vector<std::pair<double, double>> gui2;//gui option 2
 		static std::vector<std::pair<double, double>> gui3;//gui option 3
-		static std::vector<std::pair<double, double>> midTorque;//gui option 3
-
+		static std::vector<std::pair<double, double>> midTorque;//midtorque1
+		static std::vector<std::pair<double, double>> extra1; //extraGait1
+		static std::vector<std::pair<double, double>> extra2; //extraGait1
 		bool visualize=false;
 		bool successfulMotion = false;
+		bool prevSuccessful = false;
 		std::vector<std::pair<double, double>> ot; //over torque
-		std::vector<std::pair<double, double>> ss; //over angle
+
 		std::vector<std::pair<double, double>> vib; //vibrate this HAS to be particle specific so cannot be static?
 		
 		std::vector<int> moveTypeIdxs;//this vector keeps the current values of the move types
