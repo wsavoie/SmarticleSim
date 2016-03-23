@@ -18,6 +18,8 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 # Always use full RPATH (differentiating between the build and install trees)
 #-----------------------------------------------------------------------------
 
+
+
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 
@@ -47,7 +49,7 @@ endif()
 
 #-----------------------------------------------------------------------------
 # Disable some warnings
-#-----------------------------------------------------------------------------
+#-----------------------------`------------------------------------------------
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     if(MSVC)
@@ -74,8 +76,8 @@ set(DEMOS
 
 
 find_package(Chrono
-             COMPONENTS Parallel
-             OPTIONAL_COMPONENTS OpenGL
+             # COMPONENTS Parallel
+             # OPTIONAL_COMPONENTS OpenGL
              COMPONENTS Irrlicht
              CONFIG
 		
@@ -152,6 +154,10 @@ endforeach(PROGRAM)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
+# set specifically only release and debug build types
+# set(CMAKE_CONFIGURATION_TYPES Release Debug CACHE TYPE INTERNAL FORCE )
+
+
   # Remove duplicates in the list of DLLs
   list(REMOVE_DUPLICATES ALL_DLLS)
 
@@ -162,25 +168,30 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   add_custom_target(COPY_DLLS ALL)
 
   # Loop over the list of all DLLs and create a custom command
-  foreach(DLL ${ALL_DLLS})
+  
+	
+  	file(GLOB ReleaseDLL "${Chrono_DIR}/../bin/Release/*.dll")
+	file(GLOB DebugDLL "${Chrono_DIR}/../bin/Debug/*.dll")
+	list(REMOVE_DUPLICATES ReleaseDLL)
+	list(REMOVE_DUPLICATES DebugDLL)
+	message(STATUS ${DebugDLL})
 
-    message(STATUS "...${DLL}")
-
-    # Create custom commands, invoked post-build to copy DLLs to the appropriate
-    # directory (depending on the configuration selected at build time in VS)
-    add_custom_command(
+	
+	# add_custom_command(
+        # TARGET COPY_DLLS POST_BUILD
+        # COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            # "${sDLL}"
+            # "${CMAKE_BINARY_DIR}/$<CONFIGURATION>"			
+	# )
+	file(GLOB DLLS "${Chrono_DIR}/../bin/$<CONFIGURATION>/*.dll")
+	
+	foreach(DLL ${ReleaseDLL})
+	add_custom_command(
         TARGET COPY_DLLS POST_BUILD
-		if(MSVC)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${DLL}"
-            "${CMAKE_BINARY_DIR}/$<CONFIGURATION>"
-			else()
-			            "${DLL}"
-            "${CMAKE_BINARY_DIR}/bin/$<CONFIGURATION>"
-			
-		endif()
-    )
-
-  endforeach()
+            "${CMAKE_BINARY_DIR}/$<CONFIGURATION>"			
+	)
+	endforeach()
 
 endif()

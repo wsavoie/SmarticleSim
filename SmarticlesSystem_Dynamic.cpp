@@ -261,14 +261,14 @@ private:
 	double y_dxdx;
 };
 
-class ext_force :public ChReportContactCallback2{
+class ext_force :public ChReportContactCallback{
 
 public:
 	double n_contact_force = 0;
 	ChVector<> t_contact_force = (0, 0, 0);
 	double m_contact_force = 0;
 	double maxHeight = 0;
-	virtual bool ReportContactCallback2(
+	virtual bool ReportContactCallback(
 		const ChVector<>& pA,             ///< get contact pA
 		const ChVector<>& pB,             ///< get contact pB
 		const ChMatrix33<>& plane_coord,  ///< get contact plane coordsystem (A column 'X' is contact normal)
@@ -307,7 +307,7 @@ double showForce(CH_SYSTEM *msys)
 {
 		
 		ext_force ef;
-		msys->GetContactContainer()->ReportAllContacts2(&ef);
+		msys->GetContactContainer()->ReportAllContacts(&ef);
 		return ef.m_contact_force; //TODO return max height too
 }
 // =============================================================================
