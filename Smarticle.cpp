@@ -625,9 +625,9 @@ void Smarticle::Create() {
 		jointClearance = .0065;//6.5 mm in x dir jc in y dir is r2
 		double armt = r;
 		double armt2 = .0032 / 2 * sizeScale; //8.06 mm with solar 3.2 without
-		CreateArm2(0, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(angle1)*l / 2), 0, -(l / 2.0)*sin(angle1) -offPlaneoffset), quat0);
+		CreateArm2(0, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) -offPlaneoffset), quat0);
 		CreateArm2(1, w,r,r2, ChVector<>(0, 0, 0));
-		CreateArm2(2, l, armt, armt2, ChVector<>(-(w / 2.0 - (jointClearance)+cos(angle2)*l / 2), 0, -(l / 2.0)*sin(angle2) -offPlaneoffset), quat2);
+		CreateArm2(2, l, armt, armt2, ChVector<>(-(w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) -offPlaneoffset), quat2);
 	}
 
 	CreateActuators();
@@ -1130,6 +1130,7 @@ bool Smarticle::MoveOverStress(double tor0, double tor1)
 //returns true if either arm is OT
 bool Smarticle::ChangeArmColor(double torque01, double torque12)
 {
+	bool LTMTcolor = false;
 	//for vibration upon OT, change degreesToVibrate to amount you wish to vibrate
 	double degreesToVibrate = 0;
 	double moveAmt = degreesToVibrate*D2R;
@@ -1151,9 +1152,9 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12)
 			this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
 		}
 		//nothing needs to be done if prev OT
-
+		arm0OT = true;
 		//setstate OT
-		specialState = OT;
+		//specialState = OT;
 	}
 	else
 	{
@@ -1182,7 +1183,7 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12)
 			this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
 		}
 		arm2OT = true;
-		specialState = OT;
+		//specialState = OT;
 	}
 	else
 	{
@@ -1195,18 +1196,20 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12)
 		// nothing needs to be done if not prev OT
 	}
 	
-	
-	if (abs(torque01) + abs(torque12) > MTThresh && !arm2OT && !arm0OT)
+	if (LTMTcolor)
 	{
-		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
-		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
-	}
-	if (abs(torque01) + abs(torque12) < LTThresh)
-	{
-		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
-		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
-	}
+		if (abs(torque01) + abs(torque12) > MTThresh && !arm2OT && !arm0OT)
+		{
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
+		}
+		if (abs(torque01) + abs(torque12) < LTThresh)
+		{
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
+		}
 
+	}
 	if (specialState == OT)
 		return true;
 	else
