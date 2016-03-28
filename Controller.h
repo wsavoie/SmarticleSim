@@ -27,8 +27,7 @@ namespace chrono {
 		std::shared_ptr<ChLinkEngine> GetEngine(size_t i);
 		std::shared_ptr<ChFunctionController> engine_funct0;
 		std::shared_ptr<ChFunctionController> engine_funct1;
-		void SetDesiredAngle(size_t i, double desOmeg);
-		void SetDesiredAngularSpeed(size_t i, double desangle);
+		
 		double GetDesiredAngle(size_t i, double t);
 		double GetExpAngle(size_t idx, double t);
 		double GetActuatorOmega(size_t i, double t);

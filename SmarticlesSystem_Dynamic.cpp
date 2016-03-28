@@ -1468,35 +1468,13 @@ void setUpBucketActuator(CH_SYSTEM& mphysicalSystem)
 }
 
 // =============================================================================
-void screenshot(ChIrrApp& app,bool save)
-{
-	static int frameNum=0;
-	int vidEach = 50;
-	double h = app.GetVideoDriver()->getScreenSize().Height;
-	double w = app.GetVideoDriver()->getScreenSize().Width;
-	auto vp = app.GetVideoDriver()->getViewPort();
-	//app.GetIGUIEnvironment()->saveGUI("lolol.jpeg",irr::gui::wind);
-	double centx = app.GetVideoDriver()->getViewPort().getCenter().X;
-	double centy = app.GetVideoDriver()->getViewPort().getCenter().Y;
-	GetLog() << "Screen Size: " << h << " " << w << "\tScreen: " << centx<< " " << centy;
-	if (save) {
-		if (frameNum % vidEach == 0) {
-			irr::video::IImage* image = app.GetVideoDriver()->createScreenShot();
-			char filename[100];
-			sprintf(filename, "Myscreenshot%05d.jpeg", (frameNum + 1) / vidEach);
-			if (image)
-				app.GetVideoDriver()->writeImageToFile(image, filename);
-			image->drop();
-		}
-		frameNum++;
-	}
+
 	//CImage image;
 	//image.Attach(hBitmap);
 	//image.Save("c:\\pngPicture.png");
 
 	//hres = CreateStreamOnHGlobal(0, TRUE, &pStream);
 	//hr = myImage.Save(pStream, Gdiplus::ImageFormatPNG);
-}
 void UpdateSmarticles(
 		CH_SYSTEM& mphysicalSystem,
 		std::vector<Smarticle*> mySmarticlesVec) {
@@ -2176,10 +2154,10 @@ int main(int argc, char* argv[]) {
 				application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
 				application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
 			}
-			
+
 			//application.AssetBindAll();  //uncomment to visualize vol frac boxes
 			//application.AssetUpdateAll();//uncomment to visualize vol frac boxes
-			//screenshot(application, true);
+			
 			application.DoStep();//
 			
 			application.GetVideoDriver()->endScene();
@@ -2215,6 +2193,11 @@ int main(int argc, char* argv[]) {
 	  //step_timer.stop("step time");
 		receiver.drawCamera();
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
+		
+		receiver.dtPerFrame = 134;
+		receiver.fps = 30;
+		receiver.screenshot(receiver.dtPerFrame);
+
 
 	  std::cout.flush();
 

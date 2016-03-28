@@ -13,6 +13,7 @@
 #include "core/ChRealtimeStep.h"
 //#include <irrlicht.h>
 #include "assets/ChTexture.h"
+#include "chrono/core/ChFileutils.h"
 #include <memory>
 namespace chrono{
 	namespace irrlicht{
@@ -31,8 +32,10 @@ namespace chrono{
 			void addSuccessful(Smarticle &sPtr);
 			void resetSuccessfulCount();
 			void GenerateVibrateGait(Smarticle& sPtr);
-
-
+			void screenshot(int stepsPerFrame);
+			bool saveFrame=false;
+			int fps = 30;
+			int dtPerFrame = 134;
 		private:
 			std::vector<Smarticle*> *sv;
 			ChIrrApp* app;
@@ -54,7 +57,6 @@ namespace chrono{
 			irr::gui::IGUIStaticText* text_angle2;
 			irr::gui::IGUIEditBox* angle1Input;
 			irr::gui::IGUIEditBox* angle2Input;
-
 			irr::gui::IGUIEditBox* pgainInput;
 			irr::gui::IGUIEditBox* igainInput;
 			irr::gui::IGUIEditBox* dgainInput;

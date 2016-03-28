@@ -106,6 +106,21 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 					Smarticle::global_GUI_value = MoveType::GLOBAL;
 				return true;
 				break;
+			case irr::KEY_KEY_9:
+				GetLog() << "Saving frames";
+				saveFrame = true;
+				
+				break;
+			case irr::KEY_KEY_0:
+			{
+				app->GetDevice()->closeDevice();
+				char comm[100];
+				sprintf(comm, "ffmpeg -framerate %d -i ", fps);
+				strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -b:v 100000k video_capture/outVid.avi");
+				//exit(-1);
+				system(comm);
+				break;
+			}
 			case irr::KEY_KEY_N:
 				if (Smarticle::global_GUI_value != MoveType::MIDT)
 					Smarticle::global_GUI_value = MoveType::MIDT;
@@ -460,6 +475,43 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			this->text_Angle->setText(core::stringw(message).c_str());
 		}
 
+	}
+	void IrrGui::screenshot(int stepsPerFrame)
+	{
+		static int frameNum = 0;
+		if (saveFrame) {
+			if (frameNum % stepsPerFrame == 0) {
+				ChFileutils::MakeDirectory("video_capture");
+				irr::video::IImage* image = app->GetVideoDriver()->createScreenShot();
+				char filename[100];
+				sprintf(filename, "video_capture/screenshot%05d.jpeg", (frameNum + 1) / stepsPerFrame);
+				if (image)
+					app->GetVideoDriver()->writeImageToFile(image, filename);
+				image->drop();
+			}
+			frameNum++;
+		}
+
+
+		//static int frameNum = 0;
+		//double h = app->GetVideoDriver()->getScreenSize().Height;
+		//double w = app->GetVideoDriver()->getScreenSize().Width;
+		//auto vp = app->GetVideoDriver()->getViewPort();
+		////app.GetIGUIEnvironment()->saveGUI("lolol.jpeg",irr::gui::wind);
+		//double centx = app->GetVideoDriver()->getViewPort().getCenter().X;
+		//double centy = app->GetVideoDriver()->getViewPort().getCenter().Y;
+		//GetLog() << "Screen Size: " << h << " " << w << "\tScreen: " << centx << " " << centy;
+		//if (saveFrame) {
+		//	if (frameNum % stepsPerFrame == 0) {
+		//		irr::video::IImage* image = app->GetVideoDriver()->createScreenShot();
+		//		char filename[100];
+		//		sprintf(filename, "video_capture\Myscreenshot%05d.jpeg", (frameNum + 1) / stepsPerFrame);
+		//		if (image)
+		//			app->GetVideoDriver()->writeImageToFile(image, filename);
+		//		image->drop();
+		//	}
+		//	frameNum++;
+		//}
 	}
 	void IrrGui::drawCamera()
 	{
