@@ -1282,7 +1282,9 @@ void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylra
 	double currBuckRad = sqrt(temp.x*temp.x + temp.y*temp.y) - bucket_half_thick / 5.0;//bucket_half_thick/5 is how wall thickness is defined!
 	//GetLog() << bucket_half_thick<< "thick\n";
 	//showForce(mphysicalSystem)/(PI*2*cylrad*zmax)
-		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
+	double force = showForce(mphysicalSystem);
+	//GetLog() << "\nforce:" << force;
+		stress_of << mphysicalSystem->GetChTime() << ", " << force <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
 	stress_of.close();
 }
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
@@ -1498,6 +1500,7 @@ void UpdateSmarticles(
 			moveType = Smarticle::global_GUI_value;
 
 		mySmarticlesVec[i]->ControllerMove(moveType, tor1, tor2);
+		//GetLog() << "\ntorque(1,2):" << tor1 << "\t" << tor2;
 	}
 }
 // =============================================================================
