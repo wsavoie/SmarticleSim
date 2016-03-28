@@ -36,11 +36,10 @@ double ChFunctionController::ComputeOutput(double t) {
 
 	double error = des_ang - curr_ang;
 	double prevError = controller_->prevError_.at(index_);
-	double s=1;
+
 	double K = p_gain;
 	double Ti = i_gain;
 	double Td = d_gain;
-	double h = dT;
 	double Tt = 1*dT;//read about tt
 	double N = 10; //N=[8-20] http://www.cds.caltech.edu/~murray/courses/cds101/fa02/caltech/astrom-ch6.pdf
 	double b = 1;
@@ -50,10 +49,10 @@ double ChFunctionController::ComputeOutput(double t) {
 	double vlim = controller_->omegaLimit;
 	double tlim = controller_->outputLimit;
 
-	double bi = K*h / Ti;//integral gain
-	double ad = (2 * Td - N*h) / (2 * Td + N*h);
-	double bd = 2 * K*N*Td / (2 * Td + N*h); //deriv gain
-	double ao = h / Tt;
+	double bi = K*dT / Ti;//integral gain
+	double ad = (2 * Td - N*dT) / (2 * Td + N*dT);
+	double bd = 2 * K*N*Td / (2 * Td + N*dT); //deriv gain
+	double ao = dT / Tt;
 	double ysp = des_ang;
 	double y = curr_ang;
 
@@ -65,11 +64,14 @@ double ChFunctionController::ComputeOutput(double t) {
 	double u = SaturateValue(v, tlim);
 	//double u = v;
 	controller_->II[index_] = controller_->II[index_] + bi*(ysp - y) + ao*(u - v);
-	double vel = (controller_->yold[index_] - y) / h;
+	
+	
+	
+	double vel = (controller_->yold[index_] - y) / dT;
 	
 	//GetLog() << "\nvel:" << des_ang;
 	vel = SaturateValue(vel, vlim);
-	double tor = (controller_->velOld[index_] - vel) / h;
+	double tor = (controller_->velOld[index_] - vel) / dT;
 	tor = SaturateValue(tor, tlim);
 	double out = u;
 

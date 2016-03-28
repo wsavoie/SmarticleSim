@@ -168,10 +168,10 @@ void Smarticle::Properties(
 	torqueAvg = std::make_tuple(0, 0, 0, 0);
 	initialAng0 = other_angle;
 	initialAng1 = other_angle2;
-	percentToChangeStressState = .25;
+	percentToChangeStressState = .05;
 	
-	OTThresh = .65;//for single arm
-	MTThresh = .5;//for both arms?
+	OTThresh = .7;//for single arm 
+	MTThresh = OTThresh/3.0;//for both arms?
 	LTThresh = .05;//for both arms?
 		//avg1 = 0;
 	//avg2 = 0;

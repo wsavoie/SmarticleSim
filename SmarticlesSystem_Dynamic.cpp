@@ -168,8 +168,8 @@ double gaitChangeLengthTime = .5;
 	double rho_smarticle = 443.0;
 #endif
 
-	double p_gain = .15;   //.32
-	double i_gain = .5;	 //.4
+	double p_gain = .2;   //.32
+	double i_gain = .225;	 //.4
 	double d_gain = 0.01; //.1  //.01
 
 	// double t_smarticle 	= sizeScale * .00254;
@@ -471,9 +471,9 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			}
 			else////////////place in center of bucket on bucket bottom
 			{
-				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*2.2,bucket_bott->GetPos().z + t_smarticle / 2);
+				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*1.45,bucket_bott->GetPos().z + t_smarticle / 2);
 				dropSpeed = VNULL;
-				myRot = Q_from_AngAxis(PI_2, VECT_X);
+				myRot = Q_from_AngAxis(-PI_2, VECT_X);
 			}
 			////////////////////////////////////
 
@@ -2221,6 +2221,10 @@ int main(int argc, char* argv[]) {
 	  delete mySmarticlesVec[i];
 
   }
+	if (receiver.saveFrame)
+	{
+		receiver.SaveToMovie();
+	}
   mySmarticlesVec.clear();
 
 	simParams << "completed"<<std::endl;
