@@ -27,8 +27,9 @@ stapleSize = false;
 dt=.00025; %.00025
 sizeScale=1;
 % omega = 4.9244e-5;
-omegaLim = 8; %%limit speed in sim
-omega = 8; %distance between points in move list
+%%limit speed in sim (5.3 for 90 deg, 6.3 for 180 deg, takes time to slow so probably 7
+omegaLim = 6.3; %if you want to change the speed you must change linear interpolate method
+omega = 6.3; %distance between points in move list
 % omega = 10;
 rho = 7850.0;%/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
@@ -43,10 +44,10 @@ if stapleSize
     torqueThresh=2*9.8*mass*w_s;%.00005;  4.6657e-04
 else
       %t = height of solar panels
-    t= .022982;
-    w_s = .04669;
-    t2 = .02172;
-    l_s = .04450; 
+    t= .029982;
+    w_s = 0.05316;
+    t2 = .02122;
+    l_s = .8*w_s; 
 %     t   = .0079*sizeScale;
 %     t2  = .0053*sizeScale;
 %     w_s = .0117*sizeScale;
@@ -55,7 +56,7 @@ else
     rho = 443.0;%/(sizeScale^3);
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
-    torqueThresh=.035; %.008 previously cd 
+    torqueThresh=.0325; %.008 previously cd 
 end
 
 
@@ -93,7 +94,7 @@ fprintf(fid,'#\n');
 
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
-ss= dt*omega*35; %step size 
+ss= 2.75*pi/180; %step size save value as in linear interpolate method
 if ss<1e-3
     ss= .0013; %step siz
 %     error('change back to ss=.0025)');
