@@ -98,7 +98,6 @@ void Smarticle::Properties(
 
 
 	mtextureOT->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
-	//mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 	mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 	mtextureMid->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
 }
@@ -431,10 +430,31 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 			arm->AddAsset(arm0_textureAsset);
 			break;
 		case 1:
+		{
 			arm1_textureAsset = std::make_shared<ChTexture>();
-			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
+			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_SmarticlePicture.png"));
 			arm->AddAsset(arm1_textureAsset);
+
+			//auto centerMesh = std::make_shared<ChObjShapeFile>();
+			//centerMesh->SetFilename("C:/Users/root/Desktop/Case.obj");
+			//centerMesh->SetColor(ChColor(.4, .2, .5, 0));
+			//ChMatrix33<> a = centerMesh->Rot;
+			////ChQuaternion<> b = a.ClipQuaternion(3,3);
+			////b = b*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI/2, PI/2, 0));
+			////a.PasteQuaternion(b, 3, 3);
+			////GetLog() << a;
+			//a.Set_A_Rxyz(ChVector<>(PI / 2, PI / 2, PI / 2));
+			//centerMesh->Rot = a;
+			//centerMesh->Pos = ChVector<>(1, 1, 1);
+			//GetLog() << "\n ROTATED\n";
+			//GetLog() << a;
+			//GetLog() << centerMesh->Rot;
+			//centerMesh->SetFading(0.1);
+			//arm->AddAsset(centerMesh);
+			//ChFrame<> fr = arm->GetAssetsFrame();
+			//fr.SetRot(a);
 			break;
+		}
 		case 2:
 			arm2_textureAsset = std::make_shared<ChTexture>();
 			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
@@ -1308,21 +1328,18 @@ void Smarticle::CheckOTTimer()
 void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 {
 
-	////////determine which actions stress related actions are turned on////////
-	static const bool LowStressActive = true;
+	/////////////////////////set which stress actions are actived/////////////////////////
+	static const bool LowStressActive = false;
 	static const bool MidStressActive = false;
-	static const bool OverStressActive = false;
-	////////////////////////////////////////////////////////////////////////////
+	static const bool OverStressActive = true;
+	//////////////////////////////////////////////////////////////////////////////////////
 
-
-	bool moveDecided = false;
-
-	if (active == false)//TODO put this higher
+	if (active == false)
 	{
 		successfulMotion = false;
 		return;
 	}
-
+	bool moveDecided = false;
 	bool sameMoveType = false;
 	prevSuccessful = successfulMotion;
 	successfulMotion = false;
@@ -1340,16 +1357,18 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 		CheckOTTimer();
 		moveDecided = MoveOverStress(torque01, torque12);
 	}
-	else
+	else//this is here so that if all actions are false, smarticles don't get stuck
 	{
 		if (!arm0OT || !arm2OT)
 			specialState = -1;
 	}
 	
+
 	if (MidStressActive  && !moveDecided)
 	{
 		moveDecided = MoveMidStress(torque01, torque12);
 	}
+
 
 	if (LowStressActive  && !moveDecided)
 	{
