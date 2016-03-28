@@ -14,6 +14,7 @@ using namespace irr::gui;
 IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 
 	sv = mySmarticlesVec;
+
 	// store pointer applicaiton
 	app = myapp;
 	// ..add a GUI slider to control friction
@@ -114,11 +115,6 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			case irr::KEY_KEY_0:
 			{
 				app->GetDevice()->closeDevice();
-				char comm[100];
-				sprintf(comm, "ffmpeg -framerate %d -i ", fps);
-				strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -b:v 100000k video_capture/outVid.avi");
-				//exit(-1);
-				system(comm);
 				break;
 			}
 			case irr::KEY_KEY_N:
@@ -475,6 +471,15 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 			this->text_Angle->setText(core::stringw(message).c_str());
 		}
 
+	}
+	void IrrGui::SaveToMovie()
+	{
+		
+		char comm[100];
+		sprintf(comm, "ffmpeg -framerate %d -i ", fps);
+		strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -b:v 100000k video_capture/outVid.avi");
+		//exit(-1);
+		system(comm);
 	}
 	void IrrGui::screenshot(int stepsPerFrame)
 	{

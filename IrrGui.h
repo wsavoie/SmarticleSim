@@ -32,8 +32,9 @@ namespace chrono{
 			void addSuccessful(Smarticle &sPtr);
 			void resetSuccessfulCount();
 			void GenerateVibrateGait(Smarticle& sPtr);
+			void SaveToMovie();
 			void screenshot(int stepsPerFrame);
-			bool saveFrame=false;
+			bool saveFrame = false;
 			int fps = 30;
 			int dtPerFrame = 134;
 		private:
