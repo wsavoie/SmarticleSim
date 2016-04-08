@@ -130,7 +130,7 @@ unsigned int largeID = 10000000;
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
 double tFinal = 100;
-double vibrateStart= 1.5;
+double vibrateStart= 100;
 
 
 double rho_cylinder = 1180.0;
@@ -163,14 +163,14 @@ double gaitChangeLengthTime = .5;
 	//real value
 	double t_smarticle = sizeScale * .029982 / 1; //height of solar panels
 	double t2_smarticle = sizeScale * .02122 / 1;
-	double bucket_rad = sizeScale*w_smarticle*3;
+	double bucket_rad = sizeScale*w_smarticle*2; //3
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
 	double rho_smarticle = 443.0;
 #endif
 
-	double p_gain = .2;   //.32
-	double i_gain = .225;	 //.4
-	double d_gain = 0.01; //.1  //.01
+	double p_gain = .2;   //.32           //.2
+	double i_gain = .225;	 //.4 //.225       //.225
+	double d_gain = 0.01; //.1  //.01      //.01
 
 	// double t_smarticle 	= sizeScale * .00254;
 	// double t2_smarticle	= sizeScale * .001;
@@ -187,10 +187,10 @@ bool bucket_exist = true;
 
 bool read_from_file = false;
 bool povray_output = false;
-int out_fps = 120;
+int out_fps = 30;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-int numPerLayer =6;
+int numPerLayer =9;
 bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surface
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
@@ -214,7 +214,7 @@ double inc = 0.00001;
 double angle1 = 90;
 double angle2 = 90;
 double vibAmp = 5 * D2R; //vibrate by some amount of degrees back and forth
-
+double videoFrameInterval = 134;
 auto bucketTexture = std::make_shared<ChTexture>();
 auto sphereTexture = std::make_shared<ChTexture>();
 auto groundTexture = std::make_shared<ChTexture>();
@@ -340,26 +340,32 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 	if (argc > 6){
 		const char* text = argv[6];
 		angle1 = atof(text);
+		//angle1 = angle1*D2R;
 	}
 	if (argc > 7){
 		const char* text = argv[7];
 		angle2 = atof(text);
+		//angle2 = angle2*D2R;
+	}
+	if (argc > 8){
+		const char* text = argv[8];
+		box_ang = atof(text)*D2R;
 	}
 	/// if parallel, get solver setting
-  if (USE_PARALLEL) {
-	  if (argc > 8) {
-		const char* text = argv[8];
-		threads = atoi(text);
-	  }
-	  if (argc > 9) {
-		const char* text = argv[9];
-		max_iteration_sliding = atoi(text);
-	  }
-	  if (argc > 10) {
-		const char* text = argv[10];
-		max_iteration_bilateral = atoi(text);
-	  }
-  }
+  //if (USE_PARALLEL) {
+	 // if (argc > 8) {
+		//const char* text = argv[8];
+		//threads = atoi(text);
+	 // }
+	 // if (argc > 9) {
+		//const char* text = argv[9];
+		//max_iteration_sliding = atoi(text);
+	 // }
+	 // if (argc > 10) {
+		//const char* text = argv[10];
+		//max_iteration_bilateral = atoi(text);
+	 // }
+  //}
 }
 // =============================================================================
 void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc, char* argv[]) {
@@ -440,7 +446,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 	ChQuaternion<> myRot = QUNIT;
 	double z;
 	double zpos;
-	int smarticleCount = mySmarticlesVec.size();
+	size_t smarticleCount = mySmarticlesVec.size();
 	double ang = 2*PI / numPerLayer;
 	double w = w_smarticle;
 	if (smarticleCount < numPerLayer){ z = w_smarticle / 1; }
@@ -471,7 +477,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			}
 			else////////////place in center of bucket on bucket bottom
 			{
-				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*1.45,bucket_bott->GetPos().z + t_smarticle / 2);
+				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*1.45,bucket_bott->GetPos().z + t_smarticle );
 				dropSpeed = VNULL;
 				myRot = Q_from_AngAxis(-PI_2, VECT_X);
 			}
@@ -498,13 +504,14 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			myRot = Q_from_AngAxis(PI_2, VECT_X);
 			ChQuaternion<> buckRot = bucket->GetRot();
 			double buckRotAngx = Quat_to_Angle(ANGLESET_RXYZ,buckRot).x;
-			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI/2,PI,0));
+			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI/2,PI,0));
+			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(genRand(0, 2*PI), genRand(0, 2*PI), genRand(0, 2*PI)));
 			
-			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, PI*(i % 2), 0));
-			double xPos = genRand(-1,1)*t2_smarticle/1.25;
+			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI/2,0, 0));
+			double xPos = genRand(-3,3)*t2_smarticle/1.25;
 			double yPos = (i-4.2) * 2 * t2_smarticle;
 			myPos = bucket_ctr + ChVector<>(xPos, yPos, ( - yPos - 2*bucket_half_thick)*tan(buckRotAngx)+t_smarticle/1.99);
-
+			//myPos = bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * bucket_half_thick)*tan(buckRotAngx) + 3*t_smarticle) ;
 			///////////////////////////place in specific location///////////////////////////
 			break;
 		}
@@ -528,22 +535,21 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				sOmega,
 				true,
 				myPos,
-				myRot
-				);
+				myRot,
+				angle1*D2R,angle2*D2R);
 
 			if (genRand()<1)//to reduce amount visualized amount
 				smarticle0->visualize = true;
-
 			smarticle0->populateMoveVector();
-			smarticle0->SetAngles(angle1, angle2, true);
+			//smarticle0->SetAngles(angle1, angle2);
 			//smarticle0->SetInitialAngles();
 			smarticle0->Create();
 			smarticle0->setCurrentMoveType((MoveType) Smarticle::global_GUI_value);
 			smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
-			
+
 			//must put this line because of how linspace is written;
 			smarticle0->AssignState(VIB);
-			smarticle0->GenerateVib(angle1,angle2);
+			smarticle0->GenerateVib(angle1*D2R, angle2*D2R);
 			smarticle0->AssignState(Smarticle::global_GUI_value);
 			//smarticle0->ss.emplace_back(angle1, angle2);
 			//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
@@ -970,7 +976,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 			//dim = (2 * dim.x, 2 * dim.y, dim.z / 8);
 			//dim.x = dim.x;
 			dim = (.28 / 2);//28 cm across
-			dim.y = .55245/2;
+			dim.y = .55245;
 			dim.z = dim.z / 8;
 			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1000000000, mat_g,
 				dim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
@@ -1200,7 +1206,9 @@ void FixRotation(CH_SYSTEM& mphysicalSystem, Smarticle* sPtr) //reduces rotation
 		sPtr->GetArm(0)->SetRot_dt(sPtr->GetArm(0)->GetRot() / 2);
 		sPtr->GetArm(1)->SetRot_dt(sPtr->GetArm(1)->GetRot() / 2);
 		sPtr->GetArm(2)->SetRot_dt(sPtr->GetArm(2)->GetRot() / 2);
+		GetLog() << "\n\n******WARNING******\n arm is rotating too fast and FixRotation method is running\n******WARNING******\n";
 	}
+	
 }
 void EraseSmarticle(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*>::iterator& myIter, Smarticle& sPtr, std::vector<Smarticle*> &mySmarticlesVec)
 {
@@ -1220,14 +1228,15 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 	for (myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end();)
 	{
 		Smarticle* sPtr = *(myIter);
-		if (sPtr->armBroken)
-		{
-			EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
-			GetLog() << "\nArm broken removing smarticle \n";
-			continue;
-		}
+		//if (sPtr->armBroken)
+		//{
+		//	EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
+		//	GetLog() << "\nArm broken removing smarticle \n";
+		//	continue;
+		//}
 		FixRotation(mphysicalSystem, sPtr);
 
+		//if smarticles are too low and not hopper
 		if (bucketType != HOPPER)
 		{
 			if (sPtr->GetArm(1)->GetPos().z < -3.0*bucket_interior_halfDim.z)
