@@ -1295,10 +1295,59 @@ void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylra
 	//showForce(mphysicalSystem)/(PI*2*cylrad*zmax)
 	double force = showForce(mphysicalSystem);
 	//GetLog() << "\nforce:" << force;
-		stress_of << mphysicalSystem->GetChTime() << ", " << force <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
+	stress_of << mphysicalSystem->GetChTime() << ", " << force <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
 	stress_of.close();
 }
+void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cylrad, std::vector<Smarticle*> mySmarticlesVec) //TODO include knobs in calculation
+{
+
+	bool printAllSmarticleInfo = true;
+	static int frame = 0;
+
+	const static std::string stress = out_dir + "/Stress.txt";
+	std::ofstream stress_of;
+	if (tstep == 0) {
+		stress_of.open(stress.c_str());
+		stress_of << dT << ", " <<out_fps<<", " <<videoFrameInterval<< ", " << bucket_rad << ", "<< bucketType <<std::endl;
+	}
+	else {
+		stress_of.open(stress.c_str(), std::ios::app);
+	}
+	//GetLog() << bucket_half_thick<< "thick\n";
+	//showForce(mphysicalSystem)/(PI*2*cylrad*zmax)
+	ChVector<> temp;
+	double currBuckRad;
+	switch (bucketType)
+	{
+	case CYLINDER:
+		temp = bucket_bod_vec.at(1)->GetPos();
+		currBuckRad = sqrt(temp.x*temp.x + temp.y*temp.y) - bucket_half_thick / 5.0;//bucket_half_thick/5 is how wall thickness is defined!
+		stress_of << mphysicalSystem->GetChTime() << ", " << 0 << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl; //final 0 is a placeholder 
+		break;
+	case STRESSSTICK: case KNOBCYLINDER:
+		temp = bucket_bod_vec.at(1)->GetPos();
+		currBuckRad = sqrt(temp.x*temp.x + temp.y*temp.y) - bucket_half_thick / 5.0;//bucket_half_thick/5 is how wall thickness is defined!
+		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl;
+		break;
+	case BOX:
+		stress_of << mphysicalSystem->GetChTime() << ", " << 0 << ", " << Smarticle::global_GUI_value << ", " << box_ang << ", " << 0<< std::endl;
+		break;
+	}
+
+
+	if (printAllSmarticleInfo)
+	{
+		for (size_t i = 0; i < mySmarticlesVec.size(); i++)
+		{
+			stress_of << mySmarticlesVec[i]->GetAngle1(true) << ", " << mySmarticlesVec[i]->GetAngle2(true) << ", " << mySmarticlesVec[i]->moveType << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
+		}
+		stress_of << "#EF" <<frame<< std::endl;
+	}
+	stress_of.close();
+	frame = frame + 1;
+}
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
+
 	const static std::string vol_frac = out_dir + "/volumeFraction.txt";
 	static int stepSave = 10;
 	if (tStep % stepSave != 0) return;
@@ -1578,19 +1627,6 @@ bool SetGait(double time)
 
 	return false;
 
-		//Smarticle::global_GUI_value = 1;
-	/*else if (time > .9 && time <= 1.5)
-		Smarticle::global_GUI_value = 2;
-	else if (time > 1.5 && time <= 5)
-		Smarticle::global_GUI_value = 1;*/
-	//else /*if (time > 20)*/
-	//	return true;
-
-
-	//else if (time > 1 && time < 3)
-	//	Smarticle::global_GUI_value = 1;
-	//else
-	//	return true;
 
 	// false;
 }
@@ -2153,15 +2189,16 @@ int main(int argc, char* argv[]) {
 			break;
 		receiver.drawSuccessful();
 
-		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER)
+		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER|| bucketType==CYLINDER|| bucketType==BOX)
 		{
 			double zmax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
-			PrintStress(&mphysicalSystem, tStep, zmax,rad);
+			PrintStress2(&mphysicalSystem, tStep, zmax, rad, mySmarticlesVec);
 		}
 		
-
-
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
+
+
+		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
 
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
