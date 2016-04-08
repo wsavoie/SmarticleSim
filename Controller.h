@@ -47,6 +47,7 @@ namespace chrono {
 		double yold[2];
 		double omegaLimit = 5;
 		double outputLimit = 0;
+		size_t steps_ = 0;
 		Smarticle *smarticle_;
 		bool resetCumError = false;
 		//void setMoveVector(unsigned int guiState);
@@ -64,7 +65,7 @@ namespace chrono {
 		double command_amplitude_ = default_amplitude_;
 		int command_count_down_ = 0;
 		// reference counting
-		size_t steps_ = 0;
+		
 		double friction = 1;
 
 	};

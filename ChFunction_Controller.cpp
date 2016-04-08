@@ -5,13 +5,19 @@
 using namespace chrono;
 
 double ChFunctionController::Get_y(double t) {
-	double output = ComputeOutput(t);
-	//double curr_react_torque = controller_->GetCurrTorque(index_, t);
+	static double prevOut = 0;
+	static double output = 0;
+	prevOut = output;
+	output = ComputeOutput(t);
+	double curr_react_torque = controller_->GetCurrTorque(index_, t);
+
+	//GetLog() << "\n" << curr_react_torque;
   //add the torque already being place on the body to the torque for the next step
 	//double out_torque =output; //add the torque already being place on the body to the torque for the next step
 	//GetLog() << "Torque: " << output;
-	double out_torque = SaturateValue(output, controller_->outputLimit);
+	double out_torque = SaturateValue(output+curr_react_torque, controller_->outputLimit);
 	bool o = false;
+	//out_torque = output + curr_react_torque2;
 	if (abs(out_torque) == controller_->outputLimit)
 		o = true;
 	//GetLog() << "   \tLimited: " << out_torque << " " << "\tLIMIT= " << controller_->outputLimit; //<< "\t" << o<< "\n";
@@ -28,12 +34,14 @@ double ChFunctionController::ComputeOutput(double t) {
 	////////////////////////////////
 	//if position was changed resetCumError flag is set to true
 
+
 	double curr_ang = controller_->GetAngle(index_, t);
 	double exp_ang = controller_->GetExpAngle(index_, t);
 	double des_ang = controller_->GetDesiredAngle(index_, t); ///get the next angle
-
+	double curr_react_torque = controller_->GetCurrTorque(index_, t);
+	//GetLog() << " currDes:" << des_ang;
 	des_ang = controller_->LinearInterpolate(index_, curr_ang, des_ang); //linear interpolate for situations where gui changes so there isn't a major speed increase
-
+	//GetLog() << "\texp:" << exp_ang;
 	double error = des_ang - curr_ang;
 	double prevError = controller_->prevError_.at(index_);
 

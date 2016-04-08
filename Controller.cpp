@@ -68,22 +68,30 @@ Controller::~Controller()
 }
 bool Controller::Step(double dt) {
 	bool result = false;
-	steps_++;
+	double ang = 0;
+
 
 
 	for (size_t i = 0; i < smarticle_->numEngs; i++)
 	{
-		double ang = smarticle_->GetCurrAngle(i);
+		//if (steps_ <1)
+		//	ang = smarticle_->GetCurrAngle(i) + smarticle_->GetInitialAngle(i);// +smarticle_->GetInitialAngle(i);
+		//else
+			ang = smarticle_->GetCurrAngle(i);// +smarticle_->GetInitialAngle(i);
+		//GetLog() << "\ncurrAAng:" << ang;
 		double exp = smarticle_->GetExpAngle(i);
-		//int ind = smarticle_->moveTypeIdxs.at(smarticle_->moveType);
-		//GetLog() << " id " << i << ": C:" << ang << " X:"<<exp ;
-		smarticle_->SetAngle(i, ang,false);
+		//GetLog() << " arm " << i << ": C:" << ang << " X:"<<exp <<"\n";
+		smarticle_->SetAngle(i, ang);
+	
+		
 		
 		//GetLog() << "ANG" << i << ":" << smarticle_->GetAngle(i) << "    ";
 		bool desiredPositionStatus = smarticle_->NotAtDesiredPos(i, ang,exp); //true if not at current position being directed to 
+		//GetLog() << "\ndes" << desiredPositionStatus;
 		//auto a = ~desiredPositionStatus;
 		successfulMove_.at(i) = !desiredPositionStatus;
 		UseForceControl(i);
+		steps_++;
 	}
 	//GetLog() <<" t: " << dt << " " << "\n";
 	//exit(-1);
@@ -110,7 +118,8 @@ std::shared_ptr<ChLinkEngine> Controller::GetEngine(size_t index)
 
 double Controller::GetCurrTorque(size_t index, double t)
 {
-	return smarticle_->GetZReactTorque(index);
+	//return smarticle_->GetZReactTorque(index);
+	return smarticle_->GetReactTorqueLen(index);
 }
 
 double Controller::GetDesiredAngle(size_t index, double t)
