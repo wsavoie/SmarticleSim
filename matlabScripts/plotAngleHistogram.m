@@ -1,6 +1,7 @@
 
 %write to video
-VID= 1;
+VID= 0;
+pts('Video =',VID);
 %colors relating to the moveType and guid
 cols = {[1,0,0],[1,.5,0],[.4431,.7373, 1],[0,0,0],[.392,.824,.118],[.7,.4,.7],[.6039,1,0], [0.623, 0 ,1]};
 
@@ -51,3 +52,5 @@ end
 if(VID)
     close(outputVideo)
 end
+ %bottom left corner[x,y],[width to right,height up]
+% newAxis=axes('pos',[xpos,ypos), posz(2), posz(2)+sizez(2)]);

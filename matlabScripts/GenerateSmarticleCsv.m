@@ -56,7 +56,8 @@ else
     rho = 443.0;%/(sizeScale^3);
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
-    torqueThresh=.0325; %.008 previously cd 
+%     torqueThresh=.0325; %.008 previously cd 
+    torqueThresh=.0325; %..0325 previously cd 
 end
 
 

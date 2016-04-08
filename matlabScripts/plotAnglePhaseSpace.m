@@ -1,18 +1,29 @@
 
 %write to video
-VID= 1;
-%colors relating to the moveType and guid
-cols = {[1,0,0],[1,.5,0],[.4431,.7373, 1],[0,0,0],[.392,.824,.118],[.7,.4,.7],[.6039,1,0], [0.623, 0 ,1]};
+mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30\';
+runName = '-50-20160404-024257';
+ff = horzcat(mainFolder,runName);
+filename=horzcat(ff,'\PostProcess\Stress.txt');
 
-
-file = 'D:\SimResults\Chrono\SmarticleU\tests';
-filename=horzcat(file,'\PostProcess\Stress.txt');
-[smartPos simParams]= readAllSmarticlesAngles(filename,1);
+if exist(horzcat(ff,'\PostProcess\stressData.mat'), 'file') == 2 
+    clear('simParams','smartPos','frameInfo','filename','file');
+    ff = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30\-44-20160404-080211';
+    load(horzcat(ff,'\PostProcess\stressData.mat'));
+else
+    [smartPos, simParams, frameInfo]= readAllSmarticlesAngles(filename,0);
+end
 %smartPos % angle1  angle2   movetype   zHeight
 %simParams  dt      fps      frameInt   buckRad
 
 
 %% if data in memory only run this sectionw
+VID= 0;
+pts('Video =',VID);
+%colors relating to the moveType and guid
+cols = {[1,0,0],[1,.5,0],[.4431,.7373, 1],[0,0,0],[.392,.824,.118],[.7,.4,.7],[.6039,1,0], [0.623, 0 ,1]};
+
+
+
 figure(1);
 clf;
 ann=annotation('textbox', [0.6,0.8,0.1,0.1],...
@@ -22,7 +33,7 @@ skipFrames = simParams(3);
 
 %%open video writer
 if(VID)
-    outputVideo = VideoWriter(fullfile('','phaseSpaceOut.avi'));
+    outputVideo = VideoWriter(fullfile('','ConfigSpaceOut.avi'));
     outputVideo.FrameRate=simParams(2);
     open(outputVideo);
 end
@@ -35,7 +46,8 @@ currFrame = 1;
 %row = each smarticle %columns angles %depth= previous angles
 for(i=1:size(smartPos,2))
     if(mod(i-1,skipFrames)==0) %-1 to allow first frame to be written
-        moveType = (smartPos{i}(1,3));
+%         moveType = (smartPos{i}(1,3));
+        moveType = (frameInfo(i,3));
         cla;
         hold on;
        
@@ -88,10 +100,12 @@ for(i=1:size(smartPos,2))
             horzcat('Current Time: ',num2str(currFrame*simParams(1)))};
         xlabel('\alpha_2 (\circ)');
         ylabel('\alpha_1 (\circ)');
-        title('Smarticle Evolution in Phase Space');
-        axis square
+        title('Smarticle Evolution in Configuration Space');
+        axis equal
+        set(gca, 'xlim',[-120,120],'ylim',[-120,120]);
         figText(gcf,13);
-        set(gcf, 'Position', [100, 100, 1280, 720]);
+        set(gcf, 'Position', [2600, 100, 800, 800]);
+%         set(gcf, 'Position', [100, 100, 400, 400]);
         if(VID)
             writeVideo(outputVideo,getframe(gcf));
         else
@@ -104,3 +118,5 @@ end
 if(VID)
     close(outputVideo)
 end
+
+
