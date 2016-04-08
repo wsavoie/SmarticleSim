@@ -1553,52 +1553,66 @@ void UpdateSmarticles(
 
 		
 		int moveType=0;
-		/////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
+		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
 		if (genRand() < percentToMoveToGlobal)
-			moveType = mySmarticlesVec[i]->prevMoveType;
+			moveType = Smarticle::global_GUI_value; 
 		else
-			moveType = Smarticle::global_GUI_value;
+			moveType = mySmarticlesVec[i]->prevMoveType;
 
 		mySmarticlesVec[i]->ControllerMove(moveType, tor1, tor2);
-		//GetLog() << "\ntorque(1,2):" << tor1 << "\t" << tor2;
+
+		//GetLog() << "\nangle(1,2):" << mySmarticlesVec[i]->GetAngle1(true) << "\t" << mySmarticlesVec[i]->GetAngle2(true);
+		//GetLog() << "\n\ntor(1,2):" <<tor1 << "\t" << tor2;
 	}
 }
 // =============================================================================
 bool SetGait(double time)
 {
-	//if (t < vibrateStart-.4)
-		//Smarticle::global_GUI_value = 1;
-	//else if (t > vibrateStart-.4 && t < vibrateStart+.25)
-	//	Smarticle::global_GUI_value = 1;
-	//else if (t > vibrateStart + .25 && t < vibrateStart + 4)
-	//	Smarticle::global_GUI_value = 1;
-	//else
-	//	break;
 
-	//if (time <= 2)
-	//	Smarticle::global_GUI_value = 2;
-	//else if (time > 2 && time <= 4)
+	if (time <= 3)
+		Smarticle::global_GUI_value = 2;
+	else if (time > 3 && time <= 6)
+		Smarticle::global_GUI_value = 3;
+	else if (time > 6 && time <= 9)
+		Smarticle::global_GUI_value = 2;
+	else if (time > 9 && time <= 12)
+		Smarticle::global_GUI_value = 3;
+	else if (time > 12 && time <= 15)
+		Smarticle::global_GUI_value = 2;
+	else if (time > 15 && time <= 18)
+		Smarticle::global_GUI_value = 3;
+	else if (time > 18 && time <= 21)
+		Smarticle::global_GUI_value = 2;
+	else if (time > 21 && time <= 24)
+		Smarticle::global_GUI_value = 3;
+	else if (time > 24 && time <= 27)
+		Smarticle::global_GUI_value = 2;
+	else if (time > 27 && time <= 30)
+		Smarticle::global_GUI_value = 3;
+	//else if (time > 30 && time <= 33)
 	//	Smarticle::global_GUI_value = 3;
-	//else if (time > 4 && time <= 6)
+	//else if (time > 33 && time <= 36)
 	//	Smarticle::global_GUI_value = 2;
-	//else if (time > 6 && time <= 8)
+	//else if (time > 36 && time <= 39)
 	//	Smarticle::global_GUI_value = 3;
-	//else if (time > 8 && time <= 10)
+	//else if (time > 39 && time <= 42)
 	//	Smarticle::global_GUI_value = 2;
-	//else if (time > 10 && time <= 12)
+	//else if (time > 42 && time <= 45)
 	//	Smarticle::global_GUI_value = 3;
-	//else if (time > 12 && time <= 14)
+	//else if (time > 45 && time <= 48)
 	//	Smarticle::global_GUI_value = 2;
-	//else if (time > 14 && time <= 16)
+	//else if (time > 48 && time <= 51)
 	//	Smarticle::global_GUI_value = 3;
-	//else if (time > 16 && time <= 18)
+	//else if (time > 51 && time <= 54)
 	//	Smarticle::global_GUI_value = 2;
-	//else if (time > 18 && time <= 20)
+	//else if (time > 54 && time <= 57)
 	//	Smarticle::global_GUI_value = 3;
-	//else if (time > 20 && time <= 22)
+	//else if (time > 57 && time <= 60)
 	//	Smarticle::global_GUI_value = 2;
-	//else
-	//	return true;
+	//else if (time > 60 && time <= 63)
+	//	Smarticle::global_GUI_value = 3;
+	else
+		return true;
 
 	//if (time <= 5)
 	//	Smarticle::global_GUI_value = 2;
@@ -1637,7 +1651,8 @@ int main(int argc, char* argv[]) {
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	//ChTimerParallel step_timer;
-	Smarticle::global_GUI_value = 2;
+	Smarticle::global_GUI_value = 1;
+	
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 #if defined(_WIN64)
 	char* pPath = getenv("USERNAME");
@@ -1760,7 +1775,7 @@ int main(int argc, char* argv[]) {
 	camera->setNearValue(0.0005f);
 	camera->setMinZoom(0.1f);
 	camera->setZoomSpeed(0.1f);
-
+	
 	drawGlobalCoordinateFrame(mphysicalSystem);
 
 	//framerecord
