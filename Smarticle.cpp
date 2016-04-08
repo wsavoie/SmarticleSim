@@ -1383,7 +1383,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	}
 	else//this is here so that if all actions are false, smarticles don't get stuck
 	{
-		if (!arm0OT || !arm2OT)
+		if (!arm0OT || !arm2OT || !OverStressActive)
 			specialState = -1;
 	}
 	
@@ -1400,21 +1400,24 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 		moveDecided = MoveLowStress(torque01, torque12, LTTimer);
 	}
 
-	if (specialState != -1)
-		AssignState(specialState);
-	else
-		AssignState(guiState);
 
+	if (specialState != -1)
+	{
+		AssignState(specialState);
+		this->moveType = (MoveType) specialState;
+	}
+	else
+	{
+		AssignState(guiState);
+		this->moveType = (MoveType)guiState;
+	}
 	//!(moveType^prevMoveType)
 	sameMoveType = (moveType==prevMoveType); // !(xor) gives true if values are equal, false if not
 	if (!sameMoveType)
 	{
+		//GetLog() << "\n&&&&&&&&&&&RESET ERRORRR!&&&&&&&&&&&\n";
 			this->armsController->resetCumError = true;	
 	}
-	//successfulMotion = controller->step(sameMoveType,dT);
-	
-	//used to have switch but prob not necessary can just use if:
-
 	
 	successfulMotion = armsController->Step(m_system->GetChTime());
 	//if (this->moveType == OT); //if OT stop moving!
@@ -1441,7 +1444,13 @@ void Smarticle::setCurrentMoveType(MoveType newMoveType)
 	this->moveType = newMoveType;
 	//global_GUI_value = newMoveType;
 }
-
+double Smarticle::GetReactTorqueLen(int index)
+{
+	if (index == 0)
+		return GetReactTorqueLen01();
+	else
+		return GetReactTorqueLen12();
+}
 ChVector<> Smarticle::GetReactTorqueVectors01()
 {
 	return link_actuator01->Get_react_torque();

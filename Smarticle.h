@@ -99,6 +99,7 @@ namespace chrono {
 		size_t numEngs = 2;
 		size_t numSegs = 3;
 		//Controller armsControl (new Controller());
+		virtual double GetReactTorqueLen(int index);
 		virtual ChVector<> GetReactTorqueVectors01();
 		virtual ChVector<> GetReactTorqueVectors12();
 		virtual double GetReactTorqueLen01();
@@ -155,14 +156,17 @@ namespace chrono {
 
 		//smarticle arm angle
 		virtual void SetInitialAngles();
+		virtual double GetInitialAngle(int id);
 		virtual void SetAngles(double mangle1, double mangle2, bool degrees = false);
 		virtual void SetAngle(std::pair<double, double> mangles, bool degrees = false);
 		virtual void SetAngle(double mangle, bool degrees = false);
 		virtual void SetAngle(int id, double mangle, bool degrees = false);
 		virtual void SetAngle1(double mangle1, bool degrees = false);
 		virtual void SetAngle2(double mangle2, bool degrees = false);
+
 		std::vector<ChBody*> body_list;
 
+		
 		virtual int GetID();
 		virtual double GetAngle(int id, bool degrees = false);
 		virtual double GetAngle1(bool degrees = false);
@@ -214,6 +218,7 @@ namespace chrono {
 		void updateTorqueDeque(); 
 		void updateTorqueAvg(std::tuple <double, double,double,double > oldT);
 		///////////////////////////////////////////////////////////
+
 		void SetNextAngle(int id, double ang);
 		void GenerateVib(double angle1, double angle2);
 		double GetNextAngle(int id);
@@ -275,7 +280,7 @@ namespace chrono {
 		double angle2; //angle between center segment and outer segments
 		double volume;
 		double mass;
-		double collisionEnvelop;
+		double collisionEnvelope;
 		bool arm0OT;
 		bool arm2OT;
 		double percentToChangeStressState;
