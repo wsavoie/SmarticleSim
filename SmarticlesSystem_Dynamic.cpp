@@ -1278,8 +1278,10 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 
 
 }
+
 void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad) //TODO include knobs in calculation
 {
+
 	const static std::string stress = out_dir + "/Stress.txt";
 	std::ofstream stress_of;
 	if (tstep == 0) {
@@ -1725,6 +1727,12 @@ int main(int argc, char* argv[]) {
 
 	drawGlobalCoordinateFrame(mphysicalSystem);
 
+	//framerecord
+	application.SetVideoframeSaveInterval(videoFrameInterval);//only save out frames to make it 30fps
+
+
+
+
 	// Use this function for adding a ChIrrNodeAsset to all items
 	// If you need a finer control on which item really needs a visualization
 	// proxy in
@@ -1764,7 +1772,7 @@ int main(int argc, char* argv[]) {
 	//std::shared_ptr<ChLinkLinActuator> pris_engine(new ChLinkLinActuator);
 	std::shared_ptr<ChLinkLinActuator> pris_engine;
 	std::shared_ptr<ChLinkLockPrismatic> link_prismatic;
-	double rad;
+	double rad = 0;
 
 
 	switch (bucketType)
@@ -2046,8 +2054,8 @@ int main(int argc, char* argv[]) {
 			}
 
 		}
-
-
+		
+		///add method about system actuation
 		if (bucketType == DRUM || bucketType == BOX)
 		{
 			rotate_bucket(t);
@@ -2061,15 +2069,15 @@ int main(int argc, char* argv[]) {
 			case HOOKRAISE: case STRESSSTICK:
 			{
 
-				if (pris_engine->IsDisabled())
-				{
-					stick->SetBodyFixed(false);
-					pris_engine->SetDisabled(false);
-				
-				}
-				pris_engine->GetDist_dt();
-				//pris_engine->GetRelC_dt()
-				//GetLog() << pris_engine->GetDist_dt() << "\n";
+				//if (pris_engine->IsDisabled())
+				//{
+				//	stick->SetBodyFixed(false);
+				//	pris_engine->SetDisabled(false);
+				//
+				//}
+				//pris_engine->GetDist_dt();
+				////pris_engine->GetRelC_dt()
+				////GetLog() << pris_engine->GetDist_dt() << "\n";
 				break;
 			}
 			case KNOBCYLINDER:
@@ -2105,37 +2113,9 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		size_t vecSize = mySmarticlesVec.size();
-		////////////////////////////////////////////////////////////////////////////////////
-		//receiver.resetSuccessfulCount();
-		//bool removedSmart = false;
-		//max_z = 0;//reset max_z
-		//for (int i = vecSize - 1; i >= 0; --i)
-		//{
-		//	Smarticle& sPtr = *mySmarticlesVec.at(i);
-		//	if (FixSmarticles(mphysicalSystem, mySmarticlesVec, sPtr, tStep, i)) //if removed smarticle
-		//		continue;
-		//	UpdateSmarticles(mphysicalSystem, sPtr);
 
-		//	i == 0 ? max_z = PrintFractions(mphysicalSystem, tStep, sPtr, true) : max_z = PrintFractions(mphysicalSystem, tStep, sPtr, false);
-		//
-		//receiver.addSuccessful(sPtr);
-		//}
-		//receiver.drawSuccessful2();
-		//receiver.drawSmarticleAmt(numGeneratedLayers);
-
-		////////FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
-		////////UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
-		////////PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
-
-		/////////////////////////////////////////////////////////////////////////////////////
-
-
-
-		if (fmod(t, timeForVerticalDisplacement) < dT
-			&&mySmarticlesVec.size() < numPerLayer*numLayers && (numGeneratedLayers == numLayers))
+		if ( (fmod(t, timeForVerticalDisplacement) < dT)	&&		(mySmarticlesVec.size() < numPerLayer*numLayers) &&	(numGeneratedLayers == numLayers) )
 			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplacement);
-
 		//SavePovFilesMBD(mphysicalSystem, tStep);
 		//step_timer.start("step time");
 
@@ -2148,17 +2128,9 @@ int main(int argc, char* argv[]) {
 	#if irrlichtVisualization
 			if (!(application.GetDevice()->run())) break;
 			application.GetVideoDriver()->beginScene(true, true,
-				video::SColor(255, 140, 161, 192));
-			//ChIrrTools::drawGrid(application.GetVideoDriver(), .01, .01, 150, 150,
-			//	ChCoordsys<>(ChVector<>(0,0, bucket_bott->GetPos().z*1.001),
-			//	Q_from_AngAxis(0, VECT_X)),
-			//	video::SColor(50, 0, 255,0), true);
-			//application.AssetBindAll();
-			//application.AssetUpdateAll();
+				video::SColor(255, 140, 161, 192));			
 
-			//framerecord
-			
-			application.SetVideoframeSaveInterval(134);//only save out frames to make it 30fps
+			//ChIrrTools::drawAllLinkframes(mphysicalSystem, application.GetVideoDriver(),1);
 			application.DrawAll();
 
 			for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
@@ -2166,15 +2138,13 @@ int main(int argc, char* argv[]) {
 				application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
 				application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
 			}
-
-			//application.AssetBindAll();  //uncomment to visualize vol frac boxes
-			//application.AssetUpdateAll();//uncomment to visualize vol frac boxes
 			
-			application.DoStep();//
-			
-			application.GetVideoDriver()->endScene();
+			application.DoStep();
 			UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
+			application.GetVideoDriver()->endScene();
+			
 	#else
+
 			mphysicalSystem.DoStepDynamics(dT);
 	#endif
 #endif
@@ -2190,24 +2160,15 @@ int main(int argc, char* argv[]) {
 		}
 		
 
-		//irr::core::vector2d<irr::s32> a;
-		//irr::core::rect<irr::s32> b;
-		//application.GetContainer()->updateAbsolutePosition();
-		//a.X = application.GetContainer()->getAbsolutePosition().X + appWidth;
-		//a.Y = application.GetContainer()->getAbsolutePosition().Y - appHeight;
-		//b.LowerRightCorner = a;
 
-		//application.GetVideoDriver()->setViewPort(b);
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
 
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
 	  //step_timer.stop("step time");
-		receiver.drawCamera();
-		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
-		
-		receiver.dtPerFrame = 134;
-		receiver.fps = 30;
+		receiver.drawCamera();		
+		receiver.dtPerFrame = videoFrameInterval;
+		receiver.fps = out_fps;
 		receiver.screenshot(receiver.dtPerFrame);
 
 
@@ -2216,15 +2177,15 @@ int main(int argc, char* argv[]) {
 
 
 		receiver.drawSmarticleAmt(numGeneratedLayers);
-		CheckPointSmarticlesDynamic_Write(mySmarticlesVec,
-	  		tStep,
-	  		mat_g,
-	  		l_smarticle,
-	  		w_smarticle,
-	  		t_smarticle,
-	  		t2_smarticle,
-	  		collisionEnvelope,
-	  		rho_smarticle);
+		//CheckPointSmarticlesDynamic_Write(mySmarticlesVec,
+	 // 		tStep,
+	 // 		mat_g,
+	 // 		l_smarticle,
+	 // 		w_smarticle,
+	 // 		t_smarticle,
+	 // 		t2_smarticle,
+	 // 		collisionEnvelope,
+	 // 		rho_smarticle);
 
   }
 	simParams.open(simulationParams.c_str(), std::ios::app);
