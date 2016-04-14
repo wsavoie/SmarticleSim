@@ -1,19 +1,27 @@
 
+
+mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30\';
+runName = '-50-20160404-024257';
+ff = horzcat(mainFolder,runName);
+filename=horzcat(ff,'\PostProcess\Stress.txt');
+
+if exist(horzcat(ff,'\PostProcess\stressData.mat'), 'file') == 2 
+    clear('simParams','smartPos','frameInfo','filename','file');
+    ff = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30\-44-20160404-080211';
+    load(horzcat(ff,'\PostProcess\stressData.mat'));
+else
+    [smartPos, simParams, frameInfo]= readAllSmarticlesAngles(filename,0);
+end
+%smartPos % angle1  angle2   movetype   zHeight
+%simParams  dt      fps      frameInt   buckRad
+
+%% if data in memory only run this section
 %write to video
 VID= 0;
 pts('Video =',VID);
 %colors relating to the moveType and guid
 cols = {[1,0,0],[1,.5,0],[.4431,.7373, 1],[0,0,0],[.392,.824,.118],[.7,.4,.7],[.6039,1,0], [0.623, 0 ,1]};
 
-
-file = 'D:\SimResults\Chrono\SmarticleU\tests';
-filename=horzcat(file,'\PostProcess\Stress.txt');
-[smartPos simParams]= readAllSmarticlesAngles(filename,1);
-%smartPos % angle1  angle2   movetype   zHeight
-%simParams  dt      fps      frameInt   buckRad
-
-
-%% if data in memory only run this sectionw
 figure(1);
 clf;
 ann=annotation('textbox', [0.6,0.8,0.1,0.1],...

@@ -5,7 +5,6 @@ ff=[450 225 450 225 450 225 450 225 450 225 450];
 dd=[5 5 5 5 5 5 5 5 5 5 5 5 5];
 % ff=[225];
 % dd=[15];
-
 sampRate = 8192; %default sample rate of 8192 hertz
 for nn=1:length(ff);
 tt=(0:sampRate*dd(nn))/sampRate;

@@ -1,5 +1,5 @@
 
-%write to video
+
 mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30\';
 runName = '-50-20160404-024257';
 ff = horzcat(mainFolder,runName);
@@ -17,6 +17,7 @@ end
 
 
 %% if data in memory only run this sectionw
+%write to video
 VID= 0;
 pts('Video =',VID);
 %colors relating to the moveType and guid
