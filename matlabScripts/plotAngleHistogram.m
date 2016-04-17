@@ -1,14 +1,14 @@
 
 
-mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30\';
-runName = '-50-20160404-024257';
+mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30v2\';
+runName = '-65-20160405-040401';
 ff = horzcat(mainFolder,runName);
 filename=horzcat(ff,'\PostProcess\Stress.txt');
-
-if exist(horzcat(ff,'\PostProcess\stressData.mat'), 'file') == 2 
-    clear('simParams','smartPos','frameInfo','filename','file');
-    ff = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30\-44-20160404-080211';
-    load(horzcat(ff,'\PostProcess\stressData.mat'));
+matName = '\PostProcess\stressData.mat';
+if exist(horzcat(ff,matName), 'file') == 2 
+    clear('x','simParams','smartPos','frameInfo','filename','file');
+    ff =  horzcat(mainFolder,runName);
+    load(horzcat(ff,matName));
 else
     [smartPos, simParams, frameInfo]= readAllSmarticlesAngles(filename,0);
 end

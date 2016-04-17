@@ -1,14 +1,14 @@
 
 
-mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30\';
-runName = '-50-20160404-024257';
+mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30v2\';
+runName = '-20-20160404-141220';
 ff = horzcat(mainFolder,runName);
 filename=horzcat(ff,'\PostProcess\Stress.txt');
-
-if exist(horzcat(ff,'\PostProcess\stressData.mat'), 'file') == 2 
-    clear('simParams','smartPos','frameInfo','filename','file');
-    ff = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30\-44-20160404-080211';
-    load(horzcat(ff,'\PostProcess\stressData.mat'));
+matName = '\PostProcess\stressData.mat';
+if exist(horzcat(ff,matName), 'file') == 2 
+    clear('x','simParams','smartPos','frameInfo','filename','file');
+    ff =  horzcat(mainFolder,runName);
+    load(horzcat(ff,matName));
 else
     [smartPos, simParams, frameInfo]= readAllSmarticlesAngles(filename,0);
 end
@@ -25,7 +25,7 @@ cols = {[1,0,0],[1,.5,0],[.4431,.7373, 1],[0,0,0],[.392,.824,.118],[.7,.4,.7],[.
 
 
 
-figure(1);
+figure(2);
 clf;
 ann=annotation('textbox', [0.6,0.8,0.1,0.1],...
            'String', {horzcat('Smarticle Amt= 00'),'Current Directed Motion: 00','Time: 00'});
