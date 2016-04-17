@@ -151,6 +151,7 @@ namespace chrono {
 		//	virtual void SetCurrentMotion(std::shared_ptr<SmarticleMotionPiece> s_motionPiece); // to be implemented
 		//	virtual std::shared_ptr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
 		virtual void TransportSmarticle(ChVector<>);
+		virtual void RotateSmarticle(ChQuaternion<>);
 		virtual void SetSpeed(ChVector<> newSpeed);
 
 

@@ -199,18 +199,18 @@ void Smarticle::updateTorqueDeque()
 	torques.pop_back();
 	torques.emplace_front(getLinkActuator(0)->Get_mot_torque(), getLinkActuator(1)->Get_mot_torque(), getLinkActuator(0)->Get_mot_rot_dt(), getLinkActuator(1)->Get_mot_rot_dt());
 	updateTorqueAvg(oldT);
+
 }
 void Smarticle::updateTorqueAvg(std::tuple <double,double,double,double > oldT)
 { //already assuming it is an avg:
 	size_t len =torques.size();
-	
 	//if statement fills up torque list if not enough frames have passed
-	if (steps <= torques.size()) //since first frame this method runs on = 1 use <=
+	if (steps < torques.size()) //since first frame this method runs on = 1 use <=
 	{
-		std::get<0>(torqueAvg) = (std::get<0>(torques.front()) + std::get<0>(torqueAvg) * (steps - 1)) / steps;
-		std::get<1>(torqueAvg) = (std::get<1>(torques.front()) + std::get<1>(torqueAvg) * (steps - 1)) / steps;
-		std::get<2>(torqueAvg) = (std::get<2>(torques.front()) + std::get<2>(torqueAvg) * (steps - 1)) / steps;
-		std::get<3>(torqueAvg) = (std::get<3>(torques.front()) + std::get<3>(torqueAvg) * (steps - 1)) / steps;
+		std::get<0>(torqueAvg) = (std::get<0>(torques.front()) + std::get<0>(torqueAvg) * steps) / (steps + 1);
+		std::get<1>(torqueAvg) = (std::get<1>(torques.front()) + std::get<1>(torqueAvg) * steps) / (steps + 1);
+		std::get<2>(torqueAvg) = (std::get<2>(torques.front()) + std::get<2>(torqueAvg) * steps) / (steps + 1);
+		std::get<3>(torqueAvg) = (std::get<3>(torques.front()) + std::get<3>(torqueAvg) * steps) / (steps + 1);
 	}
 	else
 	{
@@ -531,6 +531,12 @@ void Smarticle::SetSpeed(ChVector<> newSpeed)
 	arm0->SetPos_dt(newSpeed);
 	arm1->SetPos_dt(newSpeed);
 	arm2->SetPos_dt(newSpeed);
+}
+void Smarticle::RotateSmarticle(ChQuaternion<> newRotation)
+{
+	arm0->SetRot(newRotation);
+	arm2->SetRot(newRotation);
+	arm1->SetRot(newRotation);
 }
 void Smarticle::TransportSmarticle(ChVector<> newPosition)
 {
