@@ -40,14 +40,13 @@ namespace chrono {
 		void CalcCurr_Omega(size_t i, double t);
 		bool OT();
 		void UseForceControl(size_t i);
-		void UseSpeedControl();
+		void UseSpeedControl(size_t i);
 		double velOld[2];
 		double DD[2];
 		double II[2];
 		double yold[2];
 		double omegaLimit = 5;
 		double outputLimit = 0;
-		size_t steps_ = 0;
 		Smarticle *smarticle_;
 		bool resetCumError = false;
 		//void setMoveVector(unsigned int guiState);

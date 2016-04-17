@@ -246,7 +246,8 @@ void CheckPointSmarticlesDynamic_Read(
 		friction>>
 		gui_value;
 	//TODO initialize angle1 and angle2
-
+	angle1 = 0;
+	angle2 = 0;
 	printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f angle1 %f angle2 %f",
 		l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticle, friction, angle1, angle2);
 	mat_g->SetFriction(friction);

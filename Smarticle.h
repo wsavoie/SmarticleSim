@@ -28,7 +28,7 @@ namespace chrono {
 	// structs to attach motion to smarticles
 	class Smarticle {
 	public:
-
+		int steps=0; //number of steps this smarticle has existed, updated in smarticleUpdate
 		static std::shared_ptr<ChTexture> mtextureOT;
 		static std::shared_ptr<ChTexture> mtextureMid;
 		static std::shared_ptr<ChTexture> mtextureArm;

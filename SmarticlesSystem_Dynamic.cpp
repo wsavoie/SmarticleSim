@@ -541,8 +541,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			if (genRand()<1)//to reduce amount visualized amount
 				smarticle0->visualize = true;
 			smarticle0->populateMoveVector();
-			//smarticle0->SetAngles(angle1, angle2);
-			//smarticle0->SetInitialAngles();
+			smarticle0->SetAngles(angle1, angle2,true);
+			smarticle0->SetInitialAngles();
 			smarticle0->Create();
 			smarticle0->setCurrentMoveType((MoveType) Smarticle::global_GUI_value);
 			smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
@@ -1563,6 +1563,7 @@ void UpdateSmarticles(
 
 		//GetLog() << "\nangle(1,2):" << mySmarticlesVec[i]->GetAngle1(true) << "\t" << mySmarticlesVec[i]->GetAngle2(true);
 		//GetLog() << "\n\ntor(1,2):" <<tor1 << "\t" << tor2;
+		mySmarticlesVec[i]->steps = mySmarticlesVec[i]->steps + 1;
 	}
 }
 // =============================================================================
@@ -1611,8 +1612,8 @@ bool SetGait(double time)
 	//	Smarticle::global_GUI_value = 2;
 	//else if (time > 60 && time <= 63)
 	//	Smarticle::global_GUI_value = 3;
-	else
-		return true;
+	//else	
+	//	return true;
 
 	//if (time <= 5)
 	//	Smarticle::global_GUI_value = 2;
@@ -1658,11 +1659,12 @@ int main(int argc, char* argv[]) {
 	char* pPath = getenv("USERNAME");
 	GetLog()<<pPath;
 	std::string fp;
-	if(strcmp(pPath,"root")==0)
-		fp = "D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\";
+	if (strcmp(pPath, "root") == 0)
+		fp = std::string("D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\");
 	else
-		fp = "D:\\GT Coursework\\smarticles\\data\\";
+		fp = std::string("D:\\GT Coursework\\smarticles\\data\\");
 	//fp = __FILE__+fp;
+	
 	SetChronoDataPath(fp);
 #else
 	SetChronoDataPath("/home/wsavoie/Documents/ChronoPkgs/Smarticles/data/");
@@ -1696,7 +1698,7 @@ int main(int argc, char* argv[]) {
 			return 1;
 		}
 	}
-	sphereTexture->SetTextureFilename(GetChronoDataFile("spheretexture.png"));
+	sphereTexture->SetTextureFilename(GetChronoDataFile("sphereTexture.png"));
 	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	simParams.open(simulationParams.c_str());
 	simParams << "Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
@@ -2090,6 +2092,8 @@ int main(int argc, char* argv[]) {
 	}
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	//START OF LOOP 
+	application.DrawAll();
+	
 	for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 		double t = mphysicalSystem.GetChTime();
 		if (!read_from_file)
@@ -2170,19 +2174,17 @@ int main(int argc, char* argv[]) {
 		//SavePovFilesMBD(mphysicalSystem, tStep);
 		//step_timer.start("step time");
 
-#ifdef CHRONO_OPENGL
-		if (gl_window.Active()) {
-			gl_window.DoStepDynamics(dT);
-			gl_window.Render();
-		}
-#else
+	#ifdef CHRONO_OPENGL
+			if (gl_window.Active()) {
+				gl_window.DoStepDynamics(dT);
+				gl_window.Render();
+			}
+	#else
 	#if irrlichtVisualization
 			if (!(application.GetDevice()->run())) break;
+			//if ((application.GetDevice()->isWindowMinimized())) break;
 			application.GetVideoDriver()->beginScene(true, true,
 				video::SColor(255, 140, 161, 192));			
-
-			//ChIrrTools::drawAllLinkframes(mphysicalSystem, application.GetVideoDriver(),1);
-			application.DrawAll();
 
 			for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
 			{
@@ -2192,17 +2194,23 @@ int main(int argc, char* argv[]) {
 			
 			application.DoStep();
 			UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
+
+			receiver.drawSmarticleAmt(numGeneratedLayers);
+			receiver.drawSuccessful();
+			application.DrawAll();
+
 			application.GetVideoDriver()->endScene();
 			
 	#else
-
+			
 			mphysicalSystem.DoStepDynamics(dT);
+			UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 	#endif
 #endif
 
 		if (SetGait(t) == true)
 			break;
-		receiver.drawSuccessful();
+
 
 		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER|| bucketType==CYLINDER|| bucketType==BOX)
 		{
@@ -2214,7 +2222,7 @@ int main(int argc, char* argv[]) {
 
 
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
-
+		
 	  time(&rawtimeCurrent);
 	  double timeDiff = difftime(rawtimeCurrent, rawtime);
 	  //step_timer.stop("step time");
@@ -2226,9 +2234,6 @@ int main(int argc, char* argv[]) {
 
 	  std::cout.flush();
 
-
-
-		receiver.drawSmarticleAmt(numGeneratedLayers);
 		//CheckPointSmarticlesDynamic_Write(mySmarticlesVec,
 	 // 		tStep,
 	 // 		mat_g,

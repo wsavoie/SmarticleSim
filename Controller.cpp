@@ -58,10 +58,13 @@ Controller::~Controller()
 	prevError_.~vector();
 	prevOmegError_.~vector();
 	cumError_.~vector();
-	successfulMove_.~vector();
+	cumOmegError_.~vector();
 	prevAngle_.~vector();
-
-
+	successfulMove_.~vector();
+	double velOld[2];
+	double DD[2];
+	double II[2];
+	double yold[2];
 	//engine_funct0->~ChFunctionController();
 	//engine_funct1->~ChFunctionController();
 
@@ -71,42 +74,19 @@ bool Controller::Step(double dt) {
 	double ang = 0;
 
 
-
 	for (size_t i = 0; i < smarticle_->numEngs; i++)
 	{
-		//if (steps_ <1)
-		//	ang = smarticle_->GetCurrAngle(i) + smarticle_->GetInitialAngle(i);// +smarticle_->GetInitialAngle(i);
-		//else
-			ang = smarticle_->GetCurrAngle(i);// +smarticle_->GetInitialAngle(i);
-		//GetLog() << "\ncurrAAng:" << ang;
+		ang = smarticle_->GetCurrAngle(i);
 		double exp = smarticle_->GetExpAngle(i);
-		//GetLog() << " arm " << i << ": C:" << ang << " X:"<<exp <<"\n";
 		smarticle_->SetAngle(i, ang);
-	
-		
-		
-		//GetLog() << "ANG" << i << ":" << smarticle_->GetAngle(i) << "    ";
 		bool desiredPositionStatus = smarticle_->NotAtDesiredPos(i, ang,exp); //true if not at current position being directed to 
-		//GetLog() << "\ndes" << desiredPositionStatus;
-		//auto a = ~desiredPositionStatus;
 		successfulMove_.at(i) = !desiredPositionStatus;
 		UseForceControl(i);
-		steps_++;
+		//UseSpeedControl(i);
+		
 	}
-	//GetLog() <<" t: " << dt << " " << "\n";
-	//exit(-1);
-	
-	//UseSpeedControl()
-
 	result = successfulMove_.at(0) || successfulMove_.at(1);
 
-	//if (successfulMove_.at(0) == false && successfulMove_.at(1) == false)
-	//{
-	//	result = false;
-	//}
-	//else{
-	//	result = true;
-	//}
 
 	return result;
 }
@@ -124,7 +104,6 @@ double Controller::GetCurrTorque(size_t index, double t)
 
 double Controller::GetDesiredAngle(size_t index, double t)
 {
-	//desiredAngle_.at(index) = 
 		return 	smarticle_->GetNextAngle(index);
 }
 double Controller::GetExpAngle(size_t idx, double t)
@@ -165,29 +144,17 @@ bool Controller::OT()
 		return false;
 }
 
-void Controller::UseSpeedControl() {
-
-	for (size_t i = 0; i < smarticle_->numEngs; ++i) {
-		GetEngine(i)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-		auto engine_funct = std::make_shared<ChFunctionController>(i, this);
-		GetEngine(i)->Set_spe_funct(engine_funct);
-		
-		//auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(i)->Get_spe_funct());
-		//mfun1->Set_yconst(desiredOmega_.at(i));
-	}
-	GetEngine(0)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	GetEngine(1)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	//GetEngine(0)->Set_spe_funct(engine_funct0);
-	//GetEngine(1)->Set_spe_funct(engine_funct1);
-
+void Controller::UseSpeedControl(size_t id) {
+		//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+		auto ef = std::make_shared<ChFunctionController>(id, this);
+		auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_spe_funct());
+		double y = ef->Get_y(ch_system_->GetChTime());
+		mfun->Set_yconst(y);
 }
 void Controller::UseForceControl(size_t id) {
-	//for (size_t i = 0; i < smarticle_->numEngs; ++i) {
-		
-		GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+		//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 		auto ef = std::make_shared<ChFunctionController>(id, this);
 		auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_tor_funct());
 		double y = ef->Get_y(ch_system_->GetChTime());
-		mfun->Set_yconst(y);
-	
+		mfun->Set_yconst(y);	
 }

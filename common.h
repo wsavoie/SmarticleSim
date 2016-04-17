@@ -56,7 +56,6 @@
 	extern double i_gain;
 	extern double d_gain;
 	extern double fric;
-
 	extern chrono::ChVector<> bucket_interior_halfDim;
 	
 	

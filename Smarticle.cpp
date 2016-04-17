@@ -52,7 +52,6 @@ double Smarticle::distThresh;
 unsigned int Smarticle::global_GUI_value;
 Smarticle::~Smarticle()
 {
-	//this->armsController->~Controller();
 	m_system->RemoveLink(link_actuator01);
 	m_system->RemoveLink(link_actuator12);
 	//m_system->RemoveLink(link_revolute01);
@@ -203,16 +202,23 @@ void Smarticle::updateTorqueDeque()
 }
 void Smarticle::updateTorqueAvg(std::tuple <double,double,double,double > oldT)
 { //already assuming it is an avg:
-	size_t len = torques.size();
-	std::get<0>(torqueAvg) = std::get<0>(torqueAvg) -std::get<0>(oldT) / len + std::get<0>(torques.front()) / len;
-	std::get<1>(torqueAvg) = std::get<1>(torqueAvg) -std::get<1>(oldT) / len + std::get<1>(torques.front()) / len;
-	std::get<2>(torqueAvg) = std::get<2>(torqueAvg) -std::get<2>(oldT) / len + std::get<2>(torques.front()) / len;
-	std::get<3>(torqueAvg) = std::get<3>(torqueAvg) -std::get<3>(oldT) / len + std::get<3>(torques.front()) / len;
-
-	//torqueAvg = std::make_pair(
-	//	torqueAvg.first - oldT.first / len + torques.front().first / len,
-	//	torqueAvg.second - oldT.second / len + torques.front().second / len
-	//	);
+	size_t len =torques.size();
+	
+	//if statement fills up torque list if not enough frames have passed
+	if (steps <= torques.size()) //since first frame this method runs on = 1 use <=
+	{
+		std::get<0>(torqueAvg) = (std::get<0>(torques.front()) + std::get<0>(torqueAvg) * (steps - 1)) / steps;
+		std::get<1>(torqueAvg) = (std::get<1>(torques.front()) + std::get<1>(torqueAvg) * (steps - 1)) / steps;
+		std::get<2>(torqueAvg) = (std::get<2>(torques.front()) + std::get<2>(torqueAvg) * (steps - 1)) / steps;
+		std::get<3>(torqueAvg) = (std::get<3>(torques.front()) + std::get<3>(torqueAvg) * (steps - 1)) / steps;
+	}
+	else
+	{
+		std::get<0>(torqueAvg) = std::get<0>(torqueAvg) + (std::get<0>(torques.front()) - std::get<0>(oldT)) / len;
+		std::get<1>(torqueAvg) = std::get<1>(torqueAvg) + (std::get<1>(torques.front()) - std::get<1>(oldT)) / len;
+		std::get<2>(torqueAvg) = std::get<2>(torqueAvg) + (std::get<2>(torques.front()) - std::get<2>(oldT)) / len;
+		std::get<3>(torqueAvg) = std::get<3>(torqueAvg) + (std::get<3>(torques.front()) - std::get<3>(oldT)) / len;
+	}
 }
 
 //////////////////////////////////////////////
@@ -558,10 +564,6 @@ void Smarticle::CreateActuators() {
 
 	link_actuator01 = std::make_shared<ChLinkEngine>();
 	link_actuator12 = std::make_shared<ChLinkEngine>();
-
-	//current sim
-	//ChVector<> pR01(-w / 2.0-r2, 0, 0);
-	//ChVector<> pR12(w / 2.0+r2, 0, 0);
 	
 	ChVector<> pR01 (-w / 2.0, 0, 0);
 	ChVector<> pR12 (w / 2.0, 0, 0);
@@ -573,7 +575,6 @@ void Smarticle::CreateActuators() {
 
 	ChQuaternion<> qx1 = Q_from_AngAxis(-PI_2, VECT_X);
 	ChQuaternion<> qx2 = Q_from_AngAxis(PI_2, VECT_X);
-	//ChQuaternion<> qy1 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, GetAngle1()));
 	ChQuaternion<> qy1 = Q_from_AngAxis(GetAngle1(), VECT_Z);
 	ChQuaternion<> qy2 = Q_from_AngAxis(GetAngle2(), VECT_Z);
 
@@ -581,46 +582,30 @@ void Smarticle::CreateActuators() {
 	qx2.Normalize();
 	qy1.Normalize();
 	qy2.Normalize();
-	// link 1
-	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
-	//link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
-	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TO_POWERTRAIN_SHAFT);
-	//std::shared_ptr<ChFunction_Const> mfun2; //needs to be declared outside switch
 
-	//mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(link_actuator01->Get_rot_funct_y());
-	//mfun2->Set_yconst(angle1);
-	//link_actuator01->SetMotion_axis(ChVector<>(0, 0, -1));
-	//GetLog() << "relangle1: "<<link_actuator01->GetRelAngle();
-	//ChFunction_Const* a;
-	//a = dynamic_cast<ChFunction_Const>(link_actuator01->Get_rot_funct());
-	//a->Set_yconst(angle1);
-	//GetLog() << "\nrelangle2: "<<link_actuator01->GetRelAngle();
-	link_actuator01->UpdateRelMarkerCoords();
-	link_actuator01->UpdateState();
-	link_actuator01->UpdateCqw();
-	
+
+	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 	m_system->AddLink(link_actuator01);
-	
+	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
 	link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-	//link_actuator12->Initialize(arm1, arm2, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx));
-	//link_actuator12->GetMarker1()->SetRot(qy2);
-	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-	//link_actuator12->SetMotion_axis(ChVector<>(0, 0, 1));
-
 	m_system->AddLink(link_actuator12);
+	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
+
+	//auto mfun0 = std::dynamic_pointer_cast<ChFunction_Const>(link_actuator01->Get_tor_funct());
+	//mfun0->Set_yconst(0);
+	//auto mfun1= std::dynamic_pointer_cast<ChFunction_Const>(link_actuator12->Get_tor_funct());
+	//mfun1->Set_yconst(0);
 }
 
 void Smarticle::Create() {
-	//jointClearance =1.0/3.0*r2;
 	jointClearance = 0;
 	double l_mod;
 	//double l_mod = l + 2 * r2 - jointClearance;
 
+	//ChQuaternion<> quat0 = Q_from_AngAxis(angle1, VECT_Y);
+	//ChQuaternion<> quat2 = Q_from_AngAxis(-angle2, VECT_Y);
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1, 0));
 	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2, 0));
 	quat0.Normalize();
@@ -641,9 +626,6 @@ void Smarticle::Create() {
 		jointClearance = .0065;//6.5 mm in x dir jc in y dir is r2
 		double armt = r;
 		double armt2 = .00806 / 2 * sizeScale; //8.06 mm with solar 3.2 without
-		//CreateArm2(0, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) -offPlaneoffset), quat0);
-		//CreateArm2(1, w,r,r2, ChVector<>(0, 0, 0));
-		//CreateArm2(2, l, armt, armt2, ChVector<>(-(w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) -offPlaneoffset), quat2);
 
 		CreateArm2(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset), quat0);
 		CreateArm2(1, w, r, r2, ChVector<>(0, 0, 0));
@@ -651,29 +633,25 @@ void Smarticle::Create() {
 	}
 
 	CreateActuators();
-	//CreateJoints(); //TODO do we need joints?
 
 	// mass property
 	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
 
 
-
-
 	if (genRand() < pctActive)
 	{
 		active = true;
-		//controller(omega,force)
 		armsController = (new Controller(m_system,this));
 		armsController->outputLimit= torqueThresh2;
 		armsController->omegaLimit = omegaLim;
-		//link_actuator01->GetLimit_Rz()->Set_min(-PI);
-		//link_actuator01->GetLimit_Rz()->Set_max(PI);
-		//link_actuator12->GetLimit_Rz()->Set_min(-PI);
-		//link_actuator12->GetLimit_Rz()->Set_max(PI);
-		//link_actuator01->GetLimit_Rz()->Set_active(true);
-		//link_actuator12->GetLimit_Rz()->Set_active(true);
 	}
-
+	else
+	{
+		active = false;
+		//link_actuator01->SetDisabled(true);
+		//link_actuator12->SetDisabled(true);
+	}
+	GetLog() << "\nCurrentangle" << GetCurrAngle(0) << " " << GetCurrAngle(1)<<"\n";
 }
 
 std::shared_ptr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
@@ -710,11 +688,11 @@ void Smarticle::SetActuatorFunction(int actuatorID, double omega, double dT) {
 
 //	auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_rot_funct());
 //	mfun1->Set_yconst(diffTheta + mfun1->Get_yconst());
-	auto mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
+	//auto mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
 	auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_tor_funct());
 
 	
-	mfun2->Set_yconst(omega);
+	//mfun2->Set_yconst(omega);
 	mfun1->Set_yconst(omega);
 }
 
@@ -726,9 +704,9 @@ void Smarticle::SetActuatorFunction(int actuatorID, double omega) {
 		mlink_actuator = link_actuator12;
 	}
 
-	auto mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
+	//auto mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
 	auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_tor_funct());
-	mfun2->Set_yconst(omega);
+	//mfun2->Set_yconst(omega);
 	mfun1->Set_yconst(omega);
 }
 
@@ -877,10 +855,7 @@ double Smarticle::GetExpAngle(int id)
 }
 double Smarticle::GetCurrAngle(int id)
 {
-	if (id == 0)
-		return this->getLinkActuator(id)->Get_mot_rot();
-	else
-		return this->getLinkActuator(id)->Get_mot_rot();
+	return this->getLinkActuator(id)->Get_mot_rot();
 }
 double Smarticle::GetNextAngle(int id)
 {
@@ -1094,6 +1069,7 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 	//since going from -pi to pi:
 	//currAng = currAng + PI;
 	//destAng = destAng + PI;
+
 	double deltaAng = destAng - currAng;
 	if (abs(deltaAng) > 2*distThresh)
 	{		//if destAng is larger, move with positive momega
