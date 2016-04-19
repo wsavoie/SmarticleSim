@@ -166,6 +166,7 @@ double gaitChangeLengthTime = .5;
 	double bucket_rad = sizeScale*w_smarticle*2; //3
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
 	double rho_smarticle = 443.0;
+	ChVector<>boxdim(.28/1.5, .55245, 2 * bucket_rad / 8);
 #endif
 
 	double p_gain = .2;   //.32           //.2
@@ -185,12 +186,12 @@ double collisionEnvelope = .1 * t2_smarticle;
 
 bool bucket_exist = true;
 
-bool read_from_file = false;
+int read_from_file = 0; //-1 write 0 do nothing 1 read
 bool povray_output = false;
 int out_fps = 30;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
-int numPerLayer =9;
+int numPerLayer =5;
 bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surface
 ChVector<> bucket_ctr = ChVector<>(0,0,0);
 //ChVector<> Cbucket_interior_halfDim = sizeScale * ChVector<>(.05, .05, .025);
@@ -314,7 +315,7 @@ double showForce(CH_SYSTEM *msys)
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
-void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle,bool& readFile,double& mpctActive, double& mangle1, double& mangle2) {
+void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle,int& readFile,double& mpctActive, double& mangle1, double& mangle2) {
   if (argc > 1) {
 	const char* text = argv[1];
 	double mult_l = atof(text);
@@ -350,6 +351,10 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 	if (argc > 8){
 		const char* text = argv[8];
 		box_ang = atof(text)*D2R;
+	}
+	if (argc > 9){
+		const char* text = argv[9];
+		numPerLayer = atoi(text);
 	}
 	/// if parallel, get solver setting
   //if (USE_PARALLEL) {
@@ -405,7 +410,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	simParams << "Smarticle mass: " << vol*rho_smarticle << std::endl;
 
 	//copy smarticle checkpoint if used to PostProcess folder
-	if (read_from_file)
+	if (read_from_file==1)
 	{
 		const std::string copyCheckpoint = std::string("cp smarticles.csv " + out_dir);
 		std::system(copyCheckpoint.c_str());
@@ -441,7 +446,6 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
 #endif
 	
-
 	ChVector<> dropSpeed = VNULL;
 	ChQuaternion<> myRot = QUNIT;
 	double z;
@@ -458,7 +462,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 	{
 		phase = genRand(PI_2);
 		zpos = std::min(3 * bucket_interior_halfDim.z, z) + w_smarticle;
-		
+
 		switch (bucketType){
 		case DRUM:
 			zpos = SaturateValue(z, bucket_rad);
@@ -1766,8 +1770,9 @@ int main(int argc, char* argv[]) {
 	//camera->setPosition(core::vector3df(0, bucket_interior_halfDim.y, 4 * bucket_rad / 2.0));
 	//camera->setTarget(core::vector3df(0, 2*bucket_interior_halfDim.y, -bucket_rad / 2.1)); //	camera->setTarget(core::vector3df(0, 0, .01));
 
-	camera->setPosition(core::vector3df(.0139, -.39, -.0281));
-	camera->setTarget(core::vector3df(0.0139, .298, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+	camera->setPosition(core::vector3df(.0139, -.445, .7));
+	camera->setTarget(core::vector3df(0.0139, .243, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+
 
 
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
@@ -2083,9 +2088,9 @@ int main(int argc, char* argv[]) {
 	int numGeneratedLayers = 0;
 
 
-	if (read_from_file)
+	if (read_from_file==1)
 	{
-		CheckPointSmarticlesDynamic_Read(mphysicalSystem, mySmarticlesVec);
+		CheckPointSmarticlesDynamic_Read(mphysicalSystem, mySmarticlesVec,application);
 		application.AssetBindAll();
 		application.AssetUpdateAll();
 		numGeneratedLayers = numLayers;
@@ -2096,7 +2101,7 @@ int main(int argc, char* argv[]) {
 	
 	for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 		double t = mphysicalSystem.GetChTime();
-		if (!read_from_file)
+		if (read_from_file != 1)
 		{
 			if ((fmod(t, timeForVerticalDisplacement) < dT) &&
 				(numGeneratedLayers < numLayers)){
@@ -2109,7 +2114,7 @@ int main(int argc, char* argv[]) {
 			}
 
 		}
-		
+
 		///add method about system actuation
 		if (bucketType == DRUM || bucketType == BOX)
 		{
@@ -2137,13 +2142,13 @@ int main(int argc, char* argv[]) {
 			}
 			case KNOBCYLINDER:
 			{
-				
+
 				if (link_engine->IsDisabled())
 				{
 					knobstick->SetBodyFixed(false);
 					link_engine->SetDisabled(false);
 				}
-					
+
 				break;
 			}
 

@@ -11,8 +11,10 @@
 //#include "chrono_parallel/physics/ChSystemParallel.h"
 #include "physics/ChSystem.h"
 #include "Smarticle.h" //do we need this if smarticleU imports smarticle?
-#include "SmarticleU.h"
-
+//#include "SmarticleU.h"
+using namespace chrono::irrlicht;
+using namespace irr;
+using namespace irr::video;
 #if USE_PARALLEL
 #define CH_SYSTEM ChSystemParallelDVI
 #else
@@ -50,7 +52,7 @@ void CheckPointSmarticles_Read(
 	std::vector<Smarticle*> & mySmarticlesVec);
 void CheckPointSmarticlesDynamic_Read(
 	CH_SYSTEM& mphysicalSystem,
-	std::vector<Smarticle*> & mySmarticlesVec);
+	std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application);
 //void CheckPointSmarticles_Read(
 //		#include "SmarticleU.h",
 //		std::vector<Smarticle*> & mySmarticlesVec);

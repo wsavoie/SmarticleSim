@@ -78,7 +78,10 @@ void CheckPointSmarticles_Write(
 				mSmart->GetSmarticleBodyPointer()->GetRot().e0 << ", " <<
 				mSmart->GetSmarticleBodyPointer()->GetRot().e1 << ", " <<
 				mSmart->GetSmarticleBodyPointer()->GetRot().e2 << ", " <<
-				mSmart->GetSmarticleBodyPointer()->GetRot().e3 << ", " << std::endl;
+				mSmart->GetSmarticleBodyPointer()->GetRot().e3 << ", " <<
+				mSmart->GetAngle1(true) << ", " <<
+				mSmart->GetAngle2(true) << ", " <<
+				std::endl;
 	}
 
 	outSmarticles.close();
@@ -141,7 +144,6 @@ void CheckPointSmarticlesDynamic_Write(
 	//	angle1 >> ddCh >> angle2 >> ddCh >>
 	//	dumId >> globalidx >> ddCh >> gui1idx >> ddCh >> gui2idx >> ddCh >>
 	//	gui3idx >> ddCh >> prevMoveType >> ddCh >> currMoveType >> ddCh;
-
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 		Smarticle* mSmart = (Smarticle*)mySmarticlesVec[i];
 		outSmarticles <<
@@ -159,9 +161,16 @@ void CheckPointSmarticlesDynamic_Write(
 			mSmart->moveTypeIdxs.at(MoveType::GUI1) << ", " <<
 			mSmart->moveTypeIdxs.at(MoveType::GUI2) << ", " <<
 			mSmart->moveTypeIdxs.at(MoveType::GUI3) << ", " <<
+			mSmart->moveTypeIdxs.at(MoveType::VIB) << ", " <<
+			mSmart->moveTypeIdxs.at(MoveType::EXTRA1) << ", " <<
+			mSmart->moveTypeIdxs.at(MoveType::EXTRA2) << ", " <<
+			mSmart->moveTypeIdxs.at(MoveType::MIDT) << ", " <<
+			mSmart->moveTypeIdxs.at(MoveType::OT) << ", " <<
 			mSmart->prevMoveType << ", " <<
 			mSmart->moveType << ", " <<
 			mSmart->GetOmega1() << ", "<<
+			mSmart->armsController->yold[0] << ", " <<
+			mSmart->armsController->yold[1] << ", " <<
 			std::endl;
 	}
 
@@ -189,6 +198,7 @@ void CheckPointSmarticles_Read(
 	friction>>
 	angle1>>
 	angle2;
+
 	printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f angle1 %f angle2 %f",
 			l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticle, friction, angle1, angle2);
 	mat_g->SetFriction(friction);
@@ -212,7 +222,7 @@ void CheckPointSmarticles_Read(
 						  l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 						  p3,
 						  q4);
-		smarticle0->SetAngles(angle1, angle2, true);
+		smarticle0->SetAngles(angle1, angle2, false);
 		smarticle0->Create();
 		mySmarticlesVec.emplace_back(smarticle0);
 
@@ -226,11 +236,11 @@ void CheckPointSmarticles_Read(
 
 void CheckPointSmarticlesDynamic_Read(
 	CH_SYSTEM& mphysicalSystem,
-	std::vector<Smarticle*> & mySmarticlesVec) {
+	std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application) {
 	std::ifstream inSmarticles;
 	std::pair<double, double> angPair;
 	inSmarticles.open("smarticles.csv");
-	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction, angle1, angle2, globalidx, gui1idx, gui2idx, gui3idx, dumId;
+	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction, angle1, angle2, globalidx, gui1idx, gui2idx, gui3idx, dumId, yold0, yold1,vibidx, extra1idx, extra2idx, midtidx, otidx;
 	unsigned int currMoveType, prevMoveType, gui_value;
 	double rho_smarticle;
 	auto mat_g = std::make_shared<ChMaterialSurface>();
@@ -264,37 +274,64 @@ void CheckPointSmarticlesDynamic_Read(
 	//TODO torque threshold
 	inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
 		q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >> q4.e3 >> ddCh >>
-		angle1 >> ddCh >> angle2 >> ddCh >> dumId >> ddCh >> 
+		angle1 >> ddCh >> angle2 >> ddCh >> dumId >> ddCh >>
 		globalidx >> ddCh >> gui1idx >> ddCh >> gui2idx >> ddCh >>
-		gui3idx >> ddCh >> prevMoveType >> ddCh >> currMoveType >> ddCh >> omega >> ddCh;
+		gui3idx >> ddCh >> vibidx >> ddCh >> extra1idx >> ddCh >>
+		extra2idx >> ddCh >> midtidx >> ddCh >> otidx >> ddCh >>
+		prevMoveType >> ddCh >> currMoveType >> ddCh >> omega >>
+		ddCh >> yold0 >> ddCh >> yold1 >> ddCh;
+	//TODO add 
 	while (inSmarticles.good()) {
 		
 		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 
-		smarticle0->Properties(mySmarticlesVec.size(),dumId,
+		smarticle0->Properties(mySmarticlesVec.size(), dumId,
 			rho_smarticle, mat_g,
 			collisionEnvelop,
 			l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 			omega,true,p3,
-			q4,angle1,angle2);
-		
-		smarticle0->Create();
+			q4,angle1*D2R,angle2*D2R);
 		smarticle0->populateMoveVector();
+		smarticle0->SetAngles(angle1, angle2, false);
+		smarticle0->visualize = true;
+		smarticle0->Create();
+
+		smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
+		smarticle0->AssignState(VIB);
+		smarticle0->GenerateVib(angle1*D2R, angle2*D2R);
 
 		smarticle0->moveTypeIdxs.at(MoveType::GLOBAL) = globalidx;
 		smarticle0->moveTypeIdxs.at(MoveType::GUI1)		= gui1idx;
 		smarticle0->moveTypeIdxs.at(MoveType::GUI2)		= gui2idx;
 		smarticle0->moveTypeIdxs.at(MoveType::GUI3)		= gui3idx;
-		
+		smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
+		smarticle0->armsController->yold[0] = yold0;
+		smarticle0->armsController->yold[1] = yold1;
+		smarticle0->setCurrentMoveType(VIB);
 		mySmarticlesVec.emplace_back(smarticle0);
+		application.DrawAll();
+
+		application.GetVideoDriver()->endScene();
+		application.GetVideoDriver()->beginScene(true, true,
+			video::SColor(255, 140, 161, 192));
+#if irrlichtVisualization
+		application.AssetBindAll();
+		application.AssetUpdateAll();
+		//application.AssetUpdate(smarticle0->GetArm(0));
+		//application.AssetUpdate(smarticle0->GetArm(1));
+		//application.AssetUpdate(smarticle0->GetArm(2));
+
+#endif
 
 		inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
 			q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >> q4.e3 >> ddCh >>
 			angle1 >> ddCh >> angle2 >> ddCh >> dumId >> ddCh >>
 			globalidx >> ddCh >> gui1idx >> ddCh >> gui2idx >> ddCh >>
-			gui3idx >> ddCh >> prevMoveType >> ddCh >> currMoveType >> ddCh >> omega >> ddCh;
+			gui3idx >> ddCh >> vibidx >> ddCh >> extra1idx >> ddCh >> 
+			extra2idx >> ddCh >> midtidx >> ddCh >> otidx >> ddCh >> 
+			prevMoveType >> ddCh >> currMoveType >> ddCh >> omega >> 
+			ddCh >> yold0 >> ddCh >> yold1 >> ddCh;
 	}
-
 
 	GetLog()<< "num smarticles:"<<  mySmarticlesVec.size();
 

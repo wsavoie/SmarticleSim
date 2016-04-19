@@ -598,7 +598,6 @@ void Smarticle::CreateActuators() {
 	m_system->AddLink(link_actuator12);
 	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
-
 	//auto mfun0 = std::dynamic_pointer_cast<ChFunction_Const>(link_actuator01->Get_tor_funct());
 	//mfun0->Set_yconst(0);
 	//auto mfun1= std::dynamic_pointer_cast<ChFunction_Const>(link_actuator12->Get_tor_funct());
@@ -657,7 +656,6 @@ void Smarticle::Create() {
 		//link_actuator01->SetDisabled(true);
 		//link_actuator12->SetDisabled(true);
 	}
-	GetLog() << "\nCurrentangle" << GetCurrAngle(0) << " " << GetCurrAngle(1)<<"\n";
 }
 
 std::shared_ptr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
@@ -924,7 +922,6 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	//smarticleMoves >> ang1 >> ddCh >> ang2 >> ddCh >> ddCh;
 	//angPair.first = ang1;
 	//angPair.second = ang2;
-	GetLog() << angle1 << "!%$#%FG" << angle2;
 	SetAngles(0, 0, false);
 	//for some reason it only works with vectors?
 	ChVector<> angVals;

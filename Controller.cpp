@@ -61,10 +61,6 @@ Controller::~Controller()
 	cumOmegError_.~vector();
 	prevAngle_.~vector();
 	successfulMove_.~vector();
-	double velOld[2];
-	double DD[2];
-	double II[2];
-	double yold[2];
 	//engine_funct0->~ChFunctionController();
 	//engine_funct1->~ChFunctionController();
 
