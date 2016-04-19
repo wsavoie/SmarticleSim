@@ -124,8 +124,6 @@ double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gr
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
 unsigned int largeID = 10000000;
-
-
 //double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
@@ -204,7 +202,7 @@ std::vector<std::shared_ptr<ChBody>> bucket_bod_vec;
 
 //ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 double bucket_half_thick = sizeScale * .005;
-double percentToMoveToGlobal = .25;
+double percentToMoveToGlobal = 1.0/800.0;
 double max_z = 0;
 double rampInc = 1;
 double drum_freq = 1;
@@ -304,6 +302,47 @@ public:
 };
 // =============================================================================\
 
+bool project(Smarticle* curr, Smarticle* other, ChVector<> axis,int currArm,int otherArm)
+{
+	double min1 = axis.x*curr->armVerts[currArm][0].x + 
+		axis.y*curr->armVerts[currArm][0].y; //dot product in 2d
+	double max1 = min1;
+	for (int i = 1; i < 4; i++)
+	{
+		double p = axis.x*curr->armVerts[currArm][i].x +
+			axis.y*curr->armVerts[currArm][i].y;
+		if (p < min1) {
+			min1 = p;
+		}
+		else if (p > max1) {
+			max1 = p;
+		}
+
+	}
+
+	double min2 = axis.x*other->armVerts[otherArm][0].x +
+		axis.y*other->armVerts[otherArm][0].y;
+	double max2 = min2;
+	for (int i = 1; i < 4; i++)
+	{
+		double p = axis.x*other->armVerts[otherArm][i].x +
+			axis.y*other->armVerts[otherArm][i].y;
+		if (p < min2) {
+			min2 = p;
+		}
+		else if (p > max2) {
+			max2 = p;
+		}
+
+	}
+	//[a,b] [x,y]  b>x && a<y
+	if ((max1 > min2) && (min1 < max2))
+	{
+		return true;
+	}
+	return false;
+
+}
 double showForce(CH_SYSTEM *msys)
 {
 		
@@ -474,14 +513,14 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			if (!placeInMiddle)
 			{
 				myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2.2),
-				cos(ang*i + phase)*(bucket_rad / 2.2),
-				std::max(bucket_interior_halfDim.z*2,zpos));
+					cos(ang*i + phase)*(bucket_rad / 2.2),
+					std::max(bucket_interior_halfDim.z * 2, zpos));
 				dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2 * w_smarticle / timeForDisp);
 				myRot = ChQuaternion<>(genRand(-1, 1), genRand(-1, 1), genRand(-1, 1), genRand(-1, 1));
 			}
 			else////////////place in center of bucket on bucket bottom
 			{
-				myPos = bucket_ctr + ChVector<>(0,-t_smarticle*1.45,bucket_bott->GetPos().z + t_smarticle );
+				myPos = bucket_ctr + ChVector<>(0, -t_smarticle*1.45, bucket_bott->GetPos().z + t_smarticle);
 				dropSpeed = VNULL;
 				myRot = Q_from_AngAxis(-PI_2, VECT_X);
 			}
@@ -507,69 +546,189 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			dropSpeed = VNULL;
 			myRot = Q_from_AngAxis(PI_2, VECT_X);
 			ChQuaternion<> buckRot = bucket->GetRot();
-			double buckRotAngx = Quat_to_Angle(ANGLESET_RXYZ,buckRot).x;
+			double buckRotAngx = Quat_to_Angle(ANGLESET_RXYZ, buckRot).x;
 			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI/2,PI,0));
 			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(genRand(0, 2*PI), genRand(0, 2*PI), genRand(0, 2*PI)));
-			
-			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI/2,0, 0));
-			double xPos = genRand(-3,3)*t2_smarticle/1.25;
-			double yPos = (i-4.2) * 2 * t2_smarticle;
-			myPos = bucket_ctr + ChVector<>(xPos, yPos, ( - yPos - 2*bucket_half_thick)*tan(buckRotAngx)+t_smarticle/1.99);
+
+			//ypos genRand(-PI,PI)
+
+			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, genRand(-PI, PI), 0));
+
+			double xPos = genRand(-3, 3)*t2_smarticle / 1.25;
+			double yPos = (i - 4.2) * 2 * t2_smarticle;
+			myPos = bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
 			//myPos = bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * bucket_half_thick)*tan(buckRotAngx) + 3*t_smarticle) ;
 			///////////////////////////place in specific location///////////////////////////
 			break;
 		}
 
 		default:
-			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + genRand(-w/2,w/2)),
+
+			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + genRand(-w / 2, w / 2)),
 				cos(ang*i + phase)*(bucket_rad / 2 + genRand(-w / 2, w / 2)),
 				zpos);
 			myRot = ChQuaternion<>(genRand(-1, 1), genRand(-1, 1), genRand(-1, 1), genRand(-1, 1));
 			break;
 		}
+
+		myRot.Normalize();
+		/////////////////flat rot/////////////////
+		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
+		smarticle0->Properties(mySmarticlesVec.size(), mySmarticlesVec.size() * 4,
+			rho_smarticle, mat_g,
+			collisionEnvelope,
+			//l_smarticle+t2_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+			l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+			sOmega,
+			true,
+			myPos,
+			myRot,
+			angle1*D2R, angle2*D2R);
+
+		if (genRand() < 1)//to reduce amount visualized amount
+			smarticle0->visualize = true;
+		smarticle0->populateMoveVector();
+		smarticle0->SetAngles(angle1, angle2, true);
+		smarticle0->SetInitialAngles();
+		smarticle0->Create();
+		smarticle0->setCurrentMoveType((MoveType)Smarticle::global_GUI_value);
+		smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
+
+		//must put this line because of how linspace is written;
+		smarticle0->AssignState(VIB);
+		smarticle0->GenerateVib(angle1*D2R, angle2*D2R);
+		smarticle0->AssignState(Smarticle::global_GUI_value);
+		//smarticle0->ss.emplace_back(angle1, angle2);
+		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
+		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
+	
+		double bucketX = boxdim.x;
+		double bucketY = boxdim.y;
+		//http://gamedevelopment.tutsplus.com/tutorials/collision-detection-using-the-separating-axis-theorem--gamedev-169
+		if (bucketType == BOX)
+		{
+			int its = 0;
+			bool collisions = false;
+			bool testsComplete = false;
+			while (testsComplete==false &&collisions==false)
+			{
+				application.DrawAll();
+
+				application.GetVideoDriver()->endScene();
+				application.GetVideoDriver()->beginScene(true, true,
+					video::SColor(255, 140, 161, 192));
+
+
+				its = its + 1;
+				if (its >= 10000)
+				{
+					application.GetDevice()->closeDevice();
+					exit(-1);
+				}
+				//generate random location inside box (fix to make sure actually inside) get
+				//get distance from center to tips for tipx.min/tipx.max and y
+				smarticle0->SetEdges();
+				std::vector<double>xyminmax = smarticle0->VertsMinMax();
+				
+		
+				double tipDistxmin = abs(xyminmax.at(0) - smarticle0->GetArm(1)->GetPos().x);
+				double tipDistxmax = abs(xyminmax.at(1) - smarticle0->GetArm(1)->GetPos().x);
+				double tipDistymin = abs(xyminmax.at(2) - smarticle0->GetArm(1)->GetPos().y);
+				double tipDistymax = abs(xyminmax.at(3) - smarticle0->GetArm(1)->GetPos().y);
+				//GetLog() << "\nits:" <<its;
+
+
+				double xposi = genRand(bucket->GetPos().x - bucketX + 2.01*bucket_half_thick + tipDistxmin, bucket->GetPos().x + bucketX - 2.01*bucket_half_thick - tipDistxmax);
+				double yposi = genRand(bucket->GetPos().y + (-bucketY + 2.01*bucket_half_thick)*cos(box_ang) + tipDistymin, bucket->GetPos().y + (bucketY - 2.01*bucket_half_thick)*cos(box_ang) - tipDistymax);
+				double zposi = (-yposi - 2 * bucket_half_thick)*tan(Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x) + t_smarticle / 1.99; //tangent may need to be fixed see buckrotx above
+				smarticle0->TransportSmarticle(ChVector<>(xposi, yposi, zposi));
+				smarticle0->SetEdges();
+
+				//for each smarticle
+				for (int otherSmarts = 0; otherSmarts < mySmarticlesVec.size(); otherSmarts++)
+				{
+					if (collisions)
+						break;
+					Smarticle* other = mySmarticlesVec[otherSmarts];
+					other->SetEdges();
+					for (int otherSmartArms = 0; otherSmartArms < 3; otherSmartArms++)
+					{
+						if (collisions)
+							break;
+						for (int arm = 0; arm < 3; arm++)
+						{
+							if (collisions)
+								break;
+							//I can access each shape of current and other smarticle
+							bool checkSecond = true;
+							for (int edge = 0; edge < 4; edge++)
+							{ 
+								collisions = project(smarticle0, other, smarticle0->armAxes[arm][edge], arm, otherSmartArms);
+								checkSecond = collisions;
+							}
+							if (checkSecond)
+							{
+								for (int otherEdge = 0; otherEdge < 4; otherEdge++)
+								{
+									collisions = project(smarticle0, other, other->armAxes[otherSmartArms][otherEdge], arm, otherSmartArms);
+									if (collisions)
+										break;
+
+								}
+							}
+
+							
+
+						}
+					}
+				}
+				if (collisions)
+				{
+					collisions = false;
+					continue;
+				}
+				testsComplete = true;
+			}
+		}
+
+
+			//
+			///
+			///
+		
+
+			//	//determine radius of circle around smarticle
+			//	smarticle0->GetArm(0)->GetContactPoint;
+			//	if (mySmarticlesVec.size < 1)
+			//	{
+
+			//		//place randomly between 
+			//	}
+			//
+			//
+			//for polygons A and B
+			//get normal for all edges of shape
+			//http://stackoverflow.com/questions/14629983/algorithms-for-collision-detection-between-arbitrarily-sized-convex-polygons
+			//http://www.dyn4j.org/2010/01/sat/
+			//for each normal N of the edges of A and B 
+			//	intervalA = [min, max] of projecting A on N
+			//	intervalB = [min, max] of projecting B on N
+			//	if intervalA doesn't overlap intervalB
+			//		return did not collide
+			//		return collided
 			
-			myRot.Normalize();
-			/////////////////flat rot/////////////////
-			Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
-			smarticle0->Properties(mySmarticlesVec.size(), mySmarticlesVec.size() * 4,
-				rho_smarticle, mat_g,
-				collisionEnvelope,
-				//l_smarticle+t2_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
-				l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
-				sOmega,
-				true,
-				myPos,
-				myRot,
-				angle1*D2R,angle2*D2R);
 
-			if (genRand()<1)//to reduce amount visualized amount
-				smarticle0->visualize = true;
-			smarticle0->populateMoveVector();
-			smarticle0->SetAngles(angle1, angle2,true);
-			smarticle0->SetInitialAngles();
-			smarticle0->Create();
-			smarticle0->setCurrentMoveType((MoveType) Smarticle::global_GUI_value);
-			smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
-
-			//must put this line because of how linspace is written;
-			smarticle0->AssignState(VIB);
-			smarticle0->GenerateVib(angle1*D2R, angle2*D2R);
-			smarticle0->AssignState(Smarticle::global_GUI_value);
-			//smarticle0->ss.emplace_back(angle1, angle2);
-			//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
-			//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
-
-			mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
-			smarticle0->SetSpeed(dropSpeed);
+		mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
+		smarticle0->SetSpeed(dropSpeed);
 			
-#if irrlichtVisualization
+	#if irrlichtVisualization
 			application.AssetBindAll();
 			application.AssetUpdateAll();
 			//application.AssetUpdate(smarticle0->GetArm(0));
 			//application.AssetUpdate(smarticle0->GetArm(1));
 			//application.AssetUpdate(smarticle0->GetArm(2));
 			
-#endif
+	#endif
 	}
 
 
@@ -971,7 +1130,6 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ground->AddAsset(groundTexture);
 
 	// 1: create bucket
-	ChVector<> dim = bucket_interior_halfDim;
 		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
 		switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 		{
@@ -979,11 +1137,9 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		{
 			//dim = (2 * dim.x, 2 * dim.y, dim.z / 8);
 			//dim.x = dim.x;
-			dim = (.28 / 2);//28 cm across
-			dim.y = .55245;
-			dim.z = dim.z / 8;
+		
 			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1000000000, mat_g,
-				dim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
+				boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
 			//bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 			bucket->AddAsset(bucketTexture);
@@ -1552,21 +1708,14 @@ void UpdateSmarticles(
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 		mySmarticlesVec[i]->updateTorqueDeque();
 		double tor1 = std::get<0>(mySmarticlesVec[i]->torqueAvg);
-		double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);
-		
-
-		
+		double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);		
 		int moveType=0;
 		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
 		if (genRand() < percentToMoveToGlobal)
 			moveType = Smarticle::global_GUI_value; 
 		else
 			moveType = mySmarticlesVec[i]->prevMoveType;
-
 		mySmarticlesVec[i]->ControllerMove(moveType, tor1, tor2);
-
-		//GetLog() << "\nangle(1,2):" << mySmarticlesVec[i]->GetAngle1(true) << "\t" << mySmarticlesVec[i]->GetAngle2(true);
-		//GetLog() << "\n\ntor(1,2):" <<tor1 << "\t" << tor2;
 		mySmarticlesVec[i]->steps = mySmarticlesVec[i]->steps + 1;
 	}
 }
@@ -1574,26 +1723,30 @@ void UpdateSmarticles(
 bool SetGait(double time)
 {
 
-	if (time <= 3)
-		Smarticle::global_GUI_value = 2;
-	else if (time > 3 && time <= 6)
-		Smarticle::global_GUI_value = 3;
-	else if (time > 6 && time <= 9)
-		Smarticle::global_GUI_value = 2;
-	else if (time > 9 && time <= 12)
-		Smarticle::global_GUI_value = 3;
-	else if (time > 12 && time <= 15)
-		Smarticle::global_GUI_value = 2;
-	else if (time > 15 && time <= 18)
-		Smarticle::global_GUI_value = 3;
-	else if (time > 18 && time <= 21)
-		Smarticle::global_GUI_value = 2;
-	else if (time > 21 && time <= 24)
-		Smarticle::global_GUI_value = 3;
-	else if (time > 24 && time <= 27)
-		Smarticle::global_GUI_value = 2;
-	else if (time > 27 && time <= 30)
-		Smarticle::global_GUI_value = 3;
+	//if (time <= 4)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 4 && time <= 8)
+	//	Smarticle::global_GUI_value = 3;
+	//else if (time > 8 && time <= 16)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 16 && time <= 24)
+	//	Smarticle::global_GUI_value = 3;
+	////else if (time > 20 && time <= 24)
+	////	Smarticle::global_GUI_value = 2;
+	////else if (time > 24 && time <= 18)
+	////	Smarticle::global_GUI_value = 3;
+	////else if (time > 18 && time <= 21)
+	////	Smarticle::global_GUI_value = 2;
+	////else if (time > 21 && time <= 24)
+	////	Smarticle::global_GUI_value = 3;
+	////else if (time > 24 && time <= 27)
+	////	Smarticle::global_GUI_value = 2;
+	////else if (time > 27 && time <= 30)
+	////	Smarticle::global_GUI_value = 3;
+	//else
+	//	return true;
+
+
 	//else if (time > 30 && time <= 33)
 	//	Smarticle::global_GUI_value = 3;
 	//else if (time > 33 && time <= 36)
@@ -1656,7 +1809,7 @@ int main(int argc, char* argv[]) {
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	//ChTimerParallel step_timer;
-	Smarticle::global_GUI_value = 1;
+	Smarticle::global_GUI_value = 2;
 	
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 #if defined(_WIN64)
@@ -1949,6 +2102,7 @@ int main(int argc, char* argv[]) {
 	case DRUM: case BOX:
 	{
 		setUpBucketActuator(mphysicalSystem);
+		bucket->SetBodyFixed(true);
 		break;
 	}
 
@@ -2174,81 +2328,112 @@ int main(int argc, char* argv[]) {
 		}
 
 
-		if ( (fmod(t, timeForVerticalDisplacement) < dT)	&&		(mySmarticlesVec.size() < numPerLayer*numLayers) &&	(numGeneratedLayers == numLayers) )
+		if ((fmod(t, timeForVerticalDisplacement) < dT) && (mySmarticlesVec.size() < numPerLayer*numLayers) && (numGeneratedLayers == numLayers))
 			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplacement);
 		//SavePovFilesMBD(mphysicalSystem, tStep);
 		//step_timer.start("step time");
 
-	#ifdef CHRONO_OPENGL
-			if (gl_window.Active()) {
-				gl_window.DoStepDynamics(dT);
-				gl_window.Render();
-			}
-	#else
-	#if irrlichtVisualization
-			if (!(application.GetDevice()->run())) break;
-			//if ((application.GetDevice()->isWindowMinimized())) break;
-			application.GetVideoDriver()->beginScene(true, true,
-				video::SColor(255, 140, 161, 192));			
+#ifdef CHRONO_OPENGL
+		if (gl_window.Active()) {
+			gl_window.DoStepDynamics(dT);
+			gl_window.Render();
+		}
+#else
+#if irrlichtVisualization
+		if (!(application.GetDevice()->run())) break;
+		//if ((application.GetDevice()->isWindowMinimized())) break;
+		application.GetVideoDriver()->beginScene(true, true,
+			video::SColor(255, 140, 161, 192));
 
-			for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
-			{
-				application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
-				application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
-			}
-			
-			application.DoStep();
-			UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
+		for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
+		{
+			application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
+			application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
+		}
 
-			receiver.drawSmarticleAmt(numGeneratedLayers);
-			receiver.drawSuccessful();
-			application.DrawAll();
+		application.DoStep();
+		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 
-			application.GetVideoDriver()->endScene();
-			
-	#else
-			
-			mphysicalSystem.DoStepDynamics(dT);
-			UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
-	#endif
+
+
+		receiver.drawSmarticleAmt(numGeneratedLayers);
+		receiver.drawSuccessful();
+		/////////////////////////////////////////////////////////////
+		//	double jointClearance = .0065;
+		//	double armt = t_smarticle;
+		//	double armt2 = .00806 / 2 * sizeScale; //8.06 mm with solar 3.2 without
+		//	double l_mod = l_smarticle + 2 * t2_smarticle/2 - jointClearance;
+		//	//application.GetVideoDriver()->draw3DLine(vector3df(mySmarticlesVec[0]->GetArm(1)->GetPos().x, mySmarticlesVec[0]->GetArm(1)->GetPos().y, mySmarticlesVec[0]->GetArm(1)->GetPos().z),
+		//	//	vector3df(mySmarticlesVec[0]->GetArm(1)->GetPos().x, mySmarticlesVec[0]->GetArm(1)->GetPos().y, mySmarticlesVec[0]->GetArm(1)->GetPos().z + 1), irr::video::SColor(70, 30, 200, 200));
+		//	ChVector<>pos(mySmarticlesVec[0]->GetArm(1)->TransformPointLocalToParent(ChVector<>(-w_smarticle/2, 0,0)));
+		//	ChVector<>pos2(mySmarticlesVec[0]->GetArm(1)->TransformPointLocalToParent(ChVector<>(-w_smarticle / 2, 0, t2_smarticle / 2)));
+		//	ChVector<>pos3(mySmarticlesVec[0]->GetArm(1)->TransformPointLocalToParent(ChVector<>(w_smarticle / 2, 0, t2_smarticle/2)));
+
+		//	vector3df armpos(pos.x+pos2.x, pos.y+pos2.y, pos.z+pos2.z);
+		//	vector3df armpos2(-pos2.y, pos2.x, pos2.z);
+		//	vector3df armpos3(-pos3.y, pos3.x, pos3.z);
+		//	//l + 2 * r2 - jointClearance
+		//	application.GetVideoDriver()->setTransform(irr::video::ETS_WORLD, core::IdentityMatrix);
+		//	application.GetVideoDriver()->draw3DLine(armpos2,
+		//		armpos3, irr::video::SColor(70, 255, 0, 0));
+
+		//	application.GetVideoDriver()->draw3DLine(armpos2 - vector3df(0, 0, 10),
+		//		armpos2 + vector3df(0, 0, 10), irr::video::SColor(70, 0, 255, 0));
+		//	
+		///*	application.GetVideoDriver()->draw3DLine(armpos3 - vector3df(0, 0, 10),
+		//		armpos3 + vector3df(0, 0, 10), irr::video::SColor(70, 0, 255, 0));*/
+
+		//	//////////////////////////////////////////////////////////////////////
+
+		application.DrawAll();
+
+		application.GetVideoDriver()->endScene();
+
+#else
+
+		mphysicalSystem.DoStepDynamics(dT);
+		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
+#endif
 #endif
 
 		if (SetGait(t) == true)
 			break;
 
 
-		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER|| bucketType==CYLINDER|| bucketType==BOX)
+		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER || bucketType == CYLINDER || bucketType == BOX)
 		{
 			double zmax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
 			PrintStress2(&mphysicalSystem, tStep, zmax, rad, mySmarticlesVec);
 		}
-		
+
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
 
 
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
-		
-	  time(&rawtimeCurrent);
-	  double timeDiff = difftime(rawtimeCurrent, rawtime);
-	  //step_timer.stop("step time");
-		receiver.drawCamera();		
+
+		time(&rawtimeCurrent);
+		double timeDiff = difftime(rawtimeCurrent, rawtime);
+		//step_timer.stop("step time");
+		receiver.drawCamera();
 		receiver.dtPerFrame = videoFrameInterval;
 		receiver.fps = out_fps;
 		receiver.screenshot(receiver.dtPerFrame);
 
 
-	  std::cout.flush();
+		std::cout.flush();
 
-		//CheckPointSmarticlesDynamic_Write(mySmarticlesVec,
-	 // 		tStep,
-	 // 		mat_g,
-	 // 		l_smarticle,
-	 // 		w_smarticle,
-	 // 		t_smarticle,
-	 // 		t2_smarticle,
-	 // 		collisionEnvelope,
-	 // 		rho_smarticle);
-
+		if (read_from_file == -1)
+		{
+			CheckPointSmarticlesDynamic_Write(mySmarticlesVec,
+			 		tStep,
+			 		mat_g,
+			 		l_smarticle,
+			 		w_smarticle,
+			 		t_smarticle,
+			 		t2_smarticle,
+			 		collisionEnvelope,
+			 		rho_smarticle);
+		}
   }
 	simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "Smarticle OT: " <<	 mySmarticlesVec.at(0)->torqueThresh2 << std::endl;

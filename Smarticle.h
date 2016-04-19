@@ -148,10 +148,12 @@ namespace chrono {
 
 		virtual double GetMass();
 		virtual double GetDensity() {return density;};
-		//	virtual void SetCurrentMotion(std::shared_ptr<SmarticleMotionPiece> s_motionPiece); // to be implemented
-		//	virtual std::shared_ptr<SmarticleMotionPiece> s_motionPiece GetCurrentMotion(); // to be implemented
 		virtual void TransportSmarticle(ChVector<>);
 		virtual void RotateSmarticle(ChQuaternion<>);
+		virtual void RotateSmarticleBy(ChQuaternion<>);
+		virtual void SetEdges();
+		std::vector<double> VertsMinMax();
+		double *Project(double arr[]);
 		virtual void SetSpeed(ChVector<> newSpeed);
 
 
@@ -211,6 +213,39 @@ namespace chrono {
 		void CheckLTTimer(double torque1, double torque2);
 		void CheckOTTimer();
 
+		//////////////
+
+
+
+		void UpdateState();
+		//arm0
+		ChVector<> arm0OuterEdge;
+		ChVector<> arm0Edge;
+		ChVector<> arm0Front;
+		ChVector<> arm0Back;
+
+		//arm1
+		ChVector<> arm10Shared;
+		ChVector<> arm12Shared;
+		ChVector<> arm1Front;
+		ChVector<> arm1Back;
+
+
+		//arm2
+		ChVector<> arm2OuterEdge;
+		ChVector<> arm2Front;
+		ChVector<> arm2Back;
+		ChVector<> arm2Edge;
+
+		//armAxes[arms][edges]
+		ChVector<>armAxes[3][4];
+		//armVerts[arms][points]
+		ChVector<>armVerts[3][4];
+		//{ { VNULL, VNULL, VNULL, VNULL },
+		//{ VNULL, VNULL, VNULL, VNULL },
+		//{ VNULL, VNULL, VNULL, VNULL } };
+		////////////////
+
 		std::vector<std::pair<double, double>> *mv;
 		std::deque<std::tuple<double,double,double,double>> torques;
 		std::deque<double> torque1;
@@ -266,6 +301,8 @@ namespace chrono {
 		void CreateActuators();
 		//void CreateActuators1(ChQuaternion<>, ChQuaternion<>);
 		
+
+
 
 	protected:
 		// location and orientation (location of the center of the middle arm)

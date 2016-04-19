@@ -159,7 +159,8 @@ void Smarticle::Properties(
 	armBroken = false;
 
 	std::tuple<double, double,double,double> a (0.0, 0.0,0.0,0.0);
-	torques = { a, a, a, a, a, a, a }; //probably a better way to do this....
+	//torques = { a, a, a, a, a, a, a }; //probably a better way to do this....
+	torques = { a, a }; //probably a better way to do this....
 	nextOmega = { 0, 0 };
 	nextAngle = { 0,0};
 	currTorque = { 0, 0 };
@@ -405,7 +406,6 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	auto arm = std::make_shared<ChBody>();
 
 	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
-
 	arm->SetName("smarticle_arm");
 	arm->SetPos(posArm);
 	arm->SetRot(rotation*armRelativeRot);
@@ -535,14 +535,175 @@ void Smarticle::SetSpeed(ChVector<> newSpeed)
 void Smarticle::RotateSmarticle(ChQuaternion<> newRotation)
 {
 	arm0->SetRot(newRotation);
-	arm2->SetRot(newRotation);
 	arm1->SetRot(newRotation);
+	arm2->SetRot(newRotation);
+}
+//returns (minx,maxx,miny,maxy)
+std::vector<double> Smarticle::VertsMinMax()
+{
+	//GetLog() << this->GetArm(1)->GetPos();
+	//armVerts[arm][verts];
+	std::vector<double> xyminmax;
+	double xmin = armVerts[0][0].x;
+	double xmax = armVerts[0][0].x;
+	double ymin = armVerts[0][0].y;
+	double ymax = armVerts[0][0].y;
+	for (int arm = 0; arm < 3; arm++)
+	{
+		for (int vertex = 0; vertex < 4; vertex++)
+		{
+			xmin = std::min(xmin, armVerts[arm][vertex].x);
+			xmax = std::max(xmax, armVerts[arm][vertex].x);
+
+			ymin = std::min(ymin, armVerts[arm][vertex].y);
+			ymax = std::max(ymax, armVerts[arm][vertex].y);
+		}
+	}
+	//.0065;
+	//(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset), quat2);
+	//GetLog() << "\n" << xmin << " " << xmax << " " << ymin << " " << ymax;
+
+	xyminmax.emplace_back(xmin);
+	xyminmax.emplace_back(xmax);
+	xyminmax.emplace_back(ymin);
+	xyminmax.emplace_back(ymax);
+	//xyminmax.emplace_back((std::min(std::min(std::min(armVerts[2][3].x, armVerts[2][1].x), armVerts[0][3].x), armVerts[0][1].x)));
+	//xyminmax.emplace_back((std::max(std::max(std::max(armVerts[2][3].x, armVerts[2][1].x), armVerts[0][3].x), armVerts[0][1].x)));
+
+	//xyminmax.emplace_back((std::min(std::min(std::min(armVerts[2][3].y, armVerts[2][1].y), armVerts[0][3].y), armVerts[0][1].y)));
+	//xyminmax.emplace_back((std::max(std::max(std::max(armVerts[2][3].y, armVerts[2][1].y), armVerts[0][3].y), armVerts[0][1].y)));
+
+	return xyminmax;
+}
+double *Smarticle::Project(double minmax[]){
+	
+	return minmax;
+}
+void Smarticle::UpdateState()
+{
+	GetArm(0)->Update();
+	GetArm(1)->Update();
+	GetArm(2)->Update();
+}
+void Smarticle::SetEdges()
+{
+	UpdateState();
+	//ChVector<>pos(mySmarticlesVec[0]->GetArm(1)->TransformPointLocalToParent(ChVector<>(w_smarticle / 2.0, 0, 0)));
+	//ChVector<>pos2(mySmarticlesVec[0]->GetArm(2)->TransformPointLocalToParent(ChVector<>(l_smarticle / 2, 0, 0)));
+
+	//vector3df armpos(pos.x, pos.y, pos.z);
+	//vector3df armpos2(pos2.x, pos2.y, pos2.z);
+	//application.GetVideoDriver()->setTransform(irr::video::ETS_WORLD, core::IdentityMatrix);
+	//application.GetVideoDriver()->draw3DLine(armpos - vector3df(0, 10, 0),
+	//	armpos + vector3df(0, 10, 0), irr::video::SColor(70, 255, 0, 0));
+
+	//CreateArm2(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset), quat0);
+	//CreateArm2(1, w, r, r2, ChVector<>(0, 0, 0));
+	//CreateArm2(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset), quat2);
+	
+
+	double armt = r;
+	double armt2 = .00806 / 2 * sizeScale; //8.06 mm with solar 3.2 without
+	if (!stapleSize)
+	{
+		//verts
+
+		armVerts[1][0] = GetArm(1)->TransformPointLocalToParent(ChVector<>(-w / 2.0, 0, r2));  //check
+		armVerts[1][1] = GetArm(1)->TransformPointLocalToParent(ChVector<>(-w / 2.0, 0, -r2));
+		armVerts[1][2] = GetArm(1)->TransformPointLocalToParent(ChVector<>(w / 2.0, 0, -r2));
+		armVerts[1][3] = GetArm(1)->TransformPointLocalToParent(ChVector<>(w / 2.0, 0, r2));
+
+
+		armVerts[0][0] = GetArm(0)->TransformPointLocalToParent(ChVector<>(-l / 2.0, 0, r2)); //armt2
+		armVerts[0][1] = GetArm(0)->TransformPointLocalToParent(ChVector<>(-l / 2.0, 0, -r2));
+		armVerts[0][2] = armVerts[1][1];
+		armVerts[0][3] = armVerts[1][0];
+		//armVerts[0][2] = GetArm(0)->TransformPointLocalToParent(ChVector<>(l / 2.0 + jointClearance, 0, -r2));
+		//armVerts[0][3] = GetArm(0)->TransformPointLocalToParent(ChVector<>(l / 2.0 + jointClearance, 0, r2));
+
+		
+
+		//armVerts[2][0] = GetArm(2)->TransformPointLocalToParent(ChVector<>(-l / 2.0 + jointClearance, 0, r2));//armt2
+		//armVerts[2][1] = GetArm(2)->TransformPointLocalToParent(ChVector<>(-l / 2.0 + jointClearance, 0, -r2));
+		armVerts[2][0] = armVerts[1][3];
+		armVerts[2][1] = armVerts[1][2];
+		armVerts[2][2] = GetArm(2)->TransformPointLocalToParent(ChVector<>(l / 2.0, 0, -r2)); //checked
+		armVerts[2][3] = GetArm(2)->TransformPointLocalToParent(ChVector<>(l / 2.0, 0, r2));
+
+		//going clockwise a->b = b-a
+
+		//arm0
+		arm0Front = (armVerts[0][0]) - (armVerts[0][3]);
+		arm0OuterEdge = (armVerts[0][1]) - (armVerts[0][0]);
+		arm0Back = (armVerts[0][2]) - (armVerts[0][1]);
+		arm0Edge = (armVerts[0][3]) - (armVerts[0][2]);
+
+		arm0Front = ChVector<>(-arm0Front.y, arm0Front.x, arm0Front.z);
+		arm0OuterEdge = ChVector<>(-arm0OuterEdge.y, arm0OuterEdge.x, arm0OuterEdge.z);
+		arm0Back = ChVector<>(-arm0Back.y, arm0Back.x, arm0Back.z);
+		arm0Edge = ChVector<>(-arm0Edge.y, arm0Edge.x, arm0Edge.z);
+
+		//arm1
+		arm1Front =(armVerts[1][0]) - (armVerts[1][3]);
+		arm10Shared = (armVerts[1][1]) - (armVerts[1][0]);
+		arm1Back = (armVerts[1][2]) - (armVerts[1][1]);
+		arm12Shared = (armVerts[1][3]) - (armVerts[1][2]);
+
+		arm1Front = ChVector<>(-arm1Front.y, arm1Front.x, arm1Front.z);
+		arm10Shared = ChVector<>(-arm10Shared.y, arm10Shared.x, arm10Shared.z);
+		arm1Back = ChVector<>(-arm1Back.y, arm1Back.x, arm1Back.z);
+		arm12Shared = ChVector<>(-arm12Shared.y, arm12Shared.x, arm12Shared.z);
+
+
+
+		//arm2
+		arm2Front =			(armVerts[2][0]) - (armVerts[2][3]);
+		arm2Edge =			(armVerts[2][1]) - (armVerts[2][0]);
+		arm2Back=				(armVerts[2][2]) - (armVerts[2][1]);
+		arm2OuterEdge = (armVerts[2][3]) - (armVerts[2][2]);
+
+		arm2Front = ChVector<>(-arm2Front.y, arm2Front.x, arm2Front.z);
+		arm2Edge = ChVector<>(-arm2Edge.y, arm2Edge.x, arm2Edge.z);
+		arm2Back = ChVector<>(-arm2Back.y, arm2Back.x, arm2Back.z);
+		arm2OuterEdge = ChVector<>(-arm2OuterEdge.y, arm2OuterEdge.x, arm2OuterEdge.z);
+
+
+		armAxes[0][0] = arm0Front;
+		armAxes[0][1] = arm0OuterEdge;
+		armAxes[0][2] = arm0Back;
+		armAxes[0][3] = arm0Edge;
+
+		armAxes[1][0] = arm1Front;
+		armAxes[1][1] = arm10Shared;
+		armAxes[1][2] = arm1Back;
+		armAxes[1][3] = arm12Shared;
+
+		armAxes[2][0] = arm2Front;
+		armAxes[2][1] = arm2Edge;
+		armAxes[2][2] = arm2Back;
+		armAxes[2][3] = arm2OuterEdge;
+
+	}
+
+}
+void Smarticle::RotateSmarticleBy(ChQuaternion<> newRotation)
+{
+
+
+	GetLog() << "arm1:" << arm1->GetPos();
+	GetLog() << "arm2:" << arm2->GetPos();
+	double l_mod = l + 2 * r2 - jointClearance;
+	GetLog() << "\nl-mod" << l_mod << " w:" << w << " l:"<<l<<"\n";
+	GetLog() << "local to parent" << arm1->TransformPointLocalToParent(ChVector<>(w / 2.0 - (jointClearance)+cos(-angle2)*l / 2, 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset));
+	GetLog() << "local to parent" << arm1->TransformPointLocalToParent(ChVector<>(w / 2.0+l, 0,0));
+	GetLog() << "local to parent" << arm2->TransformPointLocalToParent(ChVector<>(l, 0, 0));
 }
 void Smarticle::TransportSmarticle(ChVector<> newPosition)
 {
 	arm0->SetPos(arm0->GetPos() - arm1->GetPos() + newPosition);
 	arm2->SetPos(arm2->GetPos() - arm1->GetPos() + newPosition);
 	arm1->SetPos(newPosition);
+
 }
 void Smarticle::CreateJoints() {
 	// link 1
