@@ -9,7 +9,7 @@ double ChFunctionController::Get_y(double t) {
   //add the torque already being place on the body to the torque for the next step
 	//double out_torque =output; //add the torque already being place on the body to the torque for the next step
 	double output = ComputeOutput(t);
-	double out_torque = SaturateValue(ComputeOutput(t) + curr_react_torque, controller_->outputLimit);
+	double out_torque = SaturateValue(ComputeOutput(t) - curr_react_torque, controller_->outputLimit);
 		
 	bool o = false;
 	if (abs(out_torque) == controller_->outputLimit)

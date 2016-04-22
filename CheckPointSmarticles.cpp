@@ -311,9 +311,9 @@ void CheckPointSmarticlesDynamic_Read(
 		mySmarticlesVec.emplace_back(smarticle0);
 		application.DrawAll();
 
-		application.GetVideoDriver()->endScene();
+		/*application.GetVideoDriver()->endScene();
 		application.GetVideoDriver()->beginScene(true, true,
-			video::SColor(255, 140, 161, 192));
+			video::SColor(255, 140, 161, 192));*/
 #if irrlichtVisualization
 		application.AssetBindAll();
 		application.AssetUpdateAll();

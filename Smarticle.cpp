@@ -633,10 +633,10 @@ void Smarticle::SetEdges()
 		//going clockwise a->b = b-a
 
 		//arm0
-		arm0Front = (armVerts[0][0]) - (armVerts[0][3]);
-		arm0OuterEdge = (armVerts[0][1]) - (armVerts[0][0]);
-		arm0Back = (armVerts[0][2]) - (armVerts[0][1]);
-		arm0Edge = (armVerts[0][3]) - (armVerts[0][2]);
+		arm0Front =			(armVerts[0][0]) - (armVerts[0][3]);
+		arm0OuterEdge=	(armVerts[0][1]) - (armVerts[0][0]);
+		arm0Back =			(armVerts[0][2]) - (armVerts[0][1]);
+		arm0Edge =			(armVerts[0][3]) - (armVerts[0][2]);
 
 		arm0Front = ChVector<>(-arm0Front.y, arm0Front.x, arm0Front.z);
 		arm0OuterEdge = ChVector<>(-arm0OuterEdge.y, arm0OuterEdge.x, arm0OuterEdge.z);
@@ -644,10 +644,10 @@ void Smarticle::SetEdges()
 		arm0Edge = ChVector<>(-arm0Edge.y, arm0Edge.x, arm0Edge.z);
 
 		//arm1
-		arm1Front =(armVerts[1][0]) - (armVerts[1][3]);
-		arm10Shared = (armVerts[1][1]) - (armVerts[1][0]);
-		arm1Back = (armVerts[1][2]) - (armVerts[1][1]);
-		arm12Shared = (armVerts[1][3]) - (armVerts[1][2]);
+		arm1Front =			(armVerts[1][0]) - (armVerts[1][3]);
+		arm10Shared =		(armVerts[1][1]) - (armVerts[1][0]);
+		arm1Back =			(armVerts[1][2]) - (armVerts[1][1]);
+		arm12Shared =		(armVerts[1][3]) - (armVerts[1][2]);
 
 		arm1Front = ChVector<>(-arm1Front.y, arm1Front.x, arm1Front.z);
 		arm10Shared = ChVector<>(-arm10Shared.y, arm10Shared.x, arm10Shared.z);
@@ -1602,7 +1602,7 @@ ChVector<> Smarticle::GetReactTorqueVectors12()
 double Smarticle::GetReactTorqueLen01()
 {
 	//return (link_actuator01->Get_react_torque().Length2());
-	return fabs((link_actuator01->Get_react_torque().z));
+	return (link_actuator01->Get_react_torque().z);
 }
 double Smarticle::GetZReactTorque(int id)
 {
@@ -1611,7 +1611,7 @@ double Smarticle::GetZReactTorque(int id)
 double Smarticle::GetReactTorqueLen12()
 {
 	//return (link_actuator12->Get_react_torque().Length2());
-	return fabs((link_actuator12->Get_react_torque().z));
+	return (link_actuator12->Get_react_torque().z);
 }
 
 void Smarticle::SetBodyFixed(bool mev){
