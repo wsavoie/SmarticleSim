@@ -1,5 +1,6 @@
 % function [out]=GetFileInfo(direc)
-direc= 'D:\SimResults\Chrono\SmarticleU\tests\lazy .0025\';
+%direc= 'D:\SimResults\Chrono\SmarticleU\tests\lazy .0025\';
+direc='A:\SmarticleRun\lazy_tor.3_smarts30\lazy .02\';
 clf
 dirs = dir(direc);
 %remove non-folders
@@ -18,14 +19,14 @@ end
 idle =boxAngle{2};
 mainFolder = direc;
 matName = '\PostProcess\stressData.mat';
-dirPos = [0 0 -90 -1000 -1000 -1000];
+dirPos = [90 0 -90 -1000 -1000 -1000];
 bounds = 2;
 uniAngles = unique(angles);
 j=1;
 
 for k=14%=1:length(uniAngles)%
     dataz=0;
-    k=find(uniAngles==-30);
+    k=find(uniAngles==-40);
     idx=find(angles(:)==uniAngles(k));
     clear('x','simParams','smartPos','frameInfo','filename','file');
     for l=1:length(idx)
@@ -56,7 +57,7 @@ for k=14%=1:length(uniAngles)%
         horzcat(' idle=',num2str(idle),'/dt')});
     xlabel('Time(s)');
     ylabel('Smarticle Fraction');
-    set(gca,'xlim',[0,30],'ylim',[0,1])
+    set(gca,'xlim',[0,frameInfo(end,1)],'ylim',[0,1])
 end
 % for(i=
 % x=zeros(size(smartPos,2),1);
