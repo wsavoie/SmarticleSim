@@ -1,7 +1,7 @@
 #!/bin/bash
 smartRunFile="D:/ChronoCode/chronoPkgs/SmarticlesBuild/Release/SmarticlesSystem_Dynamic.exe"
-dataDir="D:/ChronoCode/chronoPkgs/Smarticles/data";
-
+dataDir="D:/ChronoCode/chronoPkgs/Smarticles/data"
+runDir="A:/SmarticleRun"
 if diff ../Smarticles/data $dataDir;then #if no differences
 echo "found directory";
 else
@@ -36,26 +36,30 @@ echo "run vars!: $lw $dt $nl $re $pa"
 # echo "\\n blah \\n";
 # echo ${lwArr[*]};
 # # $smartRunFile $lw $dt $nl $re $pa
-
-foldName=BoxAngChangeTorPct30v2
+cd $runDir
+foldName=BoxAngChangeTorPct30v4
 lwArr=(0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8);
 dtArr=(0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025);
 nlArr=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1);
-reArr=(0 0 0 0 0 0 0 0 0 0 0 0);
+reArr=(1 1 1 1 1 1 1 1 1 1 1 1);
 paArr=(1 1 1 1 1 1 1 1 1 1 1 1);
 ang1Arr=(90 90 90 90 90 90 90 90 90 90)
 ang2Arr=(90 90 90 90 90 90 90 90 90 90)
-boxangArr=(-20 -30 -40 -42 -44 -46 -48 -50 -52 -54 -56 -58 -60 -62 -64 -65)
+boxangArr=(-20 -25 -30 -35 -40)
+numPerLay=(5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5)
+lazy=(0.02 0.002 0.01 0.001 0.005 0.0025 0.00125)
 mkdir $foldName
-for j in `seq 0 20`; do
-	for i in `seq 0 15`; do
-	  echo $i
-	  a=./$foldName/${boxangArr[$i]}-$(date '+%Y%m%d-%H%M%S')
-	  mkdir $a
-	  cp smarticleMoves.csv $a
-	  cd $a
-	  $smartRunFile 0.8 0.00025 1 0 1 0 0 ${boxangArr[$i]};
-	  cd ../..;
-	  # cp -r ./PostProcess $a
+for laz in `seq 0 6`; do
+	for repeats in `seq 0 3`; do
+		for angs in `seq 0 4`; do
+		  a=./$foldName/${boxangArr[$angs]}_${lazy[$laz]}_$(date '+%Y%m%d_%H%M%S')
+		  mkdir $a
+		  cp smarticleMoves.csv $a
+		  cp ./checkpoints/${boxangArr[$angs]}.csv ./$a/smarticles.csv
+		  cd $a
+		  $smartRunFile 0.8 0.00025 6 1 1 0 0 ${boxangArr[$angs]} 5 ${lazy[$laz]};
+		  cd ../..;
+		  # cp -r ./PostProcess $a
+		done;
 	done;
 done;
