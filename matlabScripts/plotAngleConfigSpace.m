@@ -1,7 +1,7 @@
 
 
 mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30v2\';
-runName = '-20-20160404-141220';
+runName = '-56-20160405-031112';
 ff = horzcat(mainFolder,runName);
 filename=horzcat(ff,'\PostProcess\Stress.txt');
 matName = '\PostProcess\stressData.mat';
@@ -18,7 +18,7 @@ end
 
 %% if data in memory only run this sectionw
 %write to video
-VID= 0;
+VID= 1;
 pts('Video =',VID);
 %colors relating to the moveType and guid
 cols = {[1,0,0],[1,.5,0],[.4431,.7373, 1],[0,0,0],[.392,.824,.118],[.7,.4,.7],[.6039,1,0], [0.623, 0 ,1]};

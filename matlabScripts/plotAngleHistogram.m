@@ -1,7 +1,7 @@
 
 
 mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30v2\';
-runName = '-65-20160405-040401';
+runName = '-56-20160405-031112';
 ff = horzcat(mainFolder,runName);
 filename=horzcat(ff,'\PostProcess\Stress.txt');
 matName = '\PostProcess\stressData.mat';
@@ -17,7 +17,7 @@ end
 
 %% if data in memory only run this section
 %write to video
-VID= 0;
+VID= 1;
 pts('Video =',VID);
 %colors relating to the moveType and guid
 cols = {[1,0,0],[1,.5,0],[.4431,.7373, 1],[0,0,0],[.392,.824,.118],[.7,.4,.7],[.6039,1,0], [0.623, 0 ,1]};
@@ -40,7 +40,7 @@ for(i=1:size(smartPos,2))
         h1=histogram(smartPos{i}(:,1),60,'BinWidth',1);
         set(gca,'xlim',[-120 120],'ylim',[0,12]);
         smartAmt = size(smartPos{i},1);
-        moveType = (smartPos{i}(1,3));
+        moveType = (frameInfo(i,3));
         ann.String = {horzcat('Smarticle Amt=',num2str(smartAmt)),...
             horzcat('Current Directed Motion:',num2str(moveType)),...
             horzcat('Current Time: ',num2str(i*simParams(1)))};
