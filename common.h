@@ -57,6 +57,7 @@
 	extern double i_gain;
 	extern double d_gain;
 	extern double fric;
+	extern double percentToMoveToGlobal;
 	extern chrono::ChVector<> bucket_interior_halfDim;
 	
 	

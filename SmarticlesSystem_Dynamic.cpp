@@ -119,7 +119,7 @@ int appHeight = 720;
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 double vibration_freq = 30;
-double fric =.3814; //keyboard box friction = .3814
+double fric = 0;//.3814; //keyboard box friction = .3814
 double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
@@ -184,7 +184,7 @@ double collisionEnvelope = .1 * t2_smarticle;
 
 bool bucket_exist = true;
 
-int read_from_file = 0; //-1 write 0 do nothing 1 read
+int read_from_file = 0; //-1 write 0 do nothing 1 read 2 read and write 
 bool povray_output = false;
 int out_fps = 30;
 const std::string out_dir = "PostProcess";
@@ -395,6 +395,10 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[9];
 		numPerLayer = atoi(text);
 	}
+	if (argc > 10){
+		const char* text = argv[10];
+		percentToMoveToGlobal = atof(text);
+	}
 	/// if parallel, get solver setting
   //if (USE_PARALLEL) {
 	 // if (argc > 8) {
@@ -449,7 +453,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	simParams << "Smarticle mass: " << vol*rho_smarticle << std::endl;
 
 	//copy smarticle checkpoint if used to PostProcess folder
-	if (read_from_file==1)
+	if (read_from_file>=1)
 	{
 		const std::string copyCheckpoint = std::string("cp smarticles.csv " + out_dir);
 		std::system(copyCheckpoint.c_str());
@@ -612,21 +616,21 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			bool testsComplete = false;
 			while (testsComplete==false &&collisions==false)
 			{
-				application.DrawAll();
+		
+				//application.DrawAll();
 
-				application.GetVideoDriver()->endScene();
-				application.GetVideoDriver()->beginScene(true, true,
-					video::SColor(255, 140, 161, 192));
-
-
+				//application.GetVideoDriver()->endScene();
+				//application.GetVideoDriver()->beginScene(true, true,
+				//	video::SColor(255, 140, 161, 192));
 				its = its + 1;
 				if (its >= 10000)
 				{
 					application.GetDevice()->closeDevice();
 					exit(-1);
 				}
-				//generate random location inside box (fix to make sure actually inside) get
-				//get distance from center to tips for tipx.min/tipx.max and y
+				//http://stackoverflow.com/questions/14629983/algorithms-for-collision-detection-between-arbitrarily-sized-convex-polygons
+				//http://www.dyn4j.org/2010/01/sat/
+
 				smarticle0->SetEdges();
 				std::vector<double>xyminmax = smarticle0->VertsMinMax();
 				
@@ -635,7 +639,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				double tipDistxmax = abs(xyminmax.at(1) - smarticle0->GetArm(1)->GetPos().x);
 				double tipDistymin = abs(xyminmax.at(2) - smarticle0->GetArm(1)->GetPos().y);
 				double tipDistymax = abs(xyminmax.at(3) - smarticle0->GetArm(1)->GetPos().y);
-				//GetLog() << "\nits:" <<its;
+				GetLog() << "\nits:" <<its;
 
 
 				double xposi = genRand(bucket->GetPos().x - bucketX + 2.01*bucket_half_thick + tipDistxmin, bucket->GetPos().x + bucketX - 2.01*bucket_half_thick - tipDistxmax);
@@ -676,9 +680,6 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 
 								}
 							}
-
-							
-
 						}
 					}
 				}
@@ -690,40 +691,14 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				testsComplete = true;
 			}
 		}
-
-
-			//
-			///
-			///
-		
-
-			//	//determine radius of circle around smarticle
-			//	smarticle0->GetArm(0)->GetContactPoint;
-			//	if (mySmarticlesVec.size < 1)
-			//	{
-
-			//		//place randomly between 
-			//	}
-			//
-			//
-			//for polygons A and B
-			//get normal for all edges of shape
-			//http://stackoverflow.com/questions/14629983/algorithms-for-collision-detection-between-arbitrarily-sized-convex-polygons
-			//http://www.dyn4j.org/2010/01/sat/
-			//for each normal N of the edges of A and B 
-			//	intervalA = [min, max] of projecting A on N
-			//	intervalB = [min, max] of projecting B on N
-			//	if intervalA doesn't overlap intervalB
-			//		return did not collide
-			//		return collided
-			
-
 		mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
 		smarticle0->SetSpeed(dropSpeed);
 			
 	#if irrlichtVisualization
-			application.AssetBindAll();
-			application.AssetUpdateAll();
+			application.AssetBindAll();    
+			application.AssetUpdateAll(); 
+
+
 			//application.AssetUpdate(smarticle0->GetArm(0));
 			//application.AssetUpdate(smarticle0->GetArm(1));
 			//application.AssetUpdate(smarticle0->GetArm(2));
@@ -1139,7 +1114,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 			//dim.x = dim.x;
 		
 			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1000000000, mat_g,
-				boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
+				boxdim, bucket_half_thick, bucket_ctr, Q_from_AngAxis(-box_ang, VECT_X), true, false, true, false);
 			//bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 			bucket->AddAsset(bucketTexture);
@@ -1722,29 +1697,29 @@ void UpdateSmarticles(
 // =============================================================================
 bool SetGait(double time)
 {
-
-	//if (time <= 4)
+	double tm = 7;
+	if (time <= tm*1)
+		Smarticle::global_GUI_value = 1;
+	else if (time > tm*1 && time <= tm*2)
+		Smarticle::global_GUI_value = 2;
+	else if (time > tm*2 && time <= tm*3)
+		Smarticle::global_GUI_value = 1;
+	else if (time > tm*3 && time <= tm*4)
+		Smarticle::global_GUI_value = 2;
+	//else if (time > 20 && time <= 24)
 	//	Smarticle::global_GUI_value = 2;
-	//else if (time > 4 && time <= 8)
+	//else if (time > 24 && time <= 18)
 	//	Smarticle::global_GUI_value = 3;
-	//else if (time > 8 && time <= 16)
+	//else if (time > 18 && time <= 21)
 	//	Smarticle::global_GUI_value = 2;
-	//else if (time > 16 && time <= 24)
+	//else if (time > 21 && time <= 24)
 	//	Smarticle::global_GUI_value = 3;
-	////else if (time > 20 && time <= 24)
-	////	Smarticle::global_GUI_value = 2;
-	////else if (time > 24 && time <= 18)
-	////	Smarticle::global_GUI_value = 3;
-	////else if (time > 18 && time <= 21)
-	////	Smarticle::global_GUI_value = 2;
-	////else if (time > 21 && time <= 24)
-	////	Smarticle::global_GUI_value = 3;
-	////else if (time > 24 && time <= 27)
-	////	Smarticle::global_GUI_value = 2;
-	////else if (time > 27 && time <= 30)
-	////	Smarticle::global_GUI_value = 3;
-	//else
-	//	return true;
+	//else if (time > 24 && time <= 27)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time > 27 && time <= 30)
+	//	Smarticle::global_GUI_value = 3;
+	else
+		return true;
 
 
 	//else if (time > 30 && time <= 33)
@@ -1828,7 +1803,7 @@ int main(int argc, char* argv[]) {
 #endif
 
 	time_t rawtimeCurrent;
-	struct tm* timeinfoDiff;
+	//struct tm* timeinfoDiff;
 	// --------------------------
 	// Create output directories.
 	// --------------------------
@@ -2239,10 +2214,12 @@ int main(int argc, char* argv[]) {
 	double timeForVerticalDisplacement = 0.015;
 	if (bucketType == DRUM)
 		timeForVerticalDisplacement = 0.095; // 1.5 for safety proximity .015
+	if (bucketType == BOX)
+		timeForVerticalDisplacement = 1;
 	int numGeneratedLayers = 0;
 
 
-	if (read_from_file==1)
+	if (read_from_file>=1)
 	{
 		CheckPointSmarticlesDynamic_Read(mphysicalSystem, mySmarticlesVec,application);
 		application.AssetBindAll();
@@ -2255,7 +2232,7 @@ int main(int argc, char* argv[]) {
 	
 	for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
 		double t = mphysicalSystem.GetChTime();
-		if (read_from_file != 1)
+		if (read_from_file < 1)
 		{
 			if ((fmod(t, timeForVerticalDisplacement) < dT) &&
 				(numGeneratedLayers < numLayers)){
@@ -2352,6 +2329,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		application.DoStep();
+		//mphysicalSystem.DoStepDynamics(dT);
 		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 
 
@@ -2422,7 +2400,7 @@ int main(int argc, char* argv[]) {
 
 		std::cout.flush();
 
-		if (read_from_file == -1)
+		if (read_from_file == -1|| read_from_file == 2)
 		{
 			CheckPointSmarticlesDynamic_Write(mySmarticlesVec,
 			 		tStep,
