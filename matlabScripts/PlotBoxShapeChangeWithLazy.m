@@ -1,6 +1,6 @@
 % function [out]=GetFileInfo(direc)
 %direc= 'D:\SimResults\Chrono\SmarticleU\tests\lazy .0025\';
-direc='A:\SmarticleRun\lazy_tor.3_smarts30\lazy .02\';
+direc='A:\SmarticleRun\lazy_tor.3_smarts30\lazy .01\';
 clf
 dirs = dir(direc);
 %remove non-folders
@@ -26,7 +26,7 @@ j=1;
 
 for k=14%=1:length(uniAngles)%
     dataz=0;
-    k=find(uniAngles==-40);
+    k=find(uniAngles==-20);
     idx=find(angles(:)==uniAngles(k));
     clear('x','simParams','smartPos','frameInfo','filename','file');
     for l=1:length(idx)
@@ -37,7 +37,7 @@ for k=14%=1:length(uniAngles)%
             for j=1:size(smartPos{i},1)
                 if(all(smartPos{i}(j,1:2)>dirPos(frameInfo(i,3))-bounds)...
                         && all(smartPos{i}(j,1:2)<dirPos(frameInfo(i,3))+bounds))
-                    x(i)=x(i)+1;
+                    x(i)=x(i)+1;%add+1 to smarticles within bounds
                 end
             end
             x(i)=x(i)/size(smartPos{i},1);
@@ -73,6 +73,8 @@ end
 %         x(i)=x(i)/size(smartPos{i},1);
 % end
 %% 
+lineVar=mean(dataz,2);
+yAx=max(lineVar)*1;
 plotNames = {'Stress','Gait','U-Shape','Straight','n-Shape','Vib at \circ','Vib Angle'};
 shapeLines=getShapeLines(frameInfo(:,1),frameInfo(:,3));
 for i=1:size(shapeLines,1)

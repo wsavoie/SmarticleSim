@@ -45,13 +45,15 @@ reArr=(1 1 1 1 1 1 1 1 1 1 1 1);
 paArr=(1 1 1 1 1 1 1 1 1 1 1 1);
 ang1Arr=(90 90 90 90 90 90 90 90 90 90)
 ang2Arr=(90 90 90 90 90 90 90 90 90 90)
-boxangArr=(-20 -25 -30 -35 -40)
+#boxangArr=(-20 -25 -30 -35 -40)
+boxangArr=(-20 -30 -40)
 numPerLay=(5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5)
-lazy=(0.02 0.002 0.01 0.001 0.005 0.0025 0.00125)
+#0.02 0.002
+lazy=(0.01 0.001 0.005 0.0025 0.00125)
 mkdir $foldName
-for laz in `seq 0 6`; do
+for laz in `seq 0 4`; do
 	for repeats in `seq 0 3`; do
-		for angs in `seq 0 4`; do
+		for angs in `seq 0 2`; do
 		  a=./$foldName/${boxangArr[$angs]}_${lazy[$laz]}_$(date '+%Y%m%d_%H%M%S')
 		  mkdir $a
 		  cp smarticleMoves.csv $a
