@@ -16,6 +16,8 @@ double ChFunctionController::Get_y(double t) {
 		o = true;
 	return out_torque;
 }
+double ChFunctionController::Get_y(double t) const { return 0; }
+
 double ChFunctionController::ComputeOutput(double t) {
 	
 	double curr_ang = controller_->GetAngle(index_,t);

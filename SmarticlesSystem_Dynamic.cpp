@@ -242,15 +242,16 @@ public:
 	}
 	virtual ChFunction* new_Duplicate() {
 		ChFunctionCustom* m_func;
-		m_func = new ChFunctionCustom;
-		m_func->Copy(this);
+		/*	m_func = new ChFunctionCustom;
+		m_func->Copy(this);*/
 		return (m_func);
 	}
+	virtual ChFunction* Clone() const { return nullptr; };
 	virtual int Get_Type() { return 1; }
 	void Set_y(double x){ y = x; }
 	void Set_y_dx(double x){ y_dx = x; }
 	void Set_y_dxdx(double x){ y_dxdx = x; }
-	virtual double Get_y(double x) {return y;}
+	virtual double Get_y(double x) const { return y; }
 	virtual double Get_y_dx(double x) {return y_dx;}
 	virtual double Get_y_dxdx(double x) { return y_dxdx; }
 
@@ -467,12 +468,12 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   // ---------------------
 
   // Modify some setting of the physical system for the simulation, if you want
-	mphysicalSystem.SetLcpSolverType(ChSystem::LCP_ITERATIVE_SOR);
+	mphysicalSystem.SetSolverType(ChSystem::SOLVER_SOR);
 	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
-	mphysicalSystem.SetIterLCPmaxItersSpeed(80+1.1*numLayers);
-  mphysicalSystem.SetIterLCPmaxItersStab(0);   // unuseful for Anitescu, only Tasora uses this
+	mphysicalSystem.SetMaxItersSolverSpeed(80+1.1*numLayers);
+  mphysicalSystem.SetMaxItersSolverStab(0);   // unuseful for Anitescu, only Tasora uses this
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
-  mphysicalSystem.SetIterLCPwarmStarting(true);
+  mphysicalSystem.SetSolverWarmStarting(true);
   mphysicalSystem.SetUseSleeping(false);
   mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
 	vol = (t2_smarticle)* (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
