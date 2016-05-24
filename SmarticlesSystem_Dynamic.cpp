@@ -154,6 +154,7 @@ double gaitChangeLengthTime = .5;
 	double t2_smarticle = sizeScale * .0005;
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2*bucket_rad/sizeScale);
 	double rho_smarticle = 7850.0;
+	ChVector<>boxdim(.28 / 1.5/16, .55245/16, 2 * bucket_rad / 8);
 #else
 	
 	double w_smarticle = sizeScale * 0.05316/ 1;
