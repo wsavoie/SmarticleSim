@@ -477,7 +477,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 		
 		char comm[100];
 		sprintf(comm, "ffmpeg -framerate %d -i ", fps);
-		strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -b:v 100000k video_capture/outVid.avi");
+		//strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -b:v 100000k video_capture/outVid.avi");
 		strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -q 0 video_capture/outVid.avi");
 		//exit(-1);
 		system(comm);
