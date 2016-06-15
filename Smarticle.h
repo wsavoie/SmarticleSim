@@ -314,7 +314,7 @@ namespace chrono {
 		double w;  // mid-segment length including thickness
 		double r;  // in-plane half-thickness of arm
 		double r2;  // off-plane  half-thickness of arm, i.e. prependicular to the object
-		double angle1; //angle between center segment and outer segments
+		double angle1; //angle between center segment and outer segments radians
 		double angle2; //angle between center segment and outer segments
 		double volume;
 		double mass;

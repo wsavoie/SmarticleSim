@@ -1699,29 +1699,17 @@ void UpdateSmarticles(
 // =============================================================================
 bool SetGait(double time)
 {
-	double tm = 7;
-	if (time <= tm*1)
-		Smarticle::global_GUI_value = 1;
-	else if (time > tm*1 && time <= tm*2)
-		Smarticle::global_GUI_value = 2;
-	else if (time > tm*2 && time <= tm*3)
-		Smarticle::global_GUI_value = 1;
-	else if (time > tm*3 && time <= tm*4)
-		Smarticle::global_GUI_value = 2;
-	//else if (time > 20 && time <= 24)
+	//double tm = 7;
+	//if (time <= tm*1)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time > tm*1 && time <= tm*2)
 	//	Smarticle::global_GUI_value = 2;
-	//else if (time > 24 && time <= 18)
-	//	Smarticle::global_GUI_value = 3;
-	//else if (time > 18 && time <= 21)
+	//else if (time > tm*2 && time <= tm*3)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time > tm*3 && time <= tm*4)
 	//	Smarticle::global_GUI_value = 2;
-	//else if (time > 21 && time <= 24)
-	//	Smarticle::global_GUI_value = 3;
-	//else if (time > 24 && time <= 27)
-	//	Smarticle::global_GUI_value = 2;
-	//else if (time > 27 && time <= 30)
-	//	Smarticle::global_GUI_value = 3;
-	else
-		return true;
+	//else
+	//	return true;
 
 
 	//else if (time > 30 && time <= 33)

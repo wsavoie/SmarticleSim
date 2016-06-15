@@ -750,12 +750,19 @@ void Smarticle::CreateActuators() {
 	qy1.Normalize();
 	qy2.Normalize();
 
-
+	double mn = -20;
+	double mx = 45;
+	//link_actuator01->GetLimit_Z()->Set_active(true);
+	//link_actuator01->GetLimit_Z()->Set_min(0*D2R);
+	//link_actuator01->GetLimit_Z()->Set_max(2*D2R);
 	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 	m_system->AddLink(link_actuator01);
 	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
 	link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+	//link_actuator12->GetLimit_Rz()->Set_active(false);
+	//link_actuator12->GetLimit_Rz()->Set_min(mn*D2R);
+	//link_actuator12->GetLimit_Rz()->Set_max(mx*D2R);
 	m_system->AddLink(link_actuator12);
 	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
@@ -763,6 +770,25 @@ void Smarticle::CreateActuators() {
 	//mfun0->Set_yconst(0);
 	//auto mfun1= std::dynamic_pointer_cast<ChFunction_Const>(link_actuator12->Get_tor_funct());
 	//mfun1->Set_yconst(0);
+
+
+
+	//std::shared_ptr<ChLinkLockRevolute> linklimit01= std::make_shared<ChLinkLockRevolute>();
+	//linklimit01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
+	//linklimit01->GetLimit_Rz()->Set_active(true);
+	//linklimit01->GetLimit_Rz()->Set_min(mn*D2R);
+	//linklimit01->GetLimit_Rz()->Set_max(mx*D2R);
+	//m_system->AddLink(linklimit01);
+
+
+	std::shared_ptr<ChLinkLockRevolute> linklimit12 = std::make_shared<ChLinkLockRevolute>();
+	linklimit12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+	linklimit12->GetLimit_Rz()->Set_active(true);
+	linklimit12->GetLimit_Rz()->Set_min(mn*D2R);
+	linklimit12->GetLimit_Rz()->Set_max(mx * D2R);
+	m_system->AddLink(linklimit12);
+	
+
 }
 
 void Smarticle::Create() {
