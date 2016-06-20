@@ -1,4 +1,4 @@
-path = 'A:\SmarticleRun\lazy_tor.3_smarts30\lazy .00125\';
+path = 'A:\SmarticleRun\LazyWithAntProbs0.1\';
 % path = 'D:\SimResults\Chrono\SmarticleU\tests\lazy .05\';
 a=dir(horzcat(path,'-*'))
 for i=1:length(a)

@@ -89,5 +89,5 @@ while ischar(tline)
     tline = fgets(fid);
 
 end
-save(horzcat(filename,'/../stressData.mat'),'simParams','smartPos','frameInfo','filename');
+save(horzcat(filename,'\..\stressData.mat'),'simParams','smartPos','frameInfo','filename');
 fclose(fid);

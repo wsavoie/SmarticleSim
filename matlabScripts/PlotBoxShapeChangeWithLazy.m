@@ -1,6 +1,6 @@
 % function [out]=GetFileInfo(direc)
-%direc= 'D:\SimResults\Chrono\SmarticleU\tests\lazy .0025\';
-direc='A:\SmarticleRun\lazy_tor.3_smarts30\lazy .01\';
+direc= 'A:\SmarticleRun\Nonlazy\';
+% direc='A:\SmarticleRun\lazy_tor.3_smarts30\lazy .01\';
 clf
 dirs = dir(direc);
 %remove non-folders
@@ -20,13 +20,13 @@ idle =boxAngle{2};
 mainFolder = direc;
 matName = '\PostProcess\stressData.mat';
 dirPos = [90 0 -90 -1000 -1000 -1000];
-bounds = 2;
+bounds = 5;
 uniAngles = unique(angles);
 j=1;
 
 for k=14%=1:length(uniAngles)%
     dataz=0;
-    k=find(uniAngles==-20);
+    k=find(uniAngles==-45);
     idx=find(angles(:)==uniAngles(k));
     clear('x','simParams','smartPos','frameInfo','filename','file');
     for l=1:length(idx)
@@ -52,9 +52,9 @@ for k=14%=1:length(uniAngles)%
     end
 %     err=mean(dataz,2);
 %     err=std(dataz,0,2);
-    shadedErrorBar(frameInfo(:,1),mean(dataz,2),std(dataz,1,2),'k')
-    title({horzcat('Smarticle % Reaching Directed Position Box=',num2str(uniAngles(k)),177,num2str(bounds),'^\circ')...
-        horzcat(' idle=',num2str(idle),'/dt')});
+    shadedErrorBar(frameInfo(:,1),mean(dataz,2),std(dataz,1,2),'k');
+    title({horzcat('Smarticle Frac. Reaching Directed Position (',177, num2str(bounds),'^\circ)',' Box=',num2str(uniAngles(k)),'^\circ')...
+        ,horzcat('Ant idle distrib')});
     xlabel('Time(s)');
     ylabel('Smarticle Fraction');
     set(gca,'xlim',[0,frameInfo(end,1)],'ylim',[0,1])
@@ -74,7 +74,7 @@ end
 % end
 %% 
 lineVar=mean(dataz,2);
-yAx=max(lineVar)*1;
+yAx=1;
 plotNames = {'Stress','Gait','U-Shape','Straight','n-Shape','Vib at \circ','Vib Angle'};
 shapeLines=getShapeLines(frameInfo(:,1),frameInfo(:,3));
 for i=1:size(shapeLines,1)
