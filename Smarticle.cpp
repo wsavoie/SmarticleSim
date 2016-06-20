@@ -686,17 +686,47 @@ void Smarticle::SetEdges()
 	}
 
 }
-void Smarticle::RotateSmarticleBy(ChQuaternion<> newRotation)
+void Smarticle::RotateSmarticleBy(ChQuaternion<> newAng)
 {
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1, 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2, 0));
+	quat0.Normalize();
+	quat2.Normalize();
+	newAng.Normalize();
+	rotation = newAng;
+	ChVector<>posRel = ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset);
+	ChQuaternion<> armRelativeRot = quat0;
+	arm0->SetPos(rotation.Rotate(posRel) + arm0->GetPos());
+	arm0->SetRot(rotation*armRelativeRot);
 
+	posRel = ChVector<>(0, 0, 0);
+	armRelativeRot = QUNIT;
+	arm1->SetPos(rotation.Rotate(posRel) + arm1->GetPos());
+	arm1->SetRot(rotation*armRelativeRot);
 
+	
+	posRel = ChVector<>((w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset);
+	armRelativeRot = quat2;
+	arm2->SetPos(rotation.Rotate(posRel) + arm2->GetPos());
+	arm2->SetRot(rotation*armRelativeRot);
+	
+	arm0->SetRot_dt(QUNIT);
+	arm1->SetRot_dt(QUNIT);
+	arm2->SetRot_dt(QUNIT);
+	UpdateState();
+	arm0->GetCollisionModel()->SyncPosition();
+	arm1->GetCollisionModel()->SyncPosition();
+	arm2->GetCollisionModel()->SyncPosition();
+	link_actuator01->SyncCollisionModels();
+	link_actuator12->SyncCollisionModels();
+	/*CreateArm2(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset), quat0
 	GetLog() << "arm1:" << arm1->GetPos();
 	GetLog() << "arm2:" << arm2->GetPos();
 	double l_mod = l + 2 * r2 - jointClearance;
 	GetLog() << "\nl-mod" << l_mod << " w:" << w << " l:"<<l<<"\n";
 	GetLog() << "local to parent" << arm1->TransformPointLocalToParent(ChVector<>(w / 2.0 - (jointClearance)+cos(-angle2)*l / 2, 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset));
 	GetLog() << "local to parent" << arm1->TransformPointLocalToParent(ChVector<>(w / 2.0+l, 0,0));
-	GetLog() << "local to parent" << arm2->TransformPointLocalToParent(ChVector<>(l, 0, 0));
+	GetLog() << "local to parent" << arm2->TransformPointLocalToParent(ChVector<>(l, 0, 0));*/
 }
 void Smarticle::TransportSmarticle(ChVector<> newPosition)
 {
