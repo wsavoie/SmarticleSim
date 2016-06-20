@@ -806,20 +806,20 @@ void Smarticle::CreateActuators() {
 
 
 
-	//std::shared_ptr<ChLinkLockRevolute> linklimit01= std::make_shared<ChLinkLockRevolute>();
-	//linklimit01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
-	//linklimit01->GetLimit_Rz()->Set_active(true);
-	//linklimit01->GetLimit_Rz()->Set_min(mn*D2R);
-	//linklimit01->GetLimit_Rz()->Set_max(mx*D2R);
-	//m_system->AddLink(linklimit01);
+	/*std::shared_ptr<ChLinkLockRevolute> linklimit01= std::make_shared<ChLinkLockRevolute>();
+	linklimit01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
+	linklimit01->GetLimit_Rz()->Set_active(true);
+	linklimit01->GetLimit_Rz()->Set_min(mn*D2R);
+	linklimit01->GetLimit_Rz()->Set_max(mx*D2R);
+	m_system->AddLink(linklimit01);*/
 
 
-	std::shared_ptr<ChLinkLockRevolute> linklimit12 = std::make_shared<ChLinkLockRevolute>();
-	linklimit12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-	linklimit12->GetLimit_Rz()->Set_active(true);
-	linklimit12->GetLimit_Rz()->Set_min(mn*D2R);
-	linklimit12->GetLimit_Rz()->Set_max(mx * D2R);
-	m_system->AddLink(linklimit12);
+	//std::shared_ptr<ChLinkLockRevolute> linklimit12 = std::make_shared<ChLinkLockRevolute>();
+	//linklimit12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+	//linklimit12->GetLimit_Rz()->Set_active(true);
+	//linklimit12->GetLimit_Rz()->Set_min(mn*D2R);
+	//linklimit12->GetLimit_Rz()->Set_max(mx * D2R);
+	//m_system->AddLink(linklimit12);
 	
 
 }
