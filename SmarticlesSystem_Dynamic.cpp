@@ -484,7 +484,15 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 	simParams.close();
 }
 // =============================================================================
-
+int overlaptest(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4)
+{
+	double x = -((-x3 + x4)*(x2*y1 - x1*y2) + (x1 - x2)*(x4*y3 - x3*y4)) / ((x3 - x4)*(y1 - y2) + (x1 - x2)*(-y3 + y4));
+	double y = -(x2*y1*y3 - x4*y1*y3 - x1*y2*y3 + x4*y2*y3 - x2*y1*y4 + x3*y1*y4 + x1*y2*y4 - x3*y2*y4) / (-x3*y1 + x4*y1 + x3*y2 - x4*y2 + x1*y3 - x2*y3 - x1*y4 + x2*y4);
+	if (((x - x1)*(x - x2) <= 0) && ((x - x3)*(x - x4) <= 0))// % overlap
+		return 1;
+	else
+		return 0;
+}
 #if irrlichtVisualization
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application,double timeForDisp) {
 #else
@@ -610,88 +618,197 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 	
 		double bucketX = boxdim.x;
 		double bucketY = boxdim.y;
-		//http://gamedevelopment.tutsplus.com/tutorials/collision-detection-using-the-separating-axis-theorem--gamedev-169
+
+		
+		
 		if (bucketType == BOX)
 		{
-			int its = 0;
-			bool collisions = false;
-			bool testsComplete = false;
-			while (testsComplete==false &&collisions==false)
-			{
-		
-				//application.DrawAll();
-
-				//application.GetVideoDriver()->endScene();
-				//application.GetVideoDriver()->beginScene(true, true,
-				//	video::SColor(255, 140, 161, 192));
-				its = its + 1;
-				if (its >= 10000)
-				{
-					application.GetDevice()->closeDevice();
-					exit(-1);
-				}
-				//http://stackoverflow.com/questions/14629983/algorithms-for-collision-detection-between-arbitrarily-sized-convex-polygons
-				//http://www.dyn4j.org/2010/01/sat/
-
-				smarticle0->SetEdges();
-				std::vector<double>xyminmax = smarticle0->VertsMinMax();
-				
-		
-				double tipDistxmin = abs(xyminmax.at(0) - smarticle0->GetArm(1)->GetPos().x);
-				double tipDistxmax = abs(xyminmax.at(1) - smarticle0->GetArm(1)->GetPos().x);
-				double tipDistymin = abs(xyminmax.at(2) - smarticle0->GetArm(1)->GetPos().y);
-				double tipDistymax = abs(xyminmax.at(3) - smarticle0->GetArm(1)->GetPos().y);
-				GetLog() << "\nits:" <<its;
 
 
-				double xposi = genRand(bucket->GetPos().x - bucketX + 2.01*bucket_half_thick + tipDistxmin, bucket->GetPos().x + bucketX - 2.01*bucket_half_thick - tipDistxmax);
-				double yposi = genRand(bucket->GetPos().y + (-bucketY + 2.01*bucket_half_thick)*cos(box_ang) + tipDistymin, bucket->GetPos().y + (bucketY - 2.01*bucket_half_thick)*cos(box_ang) - tipDistymax);
+			//&&&&&&&&&&&&&&&&&&&&SHENGKAI'S generate smarticles code&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+			//be careful about hlaf size and fullsize dimensions
+			//angle1=left angle2=right
+			//bucketX = half size
+				retry:
+
+				double bcx = bucket->GetPos().x;
+				double bcy = bucket->GetPos().y;
+				double x0 = (bucketX-4*bucket_half_thick) * 2 * genRand();
+				double y0 = bucketY*2*genRand();
+
+				/*double yposi = genRand(bucket->GetPos().y - (bucketY - 2.01*bucket_half_thick)*cos(box_ang) + tipDistymin, 
+															 bucket->GetPos().y + (bucketY - 2.01*bucket_half_thick)*cos(box_ang) - tipDistymax);*/
+				double xposi = x0 + bcx -bucketX+bucket_half_thick;
+				double yposi = y0*cos(box_ang) + bcy - bucketY;
 				double zposi = (-yposi - 2 * bucket_half_thick)*tan(Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x) + t_smarticle / 1.99; //tangent may need to be fixed see buckrotx above
-				smarticle0->TransportSmarticle(ChVector<>(xposi, yposi, zposi));
-				smarticle0->SetEdges();
-
-				//for each smarticle
-				for (int otherSmarts = 0; otherSmarts < mySmarticlesVec.size(); otherSmarts++)
+				int overlap = 0;
+				int m1 = 0; //vertex of n1;
+				int m2 = 0; //vertex of n2;
+	
+				//points matlab [floor((0:11)./4)',mod(0:11,4)',floor((0:11)./4)',mod((0:11)+1,4)']
+				//box sides
+				double lft = bcx + bucketX;
+				double rgt = bcx - bucketX;
+				double top = bcy + bucketY;
+				double bot = bcy - bucketY;
+				auto & cs = smarticle0; //current smarticle 
+				if (mySmarticlesVec.size() > 0)// more than 1 smarticle exists in system 
 				{
-					if (collisions)
-						break;
-					Smarticle* other = mySmarticlesVec[otherSmarts];
-					other->SetEdges();
-					for (int otherSmartArms = 0; otherSmartArms < 3; otherSmartArms++)
+					for (int k = 0; k < mySmarticlesVec.size(); k++)//I think I want to go loop through all but current smarticle 
 					{
-						if (collisions)
-							break;
-						for (int arm = 0; arm < 3; arm++)
-						{
-							if (collisions)
-								break;
-							//I can access each shape of current and other smarticle
-							bool checkSecond = true;
-							for (int edge = 0; edge < 4; edge++)
-							{ 
-								collisions = project(smarticle0, other, smarticle0->armAxes[arm][edge], arm, otherSmartArms);
-								checkSecond = collisions;
-							}
-							if (checkSecond)
-							{
-								for (int otherEdge = 0; otherEdge < 4; otherEdge++)
-								{
-									collisions = project(smarticle0, other, other->armAxes[otherSmartArms][otherEdge], arm, otherSmartArms);
-									if (collisions)
-										break;
 
-								}
+						cs->TransportSmarticle(ChVector<>(xposi, yposi, zposi));		
+						//cs->RotateSmarticleBy(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2 +Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x, genRand(0, 2*PI), 0)));
+						cs->SetEdges();
+
+						application.DrawAll();
+
+						application.GetVideoDriver()->endScene();
+						application.GetVideoDriver()->beginScene(true, true,
+ 							video::SColor(255, 140, 161, 192));
+						for (int n1 = 0; n1 < 12; n1++)
+						{
+
+							ChVector<>csV1 = cs->armVerts[(int)(n1 / 4)][(n1) % 4];			//current smarticle vertex 1
+							ChVector<>csV2 = cs->armVerts[(int)(n1 / 4)][(n1 + 1) % 4]; //current smarticle vertex 2
+							overlap = overlap + overlaptest(csV1.x, csV1.y, csV2.x, csV2.y, lft, bot, rgt, bot);	//test if smart1 edge overlaps with box BOT edge
+							overlap = overlap + overlaptest(csV1.x, csV1.y, csV2.x, csV2.y, lft, top, lft, bot);	//test if smart1 edge overlaps with box LFT edge
+							overlap = overlap + overlaptest(csV1.x, csV1.y, csV2.x, csV2.y, rgt, bot, rgt, top);	//test if smart1 edge overlaps with box RGT edge
+							overlap = overlap + overlaptest(csV1.x, csV1.y, csV2.x, csV2.y, rgt, top, lft, top);	//test if smart1 edge overlaps with box TOP edge
+							if (overlap)
+								goto retry;
+							
+							if (csV1.x > lft || csV1.x < rgt|| csV2.x>lft || csV2.x<rgt) // pos side is on left
+								goto retry;
+							if (csV1.y > top || csV1.y < bot || csV2.y>top || csV2.y<bot) // pos side is on left
+								goto retry;
+
+							//now that we know smarticle is at least inside box, assign other smarticle and update
+							auto & os = mySmarticlesVec[k]; // other smarticle
+							os->SetEdges();
+
+							for (int n2 = 0; n2 < 12; n2++)
+							{
+								ChVector<>osV1 = os->armVerts[(int)(n2 / 4)][n2 % 4]; //current smarticle vertex 1
+								ChVector<>osV2 = os->armVerts[(int)(n2 / 4)][(n2 + 1) % 4]; //current smarticle vertex 2							
+								overlap = overlap + overlaptest(csV1.x, csV1.y, csV2.x, csV2.y, osV1.x, osV1.y, osV2.x, osV2.y);			//tests if smart1's edge(n1) intersects any of smart2's edges (n2)
+								if (overlap)
+									goto retry;
 							}
+
 						}
 					}
 				}
-				if (collisions)
+				else//only 1 smarticle exists
 				{
-					collisions = false;
-					continue;
+					cs->TransportSmarticle(ChVector<>(xposi, yposi, zposi));
+					//cs->RotateSmarticleBy(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2 + Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x, genRand(-PI, PI), 0)));
+					cs->SetEdges();
+
+					application.DrawAll();
+
+						application.GetVideoDriver()->endScene();
+						application.GetVideoDriver()->beginScene(true, true,
+							video::SColor(255, 140, 161, 192));
+						for (int n1 = 0; n1 < 12; n1++)
+						{
+							ChVector<>csV1 = cs->armVerts[(int)(n1 / 4)][(n1) % 4];			//current smarticle vertex 1
+							ChVector<>csV2 = cs->armVerts[(int)(n1 / 4)][(n1 + 1) % 4]; //current smarticle vertex 2
+							overlap = overlap + overlaptest(csV1.x, csV1.y, csV2.x, csV2.y, lft, bot, rgt, bot);	//test if smart1 edge overlaps with box BOT edge
+							overlap = overlap + overlaptest(csV1.x, csV1.y, csV2.x, csV2.y, lft, top, lft, bot);	//test if smart1 edge overlaps with box LFT edge
+							overlap = overlap + overlaptest(csV1.x, csV1.y, csV2.x, csV2.y, rgt, bot, rgt, top);	//test if smart1 edge overlaps with box RGT edge
+							overlap = overlap + overlaptest(csV1.x, csV1.y, csV2.x, csV2.y, rgt, top, lft, top);	//test if smart1 edge overlaps with box TOP edge
+							if (overlap)
+								goto retry;
+						}
+						
 				}
-				testsComplete = true;
-			}
+				mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
+				smarticle0->SetSpeed(0);
+			//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+
+
+		//	//http://gamedevelopment.tutsplus.com/tutorials/collision-detection-using-the-separating-axis-theorem--gamedev-169
+		//	int its = 0;
+		//	bool collisions = false;
+		//	bool testsComplete = false;
+		//	while (testsComplete==false &&collisions==false)
+		//	{
+		//
+		//		//application.DrawAll();
+
+		//		//application.GetVideoDriver()->endScene();
+		//		//application.GetVideoDriver()->beginScene(true, true,
+		//		//	video::SColor(255, 140, 161, 192));
+		//		its = its + 1;
+		//		if (its >= 10000)
+		//		{
+		//			application.GetDevice()->closeDevice();
+		//			exit(-1);
+		//		}
+		//		//http://stackoverflow.com/questions/14629983/algorithms-for-collision-detection-between-arbitrarily-sized-convex-polygons
+		//		//http://www.dyn4j.org/2010/01/sat/
+
+		//		smarticle0->SetEdges();
+		//		std::vector<double>xyminmax = smarticle0->VertsMinMax();
+		//		
+		//
+		//		double tipDistxmin = abs(xyminmax.at(0) - smarticle0->GetArm(1)->GetPos().x);
+		//		double tipDistxmax = abs(xyminmax.at(1) - smarticle0->GetArm(1)->GetPos().x);
+		//		double tipDistymin = abs(xyminmax.at(2) - smarticle0->GetArm(1)->GetPos().y);
+		//		double tipDistymax = abs(xyminmax.at(3) - smarticle0->GetArm(1)->GetPos().y);
+		//		GetLog() << "\nits:" <<its;
+
+
+		//		double xposi = genRand(bucket->GetPos().x - bucketX + 2.01*bucket_half_thick + tipDistxmin, bucket->GetPos().x + bucketX - 2.01*bucket_half_thick - tipDistxmax);
+		//		double yposi = genRand(bucket->GetPos().y + (-bucketY + 2.01*bucket_half_thick)*cos(box_ang) + tipDistymin, bucket->GetPos().y + (bucketY - 2.01*bucket_half_thick)*cos(box_ang) - tipDistymax);
+		//		double zposi = (-yposi - 2 * bucket_half_thick)*tan(Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x) + t_smarticle / 1.99; //tangent may need to be fixed see buckrotx above
+		//		smarticle0->TransportSmarticle(ChVector<>(xposi, yposi, zposi));
+		//		smarticle0->SetEdges();
+
+		//		//for each smarticle
+		//		for (int otherSmarts = 0; otherSmarts < mySmarticlesVec.size(); otherSmarts++)
+		//		{
+		//			if (collisions)
+		//				break;
+		//			Smarticle* other = mySmarticlesVec[otherSmarts];
+		//			other->SetEdges();
+		//			for (int otherSmartArms = 0; otherSmartArms < 3; otherSmartArms++)
+		//			{
+		//				if (collisions)
+		//					break;
+		//				for (int arm = 0; arm < 3; arm++)
+		//				{
+		//					if (collisions)
+		//						break;
+		//					//I can access each shape of current and other smarticle
+		//					bool checkSecond = true;
+		//					for (int edge = 0; edge < 4; edge++)
+		//					{ 
+		//						collisions = project(smarticle0, other, smarticle0->armAxes[arm][edge], arm, otherSmartArms);
+		//						checkSecond = collisions;
+		//					}
+		//					if (checkSecond)
+		//					{
+		//						for (int otherEdge = 0; otherEdge < 4; otherEdge++)
+		//						{
+		//							collisions = project(smarticle0, other, other->armAxes[otherSmartArms][otherEdge], arm, otherSmartArms);
+		//							if (collisions)
+		//								break;
+
+		//						}
+		//					}
+		//				}
+		//			}
+		//		}
+		//		if (collisions)
+		//		{
+		//			collisions = false;
+		//			continue;
+		//		}
+		//		testsComplete = true;
+		//	}
 		}
 		mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
 		smarticle0->SetSpeed(dropSpeed);
@@ -1171,7 +1288,7 @@ void SavePovFilesMBD(CH_SYSTEM& mphysicalSystem,
     sprintf(filename, "%s/data_%03d.dat", pov_dir_mbd.c_str(), out_frame + 1);
     utils::WriteShapesPovray(&mphysicalSystem, filename);
 
-    out_frame++;
+    ++out_frame;
   }
 }
 // =============================================================================
@@ -1259,7 +1376,9 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
 	auto zaxis = std::make_shared<ChBody>();
 
 
-	xaxis->SetPos(pos);						yaxis->SetPos(pos);							zaxis->SetPos(pos);
+	//xaxis->SetPos(pos + ChVector<>(len - rad / 2, 0, 0));
+	//yaxis->SetPos(pos + ChVector<>(0, len - rad / 2, 0));
+	//zaxis->SetPos(pos + ChVector<>(0, 0, len - rad));
 	xaxis->SetCollide(false);			yaxis->SetCollide(false);				zaxis->SetCollide(false);
 	xaxis->SetBodyFixed(true);		yaxis->SetBodyFixed(true);			zaxis->SetBodyFixed(true);
 	xaxis->GetCollisionModel()->SetEnvelope(collisionEnvelope);
@@ -1274,6 +1393,9 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
 	yaxis->AddAsset(std::make_shared<ChColorAsset>(0, 1.0f, 0));
 	zaxis->AddAsset(std::make_shared<ChColorAsset>(0, 0, 1.0f));
 	mphysicalSystem.AddBody(xaxis); mphysicalSystem.AddBody(yaxis); mphysicalSystem.AddBody(zaxis);
+	xaxis->GetCollisionModel()->SyncPosition();
+	yaxis->GetCollisionModel()->SyncPosition();
+	zaxis->GetCollisionModel()->SyncPosition();
 
 }
 
@@ -1315,7 +1437,7 @@ void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySm
 			}
 
 
-			recycledSmarticles++;
+			++recycledSmarticles;
 			inc = (inc+1)%numPerLayer;
 		}
 	}
@@ -1677,6 +1799,37 @@ void setUpBucketActuator(CH_SYSTEM& mphysicalSystem)
 void UpdateSmarticles(
 		CH_SYSTEM& mphysicalSystem,
 		std::vector<Smarticle*> mySmarticlesVec) {
+	//double pctglob[30] =
+	//{ 0.0009,
+	//0.0013,
+	//0.0016,
+	//0.0023,
+	//0.0027,
+	//0.0030,
+	//0.0041,
+	//0.0047,
+	//0.0052,
+	//0.0074,
+	//0.0085,
+	//0.0097,
+	//0.0151,
+	//0.0174,
+	//0.0197,
+	//0.0233,
+	//0.0247,
+	//0.0262,
+	//0.0343,
+	//0.0371,
+	//0.0399,
+	//0.0449,
+	//0.0473,
+	//0.0496,
+	//0.0620,
+	//0.0698,
+	//0.0776,
+	//0.0975,
+	//0.1199,
+	//0.1423 };
 
 	//static double torquethresh = mySmarticlesVec[0]->torqueThresh2;
 
@@ -1688,7 +1841,7 @@ void UpdateSmarticles(
 		double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);		
 		int moveType=0;
 		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
-		if (genRand() < percentToMoveToGlobal)
+		if (genRand() < (1))
 			moveType = Smarticle::global_GUI_value; 
 		else
 			moveType = mySmarticlesVec[i]->prevMoveType;
@@ -1699,17 +1852,17 @@ void UpdateSmarticles(
 // =============================================================================
 bool SetGait(double time)
 {
-	//double tm = 7;
-	//if (time <= tm*1)
-	//	Smarticle::global_GUI_value = 1;
-	//else if (time > tm*1 && time <= tm*2)
-	//	Smarticle::global_GUI_value = 2;
-	//else if (time > tm*2 && time <= tm*3)
-	//	Smarticle::global_GUI_value = 1;
-	//else if (time > tm*3 && time <= tm*4)
-	//	Smarticle::global_GUI_value = 2;
-	//else
-	//	return true;
+	double tm = 7;
+	if (time <= tm*1)
+		Smarticle::global_GUI_value = 1;
+	else if (time > tm*1 && time <= tm*2)
+		Smarticle::global_GUI_value = 2;
+	else if (time > tm*2 && time <= tm*3)
+		Smarticle::global_GUI_value = 1;
+	else if (time > tm*3 && time <= tm*4)
+		Smarticle::global_GUI_value = 2;
+	else
+		return true;
 
 
 	//else if (time > 30 && time <= 33)

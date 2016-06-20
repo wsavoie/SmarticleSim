@@ -704,6 +704,9 @@ void Smarticle::TransportSmarticle(ChVector<> newPosition)
 	arm2->SetPos(arm2->GetPos() - arm1->GetPos() + newPosition);
 	arm1->SetPos(newPosition);
 
+	arm0->GetCollisionModel()->SyncPosition();
+	arm1->GetCollisionModel()->SyncPosition();
+	arm2->GetCollisionModel()->SyncPosition();
 }
 void Smarticle::CreateJoints() {
 	// link 1
@@ -750,8 +753,8 @@ void Smarticle::CreateActuators() {
 	qy1.Normalize();
 	qy2.Normalize();
 
-	double mn = -20;
-	double mx = 45;
+	double mn = -120;
+	double mx = 120;
 	//link_actuator01->GetLimit_Z()->Set_active(true);
 	//link_actuator01->GetLimit_Z()->Set_min(0*D2R);
 	//link_actuator01->GetLimit_Z()->Set_max(2*D2R);
@@ -1521,7 +1524,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	/////////////////////////set which stress actions are actived/////////////////////////
 	static const bool LowStressActive = false;
 	static const bool MidStressActive = false;
-	static const bool OverStressActive = true;
+	static const bool OverStressActive = false;
 	//////////////////////////////////////////////////////////////////////////////////////
 
 	if (active == false)
