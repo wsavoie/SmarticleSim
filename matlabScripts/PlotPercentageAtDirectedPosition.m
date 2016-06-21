@@ -1,8 +1,9 @@
 
 
-mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30v2\';
+% mainFolder = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30v2\';
+mainFolder='A:\SmarticleRun\temp'
 % runName = '-65-20160405-040401';
-runName = '-20-20160405-100051';
+runName = '-20_0.01_20160614_132810';
 matName = '\PostProcess\stressData.mat';
 ff = horzcat(mainFolder,runName);
 filename=horzcat(ff,'\PostProcess\Stress.txt');

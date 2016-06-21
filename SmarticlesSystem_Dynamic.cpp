@@ -2428,10 +2428,9 @@ int main(int argc, char* argv[]) {
 		}
   }
 	simParams.open(simulationParams.c_str(), std::ios::app);
-	simParams << "Smarticle OT: " << mySmarticlesVec.at(0)->OTThresh*mySmarticlesVec.at(0)->torqueLimit << std::endl;
+	simParams << "Smarticle OT: " << mySmarticlesVec.at(0)->OTThresh << std::endl;
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
 	  delete mySmarticlesVec[i];
-
   }
 	if (receiver.saveFrame)
 	{

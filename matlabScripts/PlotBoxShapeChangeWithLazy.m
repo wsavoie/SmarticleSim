@@ -1,5 +1,5 @@
 % function [out]=GetFileInfo(direc)
-direc= 'A:\SmarticleRun\Nonlazy\';
+direc= 'A:\SmarticleRun\No OT\LazyNoOT\';
 % direc='A:\SmarticleRun\lazy_tor.3_smarts30\lazy .01\';
 clf
 dirs = dir(direc);
@@ -20,7 +20,7 @@ idle =boxAngle{2};
 mainFolder = direc;
 matName = '\PostProcess\stressData.mat';
 dirPos = [90 0 -90 -1000 -1000 -1000];
-bounds = 5;
+bounds = 2;
 uniAngles = unique(angles);
 j=1;
 

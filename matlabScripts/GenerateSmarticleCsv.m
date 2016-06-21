@@ -3,7 +3,7 @@
 % for the different movement types, global, GUI, overTorque, etc.
 %   dt          = timestep to be used in simulation
 %   omega       = angular velocity of arms to be used in simulation
-%   torqeThresh = threshold at which overtorque relief movement begins
+%   torqueLimit = torque limit for motor
 %   angLow      = lowest angle smarticle is allowed to move to
 %   angHigh     = highest angle smarticle is allowed to move to
 %top of file will include dT, omega, torqueThresh, angLow, angHigh
@@ -41,7 +41,7 @@ if stapleSize
     rho = 7850.0;%/(sizeScale^3);
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
-    torqueThresh=2*9.8*mass*w_s;%.00005;  4.6657e-04
+    torqueLimit=2*9.8*mass*w_s;%.00005;  4.6657e-04
 else
       %t = height of solar panels
     t= .029982;
@@ -57,7 +57,7 @@ else
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
 %     torqueThresh=.0325; %.008 previously cd 
-    torqueThresh=.0325; %..0325 previously cd 
+    torqueLimit=.0325; %..0325 previously cd 
 end
 
 
@@ -74,7 +74,7 @@ gui3_gait = 2;
 midt_gait = 2;
 extra1_gait=1;
 extra2_gait=1;
-torqueThresh
+torqueLimit
 PON= 1;
 
 user=getenv('username');
@@ -89,7 +89,7 @@ fid = fopen(fileloc,'wt');
 %add in all initial values to top of file
 %square torque so that we can use the square in the program so we can avoid
 %having to use sqrts in the code at each timestep!
-fprintf(fid,'%s\n%f\n%f\n%f\n%f\n%f\n',dt,omega,torqueThresh,angLow,angHigh,omegaLim);
+fprintf(fid,'%s\n%f\n%f\n%f\n%f\n%f\n',dt,omega,torqueLimit,angLow,angHigh,omegaLim);
 %add #1 to denote end of first section
 fprintf(fid,'#\n');
 
