@@ -540,47 +540,7 @@ void Smarticle::RotateSmarticle(ChQuaternion<> newRotation)
 	arm1->SetRot(newRotation);
 	arm2->SetRot(newRotation);
 }
-//returns (minx,maxx,miny,maxy)
-std::vector<double> Smarticle::VertsMinMax()
-{
-	//GetLog() << this->GetArm(1)->GetPos();
-	//armVerts[arm][verts];
-	std::vector<double> xyminmax;
-	double xmin = armVerts[0][0].x;
-	double xmax = armVerts[0][0].x;
-	double ymin = armVerts[0][0].y;
-	double ymax = armVerts[0][0].y;
-	for (int arm = 0; arm < 3; arm++)
-	{
-		for (int vertex = 0; vertex < 4; vertex++)
-		{
-			xmin = std::min(xmin, armVerts[arm][vertex].x);
-			xmax = std::max(xmax, armVerts[arm][vertex].x);
 
-			ymin = std::min(ymin, armVerts[arm][vertex].y);
-			ymax = std::max(ymax, armVerts[arm][vertex].y);
-		}
-	}
-	//.0065;
-	//(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset), quat2);
-	//GetLog() << "\n" << xmin << " " << xmax << " " << ymin << " " << ymax;
-
-	xyminmax.emplace_back(xmin);
-	xyminmax.emplace_back(xmax);
-	xyminmax.emplace_back(ymin);
-	xyminmax.emplace_back(ymax);
-	//xyminmax.emplace_back((std::min(std::min(std::min(armVerts[2][3].x, armVerts[2][1].x), armVerts[0][3].x), armVerts[0][1].x)));
-	//xyminmax.emplace_back((std::max(std::max(std::max(armVerts[2][3].x, armVerts[2][1].x), armVerts[0][3].x), armVerts[0][1].x)));
-
-	//xyminmax.emplace_back((std::min(std::min(std::min(armVerts[2][3].y, armVerts[2][1].y), armVerts[0][3].y), armVerts[0][1].y)));
-	//xyminmax.emplace_back((std::max(std::max(std::max(armVerts[2][3].y, armVerts[2][1].y), armVerts[0][3].y), armVerts[0][1].y)));
-
-	return xyminmax;
-}
-double *Smarticle::Project(double minmax[]){
-	
-	return minmax;
-}
 void Smarticle::UpdateState()
 {
 	GetArm(0)->Update();

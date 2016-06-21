@@ -102,7 +102,171 @@
 #endif
 
 	////////////deprecated code which may still be useful in the future////////////////////////////
-	///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+	///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&SMARTICLE PLACEMENT in box, placed them too sparsely&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+	
+	//	//http://gamedevelopment.tutsplus.com/tutorials/collision-detection-using-the-separating-axis-theorem--gamedev-169
+	//	int its = 0;
+	//	bool collisions = false;
+	//	bool testsComplete = false;
+	//	while (testsComplete==false &&collisions==false)
+	//	{
+	//
+	//		//application.DrawAll();
+
+	//		//application.GetVideoDriver()->endScene();
+	//		//application.GetVideoDriver()->beginScene(true, true,
+	//		//	video::SColor(255, 140, 161, 192));
+	//		its = its + 1;
+	//		if (its >= 10000)
+	//		{
+	//			application.GetDevice()->closeDevice();
+	//			exit(-1);
+	//		}
+	//		//http://stackoverflow.com/questions/14629983/algorithms-for-collision-detection-between-arbitrarily-sized-convex-polygons
+	//		//http://www.dyn4j.org/2010/01/sat/
+
+	//		smarticle0->SetEdges();
+	//		std::vector<double>xyminmax = smarticle0->VertsMinMax();
+	//		
+	//
+	//		double tipDistxmin = abs(xyminmax.at(0) - smarticle0->GetArm(1)->GetPos().x);
+	//		double tipDistxmax = abs(xyminmax.at(1) - smarticle0->GetArm(1)->GetPos().x);
+	//		double tipDistymin = abs(xyminmax.at(2) - smarticle0->GetArm(1)->GetPos().y);
+	//		double tipDistymax = abs(xyminmax.at(3) - smarticle0->GetArm(1)->GetPos().y);
+	//		GetLog() << "\nits:" <<its;
+
+
+	//		double xposi = genRand(bucket->GetPos().x - bucketX + 2.01*bucket_half_thick + tipDistxmin, bucket->GetPos().x + bucketX - 2.01*bucket_half_thick - tipDistxmax);
+	//		double yposi = genRand(bucket->GetPos().y + (-bucketY + 2.01*bucket_half_thick)*cos(box_ang) + tipDistymin, bucket->GetPos().y + (bucketY - 2.01*bucket_half_thick)*cos(box_ang) - tipDistymax);
+	//		double zposi = (-yposi - 2 * bucket_half_thick)*tan(Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x) + t_smarticle / 1.99; //tangent may need to be fixed see buckrotx above
+	//		smarticle0->TransportSmarticle(ChVector<>(xposi, yposi, zposi));
+	//		smarticle0->SetEdges();
+
+	//		//for each smarticle
+	//		for (int otherSmarts = 0; otherSmarts < mySmarticlesVec.size(); otherSmarts++)
+	//		{
+	//			if (collisions)
+	//				break;
+	//			Smarticle* other = mySmarticlesVec[otherSmarts];
+	//			other->SetEdges();
+	//			for (int otherSmartArms = 0; otherSmartArms < 3; otherSmartArms++)
+	//			{
+	//				if (collisions)
+	//					break;
+	//				for (int arm = 0; arm < 3; arm++)
+	//				{
+	//					if (collisions)
+	//						break;
+	//					//I can access each shape of current and other smarticle
+	//					bool checkSecond = true;
+	//					for (int edge = 0; edge < 4; edge++)
+	//					{ 
+	//						collisions = project(smarticle0, other, smarticle0->armAxes[arm][edge], arm, otherSmartArms);
+	//						checkSecond = collisions;
+	//					}
+	//					if (checkSecond)
+	//					{
+	//						for (int otherEdge = 0; otherEdge < 4; otherEdge++)
+	//						{
+	//							collisions = project(smarticle0, other, other->armAxes[otherSmartArms][otherEdge], arm, otherSmartArms);
+	//							if (collisions)
+	//								break;
+
+	//						}
+	//					}
+	//				}
+	//			}
+	//		}
+	//		if (collisions)
+	//		{
+	//			collisions = false;
+	//			continue;
+	//		}
+	//		testsComplete = true;
+	//	}
+	//bool project(Smarticle* curr, Smarticle* other, ChVector<> axis, int currArm, int otherArm)
+	//{
+	//	double min1 = axis.x*curr->armVerts[currArm][0].x +
+	//		axis.y*curr->armVerts[currArm][0].y; //dot product in 2d
+	//	double max1 = min1;
+	//	for (int i = 1; i < 4; i++)
+	//	{
+	//		double p = axis.x*curr->armVerts[currArm][i].x +
+	//			axis.y*curr->armVerts[currArm][i].y;
+	//		if (p < min1) {
+	//			min1 = p;
+	//		}
+	//		else if (p > max1) {
+	//			max1 = p;
+	//		}
+
+	//	}
+
+	//	double min2 = axis.x*other->armVerts[otherArm][0].x +
+	//		axis.y*other->armVerts[otherArm][0].y;
+	//	double max2 = min2;
+	//	for (int i = 1; i < 4; i++)
+	//	{
+	//		double p = axis.x*other->armVerts[otherArm][i].x +
+	//			axis.y*other->armVerts[otherArm][i].y;
+	//		if (p < min2) {
+	//			min2 = p;
+	//		}
+	//		else if (p > max2) {
+	//			max2 = p;
+	//		}
+
+	//	}
+	//	//[a,b] [x,y]  b>x && a<y
+	//	if ((max1 > min2) && (min1 < max2))
+	//	{
+	//		return true;
+	//	}
+	//	return false;
+
+	//}
+	//std::vector<double> Smarticle::VertsMinMax()
+	//{
+	//	//GetLog() << this->GetArm(1)->GetPos();
+	//	//armVerts[arm][verts];
+	//	std::vector<double> xyminmax;
+	//	double xmin = armVerts[0][0].x;
+	//	double xmax = armVerts[0][0].x;
+	//	double ymin = armVerts[0][0].y;
+	//	double ymax = armVerts[0][0].y;
+	//	for (int arm = 0; arm < 3; arm++)
+	//	{
+	//		for (int vertex = 0; vertex < 4; vertex++)
+	//		{
+	//			xmin = std::min(xmin, armVerts[arm][vertex].x);
+	//			xmax = std::max(xmax, armVerts[arm][vertex].x);
+
+	//			ymin = std::min(ymin, armVerts[arm][vertex].y);
+	//			ymax = std::max(ymax, armVerts[arm][vertex].y);
+	//		}
+	//	}
+	//	//.0065;
+	//	//(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset), quat2);
+	//	//GetLog() << "\n" << xmin << " " << xmax << " " << ymin << " " << ymax;
+
+	//	xyminmax.emplace_back(xmin);
+	//	xyminmax.emplace_back(xmax);
+	//	xyminmax.emplace_back(ymin);
+	//	xyminmax.emplace_back(ymax);
+	//	//xyminmax.emplace_back((std::min(std::min(std::min(armVerts[2][3].x, armVerts[2][1].x), armVerts[0][3].x), armVerts[0][1].x)));
+	//	//xyminmax.emplace_back((std::max(std::max(std::max(armVerts[2][3].x, armVerts[2][1].x), armVerts[0][3].x), armVerts[0][1].x)));
+
+	//	//xyminmax.emplace_back((std::min(std::min(std::min(armVerts[2][3].y, armVerts[2][1].y), armVerts[0][3].y), armVerts[0][1].y)));
+	//	//xyminmax.emplace_back((std::max(std::max(std::max(armVerts[2][3].y, armVerts[2][1].y), armVerts[0][3].y), armVerts[0][1].y)));
+
+	//	return xyminmax;
+	//}
+	//double *Smarticle::Project(double minmax[]){
+
+	//	return minmax;
+	//}
+	///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&	
 	//double ChFunctionController::Get_y2(double t) {
 	//	double output = ComputeOutput(t);
 	//	double out_omega = OutputToOmega(t, output);

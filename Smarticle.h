@@ -152,8 +152,6 @@ namespace chrono {
 		virtual void RotateSmarticle(ChQuaternion<>);
 		virtual void RotateSmarticleBy(ChQuaternion<>);
 		virtual void SetEdges();
-		std::vector<double> VertsMinMax();
-		double *Project(double arr[]);
 		virtual void SetSpeed(ChVector<> newSpeed);
 
 

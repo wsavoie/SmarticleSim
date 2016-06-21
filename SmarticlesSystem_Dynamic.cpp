@@ -305,47 +305,7 @@ public:
 };
 // =============================================================================\
 
-bool project(Smarticle* curr, Smarticle* other, ChVector<> axis,int currArm,int otherArm)
-{
-	double min1 = axis.x*curr->armVerts[currArm][0].x + 
-		axis.y*curr->armVerts[currArm][0].y; //dot product in 2d
-	double max1 = min1;
-	for (int i = 1; i < 4; i++)
-	{
-		double p = axis.x*curr->armVerts[currArm][i].x +
-			axis.y*curr->armVerts[currArm][i].y;
-		if (p < min1) {
-			min1 = p;
-		}
-		else if (p > max1) {
-			max1 = p;
-		}
 
-	}
-
-	double min2 = axis.x*other->armVerts[otherArm][0].x +
-		axis.y*other->armVerts[otherArm][0].y;
-	double max2 = min2;
-	for (int i = 1; i < 4; i++)
-	{
-		double p = axis.x*other->armVerts[otherArm][i].x +
-			axis.y*other->armVerts[otherArm][i].y;
-		if (p < min2) {
-			min2 = p;
-		}
-		else if (p > max2) {
-			max2 = p;
-		}
-
-	}
-	//[a,b] [x,y]  b>x && a<y
-	if ((max1 > min2) && (min1 < max2))
-	{
-		return true;
-	}
-	return false;
-
-}
 double showForce(CH_SYSTEM *msys)
 {
 		
@@ -625,9 +585,6 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		
 		if (bucketType == BOX)
 		{
-
-
-			//&&&&&&&&&&&&&&&&&&&&SHENGKAI'S generate smarticles code&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 			//be careful about hlaf size and fullsize dimensions
 			//angle1=left angle2=right
 			//bucketX = half size
@@ -637,9 +594,6 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				double bcy = bucket->GetPos().y;
 				double x0 = (bucketX-4*bucket_half_thick) * 2 * genRand();
 				double y0 = bucketY*2*genRand();
-
-				/*double yposi = genRand(bucket->GetPos().y - (bucketY - 2.01*bucket_half_thick)*cos(box_ang) + tipDistymin, 
-															 bucket->GetPos().y + (bucketY - 2.01*bucket_half_thick)*cos(box_ang) - tipDistymax);*/
 				double xposi = x0 + bcx -bucketX+bucket_half_thick;
 				double yposi = y0*cos(box_ang) + bcy - (bucketY+2.01*bucket_half_thick)*cos(box_ang);
 				double zposi = (-yposi - 2 * bucket_half_thick)*tan(Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x) + t_smarticle / 1.99; //tangent may need to be fixed see buckrotx above
@@ -725,92 +679,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 						}
 						
 				}
-				mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
-				smarticle0->SetSpeed(0);
-			//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
-
-
-		//	//http://gamedevelopment.tutsplus.com/tutorials/collision-detection-using-the-separating-axis-theorem--gamedev-169
-		//	int its = 0;
-		//	bool collisions = false;
-		//	bool testsComplete = false;
-		//	while (testsComplete==false &&collisions==false)
-		//	{
-		//
-		//		//application.DrawAll();
-
-		//		//application.GetVideoDriver()->endScene();
-		//		//application.GetVideoDriver()->beginScene(true, true,
-		//		//	video::SColor(255, 140, 161, 192));
-		//		its = its + 1;
-		//		if (its >= 10000)
-		//		{
-		//			application.GetDevice()->closeDevice();
-		//			exit(-1);
-		//		}
-		//		//http://stackoverflow.com/questions/14629983/algorithms-for-collision-detection-between-arbitrarily-sized-convex-polygons
-		//		//http://www.dyn4j.org/2010/01/sat/
-
-		//		smarticle0->SetEdges();
-		//		std::vector<double>xyminmax = smarticle0->VertsMinMax();
-		//		
-		//
-		//		double tipDistxmin = abs(xyminmax.at(0) - smarticle0->GetArm(1)->GetPos().x);
-		//		double tipDistxmax = abs(xyminmax.at(1) - smarticle0->GetArm(1)->GetPos().x);
-		//		double tipDistymin = abs(xyminmax.at(2) - smarticle0->GetArm(1)->GetPos().y);
-		//		double tipDistymax = abs(xyminmax.at(3) - smarticle0->GetArm(1)->GetPos().y);
-		//		GetLog() << "\nits:" <<its;
-
-
-		//		double xposi = genRand(bucket->GetPos().x - bucketX + 2.01*bucket_half_thick + tipDistxmin, bucket->GetPos().x + bucketX - 2.01*bucket_half_thick - tipDistxmax);
-		//		double yposi = genRand(bucket->GetPos().y + (-bucketY + 2.01*bucket_half_thick)*cos(box_ang) + tipDistymin, bucket->GetPos().y + (bucketY - 2.01*bucket_half_thick)*cos(box_ang) - tipDistymax);
-		//		double zposi = (-yposi - 2 * bucket_half_thick)*tan(Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x) + t_smarticle / 1.99; //tangent may need to be fixed see buckrotx above
-		//		smarticle0->TransportSmarticle(ChVector<>(xposi, yposi, zposi));
-		//		smarticle0->SetEdges();
-
-		//		//for each smarticle
-		//		for (int otherSmarts = 0; otherSmarts < mySmarticlesVec.size(); otherSmarts++)
-		//		{
-		//			if (collisions)
-		//				break;
-		//			Smarticle* other = mySmarticlesVec[otherSmarts];
-		//			other->SetEdges();
-		//			for (int otherSmartArms = 0; otherSmartArms < 3; otherSmartArms++)
-		//			{
-		//				if (collisions)
-		//					break;
-		//				for (int arm = 0; arm < 3; arm++)
-		//				{
-		//					if (collisions)
-		//						break;
-		//					//I can access each shape of current and other smarticle
-		//					bool checkSecond = true;
-		//					for (int edge = 0; edge < 4; edge++)
-		//					{ 
-		//						collisions = project(smarticle0, other, smarticle0->armAxes[arm][edge], arm, otherSmartArms);
-		//						checkSecond = collisions;
-		//					}
-		//					if (checkSecond)
-		//					{
-		//						for (int otherEdge = 0; otherEdge < 4; otherEdge++)
-		//						{
-		//							collisions = project(smarticle0, other, other->armAxes[otherSmartArms][otherEdge], arm, otherSmartArms);
-		//							if (collisions)
-		//								break;
-
-		//						}
-		//					}
-		//				}
-		//			}
-		//		}
-		//		if (collisions)
-		//		{
-		//			collisions = false;
-		//			continue;
-		//		}
-		//		testsComplete = true;
-		//	}
+		
 		}
 		mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
 		smarticle0->SetSpeed(dropSpeed);
@@ -1801,39 +1671,37 @@ void setUpBucketActuator(CH_SYSTEM& mphysicalSystem)
 void UpdateSmarticles(
 		CH_SYSTEM& mphysicalSystem,
 		std::vector<Smarticle*> mySmarticlesVec) {
-	//double pctglob[30] =
-	//{ 0.0009,
-	//0.0013,
-	//0.0016,
-	//0.0023,
-	//0.0027,
-	//0.0030,
-	//0.0041,
-	//0.0047,
-	//0.0052,
-	//0.0074,
-	//0.0085,
-	//0.0097,
-	//0.0151,
-	//0.0174,
-	//0.0197,
-	//0.0233,
-	//0.0247,
-	//0.0262,
-	//0.0343,
-	//0.0371,
-	//0.0399,
-	//0.0449,
-	//0.0473,
-	//0.0496,
-	//0.0620,
-	//0.0698,
-	//0.0776,
-	//0.0975,
-	//0.1199,
-	//0.1423 };
-
-	//static double torquethresh = mySmarticlesVec[0]->torqueThresh2;
+	double pctglob[30] =
+	{ 0.0009,
+	0.0013,
+	0.0016,
+	0.0023,
+	0.0027,
+	0.0030,
+	0.0041,
+	0.0047,
+	0.0052,
+	0.0074,
+	0.0085,
+	0.0097,
+	0.0151,
+	0.0174,
+	0.0197,
+	0.0233,
+	0.0247,
+	0.0262,
+	0.0343,
+	0.0371,
+	0.0399,
+	0.0449,
+	0.0473,
+	0.0496,
+	0.0620,
+	0.0698,
+	0.0776,
+	0.0975,
+	0.1199,
+	0.1423 };
 
 	double t = mphysicalSystem.GetChTime(); 
 	
@@ -1843,7 +1711,8 @@ void UpdateSmarticles(
 		double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);		
 		int moveType=0;
 		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
-		if (genRand() < (1))
+		//if (genRand() < pctglob[i] / 10)
+		if (genRand() < 1)
 			moveType = Smarticle::global_GUI_value; 
 		else
 			moveType = mySmarticlesVec[i]->prevMoveType;
