@@ -641,7 +641,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				/*double yposi = genRand(bucket->GetPos().y - (bucketY - 2.01*bucket_half_thick)*cos(box_ang) + tipDistymin, 
 															 bucket->GetPos().y + (bucketY - 2.01*bucket_half_thick)*cos(box_ang) - tipDistymax);*/
 				double xposi = x0 + bcx -bucketX+bucket_half_thick;
-				double yposi = y0*cos(box_ang) + bcy - bucketY;
+				double yposi = y0*cos(box_ang) + bcy - (bucketY+2.01*bucket_half_thick)*cos(box_ang);
 				double zposi = (-yposi - 2 * bucket_half_thick)*tan(Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x) + t_smarticle / 1.99; //tangent may need to be fixed see buckrotx above
 				int overlap = 0;
 				int m1 = 0; //vertex of n1;
@@ -651,8 +651,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				//box sides
 				double lft = bcx + bucketX;
 				double rgt = bcx - bucketX;
-				double top = bcy + bucketY;
-				double bot = bcy - bucketY;
+				double top = bcy + (bucketY + bucket_half_thick)*cos(box_ang);
+				double bot = bcy - (bucketY+bucket_half_thick)*cos(box_ang);
 				auto & cs = smarticle0; //current smarticle 
 				if (mySmarticlesVec.size() > 0)// more than 1 smarticle exists in system 
 				{

@@ -56,9 +56,10 @@ Smarticle::~Smarticle()
 	m_system->RemoveLink(link_actuator12);
 	//m_system->RemoveLink(link_revolute01);
 	//m_system->RemoveLink(link_revolute12);
-	m_system->RemoveBody(arm0);
-	m_system->RemoveBody(arm1);
-	m_system->RemoveBody(arm2);
+
+	m_system->RemoveBody(this->arm0);
+	m_system->RemoveBody(this->arm1);
+	m_system->RemoveBody(this->arm2);
 	armsController->~Controller();
 	
 	GetLog() << "Deleting Smarticle\n";
