@@ -204,6 +204,7 @@ std::vector<std::shared_ptr<ChBody>> bucket_bod_vec;
 //ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 double bucket_half_thick = sizeScale * .005;
 double percentToMoveToGlobal = 1.0/800.0;
+double percentToChangeStressState = 0;
 double max_z = 0;
 double rampInc = 1;
 double drum_freq = 1;
@@ -399,7 +400,8 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 	}
 	if (argc > 10){
 		const char* text = argv[10];
-		percentToMoveToGlobal = atof(text);
+		//percentToMoveToGlobal = atof(text);
+		percentToChangeStressState = atof(text);
 	}
 	/// if parallel, get solver setting
   //if (USE_PARALLEL) {
@@ -607,11 +609,11 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		smarticle0->Create();
 		smarticle0->setCurrentMoveType((MoveType)Smarticle::global_GUI_value);
 		smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
-
 		//must put this line because of how linspace is written;
 		smarticle0->AssignState(VIB);
 		smarticle0->GenerateVib(angle1*D2R, angle2*D2R);
 		smarticle0->AssignState(Smarticle::global_GUI_value);
+		smarticle0->activateStress = percentToChangeStressState;
 		//smarticle0->ss.emplace_back(angle1, angle2);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
@@ -2557,7 +2559,7 @@ int main(int argc, char* argv[]) {
 		}
   }
 	simParams.open(simulationParams.c_str(), std::ios::app);
-	simParams << "Smarticle OT: " <<	 mySmarticlesVec.at(0)->torqueThresh2 << std::endl;
+	simParams << "Smarticle OT: " << mySmarticlesVec.at(0)->OTThresh*mySmarticlesVec.at(0)->torqueLimit << std::endl;
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
 	  delete mySmarticlesVec[i];
 

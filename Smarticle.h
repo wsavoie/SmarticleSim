@@ -201,7 +201,7 @@ namespace chrono {
 		std::vector<int> moveTypeIdxs;//this vector keeps the current values of the move types
 		MoveType moveType;
 		MoveType prevMoveType;
-		double torqueThresh2; //torqueThres^2 to avoid using sqrts
+		double torqueLimit; //torqueThres^2 to avoid using sqrts
 		double angLow;
 		int specialState = -1;
 		bool lowStressChange = true;
@@ -215,8 +215,10 @@ namespace chrono {
 
 		//////////////
 
-
-
+		double activateStress = 0;;
+		double LTThresh; //Low  torque threshold
+		double MTThresh; //Mid  torque threshold
+		double OTThresh; //Over torque threshold
 		void UpdateState();
 		//arm0
 		ChVector<> arm0OuterEdge;
@@ -302,6 +304,7 @@ namespace chrono {
 		//void CreateActuators1(ChQuaternion<>, ChQuaternion<>);
 		
 
+		
 
 
 	protected:
@@ -321,10 +324,10 @@ namespace chrono {
 		double collisionEnvelope;
 		bool arm0OT;
 		bool arm2OT;
-		double percentToChangeStressState;
-		double LTThresh; //Low  torque threshold
-		double MTThresh; //Mid  torque threshold
-		double OTThresh; //Over torque threshold
+
+		//double LTThresh; //Low  torque threshold
+		//double MTThresh; //Mid  torque threshold
+		//double OTThresh; //Over torque threshold
 		// material property
 		double density;
 		std::shared_ptr<ChMaterialSurface> mat_g;

@@ -152,7 +152,7 @@ void Smarticle::Properties(
 	moveTypeIdxs.resize(MoveType::OT+1, 0);
 	arm0OT = false;
 	arm2OT = false;
-	torqueThresh2 = other_torThresh2;
+	torqueLimit = other_torThresh2;
 	angLow = 0;
 	angHigh = 120;
 	dumID = mdumID;
@@ -167,7 +167,7 @@ void Smarticle::Properties(
 	torqueAvg = std::make_tuple(0, 0, 0, 0);
 	initialAng0 = other_angle;
 	initialAng1 = other_angle2;
-	percentToChangeStressState = .30; //.05
+	activateStress = 0; //.05
 	
 	OTThresh = .7;//for single arm 
 	MTThresh = OTThresh/3.0;//for both arms?
@@ -200,6 +200,7 @@ void Smarticle::updateTorqueDeque()
 	torques.pop_back();
 	torques.emplace_front(getLinkActuator(0)->Get_mot_torque(), getLinkActuator(1)->Get_mot_torque(), getLinkActuator(0)->Get_mot_rot_dt(), getLinkActuator(1)->Get_mot_rot_dt());
 	updateTorqueAvg(oldT);
+
 
 }
 void Smarticle::updateTorqueAvg(std::tuple <double,double,double,double > oldT)
@@ -867,7 +868,7 @@ void Smarticle::Create() {
 	{
 		active = true;
 		armsController = (new Controller(m_system,this));
-		armsController->outputLimit= torqueThresh2;
+		armsController->outputLimit= torqueLimit;
 		armsController->omegaLimit = omegaLim;
 	}
 	else
@@ -1104,11 +1105,11 @@ std::pair<double, double> Smarticle::populateMoveVector()
 
 	std::ifstream smarticleMoves;
 	smarticleMoves.open("smarticleMoves.csv");
-	double mdt, momega, mtorqueThresh2, mangLow, mangHigh,mOmegaLim;
+	double mdt, momega, mtorqueLimit, mangLow, mangHigh,mOmegaLim;
 	smarticleMoves >>
 		mdt >>
 		momega >>
-		mtorqueThresh2 >>
+		mtorqueLimit >>
 		mangLow >>
 		mangHigh>>
 		mOmegaLim;
@@ -1123,10 +1124,10 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	angHigh = mangHigh;
 	angLow = mangLow;
 	distThresh = mdt*momega;
-	torqueThresh2 = mtorqueThresh2;
-	OTThresh = OTThresh*torqueThresh2;
-	MTThresh = MTThresh*torqueThresh2;
-	LTThresh = LTThresh*torqueThresh2;
+	torqueLimit = mtorqueLimit;
+	OTThresh = OTThresh*torqueLimit;
+	MTThresh = MTThresh*torqueLimit;
+	LTThresh = LTThresh*torqueLimit;
 	ddCh = '!';
 	while (ddCh != '#') {
 		smarticleMoves >> ddCh;
@@ -1323,7 +1324,7 @@ bool Smarticle::MoveMidStress(double tor0, double tor1)
 
 	if (t0+t1 > MTThresh)
 	{// MT<t0<OT //TODO perhaps make this function if(t0+t1>2*MT) since servo can only sense stress from both
-		if (genRand() < percentToChangeStressState)
+		if (genRand() < activateStress)
 		{
 			specialState = MIDT;
 			return true;
@@ -1501,7 +1502,7 @@ void Smarticle::CheckLTTimer(double t1, double t2)
 	static double switchTime = 2 * LTMaxTime;
 	if ((abs(t1)+abs(t2))<LTThresh)
 	{
-		if (genRand() < percentToChangeStressState)
+		if (genRand() < activateStress)
 		{
 			LTRunning = true;
 		}
@@ -1529,7 +1530,7 @@ void Smarticle::CheckOTTimer()
 {
 	if (GetArm0OT() || GetArm2OT())
 	{
-		if (genRand() < percentToChangeStressState)
+		if (genRand() < activateStress)
 		{
 			OTRunning = true;
 		}

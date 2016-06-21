@@ -58,6 +58,7 @@
 	extern double d_gain;
 	extern double fric;
 	extern double percentToMoveToGlobal;
+	extern double percentToChangeStressState;
 	extern chrono::ChVector<> bucket_interior_halfDim;
 	
 	
@@ -208,7 +209,7 @@
 
 
 
-//	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
+//	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueLimit;
 
 
 //	//determine moveType
@@ -275,7 +276,7 @@
 //	//}
 
 //	/////////////torque color change was here/////////////
-//	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)//one arm is OT 
+//	if (torque01 > torqueLimit || torque12 > torqueLimit)//one arm is OT 
 //	{
 //		this->setCurrentMoveType(OT);
 //		v = &ot;
@@ -356,7 +357,7 @@
 
 //	double torque01 = fabs(link_actuator01->Get_react_torque().Length2()); //use length2 to avoid squareroot calculation be aware of blowing up because too high torque overflows double
 //	double torque12 = fabs(link_actuator12->Get_react_torque().Length2());
-//	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueThresh2;
+//	//GetLog() << "\n*********" << torque01 << " " << torque12 << " thresh: " << torqueLimit;
 
 
 //	//determine moveType
@@ -422,12 +423,12 @@
 //	//	armBroken = true;
 //	//}
 
-//	if (torque01 > torqueThresh2 || torque12 > torqueThresh2)//one arm is OT 
+//	if (torque01 > torqueLimit || torque12 > torqueLimit)//one arm is OT 
 //	{
 //		this->setCurrentMoveType(OT);
 //		v = &ot;
 
-//		if (torque01 > torqueThresh2) // arm 0 is overtorqued
+//		if (torque01 > torqueLimit) // arm 0 is overtorqued
 //		{
 //			if (!arm0OT)//if arm was previously not OT, add color asset
 //			{
@@ -437,7 +438,7 @@
 //				this->ot.emplace_back(GetAngle1(), GetAngle2());
 //			}
 //		}
-//		if (torque12 > torqueThresh2)// arm 2 is overtorqued
+//		if (torque12 > torqueLimit)// arm 2 is overtorqued
 //		{
 //			if (!arm2OT)
 //			{
