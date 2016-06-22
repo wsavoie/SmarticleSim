@@ -60,7 +60,8 @@ Smarticle::~Smarticle()
 	m_system->RemoveBody(this->arm0);
 	m_system->RemoveBody(this->arm1);
 	m_system->RemoveBody(this->arm2);
-	armsController->~Controller();
+	if (armsController)
+		armsController->~Controller();
 	
 	GetLog() << "Deleting Smarticle\n";
 }
@@ -752,14 +753,16 @@ void Smarticle::CreateActuators() {
 	//link_actuator01->GetLimit_Z()->Set_max(2*D2R);
 	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 	m_system->AddLink(link_actuator01);
-	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	if(active)
+		link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
 	link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
 	//link_actuator12->GetLimit_Rz()->Set_active(false);
 	//link_actuator12->GetLimit_Rz()->Set_min(mn*D2R);
 	//link_actuator12->GetLimit_Rz()->Set_max(mx*D2R);
 	m_system->AddLink(link_actuator12);
-	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	if (active)
+		link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
 	//auto mfun0 = std::dynamic_pointer_cast<ChFunction_Const>(link_actuator01->Get_tor_funct());
 	//mfun0->Set_yconst(0);
@@ -835,8 +838,7 @@ void Smarticle::Create() {
 	else
 	{
 		active = false;
-		//link_actuator01->SetDisabled(true);
-		//link_actuator12->SetDisabled(true);
+		armsController = NULL;
 	}
 }
 

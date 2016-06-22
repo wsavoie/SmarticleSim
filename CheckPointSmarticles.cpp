@@ -143,8 +143,17 @@ void CheckPointSmarticlesDynamic_Write(
 	//	angle1 >> ddCh >> angle2 >> ddCh >>
 	//	dumId >> globalidx >> ddCh >> gui1idx >> ddCh >> gui2idx >> ddCh >>
 	//	gui3idx >> ddCh >> prevMoveType >> ddCh >> currMoveType >> ddCh;
+
+
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 		Smarticle* mSmart = (Smarticle*)mySmarticlesVec[i];
+		double yold0 = 0;
+		double yold1 = 0;
+		if (mSmart->armsController)
+		{
+			yold0 = mSmart->armsController->yold[0];
+			yold1 = mSmart->armsController->yold[1];
+		}
 		outSmarticles <<
 			mSmart->GetSmarticleBodyPointer()->GetPos().x << ", " <<
 			mSmart->GetSmarticleBodyPointer()->GetPos().y << ", " <<
@@ -168,8 +177,8 @@ void CheckPointSmarticlesDynamic_Write(
 			mSmart->prevMoveType << ", " <<
 			mSmart->moveType << ", " <<
 			mSmart->GetOmega1() << ", "<<
-			mSmart->armsController->yold[0] << ", " <<
-			mSmart->armsController->yold[1] << ", " <<
+			yold0 << ", " <<
+			yold1 << ", " <<
 			std::endl;
 	}
 
