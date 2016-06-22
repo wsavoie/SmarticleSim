@@ -603,8 +603,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 	
 				//points matlab [floor((0:11)./4)',mod(0:11,4)',floor((0:11)./4)',mod((0:11)+1,4)']
 				//box sides
-				double lft = bcx + bucketX;
-				double rgt = bcx - bucketX;
+				double lft = bcx + (-bucket_half_thick + bucketX);
+				double rgt = bcx - (-bucket_half_thick + bucketX);
 				double top = bcy + (bucketY + bucket_half_thick)*cos(box_ang);
 				double bot = bcy - (bucketY+bucket_half_thick)*cos(box_ang);
 				auto & cs = smarticle0; //current smarticle 
@@ -1711,13 +1711,19 @@ void UpdateSmarticles(
 		double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);		
 		int moveType=0;
 		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
-		//if (genRand() < pctglob[i] / 10)
-		if (genRand() < 1)
-			moveType = Smarticle::global_GUI_value; 
+		//if (genRand() < 1)
+		//{
+		if (genRand() < pctglob[i] / 10)
+		{
+			moveType = Smarticle::global_GUI_value;
+		}
 		else
+		{
 			moveType = mySmarticlesVec[i]->prevMoveType;
+		}
 		mySmarticlesVec[i]->ControllerMove(moveType, tor1, tor2);
 		mySmarticlesVec[i]->steps = mySmarticlesVec[i]->steps + 1;
+
 	}
 }
 // =============================================================================
@@ -1728,10 +1734,10 @@ bool SetGait(double time)
 		Smarticle::global_GUI_value = 1;
 	else if (time > tm*1 && time <= tm*2)
 		Smarticle::global_GUI_value = 2;
-	else if (time > tm*2 && time <= tm*3)
-		Smarticle::global_GUI_value = 1;
-	else if (time > tm*3 && time <= tm*4)
-		Smarticle::global_GUI_value = 2;
+	//else if (time > tm*2 && time <= tm*3)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time > tm*3 && time <= tm*4)
+	//	Smarticle::global_GUI_value = 2;
 	else
 		return true;
 

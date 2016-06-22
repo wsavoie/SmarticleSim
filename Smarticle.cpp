@@ -161,7 +161,7 @@ void Smarticle::Properties(
 
 	std::tuple<double, double,double,double> a (0.0, 0.0,0.0,0.0);
 	//torques = { a, a, a, a, a, a, a }; //probably a better way to do this....
-	torques = { a, a }; //probably a better way to do this....
+	torques = { a,a,a,a,a,a }; //probably a better way to do this....
 	nextOmega = { 0, 0 };
 	nextAngle = { 0,0};
 	currTorque = { 0, 0 };
@@ -1317,7 +1317,6 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 	//for vibration upon OT, change degreesToVibrate to amount you wish to vibrate
 	double degreesToVibrate = 0;
 	double moveAmt = degreesToVibrate*D2R;
-	
 	if (abs(torque01) > OTThresh)
 	{
 		//this->setCurrentMoveType(OT);
@@ -1491,6 +1490,7 @@ void Smarticle::CheckOTTimer()
 	{
 		if (genRand() < activateStress)
 		{
+
 			OTRunning = true;
 		}
 		
@@ -1514,7 +1514,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	/////////////////////////set which stress actions are actived/////////////////////////
 	static const bool LowStressActive = false;
 	static const bool MidStressActive = false;
-	static const bool OverStressActive = false;
+	static const bool OverStressActive = true;
 	//////////////////////////////////////////////////////////////////////////////////////
 
 	if (active == false)
@@ -1522,7 +1522,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 		successfulMotion = false;
 		return;
 	}
-	bool moveDecided = false;
+	static bool moveDecided = false;
 	bool sameMoveType = false;
 	prevSuccessful = successfulMotion;
 	successfulMotion = false;
@@ -1534,7 +1534,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 
 	//assigns OT and specialState to OT
 	ChangeArmColor(torque01, torque12,LowStressActive,MidStressActive,OverStressActive);
-	if (OverStressActive && !moveDecided)
+	if (OverStressActive)
 	{
 		CheckOTTimer();
 		moveDecided = MoveOverStress(torque01, torque12);
@@ -1557,7 +1557,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 		CheckLTTimer(torque01,torque12);
 		moveDecided = MoveLowStress(torque01, torque12, LTTimer);
 	}
-
+	
 
 	if (specialState != -1)
 	{

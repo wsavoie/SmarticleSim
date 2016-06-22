@@ -43,10 +43,11 @@ if stapleSize
     mass = volume*rho;
     torqueLimit=2*9.8*mass*w_s;%.00005;  4.6657e-04
 else
-      %t = height of solar panels
-    t= .029982;
-    w_s = 0.05316;
+      
+    t= .029982; %t = height of solar panels
     t2 = .02122;
+    w_s = 0.05316;
+  
     l_s = .8*w_s; 
 %     t   = .0079*sizeScale;
 %     t2  = .0053*sizeScale;

@@ -8,7 +8,6 @@
 #include <fstream>
 #include <string>
 #include "SmarticleU.h"
-
 namespace chrono {
 
 //====================================================================================
@@ -308,6 +307,7 @@ void CheckPointSmarticlesDynamic_Read(
 		smarticle0->armsController->yold[0] = yold0;
 		smarticle0->armsController->yold[1] = yold1;
 		smarticle0->setCurrentMoveType(VIB);
+		smarticle0->activateStress = percentToChangeStressState;
 		mySmarticlesVec.emplace_back(smarticle0);
 		application.DrawAll();
 
