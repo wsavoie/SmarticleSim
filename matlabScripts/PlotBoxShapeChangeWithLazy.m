@@ -1,5 +1,5 @@
 % function [out]=GetFileInfo(direc)
-direc= 'A:\SmarticleRun\No OT\LazyNoOT\';
+direc= 'A:\SmarticleRun\un_eq_no_OT_all_plots_4runs\UnequalOTv2\';
 % direc='A:\SmarticleRun\lazy_tor.3_smarts30\lazy .01\';
 clf
 dirs = dir(direc);

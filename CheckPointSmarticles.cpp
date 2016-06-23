@@ -248,7 +248,8 @@ void CheckPointSmarticlesDynamic_Read(
 	std::ifstream inSmarticles;
 	std::pair<double, double> angPair;
 	inSmarticles.open("smarticles.csv");
-	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction, angle1, angle2, globalidx, gui1idx, gui2idx, gui3idx, dumId, yold0, yold1,vibidx, extra1idx, extra2idx, midtidx, otidx;
+	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction, angle1, angle2, yold0, yold1;
+	int globalidx, gui1idx, gui2idx, gui3idx, dumId, vibidx, extra1idx, extra2idx, midtidx, otidx;
 	unsigned int currMoveType, prevMoveType, gui_value;
 	double rho_smarticle;
 	auto mat_g = std::make_shared<ChMaterialSurface>();
@@ -268,7 +269,7 @@ void CheckPointSmarticlesDynamic_Read(
 	angle2 = 0;
 	printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f angle1 %f angle2 %f",
 		l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticle, friction, angle1, angle2);
-	mat_g->SetFriction(friction);
+	mat_g->SetFriction((float) friction);
 	Smarticle::global_GUI_value = gui_value;
 	
 	ddCh = '!';

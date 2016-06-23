@@ -168,9 +168,13 @@ double gaitChangeLengthTime = .5;
 	ChVector<>boxdim(.28/1.5, .55245, 2 * bucket_rad / 8);
 #endif
 
-	double p_gain = .2;   //.32           //.2
-	double i_gain = .225;	 //.4 //.225       //.225
-	double d_gain = 0.01; //.1  //.01      //.01
+	double p_gain = 0.2;   //.1//.2         
+	double i_gain = .225;	 //.5//.225       
+	double d_gain = 0.01; //.0025 //.01     
+
+	//double p_gain = .2;   //.32           //.2
+	//double i_gain = .225;	 //.4 //.225       //.225
+	//double d_gain = 0.01; //.1  //.01      //.01
 
 	// double t_smarticle 	= sizeScale * .00254;
 	// double t2_smarticle	= sizeScale * .001;
@@ -593,9 +597,9 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				double bcx = bucket->GetPos().x;
 				double bcy = bucket->GetPos().y;
 				double x0 = (bucketX-4*bucket_half_thick) * 2 * genRand();
-				double y0 = bucketY*2*genRand();
+				double y0 = (bucketY-4 * bucket_half_thick)*2*genRand();
 				double xposi = x0 + bcx -bucketX+bucket_half_thick;
-				double yposi = y0*cos(box_ang) + bcy - (bucketY+2.01*bucket_half_thick)*cos(box_ang);
+				double yposi = y0*cos(box_ang) + bcy - (bucketY+2*bucket_half_thick)*cos(box_ang);
 				double zposi = (-yposi - 2 * bucket_half_thick)*tan(Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x) + t_smarticle / 1.99; //tangent may need to be fixed see buckrotx above
 				int overlap = 0;
 				int m1 = 0; //vertex of n1;
@@ -605,8 +609,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 				//box sides
 				double lft = bcx + (-bucket_half_thick + bucketX);
 				double rgt = bcx - (-bucket_half_thick + bucketX);
-				double top = bcy + (bucketY + bucket_half_thick)*cos(box_ang);
-				double bot = bcy - (bucketY+bucket_half_thick)*cos(box_ang);
+				double top = bcy + (bucketY + 2*bucket_half_thick)*cos(box_ang);
+				double bot = bcy - (bucketY+2*bucket_half_thick)*cos(box_ang);
 				auto & cs = smarticle0; //current smarticle 
 				if (mySmarticlesVec.size() > 0)// more than 1 smarticle exists in system 
 				{
@@ -1111,9 +1115,11 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 			bucket->AddAsset(bucketTexture);
 			bucket->SetCollide(true);
 			bucket->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-			bucket_bott->GetCollisionModel()->SetFamily(1);
-			bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-		
+			/*bucket_bott->GetCollisionModel()->SetFamily(1);
+			bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);*/
+			CreateBucket_bott(mphysicalSystem);
+			bucket_bott->SetCollide(false);
+			bucket_bott->SetPos(ChVector<>(5, 5, 5));
 			break;
 		}
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
@@ -1647,6 +1653,7 @@ void setUpBucketActuator(CH_SYSTEM& mphysicalSystem)
 		break;
 
 	case BOX:
+		
 		qx = Q_from_AngAxis(PI_2, VECT_Y);
 		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), qx));
 		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
@@ -1706,15 +1713,20 @@ void UpdateSmarticles(
 	double t = mphysicalSystem.GetChTime(); 
 	
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
-		mySmarticlesVec[i]->updateTorqueDeque();
-		double tor1 = std::get<0>(mySmarticlesVec[i]->torqueAvg);
-		double tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);		
+		double tor1 = 0;
+		double tor2 = 0; 
+		if (mySmarticlesVec[i]->active)
+		{
+			mySmarticlesVec[i]->updateTorqueDeque();
+			tor1 = std::get<0>(mySmarticlesVec[i]->torqueAvg);
+			tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);
+		}
 		int moveType=0;
 		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
-		//if (genRand() < 1)
-		//{
-		if (genRand() < pctglob[i] / 10)
+		if (genRand() < 1)
 		{
+		//if (genRand() < pctglob[i] / 10)
+		//{
 			moveType = Smarticle::global_GUI_value;
 		}
 		else
@@ -1729,19 +1741,21 @@ void UpdateSmarticles(
 // =============================================================================
 bool SetGait(double time)
 {
-	double tm = 7;
-	if (time <= tm*1)
-		Smarticle::global_GUI_value = 1;
-	else if (time > tm*1 && time <= tm*2)
-		Smarticle::global_GUI_value = 2;
-	//else if (time > tm*2 && time <= tm*3)
+	//double tm = 7;
+	//if (time <= tm*1)
 	//	Smarticle::global_GUI_value = 1;
-	//else if (time > tm*3 && time <= tm*4)
+	//else if (time > tm*1 && time <= tm*2)
 	//	Smarticle::global_GUI_value = 2;
+	////else if (time > tm*2 && time <= tm*3)
+	////	Smarticle::global_GUI_value = 1;
+	////else if (time > tm*3 && time <= tm*4)
+	////	Smarticle::global_GUI_value = 2;
+	//else
+	//	return true;
+	if (time <= 30)
+		Smarticle::global_GUI_value = 0;
 	else
 		return true;
-
-
 	//else if (time > 30 && time <= 33)
 	//	Smarticle::global_GUI_value = 3;
 	//else if (time > 33 && time <= 36)
@@ -2419,7 +2433,7 @@ int main(int argc, char* argv[]) {
 
 
 		std::cout.flush();
-
+		
 		if (read_from_file == -1|| read_from_file == 2)
 		{
 			CheckPointSmarticlesDynamic_Write(mySmarticlesVec,

@@ -822,22 +822,26 @@ void Smarticle::Create() {
 		CreateArm2(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset), quat2);
 	}
 
+	//need this here
+	if (genRand() < pctActive)
+		active = true;
+	else
+		active = false;
+
 	CreateActuators();
 
 	// mass property
 	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
 
 
-	if (genRand() < pctActive)
+	if (active)
 	{
-		active = true;
 		armsController = (new Controller(m_system,this));
 		armsController->outputLimit= torqueLimit;
 		armsController->omegaLimit = omegaLim;
 	}
 	else
 	{
-		active = false;
 		armsController = NULL;
 		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
 		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
@@ -1519,7 +1523,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	/////////////////////////set which stress actions are actived/////////////////////////
 	static const bool LowStressActive = false;
 	static const bool MidStressActive = false;
-	static const bool OverStressActive = true;
+	static const bool OverStressActive = false;
 	//////////////////////////////////////////////////////////////////////////////////////
 
 	if (active == false)

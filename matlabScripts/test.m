@@ -1,4 +1,4 @@
-path = 'A:\SmarticleRun\LazyNoOT\';
+path = 'A:\SmarticleRun\un_eq_no_OT_all_plots_4runs\UnequalOTv2\';
 % path = 'D:\SimResults\Chrono\SmarticleU\tests\lazy .05\';
 a=dir(horzcat(path,'-*'))
 for i=1:length(a)
