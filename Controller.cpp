@@ -6,7 +6,6 @@
 //#include "include/vector_utility.h"
 //#include "include/contact_reporter.h"
 
-
 using namespace chrono;
 Controller::Controller(chrono::ChSystem *ch_system, Smarticle *smarticle)
 	: ch_system_(ch_system), smarticle_(smarticle)
@@ -23,6 +22,16 @@ Controller::Controller(chrono::ChSystem *ch_system, Smarticle *smarticle)
 	cumOmegError_.assign(len, 0);
 	successfulMove_.assign(len, false);
 	prevAngle_.assign(len, 0);
+
+	mLastError.assign(len,0);
+	// accumulated input
+	mAccuError.assign(len, 0);
+	// last time the function is called
+	mLastCalled.assign(len, 0);
+	// last output
+	mLastValue.assign(len, 0);
+
+
 
 	//have to define this way because VS is not completely C++11 compliant
 	velOld[0] = 0;
@@ -68,7 +77,6 @@ Controller::~Controller()
 bool Controller::Step(double dt) {
 	bool result = false;
 	double ang = 0;
-
 
 	for (size_t i = 0; i < smarticle_->numEngs; i++)
 	{

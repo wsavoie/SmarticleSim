@@ -6,16 +6,93 @@ using namespace chrono;
 
 double ChFunctionController::Get_y(double t) {
 	double curr_react_torque = controller_->GetCurrTorque(index_, t);
-  //add the torque already being place on the body to the torque for the next step
-	//double out_torque =output; //add the torque already being place on the body to the torque for the next step
-	double output = ComputeOutput(t);
+	   //add the torque already being place on the body to the torque for the next step
+		     //double out_torque =output; //add the torque already being place on the body to the torque for the next step
+		double output = ComputeOutput(t);
 	double out_torque = SaturateValue(ComputeOutput(t) - curr_react_torque, controller_->outputLimit);
-		
-	bool o = false;
+	
+		bool o = false;
 	if (abs(out_torque) == controller_->outputLimit)
 		o = true;
 	return out_torque;
 }
+//%%%%%%%%%%%%%%%%%%%%TINGNANS CODE%%%%%%%%%%%%%%%%%%%%%%%%%
+//double Get_y(double curr_t)
+//{
+//	double dt = curr_t - mLastCalled;
+//	if (dt < mDt)
+//		return mLastValue;
+//	// we will use the internal information of the mEngine to compute the error;
+//	// then we can use the error to compute the torque needed
+//
+//	double currRotation = mEngine->Get_mot_rot();
+//	double desiredRotation = mEngine->Get_rot_funct()->Get_y(curr_t);
+//	double currError = desiredRotation - currRotation;
+//
+//	double currRotation_dt = mEngine->Get_mot_rot_dt();
+//	double desiredRotation_dt = mEngine->Get_rot_funct()->Get_y_dx(curr_t);
+//	double currError_dt = desiredRotation_dt - currRotation_dt;
+//
+//	// trapezoidal method
+//	mAccuError += 0.5 * (currError + mLastError) * dt;
+//
+//	double Out = P * currError + I * mAccuError + D * (currError - mLastError) / dt;
+//	if (Max > Min)
+//	{
+//		// set the limit
+//		Out = std::max(std::min(Out, Max), Min);
+//	}
+//
+//	mLastError = currError;
+//	mLastCalled = curr_t;
+//	mLastValue = Out;
+//	// std::cout << mAccuError << std::endl;
+//	return Out;
+//
+//}
+//%%%%%%%%%
+//double ChFunctionController::Get_y(double curr_t)
+//{
+//	double curr_react_torque = controller_->GetCurrTorque(index_, curr_t);
+//	// we will use the internal information of the mEngine to compute the error;
+//	// then we can use the error to compute the torque needed
+//	double currRotation = controller_->GetAngle(index_, curr_t);
+//	double desiredRotation = controller_->GetDesiredAngle(index_, curr_t); ///get the next angle
+//	desiredRotation = controller_->LinearInterpolate(index_, currRotation, desiredRotation); //linear interpolate for situations where gui changes so there isn't a major speed increase
+//	double currError = desiredRotation - currRotation;
+//
+//
+//	double currRotation_dt = controller_->GetActuatorOmega(index_, curr_t);
+//	double desiredRotation_dt = controller_->smarticle_->getLinkActuator(index_)->Get_rot_funct()->Get_y_dx(curr_t);
+//	double currError_dt = desiredRotation_dt - currRotation_dt;
+//
+//	double prevError = controller_->mLastError[index_];
+//
+//
+//	//mLastError.assign(len, 0);
+//	//// accumulated input
+//	//mAccuError.assign(len, 0);
+//	//// last time the function is called
+//	//mLastCalled.assign(len, 0);
+//	//// last output
+//	//mLastValue.assign(len, 0);
+//	//// trapezoidal method
+//	controller_->mAccuError[index_] +=  .5*(currError + prevError) * dT;
+//	
+//	double Out = p_gain * currError + i_gain * controller_->mAccuError[index_] + d_gain * (currError - prevError) / dT;
+//	Out = SaturateValue(Out, controller_->outputLimit);
+//	controller_->mLastError[index_]= currError;
+//	controller_->mLastCalled[index_] = curr_t;
+//	controller_->mLastValue[index_] = Out;
+//	if (controller_->resetCumError)
+//		ResetCumulative(curr_t);
+//	// std::cout << mAccuError << std::endl;
+//	return Out;
+//
+//}
+
+//%%%%%%%%%%%%%%%%%%%%TINGNANS CODE%%%%%%%%%%%%%%%%%%%%%%%%%
+//	
 double ChFunctionController::Get_y(double t) const { return 0; }
 
 double ChFunctionController::ComputeOutput(double t) {

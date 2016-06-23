@@ -56,6 +56,16 @@ namespace chrono {
 		std::vector <double> cumOmegError_;
 		std::vector <double> prevAngle_;
 		std::vector <bool> successfulMove_;
+
+		// last input
+		std::vector <double>  mLastError;
+		// accumulated input
+		std::vector <double>  mAccuError;
+		// last time the function is called
+		std::vector <double>  mLastCalled;
+		// last output
+		std::vector <double> mLastValue;
+
 	protected:
 		chrono::ChSystem *ch_system_;
 
