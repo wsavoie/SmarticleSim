@@ -44,7 +44,7 @@
 
 	////////////
 
-
+	extern int read_from_file;
 	extern double bucket_rad;
 	extern double vibAmp;
 	extern double rampInc;

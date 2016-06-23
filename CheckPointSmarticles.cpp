@@ -179,9 +179,9 @@ void CheckPointSmarticlesDynamic_Write(
 			mSmart->GetOmega1() << ", "<<
 			yold0 << ", " <<
 			yold1 << ", " <<
+			mSmart->active << ", " <<
 			std::endl;
 	}
-
 	outSmarticles.close();
 
 }
@@ -250,6 +250,7 @@ void CheckPointSmarticlesDynamic_Read(
 	inSmarticles.open("smarticles.csv");
 	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction, angle1, angle2, yold0, yold1;
 	int globalidx, gui1idx, gui2idx, gui3idx, dumId, vibidx, extra1idx, extra2idx, midtidx, otidx;
+	bool activeSmart;
 	unsigned int currMoveType, prevMoveType, gui_value;
 	double rho_smarticle;
 	auto mat_g = std::make_shared<ChMaterialSurface>();
@@ -288,12 +289,12 @@ void CheckPointSmarticlesDynamic_Read(
 		gui3idx >> ddCh >> vibidx >> ddCh >> extra1idx >> ddCh >>
 		extra2idx >> ddCh >> midtidx >> ddCh >> otidx >> ddCh >>
 		prevMoveType >> ddCh >> currMoveType >> ddCh >> omega >>
-		ddCh >> yold0 >> ddCh >> yold1 >> ddCh;
+		ddCh >> yold0 >> ddCh >> yold1 >> ddCh >> activeSmart >> ddCh;
 	//TODO add 
 	while (inSmarticles.good()) {
 		
 		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
-
+		smarticle0->active = activeSmart;
 		smarticle0->Properties(mySmarticlesVec.size(), dumId,
 			rho_smarticle, mat_g,
 			collisionEnvelop,
@@ -303,6 +304,7 @@ void CheckPointSmarticlesDynamic_Read(
 		smarticle0->populateMoveVector();
 		smarticle0->SetAngles(angle1, angle2, false);
 		smarticle0->visualize = true;
+	
 		smarticle0->Create();
 
 		smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
@@ -314,10 +316,15 @@ void CheckPointSmarticlesDynamic_Read(
 		smarticle0->moveTypeIdxs.at(MoveType::GUI2)		= gui2idx;
 		smarticle0->moveTypeIdxs.at(MoveType::GUI3)		= gui3idx;
 		smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
-		smarticle0->armsController->yold[0] = yold0;
-		smarticle0->armsController->yold[1] = yold1;
+
+		if (smarticle0->active)
+		{
+			smarticle0->armsController->yold[0] = yold0;
+			smarticle0->armsController->yold[1] = yold1;
+		}
 		smarticle0->setCurrentMoveType(VIB);
 		smarticle0->activateStress = percentToChangeStressState;
+
 		mySmarticlesVec.emplace_back(smarticle0);
 		application.DrawAll();
 
@@ -340,7 +347,7 @@ void CheckPointSmarticlesDynamic_Read(
 			gui3idx >> ddCh >> vibidx >> ddCh >> extra1idx >> ddCh >> 
 			extra2idx >> ddCh >> midtidx >> ddCh >> otidx >> ddCh >> 
 			prevMoveType >> ddCh >> currMoveType >> ddCh >> omega >> 
-			ddCh >> yold0 >> ddCh >> yold1 >> ddCh;
+			ddCh >> yold0 >> ddCh >> yold1 >> ddCh >> activeSmart >> ddCh;
 	}
 
 	GetLog()<< "num smarticles:"<<  mySmarticlesVec.size();

@@ -820,11 +820,13 @@ void Smarticle::Create() {
 	}
 
 	//need this here
-	if (genRand() < pctActive)
-		active = true;
-	else
-		active = false;
-
+	if (read_from_file <= 0)//not reading
+	{
+		if (genRand() < pctActive && read_from_file > 0)
+			active = true;
+		else
+			active = false;
+	}
 	CreateActuators();
 
 	// mass property
