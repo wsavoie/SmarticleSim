@@ -724,12 +724,10 @@ void Smarticle::CreateJoints() {
 }
 
 void Smarticle::CreateActuators() {
-
 	link_actuator01 = std::make_shared<ChLinkEngine>();
 	link_actuator12 = std::make_shared<ChLinkEngine>();
-	
-	ChVector<> pR01 (-w / 2.0, 0, 0);
-	ChVector<> pR12 (w / 2.0, 0, 0);
+	ChVector<> pR01(-w / 2.0, 0, 0);
+	ChVector<> pR12(w / 2.0, 0, 0);
 	if (!stapleSize)
 	{
 		pR01 = ChVector<>(-(w / 2 - jointClearance), 0, -offPlaneoffset);
@@ -749,26 +747,25 @@ void Smarticle::CreateActuators() {
 	double mn = angLow;
 	double mx = angHigh;
 	//link_actuator01->GetLimit_Z()->Set_active(true);
-	//link_actuator01->GetLimit_Z()->Set_min(0*D2R);
-	//link_actuator01->GetLimit_Z()->Set_max(2*D2R);
-	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
-	m_system->AddLink(link_actuator01);
-	if(active)
-		link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	//link_actuator01->GetLimit_Z()->Set_min(angLow*D2R);
+	//link_actuator01->GetLimit_Z()->Set_max(angLow*D2R);
+	//link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 
-	link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-	//link_actuator12->GetLimit_Rz()->Set_active(false);
-	//link_actuator12->GetLimit_Rz()->Set_min(mn*D2R);
-	//link_actuator12->GetLimit_Rz()->Set_max(mx*D2R);
-	m_system->AddLink(link_actuator12);
 	if (active)
+	{
+		link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 		link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+		link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
+		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
 
-	//auto mfun0 = std::dynamic_pointer_cast<ChFunction_Const>(link_actuator01->Get_tor_funct());
-	//mfun0->Set_yconst(0);
-	//auto mfun1= std::dynamic_pointer_cast<ChFunction_Const>(link_actuator12->Get_tor_funct());
-	//mfun1->Set_yconst(0);
-
+	}
+	else
+	{
+		link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
+		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+	}
+	m_system->AddLink(link_actuator01);
+	m_system->AddLink(link_actuator12);
 
 
 	/*std::shared_ptr<ChLinkLockRevolute> linklimit01= std::make_shared<ChLinkLockRevolute>();
