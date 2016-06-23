@@ -822,7 +822,7 @@ void Smarticle::Create() {
 	//need this here
 	if (read_from_file <= 0)//not reading
 	{
-		if (genRand() < pctActive && read_from_file > 0)
+		if (genRand() < pctActive)
 			active = true;
 		else
 			active = false;
