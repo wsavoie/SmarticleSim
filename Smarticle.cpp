@@ -839,6 +839,9 @@ void Smarticle::Create() {
 	{
 		active = false;
 		armsController = NULL;
+		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
 	}
 }
 
