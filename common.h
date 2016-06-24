@@ -43,7 +43,7 @@
 	extern BucketType bucketType;
 
 	////////////
-
+	extern bool saveFrame;
 	extern int read_from_file;
 	extern double bucket_rad;
 	extern double vibAmp;

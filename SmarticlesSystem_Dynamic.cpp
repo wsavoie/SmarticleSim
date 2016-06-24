@@ -116,6 +116,7 @@ std::ofstream simParams;
 double sizeScale = 1;
 int appWidth = 1280;
 int appHeight = 720;
+bool saveFrame = false;
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 double vibration_freq = 30;
@@ -366,6 +367,11 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[10];
 		//percentToMoveToGlobal = atof(text);
 		percentToChangeStressState = atof(text);
+	}
+	if (argc > 11){
+		const char* text = argv[11];
+		//percentToMoveToGlobal = atof(text);
+		saveFrame = atoi(text);
 	}
 	/// if parallel, get solver setting
   //if (USE_PARALLEL) {
@@ -1927,14 +1933,16 @@ int main(int argc, char* argv[]) {
 
 	RTSCamera* camera = new RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
-	camera->setUpVector(core::vector3df(0, 0, 1));
-//camera->setPosition(core::vector3df(0, -.17, .07));
-	//camera->setPosition(core::vector3df(0, bucket_interior_halfDim.y, 4 * bucket_rad / 2.0));
-	//camera->setTarget(core::vector3df(0, 2*bucket_interior_halfDim.y, -bucket_rad / 2.1)); //	camera->setTarget(core::vector3df(0, 0, .01));
 
-	camera->setPosition(core::vector3df(.0139, -.445, .7));
-	camera->setTarget(core::vector3df(0.0139, .243, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+////camera->setPosition(core::vector3df(0, -.17, .07));
+//	//camera->setPosition(core::vector3df(0, bucket_interior_halfDim.y, 4 * bucket_rad / 2.0));
+//	//camera->setTarget(core::vector3df(0, 2*bucket_interior_halfDim.y, -bucket_rad / 2.1)); //	camera->setTarget(core::vector3df(0, 0, .01));
 
+	//camera->setPosition(core::vector3df(.0139, -.445, .7));
+	//camera->setTarget(core::vector3df(0.0139, .243, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+
+	camera->setPosition(core::vector3df(0.0139, -0.65, -.180));
+	camera->setTarget(core::vector3df(0.0139, -.50, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
 
 
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
@@ -1944,7 +1952,11 @@ int main(int argc, char* argv[]) {
 	camera->setNearValue(0.0005f);
 	camera->setMinZoom(0.1f);
 	camera->setZoomSpeed(0.1f);
-	
+	camera->setUpVector(core::vector3df(0, -1, 0));
+	auto x = camera->getAbsoluteTransformation().getRotationDegrees();
+	x.X = 90;
+	auto c= camera->getAbsoluteTransformation();
+	c.setRotationDegrees(x);
 	drawGlobalCoordinateFrame(mphysicalSystem);
 
 	//framerecord
@@ -2351,11 +2363,11 @@ int main(int argc, char* argv[]) {
 		}
 #else
 #if irrlichtVisualization
+
 		if (!(application.GetDevice()->run())) break;
 		//if ((application.GetDevice()->isWindowMinimized())) break;
 		application.GetVideoDriver()->beginScene(true, true,
 			video::SColor(255, 140, 161, 192));
-
 		for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
 		{
 			application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
@@ -2452,7 +2464,7 @@ int main(int argc, char* argv[]) {
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
 	  delete mySmarticlesVec[i];
   }
-	if (receiver.saveFrame)
+	if (saveFrame)
 	{
 		receiver.SaveToMovie();
 	}
