@@ -37,29 +37,30 @@ echo "run vars!: $lw $dt $nl $re $pa"
 # echo ${lwArr[*]};
 # # $smartRunFile $lw $dt $nl $re $pa
 cd $runDir
-foldName=UnequalOTv2
+foldName=Active20%
 lwArr=(0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8);
 dtArr=(0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025);
 nlArr=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1);
-reArr=(1 1 1 1 1 1 1 1 1 1 1 1); 
-paArr=(1 1 1 1 1 1 1 1 1 1 1 1);
-ang1Arr=(90 90 90 90 90 90 90 90 90 90)
-ang2Arr=(90 90 90 90 90 90 90 90 90 90)
+reArr=(0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1); 
+paArr=(.2 .2 .2 .2 .2 1 1 1 1 1 1 1 1 1 1);
+ang1Arr=(0 30 60 90 120 90 90 90 90 90)
+ang2Arr=(0 30 60 90 120 90 90 90 90 90)
 #boxangArr=(-20 -25 -30 -35 -40)
-boxangArr=(-45)
-numPerLay=(5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5 5)
+boxangArr=(-45 -45 -45 -45 -45)
+numPerLay=(35 35 35 35 35 5 5 5 5 5 5 5 5 5 5 5 5 5)
+saveFrame=1
 #0.02 0.002
 changeToStressPerc=(0.3 0.001 0.005 0.0025 0.00125)
 mkdir $foldName
 for laz in `seq 0 0`; do
 	for repeats in `seq 0 0`; do
-		for angs in `seq 0 0`; do
-		  a=./$foldName/${boxangArr[$angs]}_0.3_$(date '+%Y%m%d_%H%M%S')
+		for angs in `seq 1 4`; do
+		  a=./$foldName/${boxangArr[$angs]}_lw${lwArr[$angs]}_a1=${ang1Arr[$angs]}_a2=${ang2Arr[$angs]}_$(date '+%Y%m%d_%H%M%S')
 		  mkdir $a
 		  cp smarticleMoves.csv $a
 		  cp ./checkpoints/${boxangArr[$angs]}.csv ./$a/smarticles.csv
 		  cd $a
-		  $smartRunFile 0.8 0.00025 6 1 1 0 0 ${boxangArr[$angs]} 5 0.3;
+		  $smartRunFile ${lwArr[$angs]} 0.00025 ${nlArr[$angs]} ${reArr[$angs]} ${paArr[$angs]} ${ang1Arr[$angs]} ${ang2Arr[$angs]} ${boxangArr[$angs]} ${numPerLay[$angs]} ${changeToStressPerc[$angs]} $saveFrame;
 		  cd ../..;
 		  # cp -r ./PostProcess $a
 		done;
