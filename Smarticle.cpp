@@ -744,45 +744,32 @@ void Smarticle::CreateActuators() {
 	qy1.Normalize();
 	qy2.Normalize();
 
-	double mn = angLow;
-	double mx = angHigh;
-	//link_actuator01->GetLimit_Z()->Set_active(true);
-	//link_actuator01->GetLimit_Z()->Set_min(angLow*D2R);
-	//link_actuator01->GetLimit_Z()->Set_max(angLow*D2R);
-	//link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 
 	if (active)
 	{
 		link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 		link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-		link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
-		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
 
+		link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
+		link_actuator01->GetLimit_Rz()->Set_min(D2R*angLow);
+		link_actuator01->GetLimit_Rz()->Set_max(D2R*angHigh);
+		link_actuator01->GetLimit_Rz()->Set_active(false);
+		
+		
+		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+		link_actuator12->GetLimit_Rz()->Set_min(D2R*angLow);
+		link_actuator12->GetLimit_Rz()->Set_max(D2R*angHigh);
+		link_actuator12->GetLimit_Rz()->Set_active(false);
 	}
 	else
 	{
 		link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+		
 	}
+
 	m_system->AddLink(link_actuator01);
-	m_system->AddLink(link_actuator12);
-
-
-	/*std::shared_ptr<ChLinkLockRevolute> linklimit01= std::make_shared<ChLinkLockRevolute>();
-	linklimit01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
-	linklimit01->GetLimit_Rz()->Set_active(true);
-	linklimit01->GetLimit_Rz()->Set_min(mn*D2R);
-	linklimit01->GetLimit_Rz()->Set_max(mx*D2R);
-	m_system->AddLink(linklimit01);*/
-
-
-	//std::shared_ptr<ChLinkLockRevolute> linklimit12 = std::make_shared<ChLinkLockRevolute>();
-	//linklimit12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-	//linklimit12->GetLimit_Rz()->Set_active(true);
-	//linklimit12->GetLimit_Rz()->Set_min(mn*D2R);
-	//linklimit12->GetLimit_Rz()->Set_max(mx * D2R);
-	//m_system->AddLink(linklimit12);
-	
+	m_system->AddLink(link_actuator12);	
 
 }
 
