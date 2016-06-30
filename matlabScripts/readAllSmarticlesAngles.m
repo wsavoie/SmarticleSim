@@ -15,7 +15,7 @@ function [smartPos simParams frameInfo]=readAllSmarticlesAngles(filename,varargi
 %     readAllSmarticlesAngles(ff,0);
 % end
 
-
+% //stress_of << mySmarticlesVec[i]->GetAngle1(true) << ", " << mySmarticlesVec[i]->GetAngle2(true) << ", " << mySmarticlesVec[i]->moveType << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
 fid = fopen(filename','r');     %# Open the file as a binary
 lastLine = '';                   %# Initialize to empty
 offset = 1;                      %# Offset from the end of file
@@ -41,6 +41,8 @@ simParams = sscanf(tline,'%f,')';
 
 
 tline = fgets(fid);
+d=sscanf(tline,'%f,')';
+angleInfo = [d(4) d(2) d(5)];
 lineType=0;%-1= ef, %0= volfrac stuff
 frameInfo = zeros(totFrames,5);
 frame=1;
@@ -89,5 +91,5 @@ while ischar(tline)
     tline = fgets(fid);
 
 end
-save(horzcat(filename,'\..\stressData.mat'),'simParams','smartPos','frameInfo','filename');
+save(horzcat(filename,'\..\stressData.mat'),'simParams','smartPos','frameInfo','filename','angleInfo');
 fclose(fid);

@@ -413,7 +413,8 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 
   SetArgumentsForMbdFromInput(argc, argv, dummyNumber0, dummyNumber1, dummyNumber2, dT,numLayers, armAngle, read_from_file,pctActive,angle1,angle2);
 	vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
-	simParams << std::endl <<
+	simParams << "ang1:" << angle1<< std::endl<<
+		"ang2:"<<angle2<<	std::endl <<
 		"l_smarticle: " << l_smarticle << std::endl <<
 		"l_smarticle mult for w (w = mult x l): " << l_smarticle / w_smarticle << std::endl <<
 		"read from file: " << read_from_file << std::endl <<
@@ -443,7 +444,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   // Modify some setting of the physical system for the simulation, if you want
 	mphysicalSystem.SetSolverType(ChSystem::SOLVER_SOR);
 	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
-	mphysicalSystem.SetMaxItersSolverSpeed(80+1.1*numLayers);
+	mphysicalSystem.SetMaxItersSolverSpeed(80+.3*numPerLayer*numLayers);
   mphysicalSystem.SetMaxItersSolverStab(0);   // unuseful for Anitescu, only Tasora uses this
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   mphysicalSystem.SetSolverWarmStarting(true);
@@ -693,6 +694,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		
 		}
 		mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
+		GetLog() << "Smarticles: " << mySmarticlesVec.size() << "\n";
 		smarticle0->SetSpeed(dropSpeed);
 			
 	#if irrlichtVisualization
@@ -1473,7 +1475,7 @@ void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cyl
 		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl;
 		break;
 	case BOX:
-		stress_of << mphysicalSystem->GetChTime() << ", " << 0 << ", " << Smarticle::global_GUI_value << ", " << box_ang << ", " << 0<< std::endl;
+		stress_of << mphysicalSystem->GetChTime() << ", " << angle1 << ", " << Smarticle::global_GUI_value << ", " << box_ang << ", " << angle2 << std::endl;
 		break;
 	}
 
@@ -1482,7 +1484,9 @@ void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cyl
 	{
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++)
 		{
-			stress_of << mySmarticlesVec[i]->GetAngle1(true) << ", " << mySmarticlesVec[i]->GetAngle2(true) << ", " << mySmarticlesVec[i]->moveType << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
+			//works for plotlazy matlabfile
+			//stress_of << mySmarticlesVec[i]->GetAngle1(true) << ", " << mySmarticlesVec[i]->GetAngle2(true) << ", " << mySmarticlesVec[i]->moveType << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
+			stress_of << mySmarticlesVec[i]->active << ", " << mySmarticlesVec[i]->Get_cm().x << ", " << mySmarticlesVec[i]->Get_cm().y << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
 		}
 		stress_of << "#EF" <<frame<< std::endl;
 	}
@@ -1758,7 +1762,7 @@ bool SetGait(double time)
 	////	Smarticle::global_GUI_value = 2;
 	//else
 	//	return true;
-	if (time <= 30)
+	if (time <= 15)
 		Smarticle::global_GUI_value = 0;
 	else
 		return true;
@@ -2261,7 +2265,7 @@ int main(int argc, char* argv[]) {
 	if (bucketType == DRUM)
 		timeForVerticalDisplacement = 0.095; // 1.5 for safety proximity .015
 	if (bucketType == BOX)
-		timeForVerticalDisplacement = 1;
+		timeForVerticalDisplacement = .5;
 	int numGeneratedLayers = 0;
 
 
