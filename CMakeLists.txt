@@ -117,7 +117,7 @@ include_directories(
 
 list(APPEND ALL_DLLS "${CHRONO_DLLS}")
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
-
+set(CHRONO_BIN_PATH "D:/ChronoCode/chronoPkgs/ChronoBuild/bin/" CACHE FILEPATH "chrono build path")
 #--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
@@ -172,8 +172,10 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	
   	file(GLOB ReleaseDLL "${Chrono_DIR}/../bin/Release/*.dll")
 	file(GLOB DebugDLL "${Chrono_DIR}/../bin/Debug/*.dll")
+	file(GLOB RelWithDebInfoDLL "${Chrono_DIR}/../bin/RelWithDebInfo/*.dll")
 	list(REMOVE_DUPLICATES ReleaseDLL)
 	list(REMOVE_DUPLICATES DebugDLL)
+	list(REMOVE_DUPLICATES RelWithDebInfoDLL)
 	message(STATUS ${DebugDLL})
 
 	
@@ -183,15 +185,16 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
             # "${sDLL}"
             # "${CMAKE_BINARY_DIR}/$<CONFIGURATION>"			
 	# )
-	file(GLOB DLLS "${Chrono_DIR}/../bin/$<CONFIGURATION>/*.dll")
+	#have to use one a specific build here since I don't know how to add this to the post build command below
+	# file(GLOB DLLS "${CHRONO_BIN_PATH}/Release/*.dll")
 	
-	foreach(DLL ${ReleaseDLL})
+	foreach(DLL ${CHRONO_DLL_NAMES})
 	add_custom_command(
         TARGET COPY_DLLS POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${DLL}"
-            "${CMAKE_BINARY_DIR}/$<CONFIGURATION>"			
+            "${CHRONO_BIN_PATH}/$<CONFIGURATION>/${DLL}"
+            "${CMAKE_BINARY_DIR}/$<CONFIGURATION>/${DLL}"			
 	)
 	endforeach()
-
+# message(STATUS "\nParallel programs... " ${CMAKE_BINARY_DIR}/$<CONFIGURATION>/${DLL}".dll"	)
 endif()
