@@ -305,7 +305,7 @@ namespace chrono {
 		
 
 
-	protected:
+	public:
 		// location and orientation (location of the center of the middle arm)
 		ChVector<> initPos;
 		ChQuaternion<> rotation;

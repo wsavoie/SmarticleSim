@@ -166,7 +166,7 @@ double gaitChangeLengthTime = .5;
 	double bucket_rad = sizeScale*w_smarticle*2; //3
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
 	double rho_smarticle = 443.0;
-	ChVector<>boxdim(.28/1.5, .55245, 2 * bucket_rad / 8);
+	ChVector<>boxdim(.28/1.5 *2.5, .55245, 2 * bucket_rad / 8);
 #endif
 
 	double p_gain = 0.2;   //.1//.2         
@@ -625,7 +625,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 					{
 
 						cs->TransportSmarticle(ChVector<>(xposi, yposi, zposi));		
-						//cs->RotateSmarticleBy(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2 +Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x, genRand(0, 2*PI), 0)));
+			
+						//cs->RotateSmarticleBy(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x, /*genRand(0, 2*PI)*/ 0, PI/2)));
 						cs->SetEdges();
 
 						application.DrawAll();
@@ -1115,7 +1116,6 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		{
 			//dim = (2 * dim.x, 2 * dim.y, dim.z / 8);
 			//dim.x = dim.x;
-		
 			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1000000000, mat_g,
 				boxdim, bucket_half_thick, bucket_ctr, Q_from_AngAxis(-box_ang, VECT_X), true, false, true, false);
 			//bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
@@ -1128,6 +1128,10 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 			CreateBucket_bott(mphysicalSystem);
 			bucket_bott->SetCollide(false);
 			bucket_bott->SetPos(ChVector<>(5, 5, 5));
+
+			const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
+			simParams.open(simulationParams.c_str(), std::ios::app);
+			simParams << "SystemSize: " << boxdim.x << boxdim.y << boxdim.z<< std::endl;
 			break;
 		}
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
