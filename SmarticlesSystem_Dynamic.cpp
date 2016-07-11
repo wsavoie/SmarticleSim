@@ -110,6 +110,7 @@ std::vector<std::shared_ptr<ChBody>> sphereStick;
 std::shared_ptr<ChBody> bucket;
 std::shared_ptr<ChBody> bucket_bott;
 
+int overlaptest(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4);
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 std::ofstream simParams;
@@ -168,7 +169,7 @@ double gaitChangeLengthTime = .5;
 	double rho_smarticle = 443.0;
 	ChVector<>boxdim(.28/1.5 *2.5, .55245, 2 * bucket_rad / 8);
 #endif
-
+	double hole_size = 2 * w_smarticle;
 	double p_gain = 0.2;   //.1//.2         
 	double i_gain = .225;	 //.5//.225       
 	double d_gain = 0.01; //.0025 //.01     
@@ -690,6 +691,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			myPos = bucket_ctr + ChVector<>(sin(ang * i + phase) *(bucket_rad / 2 + genRand(w)),
 				cos(ang*i + phase)*(bucket_rad / 2 + genRand(w)),
 				zpos);
+
+			myRot = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(genRand(-PI, PI), genRand(-PI, PI), genRand(-PI, PI)));
 			break;
 		case BOX:
 		{
@@ -1080,7 +1083,7 @@ std::shared_ptr<ChBody> Create_hopper2(CH_SYSTEM* mphysicalSystem, std::shared_p
 	holeSize = holeSize / 2;
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double r = bucket_rad;
-	double ang = theta*D2R;
+	double ang = theta;
 	double h = bucket_interior_halfDim.z;
 	double sH = (h-t) / sin(ang); //side height
 	//double w = holeSize / 2 + cos(ang)*h;
@@ -1109,13 +1112,13 @@ std::shared_ptr<ChBody> Create_hopper2(CH_SYSTEM* mphysicalSystem, std::shared_p
 	//utils::AddBoxGeometry(ramp.get(), ChVector<>(w, w, t), rampPos, QUNIT, true);//bucket_bottom
 
 
-	utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos - VECT_X*(sin(ang)*h + holeSize+cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, ang, 0)), true);// -x negAngle
+	utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos - VECT_X*(-sin(ang)*h + holeSize+cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -ang, 0)), true);// -x negAngle
 	//utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos - VECT_X*(sin(ang)*(h)+holeSize+cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, ang, 0)), true);// -x negAngle +theta
-	utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos + VECT_X*(sin(ang)*h + holeSize+cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -ang, 0)), true);// +x  -theta = /
+	utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos + VECT_X*(-sin(ang)*h + holeSize+cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, ang, 0)), true);// +x  -theta = /
 
 
-	utils::AddBoxGeometry(hopper.get(), ChVector<>(2 * sin(ang)*h + holeSize+2*cos(ang)*t, t, h), hop_pos - VECT_Y*(r + o_lap) + VECT_Z*(h - o_lap), QUNIT, false);//camera pos -y
-	utils::AddBoxGeometry(hopper.get(), ChVector<>(2 * sin(ang)*h + holeSize+2*cos(ang)*t, t, h), hop_pos + VECT_Y*(r + o_lap) + VECT_Z*(h - o_lap), QUNIT, true); //camera target +y
+	utils::AddBoxGeometry(hopper.get(), ChVector<>(2 * -sin(ang)*h + holeSize+2*cos(ang)*t, t, h), hop_pos - VECT_Y*(r + o_lap) + VECT_Z*(h - o_lap), QUNIT, false);//camera pos -y
+	utils::AddBoxGeometry(hopper.get(), ChVector<>(2 * -sin(ang)*h + holeSize+2*cos(ang)*t, t, h), hop_pos + VECT_Y*(r + o_lap) + VECT_Z*(h - o_lap), QUNIT, true); //camera target +y
 
 	hopper->GetCollisionModel()->BuildModel();
 	mphysicalSystem->AddBody(hopper);
@@ -1219,7 +1222,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 
 		case HOPPER:
 			//bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x*2, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z, true);
-			bucket = Create_hopper2(&mphysicalSystem,mat_g,30,2*w_smarticle,true);
+			bucket = Create_hopper2(&mphysicalSystem,mat_g,box_ang,2*hole_size,true);
 			CreateBucket_bott(mphysicalSystem);
 			break;
 
@@ -1486,7 +1489,16 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 		case HOPPER:
 			if (!IsInRadial(sPtr->GetArm(1)->GetPos(), bucket->GetPos(), ChVector<>(2 * bucket_rad, -4.0*bucket_interior_halfDim.z, 4.0*bucket_interior_halfDim.z)))
 			{
-				EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
+				//double z = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
+				double x = bucket_rad / 2 + w_smarticle;
+				double y = bucket_rad / 2 + w_smarticle;
+				double z = genRand(.2, .6);
+				//EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
+				ChVector<> myPos = bucket_ctr + ChVector<>(genRand(-x,x),
+					genRand(-y, y),
+					z);
+				sPtr->TransportSmarticle(myPos);
+				sPtr->SetSpeed(VNULL);
 				GetLog() << "\nRemoving smarticle outside hopper \n";
 
 			}
@@ -1563,8 +1575,8 @@ void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cyl
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++)
 		{
 			//works for plotlazy matlabfile
-			//stress_of << mySmarticlesVec[i]->GetAngle1(true) << ", " << mySmarticlesVec[i]->GetAngle2(true) << ", " << mySmarticlesVec[i]->moveType << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
-			stress_of << mySmarticlesVec[i]->active << ", " << mySmarticlesVec[i]->Get_cm().x << ", " << mySmarticlesVec[i]->Get_cm().y << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
+			stress_of << mySmarticlesVec[i]->GetAngle1(true) << ", " << mySmarticlesVec[i]->GetAngle2(true) << ", " << mySmarticlesVec[i]->moveType << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
+			//stress_of << mySmarticlesVec[i]->active << ", " << mySmarticlesVec[i]->Get_cm().x << ", " << mySmarticlesVec[i]->Get_cm().y << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
 		}
 		stress_of << "#EF" <<frame<< std::endl;
 	}
@@ -2023,8 +2035,22 @@ int main(int argc, char* argv[]) {
 	//camera->setPosition(core::vector3df(.0139, -.445, .7));
 	//camera->setTarget(core::vector3df(0.0139, .243, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
 
-	camera->setPosition(core::vector3df(0.0139, -0.65, -.180));
-	camera->setTarget(core::vector3df(0.0139, -.50, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+	switch (bucketType)
+	{
+	case HOPPER:
+		camera->setPosition(core::vector3df(0.0139, -.45, .25));
+		camera->setTarget(core::vector3df(0.0139, -.3, .24)); //	camera->setTarget(core::vector3df(0, 0, .01));
+		break;
+	case BOX:
+		camera->setPosition(core::vector3df(0.0139, -0.65, -.180));
+		camera->setTarget(core::vector3df(0.0139, -.50, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+		break;
+	default:
+		camera->setPosition(core::vector3df(0.0139, -0.65, -.180));
+		camera->setTarget(core::vector3df(0.0139, -.50, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+		break;
+	}
+
 
 
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
