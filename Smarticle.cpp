@@ -183,7 +183,7 @@ void Smarticle::Properties(
 	this->OTVal.emplace_back(EXTRA1);
 	this->OTVal.emplace_back(EXTRA2);
 	this->OTValIdx = genRandInt(0, OTVal.size() - 1);
-	GetLog() << "smartRandidx:" << this->OTValIdx << "\n";
+	//GetLog() << "smartRandidx:" << this->OTValIdx << "\n";
 
 	//initialize LT timer params
 	this->LTTimer = 0;
@@ -753,13 +753,13 @@ void Smarticle::CreateActuators() {
 		link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 		link_actuator01->GetLimit_Rz()->Set_min(D2R*angLow);
 		link_actuator01->GetLimit_Rz()->Set_max(D2R*angHigh);
-		link_actuator01->GetLimit_Rz()->Set_active(false);
+		link_actuator01->GetLimit_Rz()->Set_active(true);
 		
 		
 		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
 		link_actuator12->GetLimit_Rz()->Set_min(D2R*angLow);
 		link_actuator12->GetLimit_Rz()->Set_max(D2R*angHigh);
-		link_actuator12->GetLimit_Rz()->Set_active(false);
+		link_actuator12->GetLimit_Rz()->Set_active(true);
 	}
 	else
 	{
