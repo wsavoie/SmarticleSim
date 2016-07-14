@@ -1,5 +1,5 @@
 % function [out]=GetFileInfo(direc)
-% direc= 'A:\SmarticleRun\Active75Pos%\';
+% direc= 'A:\SmarticleRun\Active75Pos%\'; 
 % direc='A:\SmarticleRun\lazy_tor.3_smarts30\lazy .01\';
 clf
 
@@ -60,8 +60,8 @@ dt=[(sf-1):length(allX)-2+sf]'*.00025*ds;
 
 tracks=cell(1);
 
-idx = 3;
-tt=find(dt>10.067 & dt<11.5);
+idx = 1;
+% tt=find(dt>.5 & dt<8);
 tt=1:length(dt);
 dt=dt(tt);
 tracks{1}= [dt,allX(tt,idx),allY(tt,idx)];
@@ -93,5 +93,5 @@ ma = ma.computeVCorr;
 ma.plotMeanVCorr;
 
 % meanIdxs = find(tracks{1}(:,1)>10 & tracks{1}(:,1)<10.5);
-% M = mean(ma.vcorr{1}(meanIdxs,2));
-% line([0 15], [M M],'color','r','linewidth',3);
+M = mean(ma.vcorr{1}(:,2));
+line([ma.vcorr{idx}(1,1) ma.vcorr{idx}(end,1)], [M M],'color','r','linewidth',3);
