@@ -48,6 +48,7 @@
 		<Item Name="ADXL345 Accelerometer Test.vi" Type="VI" URL="../ADXL345 Accelerometer Test.vi"/>
 		<Item Name="StartAccelerometer.vi" Type="VI" URL="../StartAccelerometer.vi"/>
 		<Item Name="Rotate 3D object.vi" Type="VI" URL="../Rotate 3D object.vi"/>
+		<Item Name="StartVideo.vi" Type="VI" URL="../StartVideo.vi"/>
 		<Item Name="Dependencies" Type="Dependencies">
 			<Item Name="vi.lib" Type="Folder">
 				<Item Name="Simple Error Handler.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Simple Error Handler.vi"/>
