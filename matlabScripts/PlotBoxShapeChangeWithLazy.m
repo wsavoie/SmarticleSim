@@ -1,6 +1,6 @@
 % function [out]=GetFileInfo(direc)
-direc= 'A:\SmarticleRun\un_eq_no_OT_all_plots_4runs\UnequalOTv2\';
-% direc='A:\SmarticleRun\lazy_tor.3_smarts30\lazy .01\';
+% direc= 'A:\SmarticleRun\un_eq_no_OT_all_plots_4runs\UnequalOTv2\';
+direc='A:\SmarticleRun\TestLazy\';
 clf
 dirs = dir(direc);
 %remove non-folders
@@ -9,7 +9,12 @@ dirs = {dirs([dirs.isdir]).name};
 dirs = dirs(1:end-2);
 
 angles = zeros(length(dirs),1);
-idle = 0;
+idle = 1;
+if idle
+    idleText=['Ant inspired idle distribution G\approx0.56'];
+else
+    idleText=['Active Smarticles'];
+end
 for i=1:length(dirs)
 %     if older with no lazy designation in filename
 %     [boxAngle]=textscan(dirs{i},'%d%d%d');
@@ -24,9 +29,9 @@ bounds = 2;
 uniAngles = unique(angles);
 j=1;
 
-for k=14%=1:length(uniAngles)%
+% for k=1%=1:length(uniAngles)%
     dataz=0;
-    k=find(uniAngles==-45);
+    k=find(uniAngles==-40);
     idx=find(angles(:)==uniAngles(k));
     clear('x','simParams','smartPos','frameInfo','filename','file');
     for l=1:length(idx)
@@ -54,11 +59,11 @@ for k=14%=1:length(uniAngles)%
 %     err=std(dataz,0,2);
     shadedErrorBar(frameInfo(:,1),mean(dataz,2),std(dataz,1,2),'k');
     title({horzcat('Smarticle Frac. Reaching Directed Position (',177, num2str(bounds),'^\circ)',' Box=',num2str(uniAngles(k)),'^\circ')...
-        ,horzcat('Ant idle distrib')});
+        ,horzcat(idleText)});
     xlabel('Time(s)');
     ylabel('Smarticle Fraction');
     set(gca,'xlim',[0,frameInfo(end,1)],'ylim',[0,1])
-end
+% end
 % for(i=
 % x=zeros(size(smartPos,2),1);
 % for(i=1:size(smartPos,2))

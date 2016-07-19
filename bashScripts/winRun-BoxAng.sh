@@ -37,24 +37,24 @@ echo "run vars!: $lw $dt $nl $re $pa"
 # echo ${lwArr[*]};
 # # $smartRunFile $lw $dt $nl $re $pa
 cd $runDir
-foldName=Active20%
+foldName=TestActive
 lwArr=(0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8);
 dtArr=(0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025);
 nlArr=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1);
-reArr=(0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1); 
-paArr=(.2 .2 .2 .2 .2 1 1 1 1 1 1 1 1 1 1);
-ang1Arr=(0 30 60 90 120 90 90 90 90 90)
-ang2Arr=(0 30 60 90 120 90 90 90 90 90)
+reArr=(0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1); 
+paArr=(1 .98 .75 .75 .75 .75 .75 .75 .75 .75 1 1 1 1 1 1 1 1 1 1);
+ang1Arr=(120 120 30 45 60 75 90 105 120 90 90 90 90 90)
+ang2Arr=(-120 -120 30 45 60 75 90 105 120 90 90 90)
 #boxangArr=(-20 -25 -30 -35 -40)
-boxangArr=(-45 -45 -45 -45 -45)
-numPerLay=(35 35 35 35 35 5 5 5 5 5 5 5 5 5 5 5 5 5)
-saveFrame=1
+boxangArr=(-40 -40 -45 -45 -45 -45 -45 -45 -45 -45)
+numPerLay=(100 100 35 35 35 35 35 35 35 35 5 5 5 5 5 5)
+saveFrame=0
 #0.02 0.002
-changeToStressPerc=(0.3 0.001 0.005 0.0025 0.00125)
+changeToStressPerc=(0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3)
 mkdir $foldName
 for laz in `seq 0 0`; do
 	for repeats in `seq 0 0`; do
-		for angs in `seq 1 4`; do
+		for angs in `seq 0 0`; do
 		  a=./$foldName/${boxangArr[$angs]}_lw${lwArr[$angs]}_a1=${ang1Arr[$angs]}_a2=${ang2Arr[$angs]}_$(date '+%Y%m%d_%H%M%S')
 		  mkdir $a
 		  cp smarticleMoves.csv $a
