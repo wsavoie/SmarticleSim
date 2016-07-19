@@ -30,6 +30,7 @@ namespace chrono {
 
 	protected:
 		double ComputeOutput(double t);
+		double ComputeOutputSpeed(double t);
 		double OutputToOmega(double t, double out);
 		double OmegaToTorque(double t, double out);
 		//double cum_error_ = 0;

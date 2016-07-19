@@ -85,9 +85,17 @@ bool Controller::Step(double dt) {
 		smarticle_->SetAngle(i, ang);
 		bool desiredPositionStatus = smarticle_->NotAtDesiredPos(i, ang,exp); //true if not at current position being directed to 
 		successfulMove_.at(i) = !desiredPositionStatus;
-		UseForceControl(i);
-		//UseSpeedControl(i);
-		
+		switch (smarticle_->getLinkActuator(i)->Get_eng_mode())
+		{
+		case ChLinkEngine::ENG_MODE_SPEED:
+			UseSpeedControl(i);
+			break;
+		case ChLinkEngine::ENG_MODE_TORQUE:
+			UseForceControl(i);
+			break;
+		default:
+			UseForceControl(i);
+		}
 	}
 	result = successfulMove_.at(0) || successfulMove_.at(1);
 

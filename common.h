@@ -38,7 +38,7 @@
 
 
 	enum SmarticleType { SMART_ARMS, SMART_U };
-	enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM };
+	enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM, FLATHOPPER };
 	extern SmarticleType smarticleType;
 	extern BucketType bucketType;
 
