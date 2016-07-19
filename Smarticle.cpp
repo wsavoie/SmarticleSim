@@ -173,11 +173,13 @@ void Smarticle::Properties(
 	
 	OTThresh = .7;//for single arm 
 	MTThresh = OTThresh/3.0;//for both arms?
-	LTThresh = .05;//for both arms?
+	LTThresh = .01;//for both arms?
 
 	//initialize OT timer params
-	this->OTTimer = 0;
 	this->OTMaxTime = .25;
+	//give random time so no all change at same time
+	this->OTTimer = genRand(OTMaxTime);
+
 	this->OTRunning = false;
 	this->OTVal.emplace_back(GUI1);
 	this->OTVal.emplace_back(EXTRA1);
@@ -186,11 +188,12 @@ void Smarticle::Properties(
 	//GetLog() << "smartRandidx:" << this->OTValIdx << "\n";
 
 	//initialize LT timer params
-	this->LTTimer = 0;
-	this->LTMaxTime = .25;
+
+	this->LTMaxTime = .10;
+	this->LTTimer = genRand(LTMaxTime);;
 	this->LTRunning = false;
-	this->LTVal.emplace_back(GUI1);
-	this->LTVal.emplace_back(GUI3);
+	this->LTVal.emplace_back(GUI2);
+	//this->LTVal.emplace_back(GUI3);
 	this->LTValIdx = genRandInt(0, LTVal.size() - 1);
 
 }
@@ -401,6 +404,9 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	}
 }
 void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
+	auto newmat = mat_g;
+
+	newmat->SetFriction(.2);
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
 	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, mr, mr2));
@@ -420,7 +426,7 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	else
 		arm->SetBodyFixed(false);
 	//mat_g->SetFriction(.05);
-	arm->SetMaterialSurface(mat_g);
+	arm->SetMaterialSurface(newmat);
 
 	double mass = density * vol;
 	//double mass = .005;//.043/3.0; //robot weight 43 grams
@@ -749,16 +755,25 @@ void Smarticle::CreateActuators() {
 	{
 		link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 		link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+		//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+		//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 
 		link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 		link_actuator01->GetLimit_Rz()->Set_min(D2R*angLow);
 		link_actuator01->GetLimit_Rz()->Set_max(D2R*angHigh);
+		link_actuator01->Set_mot_inertia(100000);
 		link_actuator01->GetLimit_Rz()->Set_active(true);
 		
-		
+		/*link_actuator01->GetForce_D()->Set_active(true);
+		auto modK = (ChFunction_Const*)(link_actuator01->GetForce_D()->Get_modul_K());
+		link_actuator01->GetForce_D()->Set_K(1);
+		modK->Set_yconst(100);*/
+
+
 		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
 		link_actuator12->GetLimit_Rz()->Set_min(D2R*angLow);
 		link_actuator12->GetLimit_Rz()->Set_max(D2R*angHigh);
+		link_actuator12->Set_mot_inertia(100000);
 		link_actuator12->GetLimit_Rz()->Set_active(true);
 	}
 	else
@@ -1297,6 +1312,7 @@ bool Smarticle::MoveOverStress(double tor0, double tor1)
 	
 	if (OTRunning)
 	{
+		//specialState = OT;
 		specialState = OTVal.at(OTValIdx);
 		return true;
 	}
@@ -1322,9 +1338,9 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 
 				this->ot.clear();
 				//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
-				this->ot.emplace_back(GetAngle1() + moveAmt, GetAngle2() + moveAmt);
+				//this->ot.emplace_back(GetAngle1() + moveAmt, GetAngle2() + moveAmt);
 				this->ot.emplace_back(GetAngle1(), GetAngle2());
-				this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
+				//this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
 				this->armsController->resetCumError = true;
 		}
 		//nothing needs to be done if prev OT
@@ -1352,9 +1368,9 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 		{
 				arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 				this->ot.clear();
-				this->ot.emplace_back(GetAngle1() + moveAmt, GetAngle2() + moveAmt);
+				//this->ot.emplace_back(GetAngle1() + moveAmt, GetAngle2() + moveAmt);
 				this->ot.emplace_back(GetAngle1(), GetAngle2());
-				this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
+				//this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
 				this->armsController->resetCumError = true;
 		}
 		arm2OT = true;
@@ -1438,6 +1454,7 @@ void Smarticle::AssignState(int guiState)
 		mv = &midTorque;
 		break;
 	case 8:
+		
 		this->setCurrentMoveType(OT);
 		mv = &ot;
 		break;
