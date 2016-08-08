@@ -2054,12 +2054,13 @@ int main(int argc, char* argv[]) {
 	// define material property for everything
 	mat_g = std::make_shared<ChMaterialSurface>();
 	mat_g->SetFriction(fric); // .6 for wall to staple using tan (theta) tested on 7/20
-
+	
 	// Create a ChronoENGINE physical system
 	CH_SYSTEM mphysicalSystem;
 
 
 	InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
+	videoFrameInterval = 1 / (out_fps*dT); //dt = [sec/step], fps=[frames/sec] --> 1/(dt*fps)=[(sec*steps)/(sec*frames)]=[steps/frame]
 	GetLog() << "\npctActive" << pctActive << "\n";
 	Smarticle::pctActive = pctActive;
 	MyBroadPhaseCallback mySmarticleBroadphaseCollisionCallback;
