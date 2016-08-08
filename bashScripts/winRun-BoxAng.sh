@@ -37,32 +37,54 @@ echo "run vars!: $lw $dt $nl $re $pa"
 # echo ${lwArr[*]};
 # # $smartRunFile $lw $dt $nl $re $pa
 cd $runDir
-foldName=TestActive
+
 lwArr=(0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8 0.8);
 dtArr=(0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025 0.00025);
-nlArr=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1);
+nlArr=(2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1);
 reArr=(0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1); 
-paArr=(1 .98 .75 .75 .75 .75 .75 .75 .75 .75 1 1 1 1 1 1 1 1 1 1);
-ang1Arr=(120 120 30 45 60 75 90 105 120 90 90 90 90 90)
-ang2Arr=(-120 -120 30 45 60 75 90 105 120 90 90 90)
+paArr=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1);
+ang1Arr=(90 90 90 90 90 90 90 90 90 90 90 90 90 90)
+ang2Arr=(90 90 90 90 90 90 90 90 90 90 90 90)
 #boxangArr=(-20 -25 -30 -35 -40)
-boxangArr=(-40 -40 -45 -45 -45 -45 -45 -45 -45 -45)
-numPerLay=(100 100 35 35 35 35 35 35 35 35 5 5 5 5 5 5)
+boxangArr=(-30 -30 -30 -30 -30 -30 -30 -30 -30 -30)
+numPerLay=(20 20 20 20 20 20 20 20 20 20 5 5 5 5 5 5)
 saveFrame=0
 #0.02 0.002
 changeToStressPerc=(0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3)
-mkdir $foldName
-for laz in `seq 0 0`; do
-	for repeats in `seq 0 0`; do
-		for angs in `seq 0 0`; do
-		  a=./$foldName/${boxangArr[$angs]}_lw${lwArr[$angs]}_a1=${ang1Arr[$angs]}_a2=${ang2Arr[$angs]}_$(date '+%Y%m%d_%H%M%S')
-		  mkdir $a
-		  cp smarticleMoves.csv $a
-		  cp ./checkpoints/${boxangArr[$angs]}.csv ./$a/smarticles.csv
-		  cd $a
-		  $smartRunFile ${lwArr[$angs]} 0.00025 ${nlArr[$angs]} ${reArr[$angs]} ${paArr[$angs]} ${ang1Arr[$angs]} ${ang2Arr[$angs]} ${boxangArr[$angs]} ${numPerLay[$angs]} ${changeToStressPerc[$angs]} $saveFrame;
-		  cd ../..;
-		  # cp -r ./PostProcess $a
-		done;
+
+
+########regular run
+# foldName='hopper_no_OT_r=pi-4'
+# mkdir $foldName
+# for laz in `seq 0 0`; do
+	# for repeats in `seq 0 0`; do
+		# for angs in `seq 0 4`; do
+		  # a=./$foldName/${boxangArr[$angs]}_lw${lwArr[$angs]}_a1=${ang1Arr[$angs]}_a2=${ang2Arr[$angs]}_$(date '+%Y%m%d_%H%M%S')
+		  # mkdir $a
+		  # cp smarticleMoves.csv $a
+		  # #cp ./checkpoints/${boxangArr[$angs]}.csv ./$a/smarticles.csv
+		  # cd $a
+		  # $smartRunFile ${lwArr[$angs]} 0.00025 ${nlArr[$angs]} ${reArr[$angs]} ${paArr[$angs]} ${ang1Arr[$angs]} ${ang2Arr[$angs]} ${boxangArr[$angs]} ${numPerLay[$angs]} ${changeToStressPerc[$angs]} $saveFrame;
+		  # cd ../..;
+		  # # cp -r ./PostProcess $a
+		# done;
+	# done;
+# done;
+
+##if running many runs with different smarticle.csv files
+foldName='FastGaitAreaConstPoints2/hopper_no_OT_r='
+# csvNames=(pi2 pi3 pi4 pi5 pi6 pi7 pi8);
+csvNames=(0.55 0.85 1.15 1.45);
+for i in "${csvNames[@]}"; do	tempFoldname=$foldName$i
+	mkdir $tempFoldname
+	for angs in `seq 0 0`; do
+		a=./$tempFoldname/${boxangArr[$angs]}_lw${lwArr[$angs]}_a1=${ang1Arr[$angs]}_a2=${ang2Arr[$angs]}_$(date '+%Y%m%d_%H%M%S')
+		mkdir $a
+		cp ./smarticleMovesCSV/$i".csv" ./$a/smarticleMoves.csv
+		echo $i".csv"
+		# cp ./checkpoints/${boxangArr[$angs]}.csv ./$a/smarticles.csv
+		cd $a
+		$smartRunFile ${lwArr[$angs]} 0.001 ${nlArr[$angs]} ${reArr[$angs]} ${paArr[$angs]} ${ang1Arr[$angs]} ${ang2Arr[$angs]} ${boxangArr[$angs]} ${numPerLay[$angs]} ${changeToStressPerc[$angs]} $saveFrame;
+	cd $runDir
 	done;
 done;
