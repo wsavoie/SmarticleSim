@@ -24,7 +24,7 @@
 %Kt = T/I, .008/.27 = .0296 Nm/A
 %J
 stapleSize = false;
-dt=.00025; %.00025
+dt=.001; %.00025
 sizeScale=1;
 % omega = 4.9244e-5;
 %%limit speed in sim (5.3 for 90 deg, 6.3 for 180 deg, takes time to slow so probably 7
@@ -96,19 +96,25 @@ fprintf(fid,'#\n');
 
 %% global function position definition
 % define some positions in the angular phase space (TO BE CHANGED)
-ss= 2.75*pi/180; %step size save value as in linear interpolate method
-if ss<1e-3
-    ss= .0013; %step siz
-%     error('change back to ss=.0025)');
-end
+% ss= 2.75*pi/180; %step size save value as in linear interpolate method
+radI=(pi/2); %intial radius to base arclength off of
+ss=radI*(2)*(pi/180); %rad*degs*degToRads   this is arc length each step
+
+%want to make sure arclength/step is >> than rads/step
+%i.e  ss>>(omega*dt)
 
 switch global_gait
     case 1% circle gait
-        ang = 0:ss:2*pi;
-        r=pi/2;
+%         ang = 0:ss:2*pi;
+        r=1.45;
+        arcDivs=(2*r*pi)/(ss); %circumference divided by arclength to get number of points
+        ang=linspace(0,2*pi,arcDivs);
+        ang(end)=[]; %remove 2pi index
         phi = 0;
-        global_theta_1Pos=r*cos(ang-phi);
-        global_theta_2Pos=r*sin(ang-phi);
+        offset1=0;
+        offset2=0;
+        global_theta_1Pos=r*cos(ang-phi)+offset1;
+        global_theta_2Pos=r*sin(ang-phi)+offset2;
         if PON
             hold on;
             figure(1);
@@ -118,7 +124,7 @@ switch global_gait
             
             title('Circle Gait');
             %%figText(gcf,15);
-            axis square
+            axis equal
         end
     case 2% square gait
         %not implemented yet!
