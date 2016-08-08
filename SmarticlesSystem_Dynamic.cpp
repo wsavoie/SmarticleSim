@@ -169,9 +169,9 @@ double gaitChangeLengthTime = .5;
 	ChVector<>boxdim(.28/1.5 *2.5, .55245, 2 * bucket_rad / 8);
 #endif
 	double hole_size = 2 * w_smarticle;
-	double p_gain = 0.2;   //.1//.2         
-	double i_gain = .225;	 //.5//.225       
-	double d_gain = 0.01; //.0025 //.01     
+	double p_gain = 0.2/1.5;   //.1//.2         
+	double i_gain = .225/2;	 //.5//.225       
+	double d_gain = 0.003; //.0025 //.01     
 
 	//double p_gain = .2;   //.32           //.2
 	//double i_gain = .225;	 //.4 //.225       //.225
@@ -220,7 +220,7 @@ double inc = 0.00001;
 double angle1 = 90;
 double angle2 = 90;
 double vibAmp = 5 * D2R; //vibrate by some amount of degrees back and forth
-double videoFrameInterval = 134;
+int videoFrameInterval = 1/(out_fps*dT); //dt = [sec/step], fps=[frames/sec] --> 1/(dt*fps)=[(sec*steps)/(sec*frames)]=[steps/frame]
 auto bucketTexture = std::make_shared<ChTexture>();
 auto sphereTexture = std::make_shared<ChTexture>();
 auto groundTexture = std::make_shared<ChTexture>();
@@ -615,7 +615,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   // Modify some setting of the physical system for the simulation, if you want
 	mphysicalSystem.SetSolverType(ChSystem::SOLVER_SOR);
 	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
-	mphysicalSystem.SetMaxItersSolverSpeed(80+.3*numPerLayer*numLayers);
+	mphysicalSystem.SetMaxItersSolverSpeed(50+.3*numPerLayer*numLayers);
   mphysicalSystem.SetMaxItersSolverStab(0);   // unuseful for Anitescu, only Tasora uses this
   mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
   mphysicalSystem.SetSolverWarmStarting(true);
@@ -1378,6 +1378,7 @@ void printFlowRate(double time,int count) //SAVE smarticle gaitType out for refe
 	{
 		flowRate_of.open(flowRate.c_str());
 		started = true;
+		flowRate_of << 0 << ", " << 0<< ", " << Smarticle::global_GUI_value << std::endl;
 	}
 	else
 	{
