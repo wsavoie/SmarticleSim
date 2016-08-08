@@ -43,7 +43,7 @@ end
 %%s
 % dt = linspace(0,length(allX))';
 clear tracks;
-dt=[(sf-1):length(allX)-2+sf]'*.00025*ds;
+dt=[(sf-1):length(allX)-2+sf]'*simParams(1)*ds;
 
 %%%%%%%%%%%all tracks%%%%%%%%%%%%%%%%
 % tracks=cell(1,size(allX,2));
