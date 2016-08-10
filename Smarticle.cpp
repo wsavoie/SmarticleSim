@@ -1621,6 +1621,21 @@ double Smarticle::GetReactTorqueLen(int index)
 	else
 		return GetReactTorqueLen12();
 }
+double Smarticle::GetArmEnergy(int index)
+{
+	if (active)
+	{
+		double torque = armsController->GetEngine(index)->Get_tor_funct()->Get_y(m_system->GetChTime());
+		//return (armsController->ycurr[index] - armsController->yold[index])*torque;
+		return torque;
+	}
+	else
+		return 0;
+}
+double Smarticle::GetTotalEnergy()
+{
+	return abs(GetArmEnergy(0)) + abs(GetArmEnergy(1));
+}
 ChVector<> Smarticle::GetReactTorqueVectors01()
 {
 	return link_actuator01->Get_react_torque();

@@ -1368,7 +1368,7 @@ bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 	if (pt.z < rad.y || pt.z >rad.z){ /*GetLog() <<  "outside z";*/ return false; }
 	return true;
 }
-void printFlowRate(double time,int count) //SAVE smarticle gaitType out for reference!
+void printFlowRate(double time,int count,bool end = false) //SAVE smarticle gaitType out for reference!
 {
 	static bool started= false;
 	const std::string flowRate = out_dir + "/flowrate.txt";
@@ -1649,7 +1649,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	static int stepSave = 10;
 	if (tStep % stepSave != 0) return;
 	double zComz = 0;
-	double meanOT = 0;
+	double totalEnergy = 0;
 	//static std::shared_ptr<ChBody> grid;  //uncomment to visualize vol frac boxes
 	//static bool a = false;						//uncomment to visualize vol frac boxes
 	std::ofstream vol_frac_of;
@@ -1721,7 +1721,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 					zMax = max2;
 					max2 = temp;
 				}
-				meanOT += sPtr->GetReactTorqueLen01() + sPtr->GetReactTorqueLen12();
+				totalEnergy += sPtr->GetReactTorqueLen01() + sPtr->GetReactTorqueLen12();
 				//zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z- bucketMin.z);
 
 			}
@@ -1730,19 +1730,32 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 		//GetLog() << vol << " " << countInside2 << " " << bucket_rad << " " << zMax << " " << volumeFraction << "\n";
 		//GetLog() << "phi=" << volumeFraction << "\n";
 		zComz = zComz / countInside2;
-		meanOT = meanOT / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
+		totalEnergy = totalEnergy / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
 		break;
 	case RAMP:
+	{
 		zMax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
 		zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
-		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
-			Smarticle* sPtr = mySmarticlesVec[i]; 
+		max2 = 0;
+		for (size_t i = 0; i < mySmarticlesVec.size(); i++) 
+		{
+			Smarticle* sPtr = mySmarticlesVec[i];
+			
+			com = sPtr->Get_cm() - ChVector<>(0, 0, bucket_bott->GetPos().z);
+			max2 = std::max(max2, com.z);
+
+
 			countInside2 = smarticleHopperCount;
+			totalEnergy += mySmarticlesVec[i]->GetTotalEnergy();
 		}
+		//volumeFraction = (countInside2*vol) / (max2*boxdim.x*abs(cos(box_ang)));
+		volumeFraction = 0;
+	}
 	default:
 		break;
 	}
-	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << meanOT<< ", " << Smarticle::global_GUI_value << std::endl;
+	//totalEnergy used to be meanOT
+	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << totalEnergy << ", " << Smarticle::global_GUI_value << std::endl;
 	vol_frac_of.close();
 	return;
 }
@@ -2662,6 +2675,12 @@ int main(int argc, char* argv[]) {
   }
 	simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "Smarticle OT: " << mySmarticlesVec.at(0)->OTThresh << std::endl;
+
+	//need to print out last step at 15 secs
+	//if (bucketType == RAMP)
+	//{
+	//	recycleSmarticles(mphysicalSystem, mySmarticlesVec);
+	//}
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
 	  delete mySmarticlesVec[i];
   }
