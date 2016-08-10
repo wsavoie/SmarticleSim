@@ -162,7 +162,7 @@ void Smarticle::Properties(
 
 	std::tuple<double, double,double,double> a (0.0, 0.0,0.0,0.0);
 	//torques = { a, a, a, a, a, a, a }; //probably a better way to do this....
-	torques = { a,a,a,a,a,a }; //probably a better way to do this....
+	torques = { a }; //probably a better way to do this....
 	nextOmega = { 0, 0 };
 	nextAngle = { 0,0};
 	currTorque = { 0, 0 };
@@ -541,8 +541,11 @@ void Smarticle::SetSpeed(ChVector<> newSpeed)
 	arm1->SetPos_dt(newSpeed);
 	arm2->SetPos_dt(newSpeed);
 }
+
 void Smarticle::RotateSmarticle(ChQuaternion<> newRotation)
 {
+	GetLog() << arm1->GetRotAxis();
+	auto arm1Frame = arm1->GetCoord();
 	arm0->SetRot(newRotation);
 	arm1->SetRot(newRotation);
 	arm2->SetRot(newRotation);
@@ -662,32 +665,53 @@ void Smarticle::RotateSmarticleBy(ChQuaternion<> newAng)
 	quat0.Normalize();
 	quat2.Normalize();
 	newAng.Normalize();
-	rotation = newAng;
-	ChVector<>posRel = ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset);
-	ChQuaternion<> armRelativeRot = quat0;
-	arm0->SetPos(rotation.Rotate(posRel) + arm0->GetPos());
-	arm0->SetRot(rotation*armRelativeRot);
 
-	posRel = ChVector<>(0, 0, 0);
-	armRelativeRot = QUNIT;
-	arm1->SetPos(rotation.Rotate(posRel) + arm1->GetPos());
-	arm1->SetRot(rotation*armRelativeRot);
+	auto c = arm1->GetCoord();
+	c.pos.z = c.pos.z + 1;
+	//ChTransform<>::TransformLocalToParent()
+	
+	auto ca = arm1->GetRotAxis();
+	rotation = rotation*newAng;
+	arm1->SetRot(rotation);
+	UpdateState();
+	arm1->GetCollisionModel()->SyncPosition();
 
-	
-	posRel = ChVector<>((w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset);
-	armRelativeRot = quat2;
-	arm2->SetPos(rotation.Rotate(posRel) + arm2->GetPos());
-	arm2->SetRot(rotation*armRelativeRot);
-	
-	arm0->SetRot_dt(QUNIT);
-	arm1->SetRot_dt(QUNIT);
-	arm2->SetRot_dt(QUNIT);
+	auto a = arm0->GetCoord();
+	a.ConcatenatePreTransformation(arm1->GetCoord());
+	arm0->SetCoord(a);
 	UpdateState();
 	arm0->GetCollisionModel()->SyncPosition();
-	arm1->GetCollisionModel()->SyncPosition();
-	arm2->GetCollisionModel()->SyncPosition();
-	link_actuator01->SyncCollisionModels();
-	link_actuator12->SyncCollisionModels();
+
+
+	
+	//rotation = newAng;
+	//ChVector<>posRel = ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset);
+	//ChQuaternion<> armRelativeRot = quat0;
+	//arm0->SetPos(rotation.Rotate(posRel) + arm0->GetPos());
+	//arm0->SetRot(rotation*armRelativeRot);
+
+	//posRel = ChVector<>(0, 0, 0);
+	//armRelativeRot = QUNIT;
+	//arm1->SetPos(rotation.Rotate(posRel) + arm1->GetPos());
+	//arm1->SetRot(rotation*armRelativeRot);
+
+	//
+	//posRel = ChVector<>((w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset);
+	//armRelativeRot = quat2;
+	//arm2->SetPos(rotation.Rotate(posRel) + arm2->GetPos());
+	//arm2->SetRot(rotation*armRelativeRot);
+	//
+	//arm0->SetRot_dt(QUNIT);
+	//arm1->SetRot_dt(QUNIT);
+	//arm2->SetRot_dt(QUNIT);
+	//UpdateState();
+	//arm0->GetCollisionModel()->SyncPosition();
+	//arm1->GetCollisionModel()->SyncPosition();
+	//arm2->GetCollisionModel()->SyncPosition();
+	//link_actuator01->SyncCollisionModels();
+	//link_actuator12->SyncCollisionModels();
+
+
 	/*CreateArm2(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset), quat0
 	GetLog() << "arm1:" << arm1->GetPos();
 	GetLog() << "arm2:" << arm2->GetPos();
