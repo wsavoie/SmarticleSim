@@ -104,6 +104,9 @@ namespace chrono {
 		virtual ChVector<> GetReactTorqueVectors12();
 		virtual double GetReactTorqueLen01();
 		virtual double GetReactTorqueLen12();
+		virtual double GetArmEnergy(int index);
+		virtual double GetTotalEnergy();
+
 		virtual bool ChangeArmColor(double torque01, double torque12, bool LA, bool MA, bool OA);
 		bool MoveOverStress(double torque01, double torque12);
 		bool MoveMidStress(double torque01, double torque12);
