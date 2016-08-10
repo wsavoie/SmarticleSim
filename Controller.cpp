@@ -46,6 +46,8 @@ Controller::Controller(chrono::ChSystem *ch_system, Smarticle *smarticle)
 	yold[0] = 0;
 	yold[1] = 0;
 
+	ycurr[0] = 0;
+	ycurr[1] = 0;
 
 	//engine_funct0 = std::make_shared<ChFunctionController>(0, this);
 	//engine_funct1 = std::make_shared<ChFunctionController>(1, this);

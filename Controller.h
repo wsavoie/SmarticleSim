@@ -27,7 +27,7 @@ namespace chrono {
 		std::shared_ptr<ChLinkEngine> GetEngine(size_t i);
 		std::shared_ptr<ChFunctionController> engine_funct0;
 		std::shared_ptr<ChFunctionController> engine_funct1;
-		
+
 		double GetDesiredAngle(size_t i, double t);
 		double GetExpAngle(size_t idx, double t);
 		double GetActuatorOmega(size_t i, double t);
@@ -45,6 +45,7 @@ namespace chrono {
 		double DD[2];
 		double II[2];
 		double yold[2];
+		double ycurr[2];
 		double omegaLimit = 5;
 		double outputLimit = 0;
 		Smarticle *smarticle_;
