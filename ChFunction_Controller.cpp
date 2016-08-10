@@ -8,7 +8,7 @@ double ChFunctionController::Get_y(double t) {
 	double curr_react_torque = controller_->GetCurrTorque(index_, t);
 	double ct = controller_->smarticle_->getLinkActuator(index_)->Get_mot_torque();
 	//add the torque already being place on the body to the torque for the next step
-	//double out_torque =output; //add the torque already being place on the body to the torque for the next step
+	//double out_torque =output; //add the torque already being placed on the body to the torque for the next step
 
 	double output = 0;
 	switch (this->controller_->smarticle_->getLinkActuator(index_)->Get_eng_mode())
@@ -179,6 +179,18 @@ double ChFunctionController::ComputeOutputSpeed(double t)
 double ChFunctionController::ComputeOutput(double t) {
 	
 	double curr_ang = controller_->GetAngle(index_,t);
+
+	if (controller_->smarticle_->steps == 0)  //*********************
+	{
+		controller_->ycurr[index_] = curr_ang;
+		controller_->yold[index_] = curr_ang;
+	}
+	else
+	{
+		controller_->yold[index_] = controller_->ycurr[index_];
+		controller_->ycurr[index_] = curr_ang;	
+	}
+
 	double exp_ang = controller_->GetExpAngle(index_, t);
 	double des_ang = controller_->GetDesiredAngle(index_, t); ///get the next angle
 	des_ang = controller_->LinearInterpolate(index_, curr_ang, des_ang); //linear interpolate for situations where gui changes so there isn't a major speed increase
@@ -205,16 +217,18 @@ double ChFunctionController::ComputeOutput(double t) {
 	double y = curr_ang;
 
 	//initializes yold to current value for first iteration
-	if (controller_->smarticle_->steps == 0)
-		controller_->yold[index_] = y;
+	//if (controller_->smarticle_->steps == 0)  //*********************
+	//	controller_->yold[index_] = y;
 
 	double pp = K*(b*ysp - y);
 	controller_->DD[index_] = ad*controller_->DD[index_] - bd*(y - controller_->yold[index_]);
 	double v = pp + controller_->II[index_] + controller_->DD[index_];
 	double u = SaturateValue(v, tlim);
 	controller_->II[index_] = controller_->II[index_] + bi*(ysp - y) + ao*(u - v);
-	controller_->yold[index_] = y;
+	//controller_->yold[index_] = y;//************
 	
+
+
 
 	//double vel = (controller_->yold[index_] - y) / dT;
 	//vel = SaturateValue(vel, vlim);
