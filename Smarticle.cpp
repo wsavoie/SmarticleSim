@@ -52,8 +52,11 @@ double Smarticle::distThresh;
 unsigned int Smarticle::global_GUI_value;
 Smarticle::~Smarticle()
 {
-	m_system->RemoveLink(link_actuator01);
-	m_system->RemoveLink(link_actuator12);
+	for (size_t i = 0; i < numEngs; i++)
+	{
+		m_system->RemoveLink(link_actuators[i]);
+	}
+
 	//m_system->RemoveLink(link_revolute01);
 	//m_system->RemoveLink(link_revolute12);
 
@@ -754,8 +757,9 @@ void Smarticle::CreateJoints() {
 }
 
 void Smarticle::CreateActuators() {
-	link_actuator01 = std::make_shared<ChLinkEngine>();
-	link_actuator12 = std::make_shared<ChLinkEngine>();
+
+	std::shared_ptr<ChLinkEngine> link_actuator01 = std::make_shared<ChLinkEngine>();
+	std::shared_ptr<ChLinkEngine> link_actuator12 = std::make_shared<ChLinkEngine>();
 	ChVector<> pR01(-w / 2.0, 0, 0);
 	ChVector<> pR12(w / 2.0, 0, 0);
 	if (!stapleSize)
@@ -809,7 +813,10 @@ void Smarticle::CreateActuators() {
 
 	m_system->AddLink(link_actuator01);
 	m_system->AddLink(link_actuator12);	
-
+	//////////
+	//actuator 1
+	link_actuators[0] = link_actuator01;
+	link_actuators[1] = link_actuator12;
 }
 
 void Smarticle::Create() {
@@ -874,68 +881,34 @@ void Smarticle::Create() {
 	}
 }
 
-std::shared_ptr<ChFunction> Smarticle::GetActuatorFunction(int actuatorID) {
-	if (actuatorID == 0) {
-		return function01;
-	} else if (actuatorID == 1) {
-		return function12;
-	} else {
-		std::cout << "Error! smarticle can only have actuators with ids from {0, 1}" << std::endl;
+std::shared_ptr<ChFunction> Smarticle::GetActuatorFunction(int id) {
+	if (id <= numEngs - 1)
+	{
+		return EngFunctions[id];
 	}
+	//else
+	//{
+	//	std::cout << "Error! "<< __FUNCTION__ <<" smarticle can only have actuators with ids from {0, 1}" << std::endl;
+	//}
 	return std::shared_ptr<ChFunction>(NULL);
 }
+void Smarticle::SetActuatorFunction(int id, std::shared_ptr<ChFunction> actuatorFunction) {
 
-void Smarticle::SetActuatorFunction(int actuatorID, std::shared_ptr<ChFunction> actuatorFunction) {
-	if (actuatorID == 0) {
-		function01 = actuatorFunction;
-		link_actuator01->Set_rot_funct(function01);
-	} else if (actuatorID == 1) {
-		function12 = actuatorFunction;
-		link_actuator12->Set_rot_funct(function12);
-	} else {
-		std::cout << "Error! smarticle can only have actuators with ids from {0, 1}" << std::endl;
-	}
-}
-
-void Smarticle::SetActuatorFunction(int actuatorID, double omega, double dT) {
-	double diffTheta = dT * omega;
-	std::shared_ptr<ChLinkEngine> mlink_actuator;
-	if (actuatorID == 0) {
-		mlink_actuator = link_actuator01;
-	} else {
-		mlink_actuator = link_actuator12;
-	}
-
-//	auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_rot_funct());
-//	mfun1->Set_yconst(diffTheta + mfun1->Get_yconst());
-	//auto mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
-	auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_tor_funct());
-
-	
-	//mfun2->Set_yconst(omega);
-	mfun1->Set_yconst(omega);
-}
-
-void Smarticle::SetActuatorFunction(int actuatorID, double omega) {
-	std::shared_ptr<ChLinkEngine> mlink_actuator;
-	if (actuatorID == 0) {
-		mlink_actuator = link_actuator01;
-	} else {
-		mlink_actuator = link_actuator12;
-	}
-
-	//auto mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_spe_funct());
-	auto mfun1 = std::dynamic_pointer_cast<ChFunction_Const>(mlink_actuator->Get_tor_funct());
-	//mfun2->Set_yconst(omega);
-	mfun1->Set_yconst(omega);
+		GetActuatorFunction(id) = actuatorFunction;
+		getLinkActuator(id)->Set_rot_funct(GetActuatorFunction(id));
 }
 
 std::shared_ptr<ChLinkEngine> Smarticle::getLinkActuator(int id)
 {
-	if (id == 0)
-		return link_actuator01;
-	else
-		return link_actuator12;
+	if (id <= numEngs - 1)
+	{
+		return link_actuators[id];
+	}
+	else 
+	{
+		std::cout << "Error!"<< __FUNCTION__ << " smarticle can only have actuators with ids from {0, 1}" << std::endl;
+		exit(-1);
+	}
 }
 double Smarticle::GetVolume() {
 //	return r * r2 * (w + 2 * (l + jointClearance));
@@ -1638,14 +1611,7 @@ void Smarticle::setCurrentMoveType(MoveType newMoveType)
 	this->moveType = newMoveType;
 	//global_GUI_value = newMoveType;
 }
-double Smarticle::GetReactTorqueLen(int index)
-{
-	if (index == 0)
-		return GetReactTorqueLen01();
-	else
-		return GetReactTorqueLen12();
-}
-double Smarticle::GetArmEnergy(int index)
+double Smarticle::GetArmTorque(int index) ///gets torque exerted by controller on arm
 {
 	if (active)
 	{
@@ -1656,31 +1622,23 @@ double Smarticle::GetArmEnergy(int index)
 	else
 		return 0;
 }
-double Smarticle::GetTotalEnergy()
+double Smarticle::GetTotalTorque()///sums up, for both arms, torque exerted by controller on arm
 {
-	return abs(GetArmEnergy(0)) + abs(GetArmEnergy(1));
+	double totalTorque = 0;
+	for (int i = 0; i < numEngs; i++)
+	{
+		totalTorque += abs(GetArmTorque(i));
+	}
+	return totalTorque;
 }
-ChVector<> Smarticle::GetReactTorqueVectors01()
+ChVector<> Smarticle::GetReactTorqueVector(int id)
 {
-	return link_actuator01->Get_react_torque();
+	return getLinkActuator(id)->Get_react_torque();
 }
-ChVector<> Smarticle::GetReactTorqueVectors12()
-{
-	return link_actuator12->Get_react_torque();
-}
-double Smarticle::GetReactTorqueLen01()
-{
-	//return (link_actuator01->Get_react_torque().Length2());
-	return (link_actuator01->Get_react_torque().z);
-}
-double Smarticle::GetZReactTorque(int id)
+
+double Smarticle::GetMotTorque(int id)
 {
 	return getLinkActuator(id)->Get_mot_torque();
-}
-double Smarticle::GetReactTorqueLen12()
-{
-	//return (link_actuator12->Get_react_torque().Length2());
-	return (link_actuator12->Get_react_torque().z);
 }
 
 void Smarticle::SetBodyFixed(bool mev){

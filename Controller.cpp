@@ -113,7 +113,7 @@ std::shared_ptr<ChLinkEngine> Controller::GetEngine(size_t index)
 double Controller::GetCurrTorque(size_t index, double t)
 {
 	//return smarticle_->GetZReactTorque(index);
-	return smarticle_->GetReactTorqueLen(index);
+	return smarticle_->GetReactTorqueVector(index).z;
 }
 
 double Controller::GetDesiredAngle(size_t index, double t)

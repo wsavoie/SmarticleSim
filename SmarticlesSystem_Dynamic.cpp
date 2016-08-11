@@ -22,7 +22,7 @@
 //
 //	 CHRONO
 //   ------
-//   Multibody dinamics engine
+//   Multibody dynamics engine
 //
 // ------------------------------------------------
 //             www.deltaknowledge.com
@@ -1649,7 +1649,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	static int stepSave = 10;
 	if (tStep % stepSave != 0) return;
 	double zComz = 0;
-	double totalEnergy = 0;
+	double totalTorque = 0;
 	//static std::shared_ptr<ChBody> grid;  //uncomment to visualize vol frac boxes
 	//static bool a = false;						//uncomment to visualize vol frac boxes
 	std::ofstream vol_frac_of;
@@ -1721,7 +1721,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 					zMax = max2;
 					max2 = temp;
 				}
-				totalEnergy += sPtr->GetReactTorqueLen01() + sPtr->GetReactTorqueLen12();
+				totalTorque += sPtr->GetReactTorqueVector(0).z +sPtr->GetReactTorqueVector(1).z;
 				//zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z- bucketMin.z);
 
 			}
@@ -1730,10 +1730,11 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 		//GetLog() << vol << " " << countInside2 << " " << bucket_rad << " " << zMax << " " << volumeFraction << "\n";
 		//GetLog() << "phi=" << volumeFraction << "\n";
 		zComz = zComz / countInside2;
-		totalEnergy = totalEnergy / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
+		totalTorque = totalTorque / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
 		break;
 	case RAMP:
 	{
+		zComz = 0;
 		zMax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
 		zMax = std::min(zMax, bucketMin.z + 2 * bucket_interior_halfDim.z);
 		max2 = 0;
@@ -1746,7 +1747,8 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 
 
 			countInside2 = smarticleHopperCount;
-			totalEnergy += mySmarticlesVec[i]->GetTotalEnergy();
+			totalTorque += mySmarticlesVec[i]->GetTotalTorque();
+			zComz += sPtr->GetArmTorque(1);
 		}
 		//volumeFraction = (countInside2*vol) / (max2*boxdim.x*abs(cos(box_ang)));
 		volumeFraction = 0;
@@ -1755,7 +1757,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 		break;
 	}
 	//totalEnergy used to be meanOT
-	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << totalEnergy << ", " << Smarticle::global_GUI_value << std::endl;
+	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << totalTorque << ", " << Smarticle::global_GUI_value << std::endl;
 	vol_frac_of.close();
 	return;
 }

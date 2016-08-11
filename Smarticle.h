@@ -9,6 +9,7 @@
 #define SMARTICLE_H_
 
 //#include "core/ChVector.h"
+#include <iostream>
 #include "assets/ChTexture.h"
 #include "chrono_irrlicht/ChIrrApp.h"//changed path from unit to chrono to reflect changes in updated chrono
 #include "chrono_irrlicht/ChIrrTools.h"
@@ -96,16 +97,14 @@ namespace chrono {
 
 		double initialAng0;
 		double initialAng1;
-		size_t numEngs = 2;
-		size_t numSegs = 3;
+		static const size_t numEngs = 2;
+		static const size_t numSegs = 3;
 		//Controller armsControl (new Controller());
-		virtual double GetReactTorqueLen(int index);
-		virtual ChVector<> GetReactTorqueVectors01();
-		virtual ChVector<> GetReactTorqueVectors12();
-		virtual double GetReactTorqueLen01();
-		virtual double GetReactTorqueLen12();
-		virtual double GetArmEnergy(int index);
-		virtual double GetTotalEnergy();
+
+		virtual ChVector<> GetReactTorqueVector(int id);
+
+		virtual double GetArmTorque(int index); 
+		virtual double GetTotalTorque();
 
 		virtual bool ChangeArmColor(double torque01, double torque12, bool LA, bool MA, bool OA);
 		bool MoveOverStress(double torque01, double torque12);
@@ -123,7 +122,7 @@ namespace chrono {
 		virtual double GetOmega1(bool angularFreq = true);
 		virtual double GetOmega2(bool angularFreq = true);
 		double GetNextOmega(int id);
-		double GetZReactTorque(int id);
+		double GetMotTorque(int id);
 		virtual std::shared_ptr<ChBody> GetSmarticleBodyPointer();
 
 		// create the smarticle by creating arms, adding joint between them, and functions
@@ -141,8 +140,6 @@ namespace chrono {
 		// actuatorID belongs to {0, 1}, i.e. the actuatorID between 0 and 1, or between 1 and 2
 		virtual std::shared_ptr<ChFunction> GetActuatorFunction(int actuatorID);
 		virtual void SetActuatorFunction(int actuatorID, std::shared_ptr<ChFunction> actuatorFunction);
-		virtual void SetActuatorFunction(int actuatorID, double omega, double dT);
-		virtual void SetActuatorFunction(int actuatorID, double omega);
 		Controller* armsController;
 		// Smarticle volume
 		virtual double GetVolume();
@@ -374,12 +371,10 @@ namespace chrono {
 		std::shared_ptr<ChLinkLockRevolute> link_revolute12; 	// revolute joint between arms 0 and 1
 
 		// Actuators
-		std::shared_ptr<ChLinkEngine> link_actuator01;	// actuator joint between arms 0 and 1
-		std::shared_ptr<ChLinkEngine> link_actuator12;	// actuator joint between arms 0 and 1
+		std::shared_ptr<ChLinkEngine> link_actuators[numEngs];
 
 		// joints functions
-		std::shared_ptr<ChFunction> function01;
-		std::shared_ptr<ChFunction> function12;
+		std::shared_ptr<ChFunction> EngFunctions[numEngs];
 
 		// assets
 		std::shared_ptr<ChTexture> arm0_textureAsset;
