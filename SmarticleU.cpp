@@ -25,19 +25,19 @@ void SmarticleU::Create() {
 	
 	
 	ChVector<> box2_loc = ChVector<>(
-		(-w / 2.0 + r2) - (l / 2.0+r2)*cos(angle1),
+		(-w / 2.0 + r2) - (l / 2.0+r2)*cos(angles[0]),
 		0,
-		(l / 2.0 + r2)*sin(angle1));
+		(l / 2.0 + r2)*sin(angles[0]));
 	
 	
 	ChVector<> box3_loc = ChVector<>(
-		(w / 2.0 - r2) + (l / 2.0+r2)*cos(angle2),
+		(w / 2.0 - r2) + (l / 2.0+r2)*cos(angles[1]),
 		0,
-		(l / 2.0 + r2)*sin(angle2));
+		(l / 2.0 + r2)*sin(angles[1]));
 
 	// relative location of the boxes wrt smarticle initPos,
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1 +PI_2, 0));
-	ChQuaternion<> quat3 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2 - PI_2, 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angles[0] +PI_2, 0));
+	ChQuaternion<> quat3 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angles[1] - PI_2, 0));
 
 
 	ChVector<> gyr1 = utils::CalcBoxGyration(box1_dim,box1_loc).Get_Diag();
@@ -115,54 +115,4 @@ ChVector<> SmarticleU::Get_cm() {
 double SmarticleU::GetVolume() {
 	return (2 * r) * (2 * r2 )* (w + 2 * l);
 }
-void SmarticleU::SetAngle(double mangle1, double mangle2, bool degrees = false)// &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& make sure on use I supply rads without final arg
-{
-	if (degrees)
-	{
-		angle1 = mangle1*D2R;
-		angle2 = mangle2*D2R;
-	}
-	else
-	{
-		angle1 = mangle1;
-		angle2 = mangle2;
-	}
-}
-void SmarticleU::SetAngle(double mangle, bool degrees = false)
-{
-	if (degrees)
-	{
-		angle1 = mangle*D2R;
-		angle2 = mangle*D2R;
-	}
-	else
-	{
-		angle1 = mangle;
-		angle2 = mangle;
-	}
-}
-void SmarticleU::SetAngle1(double mangle1, bool degrees = false)
-{
-	if (degrees) { angle1 = mangle1*D2R; }
-	else{ angle1 = mangle1; }
-}
-void SmarticleU::SetAngle2(double mangle2, bool degrees = false)
-{
-	if (degrees) { angle2 = mangle2*D2R; }
-	else{ angle2 = mangle2; }
-}
 
-double SmarticleU::GetAngle1(bool degrees = false)
-{
-	if (degrees)
-		return angle1*R2D;
-	else
-		return angle1;
-}
-double SmarticleU::GetAngle2(bool degrees = false)
-{
-	if (degrees)
-		return angle2*R2D;
-	else
-		return angle2;
-}

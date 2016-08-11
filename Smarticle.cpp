@@ -95,8 +95,8 @@ void Smarticle::Properties(
 	collisionEnvelope = other_envelope;
 	initPos = pos;
 	rotation = rot;
-	angle1 = other_angle;
-	angle2 = other_angle2;
+	angles[0] = other_angle;
+	angles[1] = other_angle2;
 	volume = GetVolume();
 
 
@@ -172,6 +172,7 @@ void Smarticle::Properties(
 	torqueAvg = std::make_tuple(0, 0, 0, 0);
 	initialAng0 = other_angle;
 	initialAng1 = other_angle2;
+
 	activateStress = 0; //.05
 	
 	OTThresh = .7;//for single arm 
@@ -660,8 +661,8 @@ void Smarticle::SetEdges()
 }
 void Smarticle::RotateSmarticleBy(ChQuaternion<> newAng)
 {
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1, 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2, 0));
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angles[0], 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angles[1], 0));
 	quat0.Normalize();
 	quat2.Normalize();
 	newAng.Normalize();
@@ -767,8 +768,8 @@ void Smarticle::CreateActuators() {
 
 	ChQuaternion<> qx1 = Q_from_AngAxis(-PI_2, VECT_X);
 	ChQuaternion<> qx2 = Q_from_AngAxis(PI_2, VECT_X);
-	ChQuaternion<> qy1 = Q_from_AngAxis(GetAngle1(), VECT_Z);
-	ChQuaternion<> qy2 = Q_from_AngAxis(GetAngle2(), VECT_Z);
+	ChQuaternion<> qy1 = Q_from_AngAxis(GetAngle(0), VECT_Z);
+	ChQuaternion<> qy2 = Q_from_AngAxis(GetAngle(1), VECT_Z);
 
 	qx1.Normalize();
 	qx2.Normalize();
@@ -823,8 +824,8 @@ void Smarticle::Create() {
 
 	//ChQuaternion<> quat0 = Q_from_AngAxis(angle1, VECT_Y);
 	//ChQuaternion<> quat2 = Q_from_AngAxis(-angle2, VECT_Y);
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angle1, 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angle2, 0));
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angles[0], 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angles[1], 0));
 	quat0.Normalize();
 	quat2.Normalize();
 
@@ -833,9 +834,9 @@ void Smarticle::Create() {
 	{
 		offPlaneoffset = 0;
 		l_mod = l + 2 * r2 - jointClearance;
-		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(angle1), 0, -(l_mod / 2.0 - r2)*sin(angle1)), quat0);
+		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(angles[0]), 0, -(l_mod / 2.0 - r2)*sin(angles[0])), quat0);
 		CreateArm(1, w, ChVector<>(0, 0, 0));
-		CreateArm(2, l_mod, ChVector<>(w / 2.0 +  (l / 2.0)*cos(angle2), 0, -(l_mod / 2.0 - r2)*sin(angle2)), quat2);
+		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(angles[1]), 0, -(l_mod / 2.0 - r2)*sin(angles[1])), quat2);
 	}
 	else
 	{
@@ -844,9 +845,9 @@ void Smarticle::Create() {
 		double armt = r;
 		double armt2 = .00806 / 2 * sizeScale; //8.06 mm with solar 3.2 without
 
-		CreateArm2(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset), quat0);
+		CreateArm2(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angles[0])*l / 2), 0, -(l / 2.0)*sin(-angles[0]) - offPlaneoffset), quat0);
 		CreateArm2(1, w, r, r2, ChVector<>(0, 0, 0));
-		CreateArm2(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset), quat2);
+		CreateArm2(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angles[1])*l / 2), 0, -(l / 2.0)*sin(-angles[1]) - offPlaneoffset), quat2);
 	}
 
 	//need this here
@@ -930,8 +931,8 @@ void Smarticle::SetAngle(std::pair<double, double> mangles, bool degrees)
 }
 void Smarticle::SetInitialAngles()
 {
-	initialAng0 = this->GetAngle1();
-	initialAng1 = this->GetAngle2();
+	initialAng0 = this->GetAngle(0);
+	initialAng1 = this->GetAngle(1);
 }
 double Smarticle::GetInitialAngle(int id)
 {
@@ -940,82 +941,54 @@ double Smarticle::GetInitialAngle(int id)
 	else
 		return initialAng1;
 }
-void Smarticle::SetAngles(double mangle1, double mangle2, bool degrees)
+void Smarticle::SetAngles(double mangle0, double mangle1, bool degrees)
 {
 	if (degrees)
 	{
-		angle1 = mangle1*D2R;
-		angle2 = mangle2*D2R;
+		angles[0] = mangle0*D2R;
+		angles[1] = mangle1*D2R;
 		return;
 	}
 	else
 	{
-		angle1 = mangle1;
-		angle2 = mangle2;
+		angles[0] = mangle0;
+		angles[1] = mangle1;
 	}
 }
 void Smarticle::SetAngle(int id, double mangle,bool degrees)
 {
-	if (id == 0)
-		SetAngle1(mangle, degrees);
-	else
-		SetAngle2(mangle, degrees);
+	
+	if (degrees) { angles[id] = mangle*D2R; }
+	else{ angles[id] = mangle; }
 }
 void Smarticle::SetAngle(double mangle, bool degrees)
 {
-	if (degrees)
+	for (int i = 0; i < numEngs; i++)
 	{
-		angle1 = mangle*D2R;
-		angle2 = mangle*D2R;
-	}
-	else
-	{
-		angle1 = mangle;
-		angle2 = mangle;
+		if (degrees){angles[i] = mangle*D2R;}
+		else{angles[i] = mangle;}
 	}
 }
-void Smarticle::SetAngle1(double mangle1, bool degrees)
-{
-	if (degrees) { angle1 = mangle1*D2R; }
-	else{ angle1 = mangle1; }
-}
-void Smarticle::SetAngle2(double mangle2, bool degrees)
-{
-	if (degrees) { angle2 = mangle2*D2R; }
-	else{ angle2 = mangle2; }
-}
+
 double Smarticle::GetAngle(int id, bool degrees)
 {
-	if (id == 0)
-		return GetAngle1(degrees);
-	else
-		return GetAngle2(degrees);
-}
-double Smarticle::GetAngle1(bool degrees)
-{
-	if (degrees)				
-		return angle1*R2D;
-	else
-		return angle1;
-}
-double Smarticle::GetAngle2(bool degrees)
-{
 	if (degrees)
-		return angle2*R2D;
+		return angles[id] * R2D;
 	else
-		return angle2;
+		return angles[id];
 }
-void Smarticle::addInterpolatedPathToVector(double a0i, double a2i, double a0f, double a2f)
+
+void Smarticle::addInterpolatedPathToVector(double a0i, double a1i, double a0f, double a1f)
 {
-	double dist1 = omega1*dT;
-	double dist2 = omega2*dT;
-	int n = std::max(abs((a0f - a0i) / dist1), abs((a2f - a2i) / dist2));
+	double dist0 = omega1*dT;
+	double dist1 = omega2*dT;
+	int n = std::max(abs((a0f - a0i) / dist0), abs((a1f - a1i) / dist1));
 	std::vector<double> a0 = linspace(a0i, a0f, n);
-	std::vector<double> a2 = linspace(a2i, a2f, n);
+	std::vector<double> a1 = linspace(a1i, a1f, n);
 
 	for (int i = 0; i < n; i++)
 	{
-		mv->emplace_back(a0.at(i), a2.at(i));
+		mv->emplace_back(a0.at(i), a1.at(i));
 	}
 
 }
@@ -1118,8 +1091,8 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	firstAngPair.second = angVals.y;
 	//TODO need to rewrite the below way of reading file, very ugly!
 
-	ot.emplace_back(GetAngle1(),GetAngle2());
-	ot.emplace_back(GetAngle1(), GetAngle2());
+	ot.emplace_back(GetAngle(0), GetAngle(1));
+	ot.emplace_back(GetAngle(0), GetAngle(1));
 	if (global.size() < 1)
 	{
 		ang1 = angPair.first;
@@ -1331,10 +1304,10 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 				arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 
 				this->ot.clear();
-				//this->ot.emplace_back(GetAngle1() + sign(torque01)*moveAmt, GetAngle2() + sign(torque12)*moveAmt);
-				//this->ot.emplace_back(GetAngle1() + moveAmt, GetAngle2() + moveAmt);
-				this->ot.emplace_back(GetAngle1(), GetAngle2());
-				//this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
+				//this->ot.emplace_back(angles[0] + sign(torque01)*moveAmt, angles[1] + sign(torque12)*moveAmt);
+				//this->ot.emplace_back(angles[0] + moveAmt, angles[1] + moveAmt);
+				this->ot.emplace_back(angles[0], angles[1]);
+				//this->ot.emplace_back(angles[0] - moveAmt, angles[1] - moveAmt);
 				this->armsController->resetCumError = true;
 		}
 		//nothing needs to be done if prev OT
@@ -1362,9 +1335,9 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 		{
 				arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 				this->ot.clear();
-				//this->ot.emplace_back(GetAngle1() + moveAmt, GetAngle2() + moveAmt);
-				this->ot.emplace_back(GetAngle1(), GetAngle2());
-				//this->ot.emplace_back(GetAngle1() - moveAmt, GetAngle2() - moveAmt);
+				//this->ot.emplace_back(angles[0] + moveAmt, angles[1] + moveAmt);
+				this->ot.emplace_back(angles[0], angles[1]);
+				//this->ot.emplace_back(angles[0] - moveAmt, angles[1] - moveAmt);
 				this->armsController->resetCumError = true;
 		}
 		arm2OT = true;

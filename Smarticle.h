@@ -30,6 +30,10 @@ namespace chrono {
 	class Smarticle {
 	public:
 		int steps=0; //number of steps this smarticle has existed, updated in smarticleUpdate
+		static const size_t numEngs = 2;
+		static const size_t numSegs = 3;
+
+		double angles[numEngs]; //angle between center segment and outer segments in radians
 		static std::shared_ptr<ChTexture> mtextureOT;
 		static std::shared_ptr<ChTexture> mtextureMid;
 		static std::shared_ptr<ChTexture> mtextureArm;
@@ -97,8 +101,7 @@ namespace chrono {
 
 		double initialAng0;
 		double initialAng1;
-		static const size_t numEngs = 2;
-		static const size_t numSegs = 3;
+
 		//Controller armsControl (new Controller());
 
 		virtual ChVector<> GetReactTorqueVector(int id);
@@ -156,22 +159,18 @@ namespace chrono {
 
 
 		//smarticle arm angle
-		virtual void SetInitialAngles();
-		virtual double GetInitialAngle(int id);
-		virtual void SetAngles(double mangle1, double mangle2, bool degrees = false);
-		virtual void SetAngle(std::pair<double, double> mangles, bool degrees = false);
-		virtual void SetAngle(double mangle, bool degrees = false);
-		virtual void SetAngle(int id, double mangle, bool degrees = false);
-		virtual void SetAngle1(double mangle1, bool degrees = false);
-		virtual void SetAngle2(double mangle2, bool degrees = false);
+		 void SetInitialAngles();
+		 double GetInitialAngle(int id);
+		 void SetAngles(double mangle1, double mangle2, bool degrees = false);
+		 void SetAngle(std::pair<double, double> mangles, bool degrees = false);
+		 void SetAngle(double mangle, bool degrees = false);
+		 void SetAngle(int id, double mangle, bool degrees = false);
 
 		std::vector<ChBody*> body_list;
 
 		
 		virtual int GetID();
-		virtual double GetAngle(int id, bool degrees = false);
-		virtual double GetAngle1(bool degrees = false);
-		virtual double GetAngle2(bool degrees = false);
+		 double GetAngle(int id, bool degrees = false);
 
 		//body fixing
 		virtual void SetBodyFixed(bool mev);
@@ -315,8 +314,6 @@ namespace chrono {
 		double w;  // mid-segment length including thickness
 		double r;  // in-plane half-thickness of arm
 		double r2;  // off-plane  half-thickness of arm, i.e. prependicular to the object
-		double angle1; //angle between center segment and outer segments radians
-		double angle2; //angle between center segment and outer segments
 		double volume;
 		double mass;
 		double collisionEnvelope;

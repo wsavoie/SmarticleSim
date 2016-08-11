@@ -1667,7 +1667,7 @@ void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cyl
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++)
 		{
 			//works for plotlazy matlabfile
-			stress_of << mySmarticlesVec[i]->GetAngle1(true) << ", " << mySmarticlesVec[i]->GetAngle2(true) << ", " << mySmarticlesVec[i]->moveType << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
+			stress_of << mySmarticlesVec[i]->GetAngle(0,true) << ", " << mySmarticlesVec[i]->GetAngle(1,true) << ", " << mySmarticlesVec[i]->moveType << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
 			//stress_of << mySmarticlesVec[i]->active << ", " << mySmarticlesVec[i]->Get_cm().x << ", " << mySmarticlesVec[i]->Get_cm().y << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
 		}
 		stress_of << "#EF" <<frame<< std::endl;

@@ -137,8 +137,8 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 
 						Smarticle* sPtr = sv->at(i);
 
-						CurrTheta01 = sPtr->GetAngle1();
-						CurrTheta12 = sPtr->GetAngle2();
+						CurrTheta01 = sPtr->GetAngle(0);
+						CurrTheta12 = sPtr->GetAngle(1);
 						sPtr->AssignState(MoveType::VIB);
 						sPtr->vib.clear(); //since mv points to address containing current movetype mv clears vib
 						sPtr->GenerateVib(CurrTheta01, CurrTheta12);

@@ -78,8 +78,8 @@ void CheckPointSmarticles_Write(
 				mSmart->GetSmarticleBodyPointer()->GetRot().e1 << ", " <<
 				mSmart->GetSmarticleBodyPointer()->GetRot().e2 << ", " <<
 				mSmart->GetSmarticleBodyPointer()->GetRot().e3 << ", " <<
-				mSmart->GetAngle1(true) << ", " <<
-				mSmart->GetAngle2(true) << ", " <<
+				mSmart->GetAngle(0,true) << ", " <<
+				mSmart->GetAngle(1,true) << ", " <<
 				std::endl;
 	}
 
@@ -162,8 +162,8 @@ void CheckPointSmarticlesDynamic_Write(
 			mSmart->GetSmarticleBodyPointer()->GetRot().e1 << ", " <<
 			mSmart->GetSmarticleBodyPointer()->GetRot().e2 << ", " <<
 			mSmart->GetSmarticleBodyPointer()->GetRot().e3 << ", " <<
-			mSmart->GetAngle1() << ", " <<
-			mSmart->GetAngle2() << ", " <<
+			mSmart->GetAngle(0) << ", " <<
+			mSmart->GetAngle(1) << ", " <<
 			mSmart->GetID() << ", " <<
 			mSmart->moveTypeIdxs.at(MoveType::GLOBAL) << ", " <<
 			mSmart->moveTypeIdxs.at(MoveType::GUI1) << ", " <<
