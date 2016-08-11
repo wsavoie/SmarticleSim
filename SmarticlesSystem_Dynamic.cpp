@@ -135,7 +135,8 @@ double vibrateStart= .9;
 double rho_cylinder = 1180.0;
 //double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 //double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
-std::shared_ptr<ChMaterialSurface> mat_g;
+std::shared_ptr<ChMaterialSurface> mat_smarts;
+std::shared_ptr<ChMaterialSurface> mat_wall;
 int numLayers = 100;
 double armAngle = 90;
 double sOmega = 5;  // smarticle omega
@@ -228,6 +229,32 @@ auto floorTexture = std::make_shared<ChTexture>();
 int smarticleHopperCount = 0;
 
 // =====================================================================================================
+class MyChCustomCollisionPointCallback : public ChSystem::ChCustomCollisionPointCallback
+	{
+	public:
+		/// Callback used to report contact points being added to the container.
+		/// This must be implemented by a child class of ChAddContactCallback
+
+		virtual void ContactCallback(
+			const collision::ChCollisionInfo& mcontactinfo,  ///< get info about contact (cannot change it)
+			ChMaterialCouple& material                       ///< you can modify this!
+			)
+		{
+			//int bucketId = bucket->GetIdentifier();
+			//if (mcontactinfo.modelA->GetPhysicsItem()->GetIdentifier() == bucketId || mcontactinfo.modelB->GetPhysicsItem()->GetIdentifier() == bucketId)
+			//{
+				//GetLog() << material.sliding_friction << " :kfric sfric:" << material.static_friction<<"\n"; 
+			//	if (bucket->GetMaterialSurface()->GetKfriction() == 0 || bucket->GetMaterialSurface()->GetSfriction() == 0)
+			//	{
+			//		material.static_friction = 0;
+			//		material.sliding_friction = 0;
+
+			//	}
+			//}
+ 		}
+
+};
+
 class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
 public:
 	/// Callback used to report 'near enough' pairs of models.
@@ -735,7 +762,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		/////////////////flat rot/////////////////
 		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 		smarticle0->Properties(mySmarticlesVec.size(), mySmarticlesVec.size() * 4,
-			rho_smarticle, mat_g,
+			rho_smarticle, mat_smarts,
 			collisionEnvelope,
 			//l_smarticle+t2_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 			l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
@@ -791,7 +818,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 }
 std::shared_ptr<ChBody> create_flathopper(int num_boxes, int id, bool overlap, CH_SYSTEM* mphysicalSystem, std::shared_ptr<ChMaterialSurfaceBase> wallMat, int ridges = 5)
 {//essentially the same as create cyl container except made it bigger and added ridges
-	bucket = utils::CreateBoxContainer(mphysicalSystem, 1000000000, mat_g,
+	bucket = utils::CreateBoxContainer(mphysicalSystem, 1000000000, wallMat,
 		boxdim, bucket_half_thick, bucket_ctr, Q_from_AngAxis(-box_ang, VECT_X), true, false, true, false);
 	//bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
@@ -882,7 +909,7 @@ std::shared_ptr<ChBody> create_drum(int num_boxes, int id, bool overlap, CH_SYST
 	bucket_bott->SetCollide(true);
 	bucket_bott->GetCollisionModel()->ClearModel();
 	bucket_bott->SetPos(bucket_ctr);
-	bucket_bott->SetMaterialSurface(mat_g);
+	bucket_bott->SetMaterialSurface(wallMat);
 	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));//custom file
 	bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	bucket_bott->AddAsset(bucketTexture);
@@ -949,7 +976,8 @@ std::shared_ptr<ChBody> create_ramp(int id, CH_SYSTEM* mphysicalSystem, std::sha
 
 
 	ramp->GetCollisionModel()->ClearModel();
-
+	//ramp->SetId(id);
+	ramp->SetIdentifier(id);
 	ramp->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	ramp->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	ramp->GetCollisionModel()->SetFamily(1);
@@ -1005,7 +1033,7 @@ std::shared_ptr<ChBody> create_ramp(int id, CH_SYSTEM* mphysicalSystem, std::sha
 	bucket_bott->SetCollide(true);
 	bucket_bott->GetCollisionModel()->ClearModel();
 	bucket_bott->SetPos(bucket_ctr);
-	bucket_bott->SetMaterialSurface(mat_g);
+	bucket_bott->SetMaterialSurface(wallMat);
 	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));//custom file
 	bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(bucket_bott.get(), ChVector<>(hdim.x + o_lap, hthick, hdim.z + o_lap), //-y
@@ -1193,7 +1221,7 @@ void CreateBucket_bott(CH_SYSTEM& mphysicalSystem)
 	bucket_bott->SetCollide(true);
 	bucket_bott->GetCollisionModel()->ClearModel();
 	bucket_bott->SetPos(bucket_ctr);
-	bucket_bott->SetMaterialSurface(mat_g);
+	bucket_bott->SetMaterialSurface(mat_wall);
 	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));//custom file
 	bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(bucket_bott.get(), Vector(bucket_rad + 2 * bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
@@ -1209,15 +1237,18 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	/////////////////
 	// Ground body
 	////////////////
-	mat_g->SetFriction(fric); //steel- plexiglass   (plexiglass was outer cylinder material)
-	mat_g->SetKfriction(fric);
+	mat_wall->SetFriction(fric); //steel- plexiglass   (plexiglass was outer cylinder material) // .6 for wall to staple using tan (theta) tested on 7/20
+	mat_smarts->SetFriction(0.2);
+
 	// ground
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
 	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*bucket_interior_halfDim.z);
 	auto ground = std::make_shared<ChBody>();
 	bucket = std::make_shared<ChBody>();
+	bucket->SetIdentifier(-5);
+	//bucket->SetId(-4);
 	bucket_bott = std::make_shared<ChBody>();
-	ground->SetMaterialSurface(mat_g);
+	ground->SetMaterialSurface(mat_wall);
 	ground->SetPos(boxLoc);
 
 	// ground->SetIdentifier(-1);
@@ -1244,7 +1275,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		{
 			//dim = (2 * dim.x, 2 * dim.y, dim.z / 8);
 			//dim.x = dim.x;
-			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1000000000, mat_g,
+			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1000000000, mat_wall,
 				boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
 			//bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
@@ -1264,16 +1295,17 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		}
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
 			CreateBucket_bott(mphysicalSystem);
-			bucket = create_cylinder_from_blocks2(25, 1, true, &mphysicalSystem, mat_g);
+			bucket = create_cylinder_from_blocks2(25, 1, true, &mphysicalSystem, mat_wall);
 			break;
 
 		case RAMP:
-			bucket = create_ramp(1,&mphysicalSystem,mat_g,boxdim);
+			bucket = create_ramp(-5, &mphysicalSystem, mat_wall, boxdim);
+			GetLog() << "\n\nfriction: " << bucket->GetMaterialSurface()->GetKfriction() << " " << bucket->GetMaterialSurface()->GetSfriction() << "\n";
 			break;
 
 		case HOPPER:
 			//bucket = Create_hopper(&mphysicalSystem, mat_g, bucket_interior_halfDim.x*2, bucket_interior_halfDim.y, 0.5 * bucket_interior_halfDim.x, bucket_interior_halfDim.z, 2 * bucket_interior_halfDim.z, true);
-			bucket = Create_hopper2(&mphysicalSystem,mat_g,box_ang,2*hole_size,true);
+			bucket = Create_hopper2(&mphysicalSystem, mat_wall, box_ang, 2 * hole_size, true);
 			CreateBucket_bott(mphysicalSystem);
 			break;
 
@@ -1281,11 +1313,11 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 			break;
 
 		case DRUM:
-			bucket = create_drum(25, 1, true, &mphysicalSystem, mat_g); 
+			bucket = create_drum(25, 1, true, &mphysicalSystem, mat_wall);
 			break;
 
 			case FLATHOPPER:
-			bucket = create_flathopper(25, 1, true, &mphysicalSystem, mat_g);
+				bucket = create_flathopper(25, 1, true, &mphysicalSystem, mat_wall);
 			break;
 		}
 		//mat_g->SetFriction(fric); //steel - steel
@@ -2067,9 +2099,8 @@ int main(int argc, char* argv[]) {
 	simParams << "Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
 	simParams.close();
 	// define material property for everything
-	mat_g = std::make_shared<ChMaterialSurface>();
-	mat_g->SetFriction(fric); // .6 for wall to staple using tan (theta) tested on 7/20
-	
+	mat_wall = std::make_shared<ChMaterialSurface>();
+	mat_smarts= std::make_shared<ChMaterialSurface>();
 	// Create a ChronoENGINE physical system
 	CH_SYSTEM mphysicalSystem;
 
@@ -2080,6 +2111,11 @@ int main(int argc, char* argv[]) {
 	Smarticle::pctActive = pctActive;
 	MyBroadPhaseCallback mySmarticleBroadphaseCollisionCallback;
 	mphysicalSystem.GetCollisionSystem()->SetBroadPhaseCallback(&mySmarticleBroadphaseCollisionCallback);
+
+	//MyChCustomCollisionPointCallback myContactCallbackFriction;
+	//mphysicalSystem.GetContactContainer()->SetAddContactCallback(myContactCallbackFriction.get());
+	//mphysicalSystem.SetCustomCollisionPointCallback(&myContactCallbackFriction);
+	//mphysicalSystem.GetContactContainer()->AddCollisionModelsToSystem();
 
 
 	std::vector<Smarticle*> mySmarticlesVec;
@@ -2146,6 +2182,13 @@ int main(int argc, char* argv[]) {
 	case RAMP:
 		camera->setPosition(core::vector3df(0.014, -1.34, -.4338));
 		camera->setTarget(core::vector3df(0.0139, -.50, -.495)); //	camera->setTarget(core::vector3df(0, 0, .01));
+
+		if (box_ang == 0)
+		{
+			camera->setPosition(core::vector3df(-0.04, -0.0142, .943));
+			camera->setTarget(core::vector3df(-0.0144, .019, -.497)); //	camera->setTarget(core::vector3df(0, 0, .01));
+		}
+
 		break;
 	default:
 		camera->setPosition(core::vector3df(0.0139, -0.65, -.180));
@@ -2224,7 +2267,7 @@ int main(int argc, char* argv[]) {
 
 		stick->SetRot(QUNIT);
 		stick->SetBodyFixed(true);
-		stick->SetMaterialSurface(mat_g);
+		stick->SetMaterialSurface(mat_wall);
 		stick->AddAsset(groundTexture);
 		stick->GetCollisionModel()->ClearModel();
 		stick->SetMass(4);
@@ -2386,7 +2429,7 @@ int main(int argc, char* argv[]) {
 		knobstick->GetCollisionModel()->ClearModel();
 		knobstick->SetRot(QUNIT);
 		knobstick->SetBodyFixed(true);
-		knobstick->SetMaterialSurface(mat_g);
+		knobstick->SetMaterialSurface(mat_wall);
 		knobstick->AddAsset(groundTexture);
 		knobstick->SetMass(1);
 
@@ -2666,7 +2709,7 @@ int main(int argc, char* argv[]) {
 		{
 			CheckPointSmarticlesDynamic_Write(mySmarticlesVec,
 			 		tStep,
-			 		mat_g,
+			 		mat_smarts,
 			 		l_smarticle,
 			 		w_smarticle,
 			 		t_smarticle,

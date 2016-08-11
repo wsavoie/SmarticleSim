@@ -328,7 +328,7 @@ namespace chrono {
 		//double OTThresh; //Over torque threshold
 		// material property
 		double density;
-		std::shared_ptr<ChMaterialSurface> mat_g;
+		std::shared_ptr<ChMaterialSurface> mat_smarts;
 
 
 

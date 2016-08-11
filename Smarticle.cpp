@@ -87,7 +87,7 @@ void Smarticle::Properties(
 
 	smarticleID = sID;
 	density = other_density;
-	mat_g = surfaceMaterial;
+	mat_smarts = surfaceMaterial;
 	l = other_l;
 	w = other_w;
 	r = other_r;
@@ -341,7 +341,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 			arm->SetBodyFixed(false);
     else
     	arm->SetBodyFixed(false);
-	arm->SetMaterialSurface(mat_g);
+		arm->SetMaterialSurface(mat_smarts);
 
 	double mass = density * vol;
 	//double mass = .005;//.043/3.0; //robot weight 43 grams
@@ -407,16 +407,13 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	}
 }
 void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
-	auto newmat = mat_g;
-
-	newmat->SetFriction(.2);
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
 	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, mr, mr2));
 	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, mr, mr2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
 	auto arm = std::make_shared<ChBody>();
-
+	
 	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
 	arm->SetName("smarticle_arm");
 	arm->SetPos(posArm);
@@ -424,13 +421,13 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	arm->SetCollide(true);
 	arm->SetBodyFixed(false);
 	arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
+
 	if (armID == 1) //this was old code from when I was fixing them to fit
 		arm->SetBodyFixed(false);
 	else
 		arm->SetBodyFixed(false);
 	//mat_g->SetFriction(.05);
-	arm->SetMaterialSurface(newmat);
-
+	arm->SetMaterialSurface(mat_smarts);
 	double mass = density * vol;
 	//double mass = .005;//.043/3.0; //robot weight 43 grams
 	arm->GetCollisionModel()->ClearModel();

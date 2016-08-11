@@ -86,7 +86,7 @@ void SmarticleU::Create() {
 	smarticleU->SetRot(rotation);
     smarticleU->SetCollide(true);
     smarticleU->SetBodyFixed(false);
-	smarticleU->SetMaterialSurface(mat_g);
+	smarticleU->SetMaterialSurface(mat_smarts);
 
 	smarticleU->GetCollisionModel()->ClearModel();
 	//smarticleU->GetCollisionModel()->SetDefaultSuggestedEnvelope(.4*r2);
