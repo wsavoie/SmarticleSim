@@ -112,7 +112,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 				saveFrame = true;
 				
 				break;
-			case irr::KEY_KEY_0:
+			case irr::KEY_KEY_8:
 			{
 				app->GetDevice()->closeDevice();
 				break;
