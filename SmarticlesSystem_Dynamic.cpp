@@ -170,13 +170,10 @@ double gaitChangeLengthTime = .5;
 	ChVector<>boxdim(.28/1.5 *2.5, .55245, 2 * bucket_rad / 8);
 #endif
 	double hole_size = 2 * w_smarticle;
-	double p_gain = 0.2/1.5;   //.1//.2         
-	double i_gain = .225/2;	 //.5//.225       
-	double d_gain = 0.003; //.0025 //.01     
 
-	//double p_gain = .2;   //.32           //.2
-	//double i_gain = .225;	 //.4 //.225       //.225
-	//double d_gain = 0.01; //.1  //.01      //.01
+	double p_gain = 0.29;   //.1//.2         //0.133
+	double i_gain =0.1;// 0.03;	 //.5//.225						//0.05
+	double d_gain = 0.0001; //.0025 //.01       //0.0033
 
 	// double t_smarticle 	= sizeScale * .00254;
 	// double t2_smarticle	= sizeScale * .001;

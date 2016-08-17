@@ -102,7 +102,82 @@
 #endif
 
 	////////////deprecated code which may still be useful in the future////////////////////////////
+	///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& OLD TORQUE CONTROLLER CODE &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
+	//double ChFunctionController::ComputeOutputTorque(double t) { //old torque controller
+
+	//	double curr_ang = controller_->GetAngle(index_, t);
+
+	//	if (controller_->smarticle_->steps == 0)  //*********************
+	//	{
+	//		controller_->ycurr[index_] = curr_ang;
+	//		controller_->yold[index_] = curr_ang;
+	//	}
+	//	else
+	//	{
+	//		controller_->yold[index_] = controller_->ycurr[index_];
+	//		controller_->ycurr[index_] = curr_ang;
+	//	}
+	//	//double curr_react_torque = controller_->GetCurrReactTorque(index_,t);
+	//	double l = controller_->smarticle_->l*controller_->smarticle_->GetArm(index_ * 2)->GetMass();
+	//	double curr_react_torque = controller_->smarticle_->getLinkActuator(index_)->Get_mot_rerot_dtdt()*l;
+	//	double exp_ang = controller_->GetExpAngle(index_, t);
+	//	double des_ang = controller_->GetDesiredAngle(index_, t); ///get the next angle
+	//	des_ang = controller_->LinearInterpolate(index_, curr_ang, des_ang); //linear interpolate for situations where gui changes so there isn't a major speed increase
+	//	double error = des_ang - curr_ang;
+	//	double prevError = controller_->prevError_.at(index_);
+	//	double prevSpeedError = (error - prevError) / dT;
+	//	double K = p_gain;// *(curr_react_torque / .27 + .03);
+	//	double Ti = i_gain;
+	//	double Td = d_gain;
+	//	double Tt = 2;//read about tt
+	//	double N = 8; //N=[8-20] http://www.cds.caltech.edu/~murray/courses/cds101/fa02/caltech/astrom-ch6.pdf
+	//	double b = 1;
+
+	//	double ulimLow = this->controller_->smarticle_->angLow;
+	//	double ulimHigh = this->controller_->smarticle_->angHigh;
+	//	double vlim = controller_->omegaLimit;
+	//	double tlim = controller_->outputLimit;
+
+	//	double bi = K*dT*Ti;//integral gain
+	//	double ad = (2 * Td - N*dT) / (2 * Td + N*dT);
+	//	double bd = 2 * K*N*Td / (2 * Td + N*dT); //deriv gain
+	//	double ao = dT / Tt;
+	//	double ysp = des_ang;
+	//	double y = curr_ang;
+
+	//	//initializes yold to current value for first iteration
+	//	//if (controller_->smarticle_->steps == 0)  //*********************
+	//	//	controller_->yold[index_] = y;
+
+	//	double pp = K*(b*ysp - y);
+	//	controller_->DD[index_] = ad*controller_->DD[index_] - bd*(y - controller_->yold[index_]);
+	//	double v = pp + controller_->II[index_] + controller_->DD[index_];
+	//	double u = SaturateValue(v, tlim);
+	//	controller_->II[index_] = controller_->II[index_] + bi*(ysp - y) + ao*(u - v);
+	//	//controller_->yold[index_] = y;//************
+
+
+	//	//GetLog() << "u=" << u <<"\t=" << curr_react_torque<<"\n";
+
+	//	//double vel = (controller_->yold[index_] - y) / dT;
+	//	//vel = SaturateValue(vel, vlim);
+	//	//double tor = (controller_->velOld[index_] - vel) / dT;
+	//	//tor = SaturateValue(tor, tlim);
+	//	//controller_->velOld[index_] = vel;
+
+
+
+	//	double out = u;
+
+
+	//	CheckReset();
+
+	//	/*if (this->controller_->smarticle_->getLinkActuator(index_)->GetForce_D()->Get_modul_R())
+	//	GetLog() << index_<<"modk exists!\n";
+	//	this->controller_->smarticle_->getLinkActuator(index_)->GetForce_D()->updGet_Force(error, prevSpeedError, t);*/
+	//	return out;
+	//}
 	///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&SMARTICLE PLACEMENT in box, placed them too sparsely&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	
 	//	//http://gamedevelopment.tutsplus.com/tutorials/collision-detection-using-the-separating-axis-theorem--gamedev-169

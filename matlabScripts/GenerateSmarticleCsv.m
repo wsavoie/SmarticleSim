@@ -19,17 +19,18 @@
 %T=5*.00652=.0325
 %dimensionless parameter for torque and length=
 %for robot: T=.008, L=.05 arm weight = 11.3 g
-
+%rads = 8.7267
 %running curr- 100mA
 %Kt = T/I, .008/.27 = .0296 Nm/A
-%J
+%T=0.0588399
 stapleSize = false;
 dt=.001; %.00025
 sizeScale=1;
 % omega = 4.9244e-5;
 %%limit speed in sim (5.3 for 90 deg, 6.3 for 180 deg, takes time to slow so probably 7
+%does nothing on torque limit
 omegaLim = 6.3; %if you want to change the speed you must change linear interpolate method
-omega = 6.3; %distance between points in move list
+omega = 6.3; %distance between points in move list 
 % omega = 10;
 rho = 7850.0;%/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
@@ -58,7 +59,7 @@ else
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
 %     torqueThresh=.0325; %.008 previously cd 
-    torqueLimit=.0325; %..0325 previously cd 
+    torqueLimit=.025; %..0325 previously cd 
 end
 
 
@@ -98,7 +99,7 @@ fprintf(fid,'#\n');
 % define some positions in the angular phase space (TO BE CHANGED)
 % ss= 2.75*pi/180; %step size save value as in linear interpolate method
 radI=(pi/2); %intial radius to base arclength off of
-ss=radI*(.5)*(pi/180); %rad*degs*degToRads   this is arc length each step
+ss=radI*(.4)*(pi/180); %rad*degs*degToRads   this is arc length each step
 
 %want to make sure arclength/step is >> than rads/step
 %i.e  ss>>(omega*dt)
@@ -106,7 +107,7 @@ ss=radI*(.5)*(pi/180); %rad*degs*degToRads   this is arc length each step
 switch global_gait
     case 1% circle gait
 %         ang = 0:ss:2*pi;
-        r=0.2;
+        r=1.6;
         arcDivs=(2*r*pi)/(ss); %circumference divided by arclength to get number of points
         ang=linspace(0,2*pi,arcDivs);
         ang(end)=[]; %remove 2pi index
@@ -155,7 +156,7 @@ switch global_gait
         end
     case 3% line gait
 %         ang = 0;
-        ang=45*pi/180;
+        ang=0*pi/180;
         r=1.6;
 
         centerx = 0;

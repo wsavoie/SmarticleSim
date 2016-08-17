@@ -1605,10 +1605,9 @@ ChVector<> Smarticle::GetReactTorqueVector(int id)
 {
 	return getLinkActuator(id)->Get_react_torque();
 }
-
 double Smarticle::GetMotTorque(int id)
 {
-	return getLinkActuator(id)->Get_mot_torque();
+	return getLinkActuator(id)->Get_mot_torque(); //gets same value as one passed into motor from controller
 }
 
 void Smarticle::SetBodyFixed(bool mev){

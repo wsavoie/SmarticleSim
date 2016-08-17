@@ -33,6 +33,7 @@ namespace chrono {
 		double GetActuatorOmega(size_t i, double t);
 		double GetCurrOmega(size_t i, double t);
 		double GetCurrTorque(size_t i, double t);
+		double GetCurrReactTorque(size_t i, double t);
 		double LinearInterpolate(size_t i, double curr, double desired);
 		double OmegaLimiter(size_t i, double omega);
 		double GetAngle(size_t i, double t);
@@ -41,17 +42,35 @@ namespace chrono {
 		bool OT();
 		void UseForceControl(size_t i);
 		void UseSpeedControl(size_t i);
+		void UsePositionControl(size_t i);
+		
+		double torOld[2];
+		double torCur[2];
+
 		double velOld[2];
+		double velCur[2];
+
+		double posOld[2];
+		double posCur[2];
+
+		double prevAngle[2];//previous directed angle used to check trajectory
+		double desPrev[2];
+
 		double DD[2];
 		double II[2];
 		double yold[2];
 		double ycurr[2];
+
+	
 		double omegaLimit = 5;
 		double outputLimit = 0;
 		Smarticle *smarticle_;
 		bool resetCumError = false;
 		//void setMoveVector(unsigned int guiState);
 		std::vector <double> prevError_;
+		int maxDAvgSize = 100;
+		std::deque <double> dAvg0_;
+		std::deque <double> dAvg1_;
 		std::vector <double> prevOmegError_;
 		std::vector <double> cumError_;
 		std::vector <double> cumOmegError_;
@@ -61,7 +80,7 @@ namespace chrono {
 		// last input
 		std::vector <double>  mLastError;
 		// accumulated input
-		std::vector <double>  mAccuError;
+		double mAccuError[2];
 		// last time the function is called
 		std::vector <double>  mLastCalled;
 		// last output

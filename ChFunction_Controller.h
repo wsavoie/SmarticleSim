@@ -21,16 +21,16 @@ namespace chrono {
 		}
 		virtual ChFunctionController* Clone() const override { return new ChFunctionController(*this); }
 		virtual double Get_y(double curr_t) const override;
-
 		void ResetCumulative(double t);
 		int Get_Type() { return 9527; }
-		double Get_y2(double curr_t);
 		double Get_y(double curr_t);
 		double Get_y_dx(double new_t) { return 0;};
-
+		void CheckReset();
+		double derivAvg(double newD);
 	protected:
-		double ComputeOutput(double t);
+		double ComputeOutputTorque(double t);
 		double ComputeOutputSpeed(double t);
+		double ComputeOutputPosition(double t);
 		double OutputToOmega(double t, double out);
 		double OmegaToTorque(double t, double out);
 		//double cum_error_ = 0;

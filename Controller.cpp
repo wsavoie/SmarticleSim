@@ -7,6 +7,7 @@
 //#include "include/contact_reporter.h"
 
 using namespace chrono;
+
 Controller::Controller(chrono::ChSystem *ch_system, Smarticle *smarticle)
 	: ch_system_(ch_system), smarticle_(smarticle)
 {
@@ -16,26 +17,41 @@ Controller::Controller(chrono::ChSystem *ch_system, Smarticle *smarticle)
 	//currAngle_.assign(len, 0);
 	//currOmega_.assign(len, 0);
 	//currTorque_.assign(len, 0);
+	//dAvg_.assign(10, std::pair<double, double>(0.0, 0.0));
 	prevError_.assign(len, 0);
 	prevOmegError_.assign(len, 0);
 	cumError_.assign(len, 0);
 	cumOmegError_.assign(len, 0);
 	successfulMove_.assign(len, false);
 	prevAngle_.assign(len, 0);
-
+	double t = ch_system->GetChTime();
 	mLastError.assign(len,0);
 	// accumulated input
-	mAccuError.assign(len, 0);
+
 	// last time the function is called
 	mLastCalled.assign(len, 0);
 	// last output
 	mLastValue.assign(len, 0);
 
-
+	mAccuError[0] = 0; mAccuError[1] = 0;
 
 	//have to define this way because VS is not completely C++11 compliant
-	velOld[0] = 0;
-	velOld[1] = 0;
+	posOld[0] = GetAngle(0, t); posOld[1] = GetAngle(1, t);
+	posCur[0] = GetAngle(0, t); posCur[1] = GetAngle(1, t);
+
+	velOld[0] = 0; velOld[1] = 0;
+	velCur[0] = 0; velCur[1] = 0;
+
+	torOld[0] = 0; torOld[1] = 0;
+	torCur[0] = 0; torCur[1] = 0;
+
+	desPrev[0] = 0; desPrev[1] = 0;
+
+
+	prevAngle[0] = 0;
+	prevAngle[1] = 0;
+	//velOld[0] = 0;
+	//velOld[1] = 0;
 
 	DD[0] = 0;
 	DD[1] = 0;
@@ -89,16 +105,24 @@ bool Controller::Step(double dt) {
 		successfulMove_.at(i) = !desiredPositionStatus;
 		switch (smarticle_->getLinkActuator(i)->Get_eng_mode())
 		{
+		case ChLinkEngine::ENG_MODE_ROTATION:
+			UsePositionControl(i);
+			break;
 		case ChLinkEngine::ENG_MODE_SPEED:
 			UseSpeedControl(i);
 			break;
 		case ChLinkEngine::ENG_MODE_TORQUE:
 			UseForceControl(i);
+			
 			break;
 		default:
 			UseForceControl(i);
+			
 		}
+		//GetLog() << smarticle_->GetActuatorOmega(i) << "\t\t";
+
 	}
+	//GetLog() << "\n";
 	result = successfulMove_.at(0) || successfulMove_.at(1);
 
 
@@ -110,12 +134,16 @@ std::shared_ptr<ChLinkEngine> Controller::GetEngine(size_t index)
 	return smarticle_->getLinkActuator(index); 
 }
 
-double Controller::GetCurrTorque(size_t index, double t)
+double Controller::GetCurrReactTorque(size_t index, double t=0)
 {
 	//return smarticle_->GetZReactTorque(index);
 	return smarticle_->GetReactTorqueVector(index).z;
 }
-
+double Controller::GetCurrTorque(size_t index, double t)
+{
+	//return smarticle_->GetZReactTorque(index);
+	return smarticle_->GetMotTorque(index);
+}
 double Controller::GetDesiredAngle(size_t index, double t)
 {
 		return 	smarticle_->GetNextAngle(index);
@@ -137,7 +165,7 @@ double Controller::GetActuatorOmega(size_t index, double t)
 
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
-	double errLim = 2.75 * D2R; // THIS NUMBER MATCHES EXPERIMENT IF 
+	double errLim = .8*D2R; // 
 	double err = (des - curr);
 	err = SaturateValue(err, errLim);
 
@@ -157,13 +185,21 @@ bool Controller::OT()
 	else
 		return false;
 }
-
+void Controller::UsePositionControl(size_t id) {
+	//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+	auto ef = std::make_shared<ChFunctionController>(id, this);
+	auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_rot_funct());
+	double y = ef->Get_y(ch_system_->GetChTime());
+	mfun->Set_yconst(y);
+	//GetLog() << y;
+}
 void Controller::UseSpeedControl(size_t id) {
 		//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 		auto ef = std::make_shared<ChFunctionController>(id, this);
 		auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_spe_funct());
 		double y = ef->Get_y(ch_system_->GetChTime());
 		mfun->Set_yconst(y);
+		//GetLog() << y;
 }
 void Controller::UseForceControl(size_t id) {
 		//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
