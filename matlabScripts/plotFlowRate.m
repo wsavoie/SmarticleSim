@@ -11,7 +11,7 @@ clogLenTemp = 0;
 clogAmtTemp = 0;
 totalEnergy = 0;
 partsPerClog=3;
-secsPerClog=.5;
+secsPerClog=0;
 
 %%%get dt in a dirty way
  directory_name = horzcat(directoryout_name,'\',dirsout(1).name);
@@ -20,8 +20,9 @@ dirs = dirs(~strncmpi('.', {dirs.name}, 1));
 x=importdata(horzcat(directory_name,'\',dirs(1).name,'\PostProcess\volumeFraction.txt'));
 dt=x(1,1);
 final=15;
-tt = 0:dt:15;
-    
+tt = 1.5:dt:15;
+clear clog2;
+clog2= cell(length(dirsout),1);
 histClog = [];
 for k=1:length(dirsout)
     directory_name = horzcat(directoryout_name,'\',dirsout(k).name);
@@ -38,14 +39,21 @@ for k=1:length(dirsout)
         p=importdata(horzcat(directory_name,'\',dirs(i).name,'\PostProcess\flowrate.txt'));
         [t,ind] = unique(p(:,1));
         p=p(ind,:);
-        
-        smartsOut(:,i)=interp1(p(:,1),p(:,2),tt);
+        pp = p(p(:,1)>=1.5,:);
+        pp(:,2)=pp(:,2)-pp(1,2);
+        smartsOut(:,i)=interp1(pp(:,1),pp(:,2),tt,'next');
+        firstNonNan=find(smartsOut(:,i)>0,1,'first');
+        if firstNonNan>1
+            smartsOut(1:firstNonNan-1,i)=0;
+        end
+        newFirstNonNan=find(isnan(smartsOut(:,i)),1,'first');
+        smartsOut(newFirstNonNan:end,i)=round(smartsOut(newFirstNonNan-1,i));
+        %first indices may be NaN
+      
 
-        maxNan = find(isnan(smartsOut(:,i)),1,'first');
-        smartsOut(maxNan:end,i)=round(smartsOut(maxNan-1,i));
-        % plot(p(:,1),p(:,2));
-        
-        clogs=movsum(diff(p(:,1)),partsPerClog);
+        clogs=movsum(diff(pp(:,1)),partsPerClog);
+        clogs2=diff(pp(:,1));
+        clog2(k)={[clog2{k}; clogs2(clogs2>secsPerClog)]};
         realClogs=(clogs(clogs>secsPerClog));
 %         histClog = [histClog; realClogs];
         if(realClogs)
@@ -64,7 +72,7 @@ for k=1:length(dirsout)
 %     histClog=0;
     clogLenTemp(isnan(clogLenTemp))=0;
     rsmartsOut=smartsOut;
-   
+
     % tt(maxNan:end)=[];
     meanSmartsOut = mean(smartsOut,2);
     errSmartsOut= std(smartsOut,0,2);
@@ -84,11 +92,16 @@ for k=1:length(dirsout)
     % suptitle('Flow of Smarticles in a Hopper')
     % subplot(2,1,1);
 
-    title('Smarticle passed through hopper');
+    title('comp. CDF of smarticles clogs');
     xlabel('Time(s)');
-    ylabel('Smarticles');
+    ylabel('P(t)');
     figure(1);
     hold on;
+    [f,x]=ecdf(clog2{k});
+    f=1-f;
+    plot(x,f,'linewidth',2);
+    set(gca,'xscale','log','yscale','log')
+    loglinefit(10,x,f);
     % plot(data{1}(:,1),data{1}(:,2),'linewidth',2); %starts variable for the legend
     % 
     % plot(tt,smartsOut,'linewidth',2);
@@ -128,7 +141,7 @@ hold on;
 errorbar(gaitRad,clogAmt(:,1),clogAmt(:,2),'linewidth',2);
 xlabel('Gait Radius (rads)');
 ylabel('Avg. Times Clogged');
-
+figText(gcf,16);
 subplot(1,2,2)
 errorbar(gaitRad,clogLen(:,1),clogLen(:,2),'linewidth',2);
 xlabel('Gait Radius (rads)');
