@@ -72,12 +72,15 @@ changeToStressPerc=(0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3 0.3)
 # done;
 
 ##if running many runs with different smarticle.csv files
-foldName='FastGaitAreaConstPoints2/hopper_no_OT_r='
+# foldName='LineGait_r=1.0/hopper_no_OT_r='
+ foldName='CircleGait/hopper_no_OT_r='
 # csvNames=(pi2 pi3 pi4 pi5 pi6 pi7 pi8);
-csvNames=(0.55 0.85 1.15 1.45);
+csvNames=(0.2 0.4 0.6 0.8 1.0 1.2 1.4 1.6);
+# csvNames=(0.2a45 0.4a45 0.6a45 0.8a45 1.0a45 1.2a45 1.4a45 1.6a45);
+# csvNames=( 1.0a0 1.0a15 1.0a30 1.0a45 1.0a60 1.0a75 1.0a90);
 for i in "${csvNames[@]}"; do	tempFoldname=$foldName$i
 	mkdir $tempFoldname
-	for angs in `seq 0 0`; do
+	for angs in `seq 0 1`; do
 		a=./$tempFoldname/${boxangArr[$angs]}_lw${lwArr[$angs]}_a1=${ang1Arr[$angs]}_a2=${ang2Arr[$angs]}_$(date '+%Y%m%d_%H%M%S')
 		mkdir $a
 		cp ./smarticleMovesCSV/$i".csv" ./$a/smarticleMoves.csv
