@@ -34,6 +34,8 @@ namespace chrono {
 		static const size_t numSegs = 3;
 
 		double angles[numEngs]; //angle between center segment and outer segments in radians
+		double initialAngs[numEngs]; //initial angles in simulation
+		double omegas[numEngs];
 		static std::shared_ptr<ChTexture> mtextureOT;
 		static std::shared_ptr<ChTexture> mtextureMid;
 		static std::shared_ptr<ChTexture> mtextureArm;
@@ -99,8 +101,6 @@ namespace chrono {
 			double other_angLow=0,
 			double other_angHigh=120);
 
-		double initialAng0;
-		double initialAng1;
 
 		//Controller armsControl (new Controller());
 
@@ -118,12 +118,8 @@ namespace chrono {
 		
 		virtual void SetOmega(int idx, double momega, bool angularFreq=true);
 		virtual void SetOmega(double momega, bool angularFreq = true);
-		virtual void SetOmega1(double momega1, bool angularFreq = true);
-		virtual void SetOmega2(double momega2, bool angularFreq = true);
 		double GetActuatorOmega(int id);
 		virtual double GetOmega(int index, bool angularFreq = true);
-		virtual double GetOmega1(bool angularFreq = true);
-		virtual double GetOmega2(bool angularFreq = true);
 		double GetNextOmega(int id);
 		double GetMotTorque(int id);
 		virtual std::shared_ptr<ChBody> GetSmarticleBodyPointer();
@@ -353,8 +349,6 @@ namespace chrono {
 		int dumID;
 		double jointClearance; // space at joint
 		double offPlaneoffset;
-		double omega1;
-		double omega2;
 		std::vector <double> nextOmega;
 		std::vector <double> nextAngle;
 		std::vector <double> currTorque;

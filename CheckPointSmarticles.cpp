@@ -176,7 +176,7 @@ void CheckPointSmarticlesDynamic_Write(
 			mSmart->moveTypeIdxs.at(MoveType::OT) << ", " <<
 			mSmart->prevMoveType << ", " <<
 			mSmart->moveType << ", " <<
-			mSmart->GetOmega1() << ", "<<
+			mSmart->GetOmega(0) << ", "<<
 			yold0 << ", " <<
 			yold1 << ", " <<
 			mSmart->active << ", " <<

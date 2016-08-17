@@ -170,8 +170,8 @@ void Smarticle::Properties(
 	nextAngle = { 0,0};
 	currTorque = { 0, 0 };
 	torqueAvg = std::make_tuple(0, 0, 0, 0);
-	initialAng0 = other_angle;
-	initialAng1 = other_angle2;
+	initialAngs[0] = other_angle;
+	initialAngs[1] = other_angle2;
 
 	activateStress = 0; //.05
 	
@@ -239,58 +239,26 @@ void Smarticle::SetDefaultOmega(double omega) {
 
 void Smarticle::SetOmega(int idx, double momega, bool angularFreq)
 {
-	if (idx == 0)
-		SetOmega1(momega, angularFreq);
+	if (angularFreq)
+		omegas[idx] = momega;
 	else
-		SetOmega2(momega, angularFreq);
+		omegas[idx] = momega * 2 * PI;
 }
 void Smarticle::SetOmega(double momega, bool angularFreq)
 {
+	for (int i = 0; i < numEngs; i++)
+	{
+		SetOmega(i, momega, angularFreq);
+	}
+}
 
-	if (angularFreq)
-	{
-		omega1 = momega;
-		omega2 = momega;
-		return;
-	}
-	omega1 = (2 * PI)*momega;
-	omega2 = (2 * PI)*momega;
-}
-//void Smarticle::SetOmega(double momega1, double momega2, bool angularFreq)
-//{
-//	if (angularFreq)
-//	{
-//		omega1 = momega1;
-//		omega2 = momega2;
-//		return;
-//	}
-//	omega1 = (2 * PI)*momega1;
-//	omega2 = (2 * PI)*momega2;
-//}
-void Smarticle::SetOmega1(double momega1, bool angularFreq)
-{
-	if (angularFreq)
-	{
-		omega1 = momega1;
-		return;
-	}
-	omega1 = (2 * PI)*momega1;
-}
-void Smarticle::SetOmega2(double momega2, bool angularFreq)
-{
-	if (angularFreq)
-	{
-		omega2=momega2;
-		return;
-	}
-	omega2 = (2 * PI)*momega2;
-}
 double Smarticle::GetOmega(int id, bool angularFreq)
 {
-	if (id == 0)
-		return GetOmega1(angularFreq);
+	if (angularFreq)
+		return omegas[id];
 	else
-		return GetOmega2(angularFreq);
+		return omegas[id] * 2 * PI;
+
 }
 double Smarticle::GetActuatorOmega(int id)
 {
@@ -301,24 +269,6 @@ double Smarticle::GetNextOmega(int id)
 	nextOmega.at(id)= this->ChooseOmegaAmount(GetOmega(id), GetCurrAngle(id), GetNextAngle(id));
 	return nextOmega.at(id);
 }
-double Smarticle::GetOmega1(bool angularFreq)
-{
-	if (angularFreq)
-	{
-		return omega1;
-	}
-	return omega1 / (2 * PI);
-}
-
-double Smarticle::GetOmega2(bool angularFreq)
-{
-	if (angularFreq)
-	{
-		return omega2;
-	}
-	return omega2 / (2 * PI);
-}
-
 void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
@@ -783,13 +733,13 @@ void Smarticle::CreateActuators() {
 		link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 		//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 		//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-
+		//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+		//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
 		link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 		link_actuator01->GetLimit_Rz()->Set_min(D2R*angLow);
 		link_actuator01->GetLimit_Rz()->Set_max(D2R*angHigh);
-		link_actuator01->Set_mot_inertia(100000);
 		link_actuator01->GetLimit_Rz()->Set_active(true);
-		
+
 		/*link_actuator01->GetForce_D()->Set_active(true);
 		auto modK = (ChFunction_Const*)(link_actuator01->GetForce_D()->Get_modul_K());
 		link_actuator01->GetForce_D()->Set_K(1);
@@ -799,7 +749,7 @@ void Smarticle::CreateActuators() {
 		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
 		link_actuator12->GetLimit_Rz()->Set_min(D2R*angLow);
 		link_actuator12->GetLimit_Rz()->Set_max(D2R*angHigh);
-		link_actuator12->Set_mot_inertia(100000);
+		//link_actuator12->Set_mot_inertia(1);
 		link_actuator12->GetLimit_Rz()->Set_active(true);
 	}
 	else
@@ -811,6 +761,7 @@ void Smarticle::CreateActuators() {
 
 	m_system->AddLink(link_actuator01);
 	m_system->AddLink(link_actuator12);	
+
 	//////////
 	//actuator 1
 	link_actuators[0] = link_actuator01;
@@ -931,15 +882,15 @@ void Smarticle::SetAngle(std::pair<double, double> mangles, bool degrees)
 }
 void Smarticle::SetInitialAngles()
 {
-	initialAng0 = this->GetAngle(0);
-	initialAng1 = this->GetAngle(1);
+	for (int i = 0; i < numEngs; i++)
+	{
+		initialAngs[i] = this->GetAngle(i);
+	}
+	
 }
 double Smarticle::GetInitialAngle(int id)
 {
-	if (id == 0)
-		return initialAng0;
-	else
-		return initialAng1;
+		return initialAngs[id];
 }
 void Smarticle::SetAngles(double mangle0, double mangle1, bool degrees)
 {
@@ -980,8 +931,8 @@ double Smarticle::GetAngle(int id, bool degrees)
 
 void Smarticle::addInterpolatedPathToVector(double a0i, double a1i, double a0f, double a1f)
 {
-	double dist0 = omega1*dT;
-	double dist1 = omega2*dT;
+	double dist0 = omegas[0]*dT;
+	double dist1 = omegas[1]*dT;
 	int n = std::max(abs((a0f - a0i) / dist0), abs((a1f - a1i) / dist1));
 	std::vector<double> a0 = linspace(a0i, a0f, n);
 	std::vector<double> a1 = linspace(a1i, a1f, n);
