@@ -119,7 +119,7 @@ bool Controller::Step(double dt) {
 			UseForceControl(i);
 			
 		}
-		//GetLog() << smarticle_->GetActuatorOmega(i) << "\t\t";
+		//GetLog() << "w"<<smarticle_->GetActuatorOmega(i) << "\t" <<smarticle_->GetMotTorque(i) << "\t";
 
 	}
 	//GetLog() << "\n";
@@ -165,7 +165,7 @@ double Controller::GetActuatorOmega(size_t index, double t)
 
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
-	double errLim = .8*D2R; // 
+	double errLim = 1.05*D2R; // 
 	double err = (des - curr);
 	err = SaturateValue(err, errLim);
 

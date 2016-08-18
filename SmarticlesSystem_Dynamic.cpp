@@ -130,7 +130,7 @@ unsigned int smartIdCounter = 4; //start at non-zero value to not collide
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
 double tFinal = 100;
-double vibrateStart= .9;
+double vibrateStart = 0.9;//.9;
 
 
 double rho_cylinder = 1180.0;
@@ -175,9 +175,9 @@ double gaitChangeLengthTime = .5;
 #endif
 	double hole_size = 2 * w_smarticle;
 
-	double p_gain = 0.29;   //.1//.2         //0.133
-	double i_gain =0.1;// 0.03;	 //.5//.225						//0.05
-	double d_gain = 0.0001; //.0025 //.01       //0.0033
+	double p_gain = 0.2;   //.1//.2         //0.133
+	double i_gain =5;// 0.03;	 //.5//.225						//0.05
+	double d_gain = 0.001; //.0025 //.01       //0.0033
 
 	// double t_smarticle 	= sizeScale * .00254;
 	// double t2_smarticle	= sizeScale * .001;
