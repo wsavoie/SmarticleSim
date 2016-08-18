@@ -24,6 +24,7 @@ tt = 1.5:dt:15;
 clear clog2;
 clog2= cell(length(dirsout),1);
 histClog = [];
+l=[];
 for k=1:length(dirsout)
     directory_name = horzcat(directoryout_name,'\',dirsout(k).name);
     dirs=dir(directory_name);
@@ -99,9 +100,14 @@ for k=1:length(dirsout)
     hold on;
     [f,x]=ecdf(clog2{k});
     f=1-f;
-    plot(x,f,'linewidth',2);
+    h=plot(x,f,'linewidth',1.5);
     set(gca,'xscale','log','yscale','log')
-    loglinefit(10,x,f);
+    [xfit,yfit] = loglinefit(10,x,f);
+    h2=loglog(xfit,yfit,'--','linewidth',2,'color',h.Color);
+    set(get(get(h2,'Annotation'),'LegendInformation'),'IconDisplayStyle','off');
+    l=[l; gaitRad(k)];
+    %Make nice edges around the patch. 
+
     % plot(data{1}(:,1),data{1}(:,2),'linewidth',2); %starts variable for the legend
     % 
     % plot(tt,smartsOut,'linewidth',2);
@@ -114,7 +120,7 @@ for k=1:length(dirsout)
     % leg = legend('Smarticles');
     pts(gaitRad(k));
 end;
-
+legend(num2str(l));
 set(gca,'xlim',[0 final]);
 [gaitRad, sortidxs]=sortrows(gaitRad,1);
 finalSmarticleAmt = finalSmarticleAmt(sortidxs,:);
