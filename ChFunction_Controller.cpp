@@ -22,7 +22,7 @@ double ChFunctionController::Get_y(double t) {
 			output = SaturateValue(output, controller_->omegaLimit);
 			break;
 		case ChLinkEngine::ENG_MODE_TORQUE:
-			output = ComputeOutputTorque(t);		
+			output = ComputeOutputTorque(t);
 			break;
 		default:
 			output = ComputeOutputTorque(t);
@@ -162,7 +162,6 @@ double ChFunctionController::ComputeOutputSpeed(double t)
 
 	double ulimLow = this->controller_->smarticle_->angLow;
 	double ulimHigh = this->controller_->smarticle_->angHigh;
-	double vlim = controller_->omegaLimit;
 	double tlim = controller_->outputLimit;
 
 	double bi = K*dT / Ti;//integral gain
@@ -238,21 +237,31 @@ void ChFunctionController::ResetCumulative(double t = 0)	////TODO reset cum_erro
 }
 void ChFunctionController::CheckReset()
 {
+	double nextAng = controller_->smarticle_->GetNextAngle(index_);
 	//resetCumError happens on gait change
 	if (controller_->resetCumError)
 	{
 		//GetLog() << "reset after gait change\n";
 		ResetCumulative();
+		controller_->prevAngle[index_] = nextAng; 
+		return;
 	}
 	//if current directed position is different than previous one reset cumulative error as endpoint is now different
-	double nextAng = controller_->smarticle_->GetNextAngle(index_);
+	
+	if (abs(controller_->velCur[index_]) > controller_->omegaLimit)
+	{
+		ResetCumulative();
+		controller_->prevAngle[index_] = nextAng;
+		return;
+	}
+
 	if (nextAng != controller_->prevAngle[index_])
 	{
 		//GetLog() << "reset after new point in traj\n";
 		ResetCumulative();
 	}
-
 	controller_->prevAngle[index_] = nextAng;
+	
 }
 
 double ChFunctionController::derivAvg(double newD)

@@ -125,6 +125,7 @@ double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gr
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
 unsigned int largeID = 10000000;
+unsigned int smartIdCounter = 4; //start at non-zero value to not collide
 //double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
@@ -758,7 +759,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		myRot.Normalize();
 		/////////////////flat rot/////////////////
 		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
-		smarticle0->Properties(mySmarticlesVec.size(), mySmarticlesVec.size() * 4,
+		smarticle0->Properties(mySmarticlesVec.size(),smartIdCounter * 4,
 			rho_smarticle, mat_smarts,
 			collisionEnvelope,
 			//l_smarticle+t2_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
@@ -768,7 +769,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			myPos,
 			myRot,
 			angle1*D2R, angle2*D2R);
-
+		smartIdCounter++;
 		if (genRand() < 1)//to reduce amount visualized amount
 			smarticle0->visualize = true;
 		smarticle0->populateMoveVector();
@@ -1242,7 +1243,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*bucket_interior_halfDim.z);
 	auto ground = std::make_shared<ChBody>();
 	bucket = std::make_shared<ChBody>();
-	bucket->SetIdentifier(-5);
+	bucket->SetIdentifier(1);
 	//bucket->SetId(-4);
 	bucket_bott = std::make_shared<ChBody>();
 	ground->SetMaterialSurface(mat_wall);
@@ -1272,7 +1273,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 		{
 			//dim = (2 * dim.x, 2 * dim.y, dim.z / 8);
 			//dim.x = dim.x;
-			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1000000000, mat_wall,
+			bucket = utils::CreateBoxContainer(&mphysicalSystem, 1, mat_wall,
 				boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
 			//bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
