@@ -167,7 +167,10 @@ double gaitChangeLengthTime = .5;
 	double t2_smarticle = sizeScale * .02122 / 1;
 	double bucket_rad = sizeScale*w_smarticle*2; //3
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
-	double rho_smarticle = 443.0;
+	double rho_smarticleArm = 925;
+	double rho_smarticleMid = 739.18;
+
+
 	ChVector<>boxdim(.28/1.5 *2.5, .55245, 2 * bucket_rad / 8);
 #endif
 	double hole_size = 2 * w_smarticle;
@@ -255,9 +258,7 @@ class MyChCustomCollisionPointCallback : public ChSystem::ChCustomCollisionPoint
 
 class MyBroadPhaseCallback : public collision::ChBroadPhaseCallback {
 public:
-	/// Callback used to report 'near enough' pairs of models.
-	/// This must be implemented by a child class of ChBroadPhaseCallback.
-	/// Return false to skip narrow-phase contact generation for this pair of bodies.
+	//skips collision between smarticle arms and center body 
 	virtual bool BroadCallback(collision::ChCollisionModel* mmodelA,  ///< pass 1st model
 		collision::ChCollisionModel* mmodelB)   ///< pass 2nd model
 	{
@@ -621,7 +622,7 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
 		"Start Angles: " << angle1 << " " << angle2<< std::endl;
 
 	simParams << "Smarticle volume: " << vol << std::endl;
-	simParams << "Smarticle mass: " << vol*rho_smarticle << std::endl;
+	simParams << "Smarticle rhos: arm: " <<rho_smarticleArm<< " mid: "<<rho_smarticleMid <<std::endl;
 
 	//copy smarticle checkpoint if used to PostProcess folder
 	if (read_from_file>=1)
@@ -760,7 +761,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		/////////////////flat rot/////////////////
 		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 		smarticle0->Properties(mySmarticlesVec.size(),smartIdCounter * 4,
-			rho_smarticle, mat_smarts,
+			rho_smarticleArm, rho_smarticleMid, mat_smarts,
 			collisionEnvelope,
 			//l_smarticle+t2_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 			l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
@@ -786,7 +787,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		//smarticle0->ss.emplace_back(angle1, angle2);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
-	
+		//GetLog()<< "\nMASS:"<<smarticle0->GetMass() <<"\n";
 		double bucketX = boxdim.x;
 		double bucketY = boxdim.y;
 
@@ -2713,7 +2714,8 @@ int main(int argc, char* argv[]) {
 			 		t_smarticle,
 			 		t2_smarticle,
 			 		collisionEnvelope,
-			 		rho_smarticle);
+					rho_smarticleArm,
+					rho_smarticleMid);
 		}
   }
 	simParams.open(simulationParams.c_str(), std::ios::app);

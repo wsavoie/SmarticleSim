@@ -95,7 +95,8 @@ void CheckPointSmarticlesDynamic_Write(
 	double t_smarticle,
 	double t2_smarticle,
 	double collisionEnvelop,
-	double rho_smarticle) {
+	double rho_smarticleArm,
+	double rho_smarticleMid) {
 	//*******************************************************************
 	int tStepsCheckPoint = 1000;
 
@@ -133,7 +134,8 @@ void CheckPointSmarticlesDynamic_Write(
 		t_smarticle << std::endl <<
 		t2_smarticle << std::endl <<
 		collisionEnvelop << std::endl <<
-		rho_smarticle << std::endl <<
+		rho_smarticleArm << std::endl <<
+		rho_smarticleMid << std::endl <<
 		mat_g->GetKfriction() << std::endl <<
 		Smarticle::global_GUI_value << std::endl <<
 		'#' << std::endl;
@@ -252,7 +254,8 @@ void CheckPointSmarticlesDynamic_Read(
 	int globalidx, gui1idx, gui2idx, gui3idx, dumId, vibidx, extra1idx, extra2idx, midtidx, otidx;
 	bool activeSmart;
 	unsigned int currMoveType, prevMoveType, gui_value;
-	double rho_smarticle;
+	double rho_smarticleArm;
+	double rho_smarticleMid;
 	auto mat_g = std::make_shared<ChMaterialSurface>();
 	char ddCh;
 	double omega;
@@ -262,14 +265,15 @@ void CheckPointSmarticlesDynamic_Read(
 		t_smarticle >>
 		t2_smarticle >>
 		collisionEnvelop >>
-		rho_smarticle >>
+		rho_smarticleArm >>
+		rho_smarticleMid>>
 		friction>>
 		gui_value;
 	//TODO initialize angle1 and angle2
 	angle1 = 0;
 	angle2 = 0;
 	printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f angle1 %f angle2 %f",
-		l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticle, friction, angle1, angle2);
+		l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticleArm,rho_smarticleMid, friction, angle1, angle2);
 	mat_g->SetFriction((float) friction);
 	Smarticle::global_GUI_value = gui_value;
 	
@@ -296,7 +300,7 @@ void CheckPointSmarticlesDynamic_Read(
 		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
 		smarticle0->active = activeSmart;
 		smarticle0->Properties(mySmarticlesVec.size(), dumId,
-			rho_smarticle, mat_g,
+			rho_smarticleArm,rho_smarticleMid, mat_g,
 			collisionEnvelop,
 			l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 			omega,true,p3,

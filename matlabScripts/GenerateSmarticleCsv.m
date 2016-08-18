@@ -29,7 +29,7 @@ sizeScale=1;
 % omega = 4.9244e-5;
 %%limit speed in sim (5.3 for 90 deg, 6.3 for 180 deg, takes time to slow so probably 7
 %does nothing on torque limit
-omegaLim = 6.3; %if you want to change the speed you must change linear interpolate method
+omegaLim = 7; %if you want to change the speed you must change linear interpolate method
 omega = 6.3; %distance between points in move list 
 % omega = 10;
 rho = 7850.0;%/(sizeScale^3);
@@ -55,11 +55,11 @@ else
 %     w_s = .0117*sizeScale;
 %     l_s = w_s;
 %1.5424 = lw
-    rho = 443.0;%/(sizeScale^3);
+    rho = 739;%/(sizeScale^3);
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
 %     torqueThresh=.0325; %.008 previously cd 
-    torqueLimit=.025; %..0325 previously cd 
+    torqueLimit=.04; %..0325 previously cd 
 end
 
 
@@ -107,7 +107,7 @@ ss=radI*(.4)*(pi/180); %rad*degs*degToRads   this is arc length each step
 switch global_gait
     case 1% circle gait
 %         ang = 0:ss:2*pi;
-        r=1.6;
+        r=0.2;
         arcDivs=(2*r*pi)/(ss); %circumference divided by arclength to get number of points
         ang=linspace(0,2*pi,arcDivs);
         ang(end)=[]; %remove 2pi index

@@ -23,7 +23,7 @@ Smarticle::Smarticle(
 		  ChSystem* otherSystem
 		  ) : m_system(otherSystem) {
 	smarticleID = -1;
-	density = 7800;
+	arm_density = 7800;
 	l = 1;
 	w = 1;
 	r = .05;
@@ -129,7 +129,8 @@ void Smarticle::Properties(
 void Smarticle::Properties(
 	int sID,
 	int mdumID,
-	double other_density,
+	double otherArm_density,
+	double otherMid_density,
 	std::shared_ptr<ChMaterialSurface> surfaceMaterial,
 	double other_envelope,
 	double other_l,
@@ -146,7 +147,7 @@ void Smarticle::Properties(
 	double other_angLow,
 	double other_angHigh){
 
-	Properties(sID, other_density, surfaceMaterial, other_envelope, other_l, other_w, other_r, other_r2, pos, rot, other_angle, other_angle2);
+	Properties(sID, otherArm_density, surfaceMaterial, other_envelope, other_l, other_w, other_r, other_r2, pos, rot, other_angle, other_angle2);
 	SetDefaultOmega(other_omega);
 	//SetOmega1(other_omega);
 	//SetOmega2(other_omega);
@@ -162,7 +163,8 @@ void Smarticle::Properties(
 	angHigh = 120;
 	dumID = mdumID;
 	armBroken = false;
-
+	arm_density = otherArm_density;
+	mid_density = otherMid_density;
 	std::tuple<double, double,double,double> a (0.0, 0.0,0.0,0.0);
 	//torques = { a, a, a, a, a, a, a }; //probably a better way to do this....
 	torques = { a }; //probably a better way to do this....
@@ -288,13 +290,23 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     arm->SetCollide(true);
     arm->SetBodyFixed(false);
     arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
-    if (armID == 1) //this was old code from when I was fixing them to fit
+		double m = 0;
+		if (armID == 1) //this was old code from when I was fixing them to fit
+		{
 			arm->SetBodyFixed(false);
-    else
-    	arm->SetBodyFixed(false);
+			m = vol*mid_density;
+			arm->SetDensity(mid_density);
+		}
+		else
+		{
+			arm->SetBodyFixed(false);
+			m= vol*arm_density;
+			arm->SetDensity(arm_density);
+		}
 		arm->SetMaterialSurface(mat_smarts);
 
-	double mass = density * vol;
+
+	//	double mass = density * vol;
 	//double mass = .005;//.043/3.0; //robot weight 43 grams
 	arm->GetCollisionModel()->ClearModel();
 	//arm->SetLimitSpeed(true);
@@ -334,8 +346,8 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
     arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
 
     // change mass and inertia property
-    arm->SetMass(mass);
-    arm->SetInertiaXX(mass * gyr);
+    arm->SetMass(m);
+    arm->SetInertiaXX(m * gyr);
     //arm->SetDensity(density);
 
     m_system->AddBody(arm);
@@ -357,14 +369,14 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 		break;
 	}
 }
-void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
+void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
 	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, mr, mr2));
 	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, mr, mr2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
 	auto arm = std::make_shared<ChBody>();
-	
+
 	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
 	arm->SetName("smarticle_arm");
 	arm->SetPos(posArm);
@@ -373,13 +385,21 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	arm->SetBodyFixed(false);
 	arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
 
+	double m = 0;
 	if (armID == 1) //this was old code from when I was fixing them to fit
+	{
+		m = vol*mid_density;
+		arm->SetDensity(mid_density);
 		arm->SetBodyFixed(false);
+	}
 	else
+	{
+		m = vol*arm_density;
+		arm->SetDensity(arm_density);
 		arm->SetBodyFixed(false);
+		}
 	//mat_g->SetFriction(.05);
 	arm->SetMaterialSurface(mat_smarts);
-	double mass = density * vol;
 	//double mass = .005;//.043/3.0; //robot weight 43 grams
 	arm->GetCollisionModel()->ClearModel();
 
@@ -434,8 +454,8 @@ void Smarticle::CreateArm2(int armID, double len,double mr, double mr2, ChVector
 	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
 
 	// change mass and inertia property
-	arm->SetMass(mass);
-	arm->SetInertiaXX(mass * gyr);
+	arm->SetMass(m);
+	arm->SetInertiaXX(m * gyr);
 	//arm->SetDensity(density);
 
 	m_system->AddBody(arm);
@@ -609,6 +629,7 @@ void Smarticle::SetEdges()
 	}
 
 }
+
 void Smarticle::RotateSmarticleBy(ChQuaternion<> newAng)
 {
 	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angles[0], 0));
@@ -867,7 +888,13 @@ double Smarticle::GetMass() {
 	//	return r * r2 * (w + 2 * (l + jointClearance));
 	return mass;
 }
-
+double Smarticle::GetDensity(int id)
+{
+	if (id == 1)
+		return mid_density;
+	else
+		return arm_density;
+}
 ChVector<> Smarticle::Get_cm() {
 	return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos()) / mass;
 

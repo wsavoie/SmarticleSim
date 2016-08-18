@@ -44,9 +44,9 @@ void SmarticleU::Create() {
 	ChVector<> gyr2 = utils::CalcBoxGyration(box2_dim,box2_loc,quat2).Get_Diag();
 	ChVector<> gyr3 = utils::CalcBoxGyration(box3_dim,box3_loc,quat3).Get_Diag();
 
-	double m1 = density * utils::CalcBoxVolume(box1_dim);
-	double m2 = density * utils::CalcBoxVolume(box2_dim);
-	double m3 = density * utils::CalcBoxVolume(box3_dim);
+	double m1 = arm_density * utils::CalcBoxVolume(box1_dim);
+	double m2 = mid_density * utils::CalcBoxVolume(box2_dim);
+	double m3 = arm_density * utils::CalcBoxVolume(box3_dim);
 
 	mass = m1 + m2 + m3;
 
@@ -103,7 +103,6 @@ void SmarticleU::Create() {
     // change mass and inertia property
     smarticleU->SetMass(mass);
     smarticleU->SetInertiaXX(mInertia);
-    smarticleU->SetDensity(density);
 
     m_system->AddBody(smarticleU);
 }

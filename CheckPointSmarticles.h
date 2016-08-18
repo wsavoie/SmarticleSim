@@ -46,7 +46,8 @@ void CheckPointSmarticlesDynamic_Write(
 	double t_smarticle,
 	double t2_smarticle,
 	double collisionEnvelop,
-	double rho_smarticle);
+	double rho_smarticleArm,
+	double rho_smarticleMid);
 void CheckPointSmarticles_Read(
 	CH_SYSTEM& mphysicalSystem,
 	std::vector<Smarticle*> & mySmarticlesVec);

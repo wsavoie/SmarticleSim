@@ -84,7 +84,8 @@ namespace chrono {
 		virtual void Properties(
 			int sID,
 			int mdumID,
-			double other_density,
+			double other_Armdensity,
+			double other_Middensity,
 			std::shared_ptr<ChMaterialSurface> surfaceMaterial,
 			double other_envelop,
 			double other_l,
@@ -146,7 +147,7 @@ namespace chrono {
 		virtual ChVector<> Get_InitPos();
 
 		virtual double GetMass();
-		virtual double GetDensity() {return density;};
+		virtual double GetDensity(int id);
 		virtual void TransportSmarticle(ChVector<>);
 		virtual void RotateSmarticle(ChQuaternion<>);
 		virtual void RotateSmarticleBy(ChQuaternion<>);
@@ -320,6 +321,9 @@ namespace chrono {
 		//double MTThresh; //Mid  torque threshold
 		//double OTThresh; //Over torque threshold
 		// material property
+		double arm_density;
+		double mid_density;
+
 		double density;
 		std::shared_ptr<ChMaterialSurface> mat_smarts;
 
