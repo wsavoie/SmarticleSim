@@ -165,8 +165,8 @@ double gaitChangeLengthTime = .5;
 	double w_smarticle = sizeScale * 0.05316/ 1;
 	double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 	//real value
-	double t_smarticle = sizeScale * .029982 / 1; //height of solar panels
-	double t2_smarticle = sizeScale * .02122 / 1;
+	double t_smarticle = sizeScale * .029982 / 1.0; //height of solar panels
+	double t2_smarticle = sizeScale * .02122 / 1.0;
 	double bucket_rad = sizeScale*w_smarticle*2; //3
 	ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
 	double rho_smarticleArm = 925;
@@ -1980,7 +1980,7 @@ bool SetGait(double time)
 	//	return true;
 
 
-	if (time > 15)
+	if (time > 30)
 		return true;
 	else
 		Smarticle::global_GUI_value = 0;
@@ -2179,6 +2179,11 @@ int main(int argc, char* argv[]) {
 	case BOX:
 		camera->setPosition(core::vector3df(0.0139, -0.65, -.180));
 		camera->setTarget(core::vector3df(0.0139, -.50, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+		if (box_ang == 0)
+		{
+			camera->setPosition(core::vector3df(-0.04, -0.0142, .943));
+			camera->setTarget(core::vector3df(-0.0144, .019, -.497)); //	camera->setTarget(core::vector3df(0, 0, .01));
+		}
 		break;
 	case FLATHOPPER:
 		camera->setPosition(core::vector3df(0.014, -1.34, -.4338));
@@ -2515,7 +2520,7 @@ int main(int argc, char* argv[]) {
 	if (bucketType == DRUM)
 		timeForVerticalDisplacement = 0.095; // 1.5 for safety proximity .015
 	if (bucketType == BOX)
-		timeForVerticalDisplacement = .5;
+		timeForVerticalDisplacement = .15;
 	int numGeneratedLayers = 0;
 
 
