@@ -105,7 +105,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM,FLATHOPPER};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = FLATHOPPER;
+BucketType bucketType = BOX;
 std::vector<std::shared_ptr<ChBody>> sphereStick;
 std::shared_ptr<ChBody> bucket;
 std::shared_ptr<ChBody> bucket_bott;
@@ -120,7 +120,9 @@ bool saveFrame = false;
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 double vibration_freq = 30;
-double fric = 0;//.3814; //keyboard box friction = .3814
+double wall_fric = .2;//.3814; //keyboard box friction = .3814
+double smart_fric = .2;//.3814; //keyboard box friction = .3814
+
 double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 double mGamma = 2.0 * gravity;
 double vibration_amp = mGamma / (omega_bucket*omega_bucket);
@@ -1236,8 +1238,8 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	/////////////////
 	// Ground body
 	////////////////
-	mat_wall->SetFriction(fric); //steel- plexiglass   (plexiglass was outer cylinder material) // .6 for wall to staple using tan (theta) tested on 7/20
-	mat_smarts->SetFriction(0.2);
+	mat_wall->SetFriction(wall_fric); //steel- plexiglass   (plexiglass was outer cylinder material) // .6 for wall to staple using tan (theta) tested on 7/20
+	mat_smarts->SetFriction(smart_fric);
 
 	// ground
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
@@ -1319,7 +1321,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 			//	bucket = create_flathopper(25, 1, true, &mphysicalSystem, mat_wall);
 			break;
 		}
-		//mat_g->SetFriction(fric); //steel - steel
+		//mat_g->SetFriction(wall_fric); //steel - steel
 
 
 	bucket->SetBodyFixed(true);
