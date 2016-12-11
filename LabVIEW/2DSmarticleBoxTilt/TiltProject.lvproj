@@ -87,22 +87,7 @@
 				<Item Name="VISA Configure Serial Port (Instr).vi" Type="VI" URL="/&lt;vilib&gt;/Instr/_visa.llb/VISA Configure Serial Port (Instr).vi"/>
 				<Item Name="VISA Configure Serial Port (Serial Instr).vi" Type="VI" URL="/&lt;vilib&gt;/Instr/_visa.llb/VISA Configure Serial Port (Serial Instr).vi"/>
 				<Item Name="VISA Configure Serial Port" Type="VI" URL="/&lt;vilib&gt;/Instr/_visa.llb/VISA Configure Serial Port"/>
-				<Item Name="LVH-LINX.lvlib" Type="Library" URL="/&lt;vilib&gt;/LabVIEW Hacker/LINX/LVH-LINX.lvlib"/>
 				<Item Name="Error Cluster From Error Code.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Error Cluster From Error Code.vi"/>
-				<Item Name="I2C Transfer Rate.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/typedefs/I2C Transfer Rate.ctl"/>
-				<Item Name="I2C Configuration.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/typedefs/I2C Configuration.ctl"/>
-				<Item Name="I2C Channels Enum.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Common/Instrument Driver Framework/myRIO v1.0/I2C/typedefs/I2C Channels Enum.ctl"/>
-				<Item Name="Generic FPGA Reference.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Common/Instrument Driver Framework/Utilities/typedefs/Generic FPGA Reference.ctl"/>
-				<Item Name="myRIO v1.0 Reference.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Common/Instrument Driver Framework/Utilities/typedefs/myRIO v1.0 Reference.ctl"/>
-				<Item Name="Hardware Version Enum.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Common/Instrument Driver Framework/Utilities/typedefs/Hardware Version Enum.ctl"/>
-				<Item Name="myRIO Generic Hardware Reference.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Common/Instrument Driver Framework/Utilities/typedefs/myRIO Generic Hardware Reference.ctl"/>
-				<Item Name="I2C Reference.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/typedefs/I2C Reference.ctl"/>
-				<Item Name="Read.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/vis/Read.vi"/>
-				<Item Name="Smart Open.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/vis/Smart Open.vi"/>
-				<Item Name="Configure.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/vis/Configure.vi"/>
-				<Item Name="Write.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/vis/Write.vi"/>
-				<Item Name="Write.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/DIO/vis/Write.vi"/>
-				<Item Name="Smart Open.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/DIO/vis/Smart Open.vi"/>
 				<Item Name="NI_3D Picture Control.lvlib" Type="Library" URL="/&lt;vilib&gt;/picture/3D Picture Control/NI_3D Picture Control.lvlib"/>
 				<Item Name="IMAQ Image.ctl" Type="VI" URL="/&lt;vilib&gt;/vision/Image Controls.llb/IMAQ Image.ctl"/>
 				<Item Name="NI_Vision_Acquisition_Software.lvlib" Type="Library" URL="/&lt;vilib&gt;/vision/driver/NI_Vision_Acquisition_Software.lvlib"/>
@@ -156,7 +141,33 @@
 				<Item Name="Sound Output Write Simple.vi" Type="VI" URL="/&lt;vilib&gt;/sound2/lvsound2.llb/Sound Output Write Simple.vi"/>
 				<Item Name="subPlayWaveform.vi" Type="VI" URL="/&lt;vilib&gt;/sound2/PlayWaveformSource.llb/subPlayWaveform.vi"/>
 				<Item Name="NI_MABase.lvlib" Type="Library" URL="/&lt;vilib&gt;/measure/NI_MABase.lvlib"/>
-				<Item Name="LVH-Toolbox.lvlib" Type="Library" URL="/&lt;vilib&gt;/LabVIEW Hacker/LVH-Toolbox/LVH-Toolbox.lvlib"/>
+				<Item Name="LMH-LINX.lvlib" Type="Library" URL="/&lt;vilib&gt;/MakerHub/LINX/LMH-LINX.lvlib"/>
+				<Item Name="LMH-Toolbox.lvlib" Type="Library" URL="/&lt;vilib&gt;/MakerHub/Toolbox/LMH-Toolbox.lvlib"/>
+				<Item Name="Configure.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/vis/Configure.vi"/>
+				<Item Name="I2C Transfer Rate.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/typedefs/I2C Transfer Rate.ctl"/>
+				<Item Name="I2C User Configuration.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/typedefs/I2C User Configuration.ctl"/>
+				<Item Name="I2C Configuration.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/typedefs/I2C Configuration.ctl"/>
+				<Item Name="I2C Channels Enum.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Common/Instrument Driver Framework/myRIO v1.0/I2C/typedefs/I2C Channels Enum.ctl"/>
+				<Item Name="Generic FPGA Reference.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Common/Instrument Driver Framework/Utilities/typedefs/Generic FPGA Reference.ctl"/>
+				<Item Name="myRIO v1.0 Reference.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Common/Instrument Driver Framework/Utilities/typedefs/myRIO v1.0 Reference.ctl"/>
+				<Item Name="Hardware Version Enum.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Common/Instrument Driver Framework/Utilities/typedefs/Hardware Version Enum.ctl"/>
+				<Item Name="myRIO Generic Hardware Reference.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Common/Instrument Driver Framework/Utilities/typedefs/myRIO Generic Hardware Reference.ctl"/>
+				<Item Name="I2C Reference.ctl" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/typedefs/I2C Reference.ctl"/>
+				<Item Name="Reset myRIO.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Utilities/vis/Reset myRIO.vi"/>
+				<Item Name="Read.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/vis/Read.vi"/>
+				<Item Name="LINX Device Config.ctl" Type="VI" URL="/&lt;vilib&gt;/LabVIEW Hacker/LINX/Private/Device/Type Defs/LINX Device Config.ctl"/>
+				<Item Name="TCP Config.ctl" Type="VI" URL="/&lt;vilib&gt;/LabVIEW Hacker/LINX/Private/Device/Type Defs/TCP Config.ctl"/>
+				<Item Name="Device Family.ctl" Type="VI" URL="/&lt;vilib&gt;/LabVIEW Hacker/LINX/Private/Type Defs/Device Family.ctl"/>
+				<Item Name="User Platform.ctl" Type="VI" URL="/&lt;vilib&gt;/LabVIEW Hacker/LINX/Private/Type Defs/User Platform.ctl"/>
+				<Item Name="Close.vi" Type="VI" URL="/&lt;vilib&gt;/LabVIEW Hacker/LINX/Public/Close.vi"/>
+				<Item Name="Initialize.vi" Type="VI" URL="/&lt;vilib&gt;/LabVIEW Hacker/LINX/Public/Initialize.vi"/>
+				<Item Name="LINX Ref.ctl" Type="VI" URL="/&lt;vilib&gt;/LabVIEW Hacker/LINX/Private/Type Defs/LINX Ref.ctl"/>
+				<Item Name="Interface.ctl" Type="VI" URL="/&lt;vilib&gt;/LabVIEW Hacker/LINX/Private/Type Defs/Interface.ctl"/>
+				<Item Name="Platform.ctl" Type="VI" URL="/&lt;vilib&gt;/LabVIEW Hacker/LINX/Private/Type Defs/Platform.ctl"/>
+				<Item Name="Write.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/DIO/vis/Write.vi"/>
+				<Item Name="Write.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/vis/Write.vi"/>
+				<Item Name="Smart Open.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/DIO/vis/Smart Open.vi"/>
+				<Item Name="Smart Open.vi" Type="VI" URL="/&lt;vilib&gt;/myRIO/Instrument Drivers/Onboard IO/I2C/vis/Smart Open.vi"/>
 			</Item>
 			<Item Name="niimaqdx.dll" Type="Document" URL="niimaqdx.dll">
 				<Property Name="NI.PreserveRelativePath" Type="Bool">true</Property>
@@ -167,6 +178,9 @@
 			<Item Name="lvsound2.dll" Type="Document" URL="/&lt;resource&gt;/lvsound2.dll"/>
 			<Item Name="lvanlys.dll" Type="Document" URL="/&lt;resource&gt;/lvanlys.dll"/>
 			<Item Name="Create File with Incrementing Suffix.vi" Type="VI" URL="../Create File with Incrementing Suffix.vi"/>
+			<Item Name="liblinxdevice.dll" Type="Document" URL="liblinxdevice.dll">
+				<Property Name="NI.PreserveRelativePath" Type="Bool">true</Property>
+			</Item>
 		</Item>
 		<Item Name="Build Specifications" Type="Build">
 			<Item Name="Main Application" Type="EXE">
