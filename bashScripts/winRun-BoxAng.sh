@@ -92,3 +92,4 @@ for i in "${csvNames[@]}"; do	tempFoldname=$foldName$i
 	cd $runDir
 	done;
 done;
+# /cygdrive/d/SimResults/Chrono/SmarticleU/tests ./winRun-BoxAng.sh 

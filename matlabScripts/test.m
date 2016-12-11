@@ -78,3 +78,13 @@ beep;
 % ma = ma.addAll(tracks);
 % ma.plotTracks
 % ma.labelPlotTracks
+x=zeros(50,2);
+y=zeros(50,2);
+for i = 1:50;
+    x(i,1)=.8;
+    x(i,2)=.2;
+    y(i,1)=i*0.01+0.2;
+    y(i,2)=i*0.01+0.2;
+end
+
+plot(x(:,1),y(:,1),'o',x(:,2),y(:,2),'o');

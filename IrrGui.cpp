@@ -221,7 +221,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec) {
 						bucket_bott->SetPos(ChVector<>(1, 0, 0));
 						break;
 					case FLATHOPPER:
-						bucket_bott->SetPos(ChVector<>(1, 0, 0));
+						bucket_bott->SetPos(ChVector<>(1,4, 0));
 						break;
 					}
 

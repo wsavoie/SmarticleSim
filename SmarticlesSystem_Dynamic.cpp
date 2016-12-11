@@ -1,4 +1,4 @@
-//
+//https://www.lri.fr/~hansen/cmaes_inmatlab.html
 // PROJECT CHRONO - http://projectchrono.org
 //
 // Copyright (c) 2010-2012 Alessandro Tasora
@@ -175,7 +175,7 @@ double gaitChangeLengthTime = .5;
 
 	ChVector<>boxdim(.28/1.5 *2.5, .55245, 2 * bucket_rad / 8);
 #endif
-	double hole_size = 2 * w_smarticle;
+	double hole_size = 1* w_smarticle;
 
 	double p_gain = 0.2;   //.1//.2         //0.133
 	double i_gain =5;// 0.03;	 //.5//.225						//0.05
@@ -965,10 +965,11 @@ std::shared_ptr<ChBody> create_flathopper(int id, CH_SYSTEM* mphysicalSystem, st
 {
 
 	double wallAngle = D2R * 30;
-	double hole = hole_size*.66;
+
 	std::shared_ptr<ChBody> flathopper = std::make_shared<ChBody>();
 	double hthick = bucket_half_thick;
 	double o_lap = hthick * 2;
+	double hole = hole_size / 2 + hthick;
 	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 	flathopper->SetPos(bucket_ctr);
 
@@ -1001,14 +1002,14 @@ std::shared_ptr<ChBody> create_flathopper(int id, CH_SYSTEM* mphysicalSystem, st
 	///////////hopper walls////////
 	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hthick, hopperWallHeight, hdim.z + o_lap), //left side
 		ChVector<>(hdim.x - hopperWallWidth, -hdim.y - hopperWallHeight*cos(wallAngle), hdim.z), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, wallAngle)));
-		flathopper->GetCollisionModel()->BuildModel();
 
 	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hthick, hopperWallHeight, hdim.z + o_lap), //right side
 		ChVector<>(-(hdim.x - hopperWallWidth), -hdim.y - hopperWallAngleHeight, hdim.z), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, -wallAngle)));
 	flathopper->GetCollisionModel()->BuildModel();
 	
-	//utils::AddBoxGeometry(flathopper.get(), ChVector<>(hdim.x + o_lap, hdim.y + o_lap, hthick), ChVector<>(0, -hdim.y - hopperWallAngleHeight, -hthick)); //bottom under hopper part
-	
+	flathopper->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)));
+	flathopper->AddAsset(floorTexture);
+	mphysicalSystem->AddBody(flathopper);
 	ChVector<> buckBottPos = ChVector<>(bucket_ctr.x, -hdim.y - 2*hopperWallAngleHeight + hthick, hdim.z);
 
 	///////////hopper walls////
@@ -1049,9 +1050,6 @@ std::shared_ptr<ChBody> create_flathopper(int id, CH_SYSTEM* mphysicalSystem, st
 	bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)));
 	mphysicalSystem->AddBody(bucket_bott);
 
-	flathopper->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)));
-	flathopper->AddAsset(floorTexture);
-	mphysicalSystem->AddBody(flathopper);
 	return flathopper;
 }
 // =============================================================================
@@ -1553,16 +1551,9 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 		FixRotation(mphysicalSystem, sPtr);
 
 		//if smarticles are too low and not hopper
-		if (bucketType != HOPPER || FLATHOPPER)
+		if (bucketType != HOPPER || bucketType ==FLATHOPPER)
 		{
-			if (sPtr->GetArm(1)->GetPos().z < -3.0*bucket_interior_halfDim.z)
-			{
-				EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
-				smarticleHopperCount++;
-				printFlowRate(mphysicalSystem.GetChTime(), smarticleHopperCount);
-				GetLog() << "\nRemoving Smarticle far below container \n";
-				continue;
-			}
+
 		}
 
 		switch (bucketType)
@@ -1596,7 +1587,19 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 			}
 			else{ ++myIter; }
 			break;
-
+		case FLATHOPPER:
+			if (sPtr->Get_cm().z < -3.2*bucket_interior_halfDim.z)
+			{
+				EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
+				smarticleHopperCount++;
+				printFlowRate(mphysicalSystem.GetChTime(), smarticleHopperCount);
+				GetLog() << "\nRemoving Smarticle far below container \n";
+				continue;
+			}
+			else{
+				++myIter;
+			}
+			break;
 		default:
 			++myIter;
 			break;

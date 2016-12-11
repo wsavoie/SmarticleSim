@@ -59,7 +59,7 @@ else
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
 %     torqueThresh=.0325; %.008 previously cd 
-    torqueLimit=.04; %..0325 previously cd 
+    torqueLimit=.01; %..0325 previously cd 
 end
 
 
@@ -107,7 +107,7 @@ ss=radI*(.4)*(pi/180); %rad*degs*degToRads   this is arc length each step
 switch global_gait
     case 1% circle gait
 %         ang = 0:ss:2*pi;
-        r=0.2;
+        r=0.3;
         arcDivs=(2*r*pi)/(ss); %circumference divided by arclength to get number of points
         ang=linspace(0,2*pi,arcDivs);
         ang(end)=[]; %remove 2pi index

@@ -182,7 +182,7 @@ void Smarticle::Properties(
 	LTThresh = .01;//for both arms?
 
 	//initialize OT timer params
-	this->OTMaxTime = .25;
+	this->OTMaxTime = .30;
 	//give random time so no all change at same time
 	this->OTTimer = genRand(OTMaxTime);
 
