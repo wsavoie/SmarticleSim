@@ -8,7 +8,7 @@
 #include <vector>
 #include <chrono>
 #include <random>
-
+#include <math.h>
 #ifndef true
 #define true 1
 #endif
@@ -16,14 +16,15 @@
 #ifndef false
 #define false 0
 #endif
-#define PI CH_C_PI   
+#define PI CH_C_PI
+#define PPI CH_C_PI 
 #define D2R CH_C_PI/180.0    //deg to rad
 #define R2D 180.0/CH_C_PI   //rad to deg
 #define PI_2 CH_C_PI/2.0   
 
 #define USE_PARALLEL false
 #define irrlichtVisualization true
-#define stapleSize false
+#define stapleSize true
 	//extern double sizeScale;
 	//extern double dT;
 	//extern bool bucket_exist;
@@ -42,7 +43,6 @@
 	enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, FLATHOPPER, HOPPER, DRUM};
 	extern SmarticleType smarticleType;
 	extern BucketType bucketType;
-
 	////////////
 	extern bool saveFrame;
 	extern int read_from_file;
@@ -52,20 +52,21 @@
 	extern double box_ang;
 	extern int numPerLayer;
 	extern double drum_omega;
-	extern double drum_freq;
+	//extern double drum_freq;
 	extern double inc;
 	extern double p_gain;
 	extern double i_gain;
 	extern double d_gain;
+	extern unsigned int largeID;
+	extern unsigned int smartIdCounter;
 	extern double fric;
 	extern double percentToMoveToGlobal;
 	extern double percentToChangeStressState;
 	extern chrono::ChVector<> bucket_interior_halfDim;
-	
+
 	
 	//extern SmarticleType smarticleType;
 	//extern BucketType bucketType;
-	extern std::shared_ptr<chrono::ChBody> bucket;
 	extern std::shared_ptr<chrono::ChBody> bucket_bott;
 	extern std::vector<std::shared_ptr<chrono::ChBody>> bucket_bod_vec;
 

@@ -89,13 +89,6 @@ namespace chrono {
 	protected:
 		chrono::ChSystem *ch_system_;
 
-		double num_waves_ = 2.0;
-		double default_amplitude_ = 0.1;
-		double command_amplitude_ = default_amplitude_;
-		int command_count_down_ = 0;
-		// reference counting
-		
-		double friction = 1;
 
 	};
 }

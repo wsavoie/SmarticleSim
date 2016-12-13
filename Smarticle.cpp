@@ -9,7 +9,7 @@
 #include "utils/ChUtilsGeometry.h"
 #include "utils/ChUtilsCreators.h"
 
-#include <math.h>  /* asin */
+
 
 
 //#include "physics/ChSystem.h"  // Arman: take care of this later
@@ -103,7 +103,7 @@ void Smarticle::Properties(
 
 	mtextureOT->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 	mtextureArm->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
-	mtextureMid->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
+	mtextureMid->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOrientedARROWS.png"));
 }
 
 void Smarticle::Properties(
@@ -324,7 +324,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 			break;
 		case 1:
 			arm1_textureAsset = std::make_shared<ChTexture>();
-			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOriented.png"));
+			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOrientedARROWS.png"));
 			arm->AddAsset(arm1_textureAsset);
 			break;
 		case 2:
@@ -752,6 +752,7 @@ void Smarticle::CreateActuators() {
 	{
 		link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 		link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+
 		//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 		//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 		//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
@@ -806,9 +807,13 @@ void Smarticle::Create() {
 	{
 		offPlaneoffset = 0;
 		l_mod = l + 2 * r2 - jointClearance;
-		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(angles[0]), 0, -(l_mod / 2.0 - r2)*sin(angles[0])), quat0);
+		/*CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(angles[0]), 0, -(l_mod / 2.0 - r2)*sin(angles[0])), quat0);
 		CreateArm(1, w, ChVector<>(0, 0, 0));
-		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(angles[1]), 0, -(l_mod / 2.0 - r2)*sin(angles[1])), quat2);
+		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(angles[1]), 0, -(l_mod / 2.0 - r2)*sin(angles[1])), quat2);*/
+
+		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0 - r2)*sin(-angles[0])), quat0);
+		CreateArm(1, w, ChVector<>(0, 0, 0));
+		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r2)*sin(-angles[1])), quat2);
 	}
 	else
 	{

@@ -23,8 +23,8 @@
 %running curr- 100mA
 %Kt = T/I, .008/.27 = .0296 Nm/A
 %T=0.0588399
-stapleSize = false;
-dt=.001; %.00025
+stapleSize = true;
+dt=.00025; %.00025
 sizeScale=1;
 % omega = 4.9244e-5;
 %%limit speed in sim (5.3 for 90 deg, 6.3 for 180 deg, takes time to slow so probably 7
@@ -42,7 +42,8 @@ if stapleSize
     rho = 7850.0;%/(sizeScale^3);
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
-    torqueLimit=2*9.8*mass*w_s;%.00005;  4.6657e-04
+    torqueLimit=.00003;%.00005;  4.6657e-04
+%     torqueLimit=2*9.8*mass*w_s;%.00005;  4.6657e-04
 else
       
     t= .029982; %t = height of solar panels
@@ -107,7 +108,7 @@ ss=radI*(.4)*(pi/180); %rad*degs*degToRads   this is arc length each step
 switch global_gait
     case 1% circle gait
 %         ang = 0:ss:2*pi;
-        r=0.3;
+        r=2;%radians!
         arcDivs=(2*r*pi)/(ss); %circumference divided by arclength to get number of points
         ang=linspace(0,2*pi,arcDivs);
         ang(end)=[]; %remove 2pi index
@@ -119,7 +120,7 @@ switch global_gait
         if PON
             hold on;
             figure(1);
-            plot(global_alpha_1Pos,global_alpha_2Pos,'.k');
+            plot(rad2deg(global_alpha_1Pos),rad2deg(global_alpha_2Pos),'.k');
             xlabel('\alpha_1');
             ylabel('\alpha_2');
             

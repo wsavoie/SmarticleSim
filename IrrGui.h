@@ -14,6 +14,7 @@
 //#include <irrlicht.h>
 #include "assets/ChTexture.h"
 #include "chrono/core/ChFileutils.h"
+#include "SystemGeometry.h"
 #include <memory>
 namespace chrono{
 	namespace irrlicht{
@@ -22,7 +23,7 @@ namespace chrono{
 
 		class IrrGui : public irr::IEventReceiver {
 		public:
-			IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec);
+			IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, SystemGeometry* msys);
 			bool OnEvent(const irr::SEvent& event);
 			void drawSmarticleAmt(int numLayers);
 			void drawAngle();
@@ -39,6 +40,7 @@ namespace chrono{
 		private:
 			std::vector<Smarticle*> *sv;
 			ChIrrApp* app;
+			SystemGeometry* sys;
 			irr::gui::IGUIScrollBar* scrollbar_friction;
 			irr::gui::IGUIStaticText* text_Q;
 			irr::gui::IGUIStaticText* text_W;

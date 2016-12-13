@@ -23,6 +23,7 @@ double ChFunctionController::Get_y(double t) {
 			break;
 		case ChLinkEngine::ENG_MODE_TORQUE:
 			output = ComputeOutputTorque(t);
+			//output = SaturateValue(output, controller_->outputLimit);
 			break;
 		default:
 			output = ComputeOutputTorque(t);
@@ -79,7 +80,8 @@ double ChFunctionController::ComputeOutputTorque(double curr_t)//http://robotics
 	double J = 6e-6;//inertia of unloaded arm
 	double gs = 1;
 	double out = (p + i + d);
-	double b = 5.5e-4;
+	//double b = 5.5e-4;
+	double b = 1e-9;
 	out = SaturateValue(out, controller_->outputLimit) - controller_->velCur[index_]*b;
 	controller_->mLastError[index_] = currError;
 	controller_->mLastCalled[index_] = curr_t;
