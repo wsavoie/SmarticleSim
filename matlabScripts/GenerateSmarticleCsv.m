@@ -23,8 +23,8 @@
 %running curr- 100mA
 %Kt = T/I, .008/.27 = .0296 Nm/A
 %T=0.0588399
-stapleSize = true;
-dt=.00025; %.00025
+stapleSize = false;
+dt=.001; %.00025
 sizeScale=1;
 % omega = 4.9244e-5;
 %%limit speed in sim (5.3 for 90 deg, 6.3 for 180 deg, takes time to slow so probably 7
