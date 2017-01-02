@@ -40,10 +40,12 @@ namespace chrono {
 				std::shared_ptr<ChBody> create_Drum(int num_boxes, bool overlap, int ridges = 5);
 				std::shared_ptr<ChBody> create_Hull(double numBoxes);
 				void										create_CentralColumn(double length);
-				void										create_Prismatic();
+				void										create_Prismatic(std::shared_ptr<ChBody> body);
 				void										create_Knobs(double kpr, double rows, double length);
 				void										create_CentralColumnEngine(double t_0);
 				void										create_Truss();
+				void										create_VibrateLink(double w, double A, double t_0, std::shared_ptr<ChBody> body);
+
 				//void vibrate_body(double t, std::shared_ptr<ChBody> mainbody, std::shared_ptr<ChBody> body);
 				void setUpBucketActuator(ChQuaternion<double> rot);
 				void setUpBucketActuator();
@@ -63,6 +65,8 @@ namespace chrono {
 
 				std::vector<std::shared_ptr<ChBody>> sphereStick;
 				
+				std::shared_ptr<ChLinkLock> vibrate_link;
+				std::shared_ptr<ChLinkLock> pris_link;
 				std::shared_ptr<ChLinkEngine> columnEngine;
 				std::shared_ptr<ChLinkEngine> bucket_actuator;
 				std::shared_ptr<ChLinkLinActuator> pris_engine;

@@ -639,12 +639,36 @@ BucketType SystemGeometry::getGeom()
 {
 	return sType;
 }
-
-void SystemGeometry::create_Prismatic()
+void SystemGeometry::create_VibrateLink(double w, double A, double t_0, std::shared_ptr<ChBody> body)
 {
+	vibrate_link=std::make_shared<ChLinkLockLock>();
+	vibrate_link->Initialize(truss, body, ChCoordsys<>(ChVector<>(0, 0, 0)));
+	double phase = -w*t_0;
+	//auto vibMotion = std::make_shared<ChFunction_Sine>();
+	
+	
+	ChFunction_Sine* vibMotion = new ChFunction_Sine();  // phase freq ampl
+	vibMotion->Set_phase(phase);
+	vibMotion->Set_amp(A);
+	vibMotion->Set_w(w);
+	vibrate_link->SetMotion_Z(vibMotion);
+	vibrate_link->SetDisabled(true);
+	sys->Add(vibrate_link);
 
+}
+void SystemGeometry::create_Prismatic(std::shared_ptr<ChBody> body)
+{
+	////
+	ChFunctionCustom* pris_motion = new ChFunctionCustom(0,1.5,0);  // phase freq ampl
+	//pris_motion->Set_y(.1);
+	//pris_motion->Set_y_dx(.1);
+	//pris_motion->Set_y_dxdx(.1);
+	////
+	
 	auto func = std::make_shared<ChFunctionCustom>();
-	link_prismatic = std::make_shared<ChLinkLockPrismatic>();
+	pris_link = std::make_shared<ChLinkLockLock>();
+	
+
 	//link_prismatic = std::make_shared<ChLinkLockPointLine>();
 	pris_engine = std::make_shared<ChLinkLinActuator>();
 	auto sinefunc = std::make_shared<ChFunction_Sine>();
@@ -652,32 +676,26 @@ void SystemGeometry::create_Prismatic()
 	{
 		case STRESSSTICK: case HOOKRAISE:
 		{
-			link_prismatic->Initialize(stick, truss, true, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
-			pris_engine->Initialize(stick, truss, true, ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(stick->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
-			func->Set_y(0);
-			func->Set_y_dx(2.5 - .5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
-			pris_engine->Set_dist_funct(func);
+
+			pris_link->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
+			pris_link->SetMotion_Z(pris_motion);
+
+			//link_prismatic->Initialize(body, truss, true, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
+			//pris_engine->Initialize(body, truss, true, ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
+			//func->Set_y(0);
+			//func->Set_y_dx(2.5 - .5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
+			//pris_engine->Set_dist_funct(func);
 			break;
 		}
-		//case HOPPER:
-		//{
-		//	link_prismatic->Initialize(bucket, truss, false, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
-		//	pris_engine->Initialize(bucket, truss, false, ChCoordsys<>(VNULL, QUNIT), ChCoordsys<>(VNULL, QUNIT));
-		//	sinefunc->Set_amp(vibAmp);
 
-		//	sinefunc->Set_w(2 * PPI * 30);
-		//	sinefunc->Set_phase(-2 * PPI * 30 * 0.9);
-		//	pris_engine->Set_dist_funct(sinefunc);
-		// break;
-		//}
 	}
-	pris_engine->SetDisabled(true);
-		//sinefunc->Set_amp(vibAmp);
-		//sinefunc->Set_w(omega_bucket);
-		//sinefunc->Set_phase(-omega_bucket*vibrateStart);b
-	sys->AddLink(link_prismatic);
-	//func = std::dynamic_pointer_cast<ChFunctionCustom>(pris_engine->Get_dist_funct());
-	sys->AddLink(pris_engine);
+	//pris_engine->SetDisabled(true);
+	//sys->AddLink(link_prismatic);
+	////func = std::dynamic_pointer_cast<ChFunctionCustom>(pris_engine->Get_dist_funct());
+	//sys->AddLink(pris_engine);
+
+	pris_link->SetDisabled(true);
+	sys->Add(pris_link);
 }
 
 void SystemGeometry::create_Truss()
@@ -837,14 +855,14 @@ void SystemGeometry::create_CentralColumn(double length)
 	}
 
 	stick->GetCollisionModel()->BuildModel();
-	//stick->GetCollisionModel()->SetFamily(bucketID);
-	//stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	stick->GetCollisionModel()->SetFamily(bucketID);
+	stick->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	stick->GetPhysicsItem()->SetIdentifier(largeID + 1);
 	stick->SetCollide(true);
 	sys->AddBody(stick);
 	create_Truss();
 }
-void SystemGeometry::vibrate_body(double t,double w, double A, double t_0, std::shared_ptr<ChBody> body) 
+void SystemGeometry::vibrate_body(double t,double w, double A, double t_0, std::shared_ptr<ChBody> body)  //!!!!!!!!!!!USE CREATE_VIBRATELINK INSTEAD!!!!!!!!!!!!!!
 {
 	//A=amplitude
 	//w=omega

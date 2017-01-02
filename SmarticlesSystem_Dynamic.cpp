@@ -700,23 +700,40 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			//myRot = ChQuaternion<>(2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1, 2 * MyRand() - 1);
 			////dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2 * w_smarticle / timeForDisp);
 			//dropSpeed = VNULL;
-			///////////////////////////place in specific location///////////////////////////
+
+			/////////////////////////////place in specific location///////////////////////////
+			//dropSpeed = VNULL;
+			//myRot = Q_from_AngAxis(PI_2, VECT_X);
+			//ChQuaternion<> buckRot = sys->bucket->GetRot();
+			//double buckRotAngx = Quat_to_Angle(ANGLESET_RXYZ, buckRot).x;
+			////myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI/2,PI,0));
+			////myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(genRand(0, 2*PI), genRand(0, 2*PI), genRand(0, 2*PI)));
+
+			////ypos genRand(-PI,PI)
+
+			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, genRand(-PI, PI), 0));
+
+			//double xPos = genRand(-3, 3)*t2_smarticle / 1.25;
+			//double yPos = (i - 4.2) * 2 * t2_smarticle;
+			//myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
+			////myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + 3*t_smarticle) ;
+			/////////////////////////////place in specific location///////////////////////////
+
+
+			//////////////////////changed////////////////////
 			dropSpeed = VNULL;
 			myRot = Q_from_AngAxis(PI_2, VECT_X);
 			ChQuaternion<> buckRot = sys->bucket->GetRot();
 			double buckRotAngx = Quat_to_Angle(ANGLESET_RXYZ, buckRot).x;
-			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI/2,PI,0));
+			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI/2,PI,0));
 			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(genRand(0, 2*PI), genRand(0, 2*PI), genRand(0, 2*PI)));
 
-			//ypos genRand(-PI,PI)
-
-			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, genRand(-PI, PI), 0));
-
+			
 			double xPos = genRand(-3, 3)*t2_smarticle / 1.25;
 			double yPos = (i - 4.2) * 2 * t2_smarticle;
 			myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
-			//myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + 3*t_smarticle) ;
-			///////////////////////////place in specific location///////////////////////////
+			myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + 3*t_smarticle) ;
+			//////////////////////changed///////////////////
 			break;
 		}
 
@@ -764,10 +781,18 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		double bucketY = sys->boxdim.y;
 
 		
-		
-		if (bucketType == BOX || bucketType== FLATHOPPER || bucketType==HOPPER)
-			placeSmarticles(mphysicalSystem, mySmarticlesVec, application, smarticle0);
-		
+
+		//if (bucketType == BOX || bucketType == FLATHOPPER || bucketType == HOPPER)
+		//{
+		//	dropSmartsInLine()
+		//}
+
+
+
+		//if (bucketType == BOX || bucketType == FLATHOPPER || bucketType == HOPPER)
+		//{
+		//	placeSmarticles(mphysicalSystem, mySmarticlesVec, application, smarticle0);
+		//}
 
 		mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
 		GetLog() << "Smarticles: " << mySmarticlesVec.size() << "\n";
@@ -1603,8 +1628,18 @@ int main(int argc, char* argv[]) {
 	switch (bucketType)
 	{
 	case HOPPER:
-		camera->setPosition(core::vector3df(0.0139, -.45, .25));
-		camera->setTarget(core::vector3df(0.0139, -.3, .24)); //	camera->setTarget(core::vector3df(0, 0, .01));
+	{
+		if (stapleSize)
+		{
+			camera->setPosition(core::vector3df(0.00024, -0.181, .102));
+			camera->setTarget(core::vector3df(0.00024, -.033, .0759)); //	camera->setTarget(core::vector3df(0, 0, .01));
+		}
+		else
+		{
+			camera->setPosition(core::vector3df(0.0139, -.45, .25));
+			camera->setTarget(core::vector3df(0.0139, -.3, .24)); //	camera->setTarget(core::vector3df(0, 0, .01));
+		}
+	}
 		break;
 	case BOX:
 		if (stapleSize)
@@ -1732,8 +1767,11 @@ int main(int argc, char* argv[]) {
 	case STRESSSTICK: case HOOKRAISE:// case KNOBCYLINDER:
 	{
 		double rodLen = sys->bucket_interior_halfDim.z*1.5;
+		
 		sys->create_CentralColumn(rodLen);
-		sys->create_Prismatic();
+		sys->create_Truss();
+		sys->create_Prismatic(sys->stick);
+
 		break;
 	}
 
@@ -1755,8 +1793,16 @@ int main(int argc, char* argv[]) {
 	case HOPPER:
 	{
 		sys->create_Truss();
+		sys->create_VibrateLink(omega_bucket, vibration_amp, vibrateStart, sys->bucket);
 		break;
 
+	}
+	case CYLINDER:
+	{
+		sys->create_Truss();
+		sys->create_VibrateLink(omega_bucket, vibration_amp, vibrateStart, sys->bucket_bott);
+
+		break;
 	}
 	case KNOBCYLINDER:
 	{	
@@ -1825,15 +1871,18 @@ int main(int argc, char* argv[]) {
 			{
 			case HOOKRAISE: case STRESSSTICK:
 			{
-
-				if (sys->pris_engine->IsDisabled())
-				{
-					sys->stick->SetBodyFixed(false);
-					sys->pris_engine->SetDisabled(false);
-				
-				}
-				sys->pris_engine->GetDist_dt();
+				sys->stick->SetBodyFixed(false);
+				sys->pris_link->SetDisabled(false);
 				break;
+
+				//if (sys->pris_engine->IsDisabled())
+				//{
+				//	sys->stick->SetBodyFixed(false);
+				//	sys->pris_engine->SetDisabled(false);
+				//
+				//}
+				//sys->pris_engine->GetDist_dt();
+				//break;
 			}
 			case KNOBCYLINDER:
 			{
@@ -1846,19 +1895,14 @@ int main(int argc, char* argv[]) {
 
 			case CYLINDER:
 			{
-				//vibrate cylinder
-				for (size_t i = 0; i < bucket_bod_vec.size(); i++)
-				{
-					sys->vibrate_body(t,omega_bucket,vibration_amp,vibrateStart, bucket_bod_vec.at(i));
-				}
-				sys->vibrate_body(t, omega_bucket, vibration_amp, vibrateStart, sys->bucket_bott);
+				sys->bucket_bott->SetBodyFixed(false);
+				sys->vibrate_link->SetDisabled(false);
 				break;
 			}
 			case HOPPER:
 			{
-				sys->bucket_bott->SetPos(ChVector<>(1, 0, 0));
-				//sys->bucket->SetBodyFixed(false);
-				sys->vibrate_body(t, omega_bucket, vibration_amp, vibrateStart, sys->bucket);
+				sys->bucket->SetBodyFixed(false);
+				sys->vibrate_link->SetDisabled(false);
 				break;
 			}
 			case FLATHOPPER:
