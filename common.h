@@ -24,7 +24,7 @@
 
 #define USE_PARALLEL false
 #define irrlichtVisualization true
-#define stapleSize true
+#define stapleSize false
 	//extern double sizeScale;
 	//extern double dT;
 	//extern bool bucket_exist;

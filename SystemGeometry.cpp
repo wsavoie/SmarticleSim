@@ -34,7 +34,16 @@ using namespace chrono;
 class ChFunctionCustom : public ChFunction{
 public:
 	ChFunctionCustom(){ y = 0; y_dx = 0; y_dxdx = 0; }
-	virtual ~ChFunctionCustom(){};
+	ChFunctionCustom(double m_x, double m_x_dx, double m_x_dxdx)
+		: y(m_x), y_dx(m_x_dx), y_dxdx(m_x_dxdx){};
+	~ChFunctionCustom(){};
+
+	/// "Virtual" copy constructor (covariant return type).
+	//virtual ChFunction_Sine* Clone() const override { return new ChFunction_Sine(*this); }
+
+	virtual FunctionType Get_Type() const override { return FUNCT_SINE; }
+		virtual ChFunctionCustom* Clone() const override { return new ChFunctionCustom(*this); };
+
 	void Copy(ChFunction* source) {
 		Set_y(source->Get_y(0));
 		Set_y_dx(source->Get_y_dx(0));
@@ -46,14 +55,17 @@ public:
 		m_func->Copy(this);*/
 		return (m_func);
 	}
-	virtual ChFunction* Clone() const { return nullptr; };
+
 	virtual int Get_Type() { return 1; }
 	void Set_y(double x){ y = x; }
 	void Set_y_dx(double x){ y_dx = x; }
 	void Set_y_dxdx(double x){ y_dxdx = x; }
-	virtual double Get_y(double x) const { return y; }
-	virtual double Get_y_dx(double x) { return y_dx; }
-	virtual double Get_y_dxdx(double x) { return y_dxdx; }
+	virtual double Get_y(double x) const override { return y; }
+	virtual double Get_y_dx(double x) const override { return y_dx; }
+	virtual double Get_y_dxdx(double x) const override { return y_dxdx; }
+	//virtual double Get_y(double x) const override;
+	//virtual double Get_y_dx(double x) const override;
+	//virtual double Get_y_dxdx(double x) const override;
 
 private:
 	double y;
