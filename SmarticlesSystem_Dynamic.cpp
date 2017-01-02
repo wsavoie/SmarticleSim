@@ -1402,6 +1402,121 @@ void UpdateSmarticles(
 
 	}
 }
+void create_spring_cir(CH_SYSTEM& mphysicalSystem)
+{
+	int n_parts = 50;
+	double rad = .0055;
+	double k = 1000.0;
+	double r = 1;
+	double m = 0.005;
+	double ropeRad = w_smarticle;
+	ChVector<>p1 = ChVector<>(0, 0, .01);
+	double ang = 2.0 * PPI / n_parts;
+	ChVector<> pPos = (0, 0, 0);  //position of each plate
+	ChQuaternion<> quat = QUNIT; //rotation of each plate
+	std::vector<std::shared_ptr<ChBody>> partVec;
+	std::shared_ptr<ChBody> partLast;
+	for (int i = 0; i < n_parts; i++)
+	{
+		auto part = std::make_shared<ChBody>();
+
+		pPos = p1 + ChVector<>(sin(ang * i) * (ropeRad),
+			cos(ang*i)*(ropeRad),
+			0);
+
+		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
+
+		part->AddAsset(sys->sphereTexture);
+
+		part->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+		part->SetPos(pPos);
+		part->GetCollisionModel()->ClearModel();
+		utils::AddSphereGeometry(part.get(), rad, pPos, QUNIT, true);
+		part->SetMass(m);
+
+		///////
+		part->GetCollisionModel()->BuildModel();
+		part->GetCollisionModel()->SetFamily(3); ////#############
+		part->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
+		mphysicalSystem.Add(part);
+		////////////
+		
+		partVec.emplace_back(part);
+		part->GetCollisionModel()->SyncPosition();
+		if (i > 0)
+		{
+			auto spring = std::make_shared<ChLinkSpring>();
+			spring->Initialize(partVec.at(i), partVec.at(i - 1), false, partVec.at(i)->GetPos(), partVec.at(i - 1)->GetPos(), true, 0);
+			//spring->Set_SpringRestLength(rad * 2.1);
+			spring->Set_SpringK(k);
+			spring->Set_SpringR(r);
+			mphysicalSystem.Add(spring);
+		}
+			if (i == n_parts-1)
+		{
+			auto springLast = std::make_shared<ChLinkSpring>();
+			springLast->Initialize(partVec.at(i), partVec.at(0), false, partVec.at(i)->GetPos(), partVec.at(0)->GetPos(), true, 0);
+			//spring->Set_SpringRestLength(rad * 2.1);
+			springLast->Set_SpringK(k);
+			springLast->Set_SpringR(r);
+			mphysicalSystem.Add(springLast);
+			partLast = part;
+		}
+
+		//part->SetBodyFixed(true);
+		part->SetCollide(true);
+		
+
+	}
+	//partLast->Accumulate_force(ChVector<>(0, .4, 0), VNULL, true);
+}
+void create_spring(CH_SYSTEM& mphysicalSystem)
+{
+	double rad = .025;
+	double k = 10000.0;
+	double r = 4;
+	double m = 0.001;
+	ChVector<>p1 = ChVector<>(0, 0, .01);
+	ChVector<>b1Pos = p1 + ChVector<>(rad, 0, 0);
+	ChVector<>b2Pos = p1 + ChVector<>(-rad, 0, 0);
+	auto b1 = std::make_shared<ChBody>();
+	b1->SetMass(m);
+	b1->AddAsset(sys->sphereTexture);
+	//b1->SetPos(b1Pos);
+	b1->GetCollisionModel()->ClearModel();
+	b1->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddSphereGeometry(b1.get(), rad, b1Pos,QUNIT, true);
+	b1->GetCollisionModel()->BuildModel();
+	b1->SetCollide(true);
+
+
+	auto b2 = std::make_shared<ChBody>();
+	b2->SetMass(m);
+
+	b2->GetCollisionModel()->ClearModel();
+	b2->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	//b1->SetPos(b2Pos);
+	utils::AddSphereGeometry(b2.get(), rad, b2Pos, QUNIT, true);
+	b2->GetCollisionModel()->BuildModel();
+	b2->SetCollide(true);
+	b2->SyncCollisionModels();
+	mphysicalSystem.Add(b1);
+	mphysicalSystem.Add(b2);
+
+	
+	auto spring = std::make_shared<ChLinkSpring>();
+
+	
+	spring->Initialize(b1, b2, false, b1->GetPos(), b2->GetPos(), true, 0);
+	//spring->Set_SpringRestLength(rad * 2.1);
+
+	spring->Set_SpringK(k);
+	spring->Set_SpringR(r);
+	//mphysicalSystem.Add(spring);
+	spring->AddAsset(sys->groundTexture);
+	b1->Accumulate_force(ChVector<>(0, .5, 0), VNULL,true);
+	mphysicalSystem.Add(spring);
+}
 // =============================================================================
 bool SetGait(double time)
 {
@@ -1833,6 +1948,11 @@ int main(int argc, char* argv[]) {
 		application.AssetUpdateAll();
 		numGeneratedLayers = numLayers;
 	}
+
+	//create_spring(mphysicalSystem);
+	create_spring_cir(mphysicalSystem);
+
+
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	//START OF LOOP 
 	application.DrawAll();
