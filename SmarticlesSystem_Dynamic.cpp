@@ -1591,7 +1591,7 @@ int main(int argc, char* argv[]) {
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	//ChTimerParallel step_timer;
-	Smarticle::global_GUI_value = 2;
+	Smarticle::global_GUI_value = 0;
 
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 #if defined(_WIN64)

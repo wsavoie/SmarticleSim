@@ -819,7 +819,7 @@ void Smarticle::Create() {
 	{
 		offPlaneoffset = .00825-r2;//smarticle arms arent centered in plane, arm is offset 8.25mm from front or offPlaneoffset-t2
 		jointClearance = .0065;//6.5 mm in x dir jc in y dir is r2
-		double armt = r;
+		double armt = r*.96;
 		double armt2 = .00806 / 2 * sizeScale; //8.06 mm with solar 3.2 without
 
 		CreateArm2(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angles[0])*l / 2), 0, -(l / 2.0)*sin(-angles[0]) - offPlaneoffset), quat0);
@@ -1404,7 +1404,6 @@ void Smarticle::AssignState(int guiState)
 		mv = &midTorque;
 		break;
 	case 8:
-		
 		this->setCurrentMoveType(OT);
 		mv = &ot;
 		break;

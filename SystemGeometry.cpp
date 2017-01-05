@@ -151,21 +151,28 @@ std::shared_ptr<ChBody> SystemGeometry::create_Box()
 
 	return bucket;
 }
-
-std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool overlap)
+std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool overlap)
 {
-	
+	double t = bucket_half_thick;
+	double r = bucket_rad;
+	double h = bucket_interior_halfDim.z;
+
+	return create_EmptyCylinder(num_boxes, overlap, true, h, t, r, bucket_ctr, true, bucketTexture);
+}
+
+std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_height, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture)
+{
 	auto cyl_container = std::make_shared<ChBody>();
 	cyl_container->SetIdentifier(bucketID);
 	//cyl_container->SetMass(mass);
-	cyl_container->SetPos(bucket_ctr);
+	cyl_container->SetPos(pos);
 	cyl_container->SetRot(QUNIT);
 	cyl_container->SetBodyFixed(false);
 	cyl_container->SetCollide(true);
-	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
+	//double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double wallt = t / 5; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
-	double half_height = bucket_interior_halfDim.z;
-	double box_side = bucket_rad * 2.0 * tan(PPI / num_boxes);//side length of cyl
+	//double half_height = bucket_interior_halfDim.z;
+	double box_side = r * 2.0 * tan(PPI / num_boxes);//side length of cyl
 	double o_lap = 0;
 	if (overlap){ o_lap = t * 2; }
 	double ang = 2.0 * PPI / num_boxes;
@@ -182,72 +189,81 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 			wallt,
 			half_height + o_lap);
 
-		pPos = bucket_ctr + ChVector<>(sin(ang * i) * (wallt + bucket_rad),
-			cos(ang*i)*(wallt + bucket_rad),
+		pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
+			cos(ang*i)*(wallt + r),
 			half_height);
 
 		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
 
 		//this is here to make half the cylinder invisible.
 		bool m_visualization = false;
-		if (ang*i < 3 * PPI / 4 || ang*i > 5 * PPI / 4)
+		if (halfVis)
+		{
+			if (ang*i < 3 * PPI / 4 || ang*i > 5 * PPI / 4)
+			{
+				m_visualization = true;
+				cyl_container->AddAsset(texture);
+			}
+		}
+		else
 		{
 			m_visualization = true;
-			cyl_container->AddAsset(bucketTexture);
+			cyl_container->AddAsset(texture);
 		}
 		cyl_container->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 		utils::AddBoxGeometry(cyl_container.get(), box_size, pPos, quat, m_visualization);
 
 	}
 
-	double cyl_volume = PPI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * bucket_rad + 2 * t)*(2 * bucket_rad + 2 * t) - bucket_rad*bucket_rad) + (PPI)*(bucket_rad + 2 * t)*(bucket_rad + 2 * t) * 2 * t;
+	double cyl_volume = PPI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * r + 2 * t)*(2 * r + 2 * t) - r*r) + (PPI)*(r + 2 * t)*(r + 2 * t) * 2 * t;
 	cyl_container->SetMass(rho_cylinder*cyl_volume);
 
 	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	cyl_container->GetCollisionModel()->BuildModel();
 
-
-	for (int i = 0; i < num_boxes; i++)
+	if (createVector)
 	{
-		auto wallPiece = std::make_shared<ChBody>();
-		box_size = ChVector<>((box_side + wallt) / 2.0,
-			wallt,
-			half_height + o_lap);
-
-		pPos = bucket_ctr + ChVector<>(sin(ang * i) * (wallt + bucket_rad),
-			cos(ang*i)*(wallt + bucket_rad),
-			half_height);
-
-		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
-
-		//this is here to make half the cylinder invisible.
-		bool m_visualization = false;
-		if (ang*i < 3 * PPI / 4 || ang*i > 5 * PPI / 4)
+		for (int i = 0; i < num_boxes; i++)
 		{
-			m_visualization = true;
-			wallPiece->AddAsset(bucketTexture);
+			auto wallPiece = std::make_shared<ChBody>();
+			box_size = ChVector<>((box_side + wallt) / 2.0,
+				wallt,
+				half_height + o_lap);
+
+			pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
+				cos(ang*i)*(wallt + r),
+				half_height);
+
+			quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
+
+			//this is here to make half the cylinder invisible.
+			bool m_visualization = false;
+			if (ang*i < 3 * PPI / 4 || ang*i > 5 * PPI / 4)
+			{
+				m_visualization = true;
+				wallPiece->AddAsset(texture);
+			}
+			wallPiece->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+			wallPiece->SetPos(pPos);
+			wallPiece->GetCollisionModel()->ClearModel();
+			utils::AddBoxGeometry(wallPiece.get(), box_size, ChVector<>(0, 0, 0), quat, m_visualization);
+			wallPiece->SetMass(rho_cylinder*cyl_volume);
+			//wallPiece->SetPos(ChVector<>(0,0,0));
+
+
+			//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+			wallPiece->GetCollisionModel()->BuildModel();
+			wallPiece->GetCollisionModel()->SetFamily(envFamily); ////#############
+			wallPiece->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+			sys->AddBody(wallPiece);
+
+			wallPiece->SetRot(QUNIT);
+			wallPiece->SetBodyFixed(true);
+			wallPiece->SetCollide(true);
+			bucket_bod_vec.emplace_back(wallPiece);
+
 		}
-		wallPiece->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-		wallPiece->SetPos(pPos);
-		wallPiece->GetCollisionModel()->ClearModel();
-		utils::AddBoxGeometry(wallPiece.get(), box_size, ChVector<>(0, 0, 0), quat, m_visualization);
-		wallPiece->SetMass(rho_cylinder*cyl_volume);
-		//wallPiece->SetPos(ChVector<>(0,0,0));
-
-
-		//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-		wallPiece->GetCollisionModel()->BuildModel();
-		wallPiece->GetCollisionModel()->SetFamily(envFamily); ////#############
-		wallPiece->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-		sys->AddBody(wallPiece);
-
-		wallPiece->SetRot(QUNIT);
-		wallPiece->SetBodyFixed(true);
-		wallPiece->SetCollide(true);
-		bucket_bod_vec.emplace_back(wallPiece);
-
 	}
-
 	return cyl_container;
 }
 
@@ -569,7 +585,7 @@ void SystemGeometry::create_Container()
 		{
 			create_Bucket_Bott();
 			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
-			bucket = create_EmptyCylinder(25, true);
+			bucket = create_bucketShell(25, true);
 			break;
 		}
 
