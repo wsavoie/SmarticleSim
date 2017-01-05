@@ -112,9 +112,9 @@ SystemGeometry::SystemGeometry(ChSystem* msys, BucketType sysType, double collis
 #endif
 	hole_size = 1 * w_smarticle;
 	rho_cylinder = 1180.0;
-	wall_fric = 0.2;
+	wall_fric = 0.8;
 	bucket_ctr = ChVector<>(0, 0, 0);
-	mat_wall->SetFriction(0.2);
+	mat_wall->SetFriction(wall_fric);
 	envFamily = 1;
 	bucketID = 1;
 	rad = 1; 
