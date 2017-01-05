@@ -113,7 +113,13 @@ std::vector<std::shared_ptr<ChBody>> /*sphereStick*/;
 int overlaptest(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4);
 double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
+
+std::ofstream flowRate_of;
 std::ofstream simParams;
+std::ofstream stress_of;
+std::ofstream vol_frac_of;
+std::ofstream ringPos;
+
 double sizeScale = 1;
 int appWidth = 1280;
 int appHeight = 720;
@@ -133,7 +139,7 @@ unsigned int smartIdCounter = 4; //start at non-zero value to not collide
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
 double tFinal = 100;
-
+double ringRad = 0.192 / 2.0;
 
 
 
@@ -567,8 +573,8 @@ void InitializeMbdPhysicalSystem_NonParallel(ChSystem& mphysicalSystem, int argc
   // ---------------------
   // Print the rest of parameters
   // ---------------------
-	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
-	simParams.open(simulationParams.c_str(), std::ios::app);
+	//const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
+	//simParams.open(simulationParams.c_str(), std::ios::app);
 	int dummyNumber0;
 	int dummyNumber1;
 	int dummyNumber2;
@@ -930,23 +936,8 @@ bool IsInRadial(ChVector<> pt, ChVector<> centralPt, ChVector<> rad)
 }
 void printFlowRate(double time,int count,bool end = false) //SAVE smarticle gaitType out for reference!
 {
-	static bool started= false;
-	const std::string flowRate = out_dir + "/flowrate.txt";
 
-	std::ofstream flowRate_of;
-	if (!started)
-	{
-		flowRate_of.open(flowRate.c_str());
-		started = true;
-		flowRate_of << 0 << ", " << 0<< ", " << Smarticle::global_GUI_value << std::endl;
-	}
-	else
-	{
-		flowRate_of.open(flowRate.c_str(), std::ios::app);
-	}
 	flowRate_of << time << ", " << count << ", " << Smarticle::global_GUI_value<<std::endl;
-
-	flowRate_of.close();
 }
 // =============================================================================
 void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
@@ -1137,17 +1128,14 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 
 
 }
-
+void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring)
+{
+		ringPos << tstep << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << std::endl;
+}
 void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad) //TODO include knobs in calculation
 {
 
-	const static std::string stress = out_dir + "/Stress.txt";
-	std::ofstream stress_of;
-	if (tstep == 0) {
-		stress_of.open(stress.c_str());
-	}
-	else {
-		stress_of.open(stress.c_str(), std::ios::app);	}
+
 	ChVector<> temp = bucket_bod_vec.at(1)->GetPos();
 	double currBuckRad = sqrt(temp.x*temp.x + temp.y*temp.y) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
 	//GetLog() << sys->bucket_half_thick<< "thick\n";
@@ -1155,7 +1143,7 @@ void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylra
 	double force = showForce(mphysicalSystem);
 	//GetLog() << "\nforce:" << force;
 	stress_of << mphysicalSystem->GetChTime() << ", " << force <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
-	stress_of.close();
+	//stress_of.close();
 }
 void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cylrad, std::vector<Smarticle*> mySmarticlesVec) //TODO include knobs in calculation
 {
@@ -1163,15 +1151,10 @@ void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cyl
 	bool printAllSmarticleInfo = true;
 	static int frame = 0;
 
-	const static std::string stress = out_dir + "/Stress.txt";
-	std::ofstream stress_of;
-	if (tstep == 0) {
-		stress_of.open(stress.c_str());
-		stress_of << dT << ", " <<out_fps<<", " <<videoFrameInterval<< ", " << sys->bucket_rad << ", "<< bucketType <<std::endl;
-	}
-	else {
-		stress_of.open(stress.c_str(), std::ios::app);
-	}
+
+	//else {
+	//	stress_of.open(stress.c_str(), std::ios::app);
+	//}
 	//GetLog() << sys->bucket_half_thick<< "thick\n";
 	//showForce(mphysicalSystem)/(PI*2*cylrad*zmax)
 	ChVector<> temp;
@@ -1205,24 +1188,18 @@ void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cyl
 		}
 		stress_of << "#EF" <<frame<< std::endl;
 	}
-	stress_of.close();
+	//stress_of.close();
 	frame = frame + 1;
 }
 void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
 
-	const static std::string vol_frac = out_dir + "/volumeFraction.txt";
 	static int stepSave = 10;
 	if (tStep % stepSave != 0) return;
 	double zComz = 0;
 	double totalTorque = 0;
 	//static std::shared_ptr<ChBody> grid;  //uncomment to visualize vol frac boxes
 	//static bool a = false;						//uncomment to visualize vol frac boxes
-	std::ofstream vol_frac_of;
-	if (tStep == 0) {
-	  vol_frac_of.open(vol_frac.c_str());
-	} else {
-	  vol_frac_of.open(vol_frac.c_str(), std::ios::app);
-	}
+
 
 	//double sqSize = w_smarticle; // try increasing!
 	//int rowSize = std::ceil(sys->bucket_rad*2/sqSize);
@@ -1323,7 +1300,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	}
 	//totalEnergy used to be meanOT
 	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << totalTorque << ", " << Smarticle::global_GUI_value << std::endl;
-	vol_frac_of.close();
+	//vol_frac_of.close();
 	return;
 }
 
@@ -1389,9 +1366,10 @@ void UpdateSmarticles(
 		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
 		if (genRand() < 1)
 		{
-		//if (genRand() < pctglob[i] / 10)
-		//{
+			//if (genRand() < pctglob[i] / 10)
+			//{
 			moveType = Smarticle::global_GUI_value;
+			//}
 		}
 		else
 		{
@@ -1402,6 +1380,8 @@ void UpdateSmarticles(
 
 	}
 }
+
+
 void create_spring_cir(CH_SYSTEM& mphysicalSystem)
 {
 	int n_parts = 50;
@@ -1651,6 +1631,9 @@ int main(int argc, char* argv[]) {
 	}
 	
 	CH_SYSTEM mphysicalSystem;
+	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
+	simParams.open(simulationParams.c_str());
+
 	sys = &SystemGeometry(&mphysicalSystem, bucketType, collisionEnvelope,
 		l_smarticle, w_smarticle, t_smarticle, t2_smarticle);
 	InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
@@ -1660,10 +1643,9 @@ int main(int argc, char* argv[]) {
 	
 
 	
-	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
-	simParams.open(simulationParams.c_str());
+
 	simParams << "Job was submitted at date/time: " << asctime(timeinfo) << std::endl;
-	simParams.close();
+	//simParams.close();
 
 	// define material property for everything
 	//!@#$%
@@ -1689,9 +1671,9 @@ int main(int argc, char* argv[]) {
 	std::vector<Smarticle*> mySmarticlesVec;
 	CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
 
-	simParams.open(simulationParams.c_str(), std::ios::app);
+	//simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "SystemSize: " << sys->boxdim.x << sys->boxdim.y << sys->boxdim.z << std::endl;
-	simParams.close();
+	//simParams.close();
 
 #ifdef CHRONO_OPENGL
 	opengl::ChOpenGLWindow& gl_window = opengl::ChOpenGLWindow::getInstance();
@@ -2120,7 +2102,7 @@ int main(int argc, char* argv[]) {
 
 
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
-
+		
 		time(&rawtimeCurrent);
 		double timeDiff = difftime(rawtimeCurrent, rawtime);
 		//step_timer.stop("step time");
@@ -2128,7 +2110,7 @@ int main(int argc, char* argv[]) {
 		receiver.dtPerFrame = videoFrameInterval;
 		receiver.fps = out_fps;
 		receiver.screenshot(receiver.dtPerFrame);
-
+		
 
 		std::cout.flush();
 		
@@ -2145,8 +2127,9 @@ int main(int argc, char* argv[]) {
 					rho_smarticleArm,
 					rho_smarticleMid);
 		}
+		PrintRingPos(&mphysicalSystem, mphysicalSystem.GetChTime(), ring);
   }
-	simParams.open(simulationParams.c_str(), std::ios::app);
+	//simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "Smarticle OT: " << mySmarticlesVec.at(0)->OTThresh << std::endl;
 
 	//need to print out last step at 15 secs
@@ -2164,6 +2147,12 @@ int main(int argc, char* argv[]) {
   mySmarticlesVec.clear();
 
 	simParams << "completed"<<std::endl;
+
+	flowRate_of.close();
+	simParams.close();
+	stress_of.close();
+	vol_frac_of.close();
+	ringPos.close();
   simParams.close();
   return 0;
 }
