@@ -65,7 +65,7 @@
 #include "assets/ChTexture.h"
 
 using namespace chrono;
-using namespace chrono::irrlicht;
+using namespace irrlicht;
 using namespace irr;
 
 using namespace irr::core;
@@ -181,9 +181,9 @@ double gaitChangeLengthTime = .5;
 	double rho_smarticleArm = 925;
 	double rho_smarticleMid = 739.18;
 
-	double p_gain = 0.2;   //.1//.2         //0.133
-	double i_gain = 5;// 0.03;	 //.5//.225						//0.05
-	double d_gain = 0.001; //.0025 //.01       //0.0033
+	double p_gain =1;   //.1//.2         //0.133
+	double i_gain = 1;// 0.03;	 //.5//.225						//0.05
+	double d_gain = 1; //.0025 //.01       //0.0033
 
 
 #endif
@@ -734,9 +734,13 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI/2,PI,0));
 			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(genRand(0, 2*PI), genRand(0, 2*PI), genRand(0, 2*PI)));
 
-			
-			double xPos = genRand(-3, 3)*t2_smarticle / 1.25;
-			double yPos = (i - 4.2) * 2 * t2_smarticle;
+			//
+			//double xPos = genRand(-3, 3)*t2_smarticle / 1.25;
+			//double yPos = (i - 4.2) * 2 * t2_smarticle;
+
+			double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
+			double yPos = (i)* 1.5 * t2_smarticle;
+
 			myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
 			myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + 3*t_smarticle) ;
 			//////////////////////changed///////////////////
@@ -1513,6 +1517,10 @@ bool SetGait(double time)
 	//	return true;
 
 
+	//if (time <= .2)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time>.5)
+	//	Smarticle::global_GUI_value = 0;
 	if (time > 30)
 		return true;
 	/*else
@@ -1932,7 +1940,35 @@ int main(int argc, char* argv[]) {
 	}
 
 	//create_spring(mphysicalSystem);
-	create_spring_cir(mphysicalSystem);
+	//create_spring_cir(mphysicalSystem);
+	double xPos = 0;
+	double yPos = 1.5 * t2_smarticle;
+	ChVector<> pos2 = sys->bucket_ctr + ChVector<>(xPos, yPos, t2_smarticle);
+
+	std::shared_ptr<ChBody> ring = sys->create_EmptyCylinder(25, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture);
+	ring->SetIdentifier(455465);
+	ring->SetCollide(true);
+	ring->SetMass(.001);
+	mphysicalSystem.AddBody(ring);
+	
+	
+	PrintRingPos(&mphysicalSystem, mphysicalSystem.GetChTime(),ring);
+	
+	const std::string stress = out_dir + "/Stress.txt";
+	const std::string flowRate = out_dir + "/flowrate.txt";
+	const std::string vol_frac = out_dir + "/volumeFraction.txt";
+
+
+	ringPos.open(out_dir + "/RingPos.txt");
+	stress_of.open(stress.c_str());
+	flowRate_of.open(flowRate.c_str());
+	vol_frac_of.open(vol_frac.c_str());
+
+	ringPos << "# ring rad = " << ringRad << "tstep, x, y, z, globalGUI" << std::endl;;
+	stress_of << dT << ", " << out_fps << ", " << videoFrameInterval << ", " << sys->bucket_rad << ", " << bucketType << std::endl;
+	flowRate_of << 0 << ", " << 0 << ", " << Smarticle::global_GUI_value << std::endl;
+
+	
 
 
 //  for (int tStep = 0; tStep < 1; tStep++) {
