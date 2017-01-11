@@ -1201,6 +1201,7 @@ std::pair<double, double> Smarticle::populateMoveVector()
 		//ot.push_back(angPair);
 		//ot.push_back(angPair);
 	//exit(-1);
+	smarticleMoves.close();
 	return firstAngPair;
 
 }

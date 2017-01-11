@@ -84,10 +84,10 @@ user=getenv('username');
 if strcmp(user,'root')
     directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
 else
-    directory_name = uigetdir('D:\GT Coursework\smarticledata'); 
+    directory_name = uigetdir('/home/ws/SmartSim/Results'); 
 end
 
-fileloc = horzcat(directory_name,'\','smarticleMoves.csv');
+fileloc = fullfile(directory_name,'smarticleMoves.csv');
 fid = fopen(fileloc,'wt');
 %add in all initial values to top of file
 %square torque so that we can use the square in the program so we can avoid

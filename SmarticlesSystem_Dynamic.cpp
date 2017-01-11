@@ -1612,7 +1612,8 @@ int main(int argc, char* argv[]) {
 	
 	SetChronoDataPath(fp);
 #else
-	SetChronoDataPath("/home/wsavoie/Documents/ChronoPkgs/Smarticles/data/");
+	SetChronoDataPath("/home/ws/SmartSim/Smarticles/data/");
+
 #endif
 
 	time_t rawtimeCurrent;
@@ -2198,6 +2199,5 @@ int main(int argc, char* argv[]) {
 	stress_of.close();
 	vol_frac_of.close();
 	ringPos.close();
-  simParams.close();
   return 0;
 }

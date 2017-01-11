@@ -473,18 +473,26 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 	}
 	void IrrGui::SaveToMovie()
 	{
-		
-		char comm[100];
+
+		char comm[150];
+#if defined(_WIN64)
 		sprintf(comm, "ffmpeg -framerate %d -i ", fps);
-		//strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -b:v 100000k video_capture/outVid.avi");
 		strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -q 0 video_capture/outVid.avi");
-		//exit(-1);
+
+#else
+		sprintf(comm, "ffmpeg -framerate %d -i ", fps);
+		strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -q 0 video_capture/outVid.avi");
+#endif
 		system(comm);
+
 	}
 	void IrrGui::DeleteJpegs()
 	{
-
+#if defined(_WIN64)
 		system("del video_capture\\*.jpeg");
+#else
+		system("rm -f video_capture/*.jpeg");
+#endif
 	}
 	void IrrGui::screenshot(int stepsPerFrame)
 	{
