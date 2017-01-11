@@ -138,7 +138,7 @@ unsigned int smartIdCounter = 4; //start at non-zero value to not collide
 //double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
-double tFinal = 100;
+double tFinal = 60*10;
 double ringRad = 0.192 / 2.0;
 
 
@@ -1527,7 +1527,7 @@ bool SetGait(double time)
 		Smarticle::global_GUI_value = 2;
 	else if (time>.05)
 		Smarticle::global_GUI_value = 0;
-	if (time > 60)
+	if (time > 60*5)
 		return true;
 	/*else
 		Smarticle::global_GUI_value = 1;
