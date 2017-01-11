@@ -112,7 +112,7 @@ SystemGeometry::SystemGeometry(ChSystem* msys, BucketType sysType, double collis
 #endif
 	hole_size = 1 * w_smarticle;
 	rho_cylinder = 1180.0;
-	wall_fric = 0.8;
+	wall_fric = 0.4;
 	bucket_ctr = ChVector<>(0, 0, 0);
 	mat_wall->SetFriction(wall_fric);
 	envFamily = 1;
@@ -156,11 +156,16 @@ std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool o
 	double t = bucket_half_thick;
 	double r = bucket_rad;
 	double h = bucket_interior_halfDim.z;
+	double o_lap = 0;
+	if (overlap){ o_lap = t * 2; }
+	double th = h +o_lap;//for use in cyl volume;
+	double cyl_volume = PPI*(2 * th - 2 * t)*(2 * th - 2 * t)*((2 * r + 2 * t)*(2 * r + 2 * t) - r*r) + (PPI)*(r + 2 * t)*(r + 2 * t) * 2 * t;
+	double m = rho_cylinder*cyl_volume;
 
-	return create_EmptyCylinder(num_boxes, overlap, true, h, t, r, bucket_ctr, true, bucketTexture);
+	return create_EmptyCylinder(num_boxes, overlap, true, h, t, r, bucket_ctr, true, bucketTexture,m);
 }
 
-std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_height, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture)
+std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture,double m)
 {
 	auto cyl_container = std::make_shared<ChBody>();
 	cyl_container->SetIdentifier(bucketID);
@@ -169,6 +174,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 	cyl_container->SetRot(QUNIT);
 	cyl_container->SetBodyFixed(false);
 	cyl_container->SetCollide(true);
+	ChVector<> box_size = (0, 0, 0); //size of plates
 	//double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double wallt = t / 5; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
 	//double half_height = bucket_interior_halfDim.z;
@@ -176,7 +182,6 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 	double o_lap = 0;
 	if (overlap){ o_lap = t * 2; }
 	double ang = 2.0 * PPI / num_boxes;
-	ChVector<> box_size = (0, 0, 0); //size of plates
 	ChVector<> pPos = (0, 0, 0);  //position of each plate
 	ChQuaternion<> quat = QUNIT; //rotation of each plate
 	cyl_container->GetCollisionModel()->ClearModel();
@@ -187,12 +192,22 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 
 		box_size = ChVector<>((box_side + wallt) / 2.0,
 			wallt,
-			half_height + o_lap);
+			half_h + o_lap);
 
-		pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
-			cos(ang*i)*(wallt + r),
-			half_height);
+		if (createVector)
+		{
+			pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
+				cos(ang*i)*(wallt + r),
+				half_h);
+		}
+		else
+		{
+				pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
+					cos(ang*i)*(wallt + r),
+					0-1.8*t);
 
+				//TODO ######take into account angle of box!!
+		}
 		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
 
 		//this is here to make half the cylinder invisible.
@@ -215,12 +230,20 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 
 	}
 
-	double cyl_volume = PPI*(2 * box_size.z - 2 * t)*(2 * box_size.z - 2 * t)*((2 * r + 2 * t)*(2 * r + 2 * t) - r*r) + (PPI)*(r + 2 * t)*(r + 2 * t) * 2 * t;
-	cyl_container->SetMass(rho_cylinder*cyl_volume);
 
+	cyl_container->SetMass(m);
+	
+
+
+	double h = half_h + o_lap;
 	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	cyl_container->GetCollisionModel()->BuildModel();
-
+	//https://en.wikipedia.org/wiki/List_of_moments_of_inertia
+	double Ixx = m / 12.0*(3 * (r*r + (r + 2 * t)*(r + 2 * t)) + (h * 2)*(h + o_lap * 2));
+	double Iyy = m / 12.0*(3 * (r*r + (r + 2 * t)*(r + 2 * t)) + (h * 2)*(h * 2));
+	double Izz = m / 2 * (r*r + (r + 2*t)*(r +2*t));
+	ChMatrix33<double> iner(Ixx, 0.0, 0.0, 0.0, Iyy, 0.0, 0.0, 0.0, Izz);
+	cyl_container->SetInertia(iner);
 	if (createVector)
 	{
 		for (int i = 0; i < num_boxes; i++)
@@ -228,11 +251,11 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 			auto wallPiece = std::make_shared<ChBody>();
 			box_size = ChVector<>((box_side + wallt) / 2.0,
 				wallt,
-				half_height + o_lap);
+				half_h + o_lap);
 
 			pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
 				cos(ang*i)*(wallt + r),
-				half_height);
+				half_h);
 
 			quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
 
@@ -247,7 +270,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 			wallPiece->SetPos(pPos);
 			wallPiece->GetCollisionModel()->ClearModel();
 			utils::AddBoxGeometry(wallPiece.get(), box_size, ChVector<>(0, 0, 0), quat, m_visualization);
-			wallPiece->SetMass(rho_cylinder*cyl_volume);
+			wallPiece->SetMass(m);
 			//wallPiece->SetPos(ChVector<>(0,0,0));
 
 
@@ -256,7 +279,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 			wallPiece->GetCollisionModel()->SetFamily(envFamily); ////#############
 			wallPiece->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 			sys->AddBody(wallPiece);
-
+			wallPiece->SetMaterialSurface(mat_wall);
 			wallPiece->SetRot(QUNIT);
 			wallPiece->SetBodyFixed(true);
 			wallPiece->SetCollide(true);
@@ -338,7 +361,6 @@ std::shared_ptr<ChBody> SystemGeometry::create_FlatHopper(ChVector<> hdim)
 	bucket_bott->SetCollide(true);
 	bucket_bott->GetCollisionModel()->ClearModel();
 	bucket_bott->SetPos(bucket_ctr);
-	bucket_bott->SetMaterialSurface(mat_wall);
 	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));//custom file
 	bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(bucket_bott.get(), ChVector<>(hdim.x + o_lap, hthick, hdim.z + o_lap), //-y
@@ -377,7 +399,6 @@ std::shared_ptr<ChBody> SystemGeometry::create_Hopper(double theta, bool overlap
 	if (overlap){ o_lap = 2 * t; }
 
 	hopper->GetCollisionModel()->ClearModel();
-	hopper->SetMaterialSurface(mat_wall);
 
 	//bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_black_bordersBlack.png"));
 	//hopper->AddAsset(bucketTexture);
@@ -421,7 +442,6 @@ std::shared_ptr<ChBody> SystemGeometry::create_Bucket_Bott()
 	bucket_bott->SetCollide(true);
 	bucket_bott->GetCollisionModel()->ClearModel();
 	bucket_bott->SetPos(bucket_ctr);
-	bucket_bott->SetMaterialSurface(mat_wall);
 	bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(bucket_bott.get(), Vector(bucket_rad + 2 * bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
 	bucket_bott->AddAsset(floorTexture);
@@ -458,7 +478,6 @@ ChVector<> ridge_size = (0, 0, 0); //size of plates
 ChVector<> pPos = (0, 0, 0);  //position of each plate
 ChQuaternion<> quat = QUNIT; //rotation of each plate
 drum->GetCollisionModel()->ClearModel();
-drum->SetMaterialSurface(mat_wall);
 
 int ridgeNum = num_boxes / ridges;
 for (int i = 0; i < num_boxes; i++)
@@ -512,7 +531,6 @@ bucket_bott->SetBodyFixed(true);
 bucket_bott->SetCollide(true);
 bucket_bott->GetCollisionModel()->ClearModel();
 bucket_bott->SetPos(bucket_ctr);
-bucket_bott->SetMaterialSurface(mat_wall);
 floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));//custom file
 bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 bucket_bott->AddAsset(bucketTexture);
@@ -578,6 +596,7 @@ void SystemGeometry::create_Container()
 			bucket_bott->SetCollide(false);
 			bucket_bott->SetPos(ChVector<>(5, 5, 5));
 			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
+	;
 			break;
 		}
 
@@ -617,7 +636,8 @@ void SystemGeometry::create_Container()
 			break;
 		}
 	}
-
+	bucket->SetMaterialSurface(mat_wall);
+	bucket_bott->SetMaterialSurface(mat_wall);
 	bucket->AddAsset(bucketTexture);
 	bucket->SetBodyFixed(true);
 	bucket->SetCollide(true);
@@ -766,7 +786,7 @@ void SystemGeometry::create_Knobs(double kpr,double rows, double length)
 			sphereStick.emplace_back(stick);
 		}
 	}
-
+	stick->SetMaterialSurface(mat_wall);
 	stick->GetCollisionModel()->BuildModel();
 	stick->SetCollide(true);
 	//stick->GetCollisionModel()->SetFamily(envFamily);

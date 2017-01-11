@@ -33,7 +33,7 @@ namespace chrono {
 				void create_Container();
 
 				std::shared_ptr<ChBody> create_Box();
-				std::shared_ptr<ChBody> create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_height, double thick, double rad, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture);
+				std::shared_ptr<ChBody> create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_height, double thick, double rad, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture, double mass);
 				std::shared_ptr<ChBody> create_bucketShell(int num_boxes, bool overlap);
 				std::shared_ptr<ChBody> create_FlatHopper(ChVector<> hdim);
 				std::shared_ptr<ChBody> create_Hopper(double theta, bool overlap);

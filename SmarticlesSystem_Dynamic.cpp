@@ -787,7 +787,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		smarticle0->AssignState(VIB);
 		smarticle0->GenerateVib(angle1*D2R, angle2*D2R);
 		smarticle0->AssignState(Smarticle::global_GUI_value);
-		smarticle0->activateStress = percentToChangeStressState;
+		smarticle0->activateStress = 0.3;//percentToChangeStressState; //#########################################
+
 		//smarticle0->ss.emplace_back(angle1, angle2);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
@@ -862,9 +863,9 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smar
 	sys->bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	///!@#$%
 	//mat_wall->SetFriction(wall_fric); //steel- plexiglass   (plexiglass was outer cylinder material) // .6 for wall to staple using tan (theta) tested on 7/20
-	
-	
+	smart_fric = percentToChangeStressState;//###############
 	mat_smarts->SetFriction(smart_fric);
+
 	
 
 	// 1: create bucket
@@ -1139,7 +1140,9 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarti
 }
 void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring)
 {
-		ringPos << tstep << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << std::endl;
+	static const int stepPerOut = .1 * 1 / dT;
+	if (tstep%stepPerOut == 0)
+		ringPos << mphysicalSystem->GetChTime() << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << std::endl;
 }
 void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad) //TODO include knobs in calculation
 {
@@ -1520,11 +1523,11 @@ bool SetGait(double time)
 	//	return true;
 
 
-	//if (time <= .2)
-	//	Smarticle::global_GUI_value = 2;
-	//else if (time>.5)
-	//	Smarticle::global_GUI_value = 0;
-	if (time > 30)
+	if (time <= .05)
+		Smarticle::global_GUI_value = 2;
+	else if (time>.05)
+		Smarticle::global_GUI_value = 0;
+	if (time > 60)
 		return true;
 	/*else
 		Smarticle::global_GUI_value = 1;
@@ -1594,7 +1597,7 @@ int main(int argc, char* argv[]) {
 	time(&rawtime);
 	timeinfo = localtime(&rawtime);
 	//ChTimerParallel step_timer;
-	Smarticle::global_GUI_value = 0;
+	Smarticle::global_GUI_value = 2;
 
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 #if defined(_WIN64)
@@ -1647,9 +1650,9 @@ int main(int argc, char* argv[]) {
 
 	sys = &SystemGeometry(&mphysicalSystem, bucketType, collisionEnvelope,
 		l_smarticle, w_smarticle, t_smarticle, t2_smarticle);
+
 	InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
-	
-	
+	sys->mat_wall->SetFriction(percentToChangeStressState); //########
 	
 	
 
@@ -1947,15 +1950,17 @@ int main(int argc, char* argv[]) {
 	double xPos = 0;
 	double yPos = 1.5 * t2_smarticle;
 	ChVector<> pos2 = sys->bucket_ctr + ChVector<>(xPos, yPos, t2_smarticle);
-
-	std::shared_ptr<ChBody> ring = sys->create_EmptyCylinder(25, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture);
+	double m = .001;
+	std::shared_ptr<ChBody> ring = sys->create_EmptyCylinder(25, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture,m);
 	ring->SetIdentifier(455465);
 	ring->SetCollide(true);
-	ring->SetMass(.001);
+
+
+
 	mphysicalSystem.AddBody(ring);
 	
 	
-	PrintRingPos(&mphysicalSystem, mphysicalSystem.GetChTime(),ring);
+	PrintRingPos(&mphysicalSystem, 0,ring);
 	
 	const std::string stress = out_dir + "/Stress.txt";
 	const std::string flowRate = out_dir + "/flowrate.txt";
@@ -1967,7 +1972,7 @@ int main(int argc, char* argv[]) {
 	flowRate_of.open(flowRate.c_str());
 	vol_frac_of.open(vol_frac.c_str());
 
-	ringPos << "# ring rad = " << ringRad << "tstep, x, y, z, globalGUI" << std::endl;;
+	ringPos << "# ring rad = " << ringRad << " tstep, x, y, z, globalGUI" << std::endl;
 	stress_of << dT << ", " << out_fps << ", " << videoFrameInterval << ", " << sys->bucket_rad << ", " << bucketType << std::endl;
 	flowRate_of << 0 << ", " << 0 << ", " << Smarticle::global_GUI_value << std::endl;
 
@@ -2166,7 +2171,7 @@ int main(int argc, char* argv[]) {
 					rho_smarticleArm,
 					rho_smarticleMid);
 		}
-		PrintRingPos(&mphysicalSystem, mphysicalSystem.GetChTime(), ring);
+		PrintRingPos(&mphysicalSystem, tStep, ring);
   }
 	//simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "Smarticle OT: " << mySmarticlesVec.at(0)->OTThresh << std::endl;
