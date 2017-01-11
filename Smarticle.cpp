@@ -175,9 +175,9 @@ void Smarticle::Properties(
 	initialAngs[0] = other_angle;
 	initialAngs[1] = other_angle2;
 
-	activateStress = 0; //.05
+	activateStress = .05; //.05 //reassign during constructor
 	
-	OTThresh = .7;//for single arm 
+	OTThresh = 1.01;//for single arm 
 	MTThresh = OTThresh/3.0;//for both arms?
 	LTThresh = .01;//for both arms?
 
@@ -830,10 +830,13 @@ void Smarticle::Create() {
 	//need this here
 	if (read_from_file <= 0)//not reading
 	{
-		if (genRand() < pctActive)
-			active = true;
-		else
-			active = false;
+		if (active == true)
+		{
+			if (genRand() < pctActive)
+				active = true;
+			else
+				active = false;
+		}
 	}
 	CreateActuators();
 

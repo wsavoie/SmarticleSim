@@ -775,6 +775,10 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 		smarticle0->populateMoveVector();
 		smarticle0->SetAngles(angle1, angle2, true);
 		smarticle0->SetInitialAngles();
+		//if (i == 0)
+		//{
+		//	smarticle0->active = false;//##################
+		//}
 		smarticle0->Create();
 		smarticle0->setCurrentMoveType((MoveType)Smarticle::global_GUI_value);
 		smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
@@ -1420,7 +1424,7 @@ void create_spring_cir(CH_SYSTEM& mphysicalSystem)
 
 		///////
 		part->GetCollisionModel()->BuildModel();
-		part->GetCollisionModel()->SetFamily(3); ////#############
+		part->GetCollisionModel()->SetFamily(3); 
 		part->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
 		mphysicalSystem.Add(part);
 		////////////
