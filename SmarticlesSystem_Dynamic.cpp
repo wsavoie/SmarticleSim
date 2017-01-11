@@ -107,7 +107,7 @@ using namespace irr::gui;
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM,FLATHOPPER};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
 BucketType bucketType = BOX;
-std::vector<std::shared_ptr<ChBody>> /*sphereStick*/;
+//std::vector<std::shared_ptr<ChBody>> /*sphereStick*/;
 //std::shared_ptr<ChBody> bucket;
 //std::shared_ptr<ChBody> bucket_bott;
 int overlaptest(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4);
@@ -199,7 +199,7 @@ double vol = (t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 
 double collisionEnvelope = .1 * t2_smarticle;
 
-SystemGeometry *sys;
+std::shared_ptr<SystemGeometry> sys;
 bool bucket_exist = true;
 
 int read_from_file = 0; //-1 write 0 do nothing 1 read 2 read and write 
@@ -1648,8 +1648,8 @@ int main(int argc, char* argv[]) {
 	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	simParams.open(simulationParams.c_str());
 
-	sys = &SystemGeometry(&mphysicalSystem, bucketType, collisionEnvelope,
-		l_smarticle, w_smarticle, t_smarticle, t2_smarticle);
+	sys = std::shared_ptr<SystemGeometry> (new SystemGeometry(&mphysicalSystem, bucketType, collisionEnvelope,
+		l_smarticle, w_smarticle, t_smarticle, t2_smarticle));
 
 	InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
 	sys->mat_wall->SetFriction(percentToChangeStressState); //########

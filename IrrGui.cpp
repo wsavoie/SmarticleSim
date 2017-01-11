@@ -11,7 +11,7 @@ using namespace irr::io;
 using namespace irr::gui;
 
 
-IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec,SystemGeometry* msys) {
+IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::shared_ptr<SystemGeometry>  msys) {
 
 	sv = mySmarticlesVec;
 	sys = msys;
