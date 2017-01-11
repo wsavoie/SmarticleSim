@@ -14,7 +14,7 @@ TIME_UNITS = 's';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 
 %define curve params [] for all
-spk=[0]; smart=[0]; gait=[1]; rob=[5]; v=[];
+spk=[]; smart=[0]; gait=[1]; rob=[5]; v=[];
 
 props={spk smart gait rob v};
 inds=1;
@@ -56,7 +56,7 @@ ma.plotMSD;
 pts('fit with drift');
 [fo gof]=ma.fitMeanMSD;
 figText(gcf,14)
-
+%%
 figure(3)
 ma = ma.computeVCorr;
 ma.plotMeanVCorr
@@ -109,10 +109,10 @@ scatter3(alld(:,2),alld(:,3),alld(:,1),'.');
 xlabel('x (m)'); ylabel('y (m)'); zlabel('t(s)');
 
 %% mean of position at each timestep for all tracks
-
+figure(8)
 %get min track size
-idx=min(cellfun(@(x) size(x,1), ma.tracks));
-idxDat=cellfun(@(x) x(1:idx,:),ma.tracks,'uniformoutput',false);
+idx=min(cellfun(@(x) size(x,1), ma.tracks(:)));
+idxDat=cellfun(@(x) x(1:idx,:),ma.tracks(:),'uniformoutput',false);
 
 %get x and y data for each timestep 
 xdat=cell2mat(cellfun(@(x) x(:,2),idxDat,'uniformoutput',false)');
@@ -120,6 +120,11 @@ ydat=cell2mat(cellfun(@(x) x(:,3),idxDat,'uniformoutput',false)');
 
 mxdat=mean(xdat,2);
 mydat=mean(ydat,2);
+
+mmxdat=mean(xdat(end,:));
+mmydat=mean(ydat(end,:));
+
+mmydat/mmxdat
 % plot(mxdat,mydat);
 f=fit(mxdat,mydat,'poly1');
 hold on;
@@ -128,5 +133,5 @@ plot(f,'-');
 legend off;
 xlabel('x (m)'); ylabel('y (m)');
 title(['mean of position for all runs after ',num2str(ma.tracks{1}(idx,1)),' s'])
- text(.3,.7,['m= ',num2str(f(1),2)],'units','normalized');
+ text(.7,.2,['m= ',num2str(f(1),2)],'units','normalized');
 figText(gcf,14);

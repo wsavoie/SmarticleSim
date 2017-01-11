@@ -23,7 +23,7 @@ namespace chrono{
 
 		class IrrGui : public irr::IEventReceiver {
 		public:
-			IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::shared_ptr<SystemGeometry> msys);
+			IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmarticlesVec, std::shared_ptr<SystemGeometry> msys);
 			bool OnEvent(const irr::SEvent& event);
 			void drawSmarticleAmt(int numLayers);
 			void drawAngle();
@@ -39,7 +39,7 @@ namespace chrono{
 			int fps = 30;
 			int dtPerFrame = 134;
 		private:
-			std::vector<Smarticle*> *sv;
+			std::vector<std::shared_ptr<Smarticle>> *sv;
 			ChIrrApp* app;
 			std::shared_ptr<SystemGeometry> sys;
 			irr::gui::IGUIScrollBar* scrollbar_friction;

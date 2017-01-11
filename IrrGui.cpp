@@ -11,7 +11,7 @@ using namespace irr::io;
 using namespace irr::gui;
 
 
-IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::shared_ptr<SystemGeometry>  msys) {
+IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmarticlesVec, std::shared_ptr<SystemGeometry>  msys) {
 
 	sv = mySmarticlesVec;
 	sys = msys;
@@ -134,7 +134,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::s
 					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 					{
 
-						Smarticle* sPtr = sv->at(i);
+						std::shared_ptr<Smarticle> sPtr = sv->at(i);
 
 						CurrTheta01 = sPtr->GetAngle(0);
 						CurrTheta12 = sPtr->GetAngle(1);
@@ -168,7 +168,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::s
 					for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 					{
 
-						Smarticle* sPtr = sv->at(i);
+						std::shared_ptr<Smarticle> sPtr = sv->at(i);
 						sPtr->AssignState(MoveType::VIB);
 						ang1 = wcstod(angle1Input->getText(), NULL)*D2R;
 						ang2 = wcstod(angle2Input->getText(), NULL)*D2R;
@@ -365,7 +365,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::s
 			case irr::KEY_KEY_C:			//decrease p
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
-					Smarticle* sPtr = sv->at(i);
+					std::shared_ptr<Smarticle> sPtr = sv->at(i);
 						p_gain = p_gain - inc;
 				}
 				drawAngle();
@@ -374,7 +374,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::s
 			case irr::KEY_KEY_V:			//decrease i
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
-					Smarticle* sPtr = sv->at(i);
+					std::shared_ptr<Smarticle> sPtr = sv->at(i);
 					i_gain = i_gain - inc;
 				}
 				drawAngle();
@@ -383,7 +383,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::s
 			case irr::KEY_KEY_B:			//decrease d
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
-					Smarticle* sPtr = sv->at(i);
+					std::shared_ptr<Smarticle> sPtr = sv->at(i);
 					d_gain = d_gain - inc;
 				}
 				drawAngle();
@@ -392,7 +392,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::s
 			case irr::KEY_KEY_D:			//increase p
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
-					Smarticle* sPtr = sv->at(i);
+					std::shared_ptr<Smarticle> sPtr = sv->at(i);
 					p_gain = p_gain + inc;
 				}
 				drawAngle();
@@ -401,7 +401,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::s
 			case irr::KEY_KEY_F:			//increase i
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
-					Smarticle* sPtr = sv->at(i);
+					std::shared_ptr<Smarticle> sPtr = sv->at(i);
 					i_gain = i_gain + inc;
 				}
 				drawAngle();
@@ -410,7 +410,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::s
 			case irr::KEY_KEY_G:			//increase d
 				for (size_t i = 0; i < sv->size(); i++) //get each particles current theta
 				{
-					Smarticle* sPtr = sv->at(i);
+					std::shared_ptr<Smarticle> sPtr = sv->at(i);
 					d_gain = d_gain + inc;
 				}
 				drawAngle();
@@ -450,7 +450,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec, std::s
 		{
 			if (sv->size() > 0)
 			{
-				Smarticle* sPtr = sv->at(0);
+				std::shared_ptr<Smarticle> sPtr = sv->at(0);
 				char message[100]; sprintf(message, "P:%g, I:%g, D:%g", p_gain, i_gain,d_gain);
 				this->text_Angle->setText(core::stringw(message).c_str());
 			}

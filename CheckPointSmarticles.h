@@ -25,7 +25,7 @@ namespace chrono {
 
 
 void CheckPointSmarticles_Write(
-		std::vector<Smarticle*> & mySmarticlesVec,
+	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
 		int tStep,
 		std::shared_ptr<ChMaterialSurface> mat_g,
 		double l_smarticle,
@@ -38,7 +38,7 @@ void CheckPointSmarticles_Write(
 		double angle2);
 
 void CheckPointSmarticlesDynamic_Write(
-	std::vector<Smarticle*> & mySmarticlesVec,
+	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
 	int tStep,
 	std::shared_ptr<ChMaterialSurface> mat_g,
 	double l_smarticle,
@@ -50,10 +50,10 @@ void CheckPointSmarticlesDynamic_Write(
 	double rho_smarticleMid);
 void CheckPointSmarticles_Read(
 	CH_SYSTEM& mphysicalSystem,
-	std::vector<Smarticle*> & mySmarticlesVec);
+	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec);
 void CheckPointSmarticlesDynamic_Read(
 	CH_SYSTEM& mphysicalSystem,
-	std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application);
+	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application);
 //void CheckPointSmarticles_Read(
 //		#include "SmarticleU.h",
 //		std::vector<Smarticle*> & mySmarticlesVec);

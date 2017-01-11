@@ -111,7 +111,7 @@ BucketType bucketType = BOX;
 //std::shared_ptr<ChBody> bucket;
 //std::shared_ptr<ChBody> bucket_bott;
 int overlaptest(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4);
-double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mSmartVec);
+double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 
 std::ofstream flowRate_of;
@@ -642,9 +642,9 @@ int overlaptest(double x1, double y1, double x2, double y2, double x3, double y3
 		return 0;
 }
 #if irrlichtVisualization
-void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application,double timeForDisp) {
+void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application, double timeForDisp) {
 #else
-void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec,double timeForDisp) {
+void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,double timeForDisp) {
 #endif
 	
 	ChVector<> dropSpeed = VNULL;
@@ -846,7 +846,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 //}
 
 
-void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec) {
+void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec) {
 	/////////////////
 	// Ground body
 	////////////////
@@ -892,7 +892,7 @@ void SavePovFilesMBD(CH_SYSTEM& mphysicalSystem,
 }
 // =============================================================================
 
-double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec) {
+double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec) {
 	std::string smarticleTypeName;
 	if (smarticleType == SMART_ARMS) {
 		smarticleTypeName = "smarticle_arm";
@@ -986,7 +986,7 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
 
 
 
-void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec)
+void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec)
 {
 	double pos = -.75*sys->bucket_interior_halfDim.z;//z position below which smarticles are regenerated above pile inside container
 	double ang = 2 * PI / numPerLayer;
@@ -995,7 +995,7 @@ void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySm
 	static int inc = 0;
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++)
 	{
-		Smarticle* sPtr = mySmarticlesVec[i];
+		std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
 		if (sPtr->GetArm(1)->GetPos().z < pos)
 		{
 
@@ -1043,7 +1043,7 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 }
 // =============================================================================
 
-void FixRotation(CH_SYSTEM& mphysicalSystem, Smarticle* sPtr) //reduces rotation speed by half 
+void FixRotation(CH_SYSTEM& mphysicalSystem, std::shared_ptr<Smarticle> sPtr) //reduces rotation speed by half 
 {
 	//if (sPtr->GetArm(0)->GetRot_dt().GetVector().Length2() > 10000)//added this because small arms can start to spin uncontrollably
 	//{
@@ -1054,7 +1054,7 @@ void FixRotation(CH_SYSTEM& mphysicalSystem, Smarticle* sPtr) //reduces rotation
 	//}
 	
 }
-void EraseSmarticle(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*>::iterator& myIter, Smarticle& sPtr, std::vector<Smarticle*> &mySmarticlesVec)
+void EraseSmarticle(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>>::iterator& myIter, Smarticle& sPtr, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec)
 {
 	sPtr.~Smarticle();
 	myIter = mySmarticlesVec.erase(myIter); 
@@ -1062,16 +1062,16 @@ void EraseSmarticle(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*>::iterato
 	//sPtr->~Smarticle();
 	//myIter = mySmarticlesVec.erase(myIter);
 }
-void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> &mySmarticlesVec, double tstep) { ///remove all traces of smarticle from system //TODO REMAKE METHOD
+void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec, double tstep) { ///remove all traces of smarticle from system //TODO REMAKE METHOD
 	if (bucketType == HOPPER && bucket_exist == false) //if hopper, put smarticles back inside after reaching below hopper if bucket_bott still exists delete
 	{
 		recycleSmarticles(mphysicalSystem, mySmarticlesVec);
 	}
 
-	std::vector<Smarticle*>::iterator myIter;
+	std::vector<std::shared_ptr<Smarticle>>::iterator myIter;
 	for (myIter = mySmarticlesVec.begin(); myIter != mySmarticlesVec.end();)
 	{
-		Smarticle* sPtr = *(myIter);
+		std::shared_ptr<Smarticle> sPtr = *(myIter);
 		//if (sPtr->armBroken)
 		//{
 		//	EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
@@ -1157,7 +1157,7 @@ void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylra
 	stress_of << mphysicalSystem->GetChTime() << ", " << force <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
 	//stress_of.close();
 }
-void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cylrad, std::vector<Smarticle*> mySmarticlesVec) //TODO include knobs in calculation
+void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cylrad, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) //TODO include knobs in calculation
 {
 
 	bool printAllSmarticleInfo = true;
@@ -1203,7 +1203,7 @@ void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cyl
 	//stress_of.close();
 	frame = frame + 1;
 }
-void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle*> mySmarticlesVec) {
+void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) {
 
 	static int stepSave = 10;
 	if (tStep % stepSave != 0) return;
@@ -1250,7 +1250,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 		zMax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
 		zMax = std::min(zMax, bucketMin.z + 2 * sys->bucket_interior_halfDim.z);
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
-			Smarticle* sPtr = mySmarticlesVec[i];
+			std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
 			if (IsIn(sPtr->Get_cm(), bucketCtr - sys->bucket_interior_halfDim, bucketCtr + sys->bucket_interior_halfDim + ChVector<>(0, 0, 2.0 * sys->bucket_half_thick))) {
 				countInside2++;
 				totalVolume2 += sPtr->GetVolume();
@@ -1261,7 +1261,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 		break;
 	case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
-			Smarticle* sPtr = mySmarticlesVec[i];
+			std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
 			if (IsInRadial(sPtr->Get_cm(), bucketCtr, ChVector<>(sys->bucket_rad, bucketMin.z, bucketMin.z + 2.0*sys->bucket_interior_halfDim.z))) {
 				countInside2++;
@@ -1294,7 +1294,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 		max2 = 0;
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) 
 		{
-			Smarticle* sPtr = mySmarticlesVec[i];
+			std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
 			
 			com = sPtr->Get_cm() - ChVector<>(0, 0, sys->bucket_bott->GetPos().z);
 			max2 = std::max(max2, com.z);
@@ -1330,7 +1330,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<Smarticle
 	//hr = myImage.Save(pStream, Gdiplus::ImageFormatPNG);
 void UpdateSmarticles(
 		CH_SYSTEM& mphysicalSystem,
-		std::vector<Smarticle*> mySmarticlesVec) {
+		std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) {
 	double pctglob[30] =
 	{ 0.0009,
 	0.0013,
@@ -1682,7 +1682,7 @@ int main(int argc, char* argv[]) {
 	//mphysicalSystem.GetContactContainer()->AddCollisionModelsToSystem();
 
 
-	std::vector<Smarticle*> mySmarticlesVec;
+	std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec;
 	CreateMbdPhysicalSystemObjects(mphysicalSystem, mySmarticlesVec);
 
 	//simParams.open(simulationParams.c_str(), std::ios::app);
@@ -2182,7 +2182,7 @@ int main(int argc, char* argv[]) {
 	//	recycleSmarticles(mphysicalSystem, mySmarticlesVec);
 	//}
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
-	  delete mySmarticlesVec[i];
+	 mySmarticlesVec.at(i).~shared_ptr();
   }
 	if (saveFrame)
 	{
