@@ -34,6 +34,7 @@ namespace chrono{
 			void resetSuccessfulCount();
 			void GenerateVibrateGait(Smarticle& sPtr);
 			void SaveToMovie();
+			void DeleteJpegs();
 			void screenshot(int stepsPerFrame);
 			int fps = 30;
 			int dtPerFrame = 134;

@@ -2179,6 +2179,7 @@ int main(int argc, char* argv[]) {
 	if (saveFrame)
 	{
 		receiver.SaveToMovie();
+		receiver.DeleteJpegs();
 	}
   mySmarticlesVec.clear();
 

@@ -481,6 +481,11 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<Smarticle*> *mySmarticlesVec,SystemG
 		//exit(-1);
 		system(comm);
 	}
+	void IrrGui::DeleteJpegs()
+	{
+
+		system("del video_capture\\*.jpeg");
+	}
 	void IrrGui::screenshot(int stepsPerFrame)
 	{
 		static int frameNum = 0;
