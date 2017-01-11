@@ -2183,7 +2183,7 @@ int main(int argc, char* argv[]) {
 	//	recycleSmarticles(mphysicalSystem, mySmarticlesVec);
 	//}
   for (int i = 0; i < mySmarticlesVec.size(); i++) {
-	 mySmarticlesVec.at(i).~shared_ptr();
+	 delete mySmarticlesVec.at(i).get();
   }
 	if (saveFrame)
 	{
