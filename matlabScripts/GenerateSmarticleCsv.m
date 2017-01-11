@@ -131,26 +131,34 @@ switch global_gait
     case 2% square gait
         %not implemented yet!
         sL = pi; %square gait side length
-        %theta1
+%       theta1
         t1 = sL/2:-ss:-sL/2;
+        
+        t1s = 0:-ss:-sL/2;
         l1 = -sL/2*ones(1,length(t1));
         b1 = -sL/2:ss:sL/2;
         r1 = sL/2*ones(1,length(t1));
+        t1e = sL/2:-ss:0;
 %       theta2
         t2 = sL/2*ones(1,length(t1));
+        
+        t2s = sL/2*ones(1,length(t1s));
         l2 = sL/2:-ss:-sL/2;
         b2 = -sL/2*ones(1,length(t1));
         r2 = -sL/2:ss:sL/2;
+        t2e = sL/2*ones(1,length(t1s));
         
-        global_alpha_1Pos=[t1,l1,b1,r1];
-        global_alpha_2Pos=[t2,l2,b2,r2];
+%         global_alpha_1Pos=[t1,l1,b1,r1];
+%         global_alpha_2Pos=[t2,l2,b2,r2];
+        global_alpha_1Pos=[t1s,l1,b1,r1,t1e];
+        global_alpha_2Pos=[t2s,l2,b2,r2,t2e];
         if PON
             figure(1);
             hold on;
-            plot(global_alpha_1Pos,global_alpha_2Pos,'.');
+            plot(rad2deg(global_alpha_1Pos),rad2deg(global_alpha_2Pos),'.');
             xlabel('\alpha_1');
             ylabel('\alpha_2');
-            axis([-sL sL -sL sL])
+            axis(rad2deg([-sL sL -sL sL]))
             axis square
             title('Square Gait');
             figText(gcf,15);

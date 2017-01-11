@@ -4,7 +4,8 @@ clear all
 
 
 
-source1='C:/Users/root/Desktop/60SecsSmarts.avi';
+% source1='C:/Users/root/Desktop/60SecsSmarts.avi';
+source1='ConfigSpaceOut.avi'
 source2='histOut.avi';
 source3='ConfigSpaceOut.avi';
 % vid1 = vision.VideoFileReader(source1);
