@@ -39,7 +39,7 @@ namespace chrono {
 		static std::shared_ptr<ChTexture> mtextureOT;
 		static std::shared_ptr<ChTexture> mtextureMid;
 		static std::shared_ptr<ChTexture> mtextureArm;
-		bool active=false;
+		bool active = true; //############;
 		static double pctActive;
 		bool armBroken;
 		double timeSinceLastGait = 0;

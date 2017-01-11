@@ -739,10 +739,11 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & my
 			//double yPos = (i - 4.2) * 2 * t2_smarticle;
 
 			double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
-			double yPos = (i)* 1.5 * t2_smarticle;
+			double yPos = (i)* genRand(1.1,1.55)* t2_smarticle;
+			//genRand(1.1,1.55)
 
 			myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
-			myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + 3*t_smarticle) ;
+			//myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + 3*t_smarticle) ;
 			//////////////////////changed///////////////////
 			break;
 		}
@@ -1372,13 +1373,11 @@ void UpdateSmarticles(
 		}
 		int moveType=0;
 		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
-		if (genRand() < 1)
-		{
-			//if (genRand() < pctglob[i] / 10)
-			//{
+			if (genRand() > .99)
+			{
 			moveType = Smarticle::global_GUI_value;
-			//}
-		}
+			}
+		
 		else
 		{
 			moveType = mySmarticlesVec[i]->prevMoveType;
