@@ -5,3 +5,7 @@
 # matlab autosave files#
 ########################
 *.asv
+
+# matlab matrix files#
+########################
+*.mat
