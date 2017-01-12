@@ -907,6 +907,10 @@ ChVector<> Smarticle::Get_cm() {
 	return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos()) / mass;
 
 }
+ChVector<> Smarticle::Get_COG() {
+	return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos());
+
+}
 
 ChVector<> Smarticle::Get_InitPos() {
 	return initPos;

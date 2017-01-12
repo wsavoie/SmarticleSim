@@ -1138,11 +1138,23 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smart
 
 
 }
-void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring)
+void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec)
 {
 	static const int stepPerOut = .1 * 1 / dT;
+	double totalMass = ring->GetMass();
+	ChVector<> cog = ring->GetPos()*ring->GetMass();
 	if (tstep%stepPerOut == 0)
-		ringPos << mphysicalSystem->GetChTime() << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << std::endl;
+	{
+		double totalMass;
+			for (size_t i = 0; i < mySmarticlesVec.size(); i++)
+			{
+				std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
+				totalMass = totalMass + sPtr->GetMass();
+				cog = cog + sPtr->Get_COG();
+			}
+			cog = cog / totalMass;
+			ringPos << mphysicalSystem->GetChTime() << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << ", " << cog.x << ", " << cog.y << ", " << cog.z << std::endl;
+	}
 }
 void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad) //TODO include knobs in calculation
 {
@@ -1162,7 +1174,7 @@ void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cyl
 
 	bool printAllSmarticleInfo = true;
 	static int frame = 0;
-
+	
 
 	//else {
 	//	stress_of.open(stress.c_str(), std::ios::app);
@@ -1527,7 +1539,7 @@ bool SetGait(double time)
 		Smarticle::global_GUI_value = 2;
 	else if (time>.05)
 		Smarticle::global_GUI_value = 0;
-	if (time > 60*5)
+	if (time > 60)
 		return true;
 	/*else
 		Smarticle::global_GUI_value = 1;
@@ -1961,7 +1973,7 @@ int main(int argc, char* argv[]) {
 	mphysicalSystem.AddBody(ring);
 	
 	
-	PrintRingPos(&mphysicalSystem, 0,ring);
+	PrintRingPos(&mphysicalSystem, 0,ring,mySmarticlesVec);
 	
 	const std::string stress = out_dir + "/Stress.txt";
 	const std::string flowRate = out_dir + "/flowrate.txt";
@@ -1973,7 +1985,7 @@ int main(int argc, char* argv[]) {
 	flowRate_of.open(flowRate.c_str());
 	vol_frac_of.open(vol_frac.c_str());
 
-	ringPos << "# ring rad = " << ringRad << " tstep, x, y, z, globalGUI" << std::endl;
+	ringPos << "# ring rad = " << ringRad << " tstep, x, y, z, globalGUI, comX, comY, comZ" << std::endl;
 	stress_of << dT << ", " << out_fps << ", " << videoFrameInterval << ", " << sys->bucket_rad << ", " << bucketType << std::endl;
 	flowRate_of << 0 << ", " << 0 << ", " << Smarticle::global_GUI_value << std::endl;
 
@@ -2172,7 +2184,7 @@ int main(int argc, char* argv[]) {
 					rho_smarticleArm,
 					rho_smarticleMid);
 		}
-		PrintRingPos(&mphysicalSystem, tStep, ring);
+		PrintRingPos(&mphysicalSystem, tStep, ring, mySmarticlesVec);
   }
 	//simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "Smarticle OT: " << mySmarticlesVec.at(0)->OTThresh << std::endl;

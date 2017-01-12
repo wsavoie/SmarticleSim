@@ -144,6 +144,7 @@ namespace chrono {
 		// Smarticle volume
 		virtual double GetVolume();
 		virtual ChVector<> Get_cm();
+		ChVector<> Get_COG();
 		virtual ChVector<> Get_InitPos();
 
 		virtual double GetMass();
