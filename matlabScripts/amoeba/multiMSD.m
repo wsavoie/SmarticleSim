@@ -1,7 +1,9 @@
 clear all;
 % close all;
-load('D:\ChronoCode\chronoPkgs\Smarticles\matlabScripts\amoeba\smarticleExpVids\rmv3\movieInfo.mat');
+% load('D:\ChronoCode\chronoPkgs\Smarticles\matlabScripts\amoeba\smarticleExpVids\rmv3\movieInfo.mat');
 
+fold=uigetdir('D:\ChronoCode\chronoPkgs\Smarticles\matlabScripts\amoeba\smarticleExpVids\optinew\circle\');
+load(fullfile(fold,'movieInfo.mat'));
 figure(1)
 SPACE_UNITS = 'm';
 TIME_UNITS = 's';
@@ -14,7 +16,7 @@ TIME_UNITS = 's';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 
 %define curve params [] for all
-spk=[]; smart=[0]; gait=[1]; rob=[5]; v=[];
+spk=[0]; smart=[]; gait=[1]; rob=[5]; v=[];
 
 props={spk smart gait rob v};
 inds=1;
@@ -37,7 +39,9 @@ for i=1:length(movs)
         inds=inds+1;
     end
 end
-
+if(isempty(ma.tracks))
+error('no tracks found for params given!');
+end
 figure(1)
 ma.plotTracks
 ma.labelPlotTracks
@@ -66,7 +70,7 @@ M = mean(m(10:end-nansN-2,2));
 hold on;
 for i= 1:length(ma.vcorr)
     nansN=sum(isnan(ma.vcorr{i}(:,2)));
-    M(i)= mean([ma.vcorr{i}(10:end-nansN,2)]);
+    M(i)= mean([ma.vcorr{i}(10:end-nansN-1,2)]);
     
 end
 M=mean(M);
@@ -108,30 +112,30 @@ alld=cell2mat(ma.tracks);
 scatter3(alld(:,2),alld(:,3),alld(:,1),'.');
 xlabel('x (m)'); ylabel('y (m)'); zlabel('t(s)');
 
-%% mean of position at each timestep for all tracks
-figure(8)
-%get min track size
-idx=min(cellfun(@(x) size(x,1), ma.tracks(:)));
-idxDat=cellfun(@(x) x(1:idx,:),ma.tracks(:),'uniformoutput',false);
-
-%get x and y data for each timestep 
-xdat=cell2mat(cellfun(@(x) x(:,2),idxDat,'uniformoutput',false)');
-ydat=cell2mat(cellfun(@(x) x(:,3),idxDat,'uniformoutput',false)');
-
-mxdat=mean(xdat,2);
-mydat=mean(ydat,2);
-
-mmxdat=mean(xdat(end,:));
-mmydat=mean(ydat(end,:));
-
-mmydat/mmxdat
+% %% mean of position at each timestep for all tracks
+% figure(8)
+% %get min track size
+% idx=min(cellfun(@(x) size(x,1), ma.tracks(:)));
+% idxDat=cellfun(@(x) x(1:idx,:),ma.tracks(:),'uniformoutput',false);
+% 
+% %get x and y data for each timestep 
+% xdat=cell2mat(cellfun(@(x) x(:,2),idxDat,'uniformoutput',false)');
+% ydat=cell2mat(cellfun(@(x) x(:,3),idxDat,'uniformoutput',false)');
+% 
+% mxdat=mean(xdat,2);
+% mydat=mean(ydat,2);
+% 
+% mmxdat=mean(xdat(end,:));
+% mmydat=mean(ydat(end,:));
+% 
+% mmydat/mmxdat
+% % plot(mxdat,mydat);
+% f=fit(mxdat,mydat,'poly1');
+% hold on;
 % plot(mxdat,mydat);
-f=fit(mxdat,mydat,'poly1');
-hold on;
-plot(mxdat,mydat);
-plot(f,'-');
-legend off;
-xlabel('x (m)'); ylabel('y (m)');
-title(['mean of position for all runs after ',num2str(ma.tracks{1}(idx,1)),' s'])
- text(.7,.2,['m= ',num2str(f(1),2)],'units','normalized');
-figText(gcf,14);
+% plot(f,'-');
+% legend off;
+% xlabel('x (m)'); ylabel('y (m)');
+% title(['mean of position for all runs after ',num2str(ma.tracks{1}(idx,1)),' s'])
+%  text(.7,.2,['m= ',num2str(f(1),2)],'units','normalized');
+% figText(gcf,14);

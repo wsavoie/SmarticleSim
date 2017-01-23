@@ -9,11 +9,13 @@ imshow(im);
 if(length(varargin)>0)
     if(~isempty(varargin{1}))
         r=varargin{1};
-    end  
+    else
     [x,y]=ginput(2);
     x=abs(x(2)-x(1));
     y=abs(y(2)-y(1));
     r=max(x,y);
+    end  
+
 end
 % r=60;
 th=5;
