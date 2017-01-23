@@ -54,11 +54,11 @@ changeToStressPerc=(0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0)
 
 #######regular run
 # foldName='Amoeba_newsquareAC'
-foldName='Amoeba_5minRun'
+foldName='Amoeba_COG_0_dead_90_deg'
 mkdir $foldName
-for fric in `seq 4 4`; do
-	for repeats in `seq 1 5`; do
-		for robs in `seq 1 1`; do
+for fric in `seq 1 7`; do
+	for repeats in `seq 1 10`; do
+		for robs in `seq 0 0`; do
 		  a=/cygdrive/a/SmarticleRun/$foldName/f_${changeToStressPerc[$fric]}_rob_${numPerLay[$robs]}_v_${repeats}
 		  mkdir $a
 		  cp /cygdrive/d/SimResults/Chrono/SmarticleU/tests/smarticleMoves.csv $a/smarticleMoves.csv

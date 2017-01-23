@@ -164,8 +164,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool o
 
 	return create_EmptyCylinder(num_boxes, overlap, true, h, t, r, bucket_ctr, true, bucketTexture,m);
 }
-
-std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture,double m)
+std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture, double m,double ax, double by)
 {
 	auto cyl_container = std::make_shared<ChBody>();
 	cyl_container->SetIdentifier(bucketID);
@@ -178,7 +177,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 	//double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double wallt = t / 5; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
 	//double half_height = bucket_interior_halfDim.z;
-	double box_side = r * 2.0 * tan(PPI / num_boxes);//side length of cyl
+	double box_side = r * 2.0 * by*sin(PPI / num_boxes)/ax*(cos(PPI/num_boxes));//side length of cyl
 	double o_lap = 0;
 	if (overlap){ o_lap = t * 2; }
 	double ang = 2.0 * PPI / num_boxes;
@@ -186,7 +185,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 	ChQuaternion<> quat = QUNIT; //rotation of each plate
 	cyl_container->GetCollisionModel()->ClearModel();
 	cyl_container->SetMaterialSurface(mat_wall);
-	
+
 	for (int i = 0; i < num_boxes; i++)
 	{
 
@@ -196,17 +195,18 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 
 		if (createVector)
 		{
-			pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
-				cos(ang*i)*(wallt + r),
+			//sin for x and cos for y because we want them *tangent* to angle specified!
+			pPos = pos + ChVector<>(sin(ang * i) * (wallt + r*ax),
+				cos(ang*i)*(wallt + r*by),
 				half_h);
 		}
 		else
 		{
-				pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
-					cos(ang*i)*(wallt + r),
-					0-1.8*t);
+			pPos = pos + ChVector<>(sin(ang * i) * (wallt + ax*r),
+				cos(ang*i)*(wallt + by*r),
+				0 - 1.8*t);
 
-				//TODO ######take into account angle of box!!
+			//TODO ######take into account angle of box!!
 		}
 		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
 
@@ -232,7 +232,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 
 
 	cyl_container->SetMass(m);
-	
+
 
 
 	double h = half_h + o_lap;
@@ -241,7 +241,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 	//https://en.wikipedia.org/wiki/List_of_moments_of_inertia
 	double Ixx = m / 12.0*(3 * (r*r + (r + 2 * t)*(r + 2 * t)) + (h * 2)*(h + o_lap * 2));
 	double Iyy = m / 12.0*(3 * (r*r + (r + 2 * t)*(r + 2 * t)) + (h * 2)*(h * 2));
-	double Izz = m / 2 * (r*r + (r + 2*t)*(r +2*t));
+	double Izz = m / 2 * (r*r + (r + 2 * t)*(r + 2 * t));
 	ChMatrix33<double> iner(Ixx, 0.0, 0.0, 0.0, Iyy, 0.0, 0.0, 0.0, Izz);
 	cyl_container->SetInertia(iner);
 	if (createVector)
@@ -253,8 +253,8 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 				wallt,
 				half_h + o_lap);
 
-			pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
-				cos(ang*i)*(wallt + r),
+			pPos = pos + ChVector<>(ax*sin(ang * i) * (wallt + r),
+				by*cos(ang*i)*(wallt + r),
 				half_h);
 
 			quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
@@ -288,6 +288,10 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool
 		}
 	}
 	return cyl_container;
+}
+std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture,double m)
+{
+	return create_EmptyEllipse(num_boxes, overlap, createVector, half_h, t, r, pos, halfVis, texture, m, 1, 1);
 }
 
 std::shared_ptr<ChBody> SystemGeometry::create_FlatHopper(ChVector<> hdim)

@@ -731,15 +731,29 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 			myRot = Q_from_AngAxis(PI_2, VECT_X);
 			ChQuaternion<> buckRot = sys->bucket->GetRot();
 			double buckRotAngx = Quat_to_Angle(ANGLESET_RXYZ, buckRot).x;
+
 			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ,ChVector<>(PI/2,PI,0));
+
+
+			////////myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI / 2, 0));
+
+
 			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(genRand(0, 2*PI), genRand(0, 2*PI), genRand(0, 2*PI)));
 
 			//
 			//double xPos = genRand(-3, 3)*t2_smarticle / 1.25;
 			//double yPos = (i - 4.2) * 2 * t2_smarticle;
 
-			double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
-			double yPos = (i)* genRand(1.1,1.55)* t2_smarticle;
+
+			//0 degs
+			//double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
+			//double yPos = (i)* genRand(1.1,1.55)* t2_smarticle;
+
+			//90 degs
+			double yPos = 3*t2_smarticle;// genRand(-3, 3)*t2_smarticle / 1.25;
+			double xPos = -2.5*t2_smarticle +(i)* genRand(1.1, 1.55)* t2_smarticle;
+
+
 			//genRand(1.1,1.55)
 
 			myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
@@ -1964,7 +1978,8 @@ int main(int argc, char* argv[]) {
 	double yPos = 1.5 * t2_smarticle;
 	ChVector<> pos2 = sys->bucket_ctr + ChVector<>(xPos, yPos, t2_smarticle);
 	double m = .001;
-	std::shared_ptr<ChBody> ring = sys->create_EmptyCylinder(25, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture,m);
+	//std::shared_ptr<ChBody> ring = sys->create_EmptyCylinder(25, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture,m);
+	std::shared_ptr<ChBody> ring = sys->create_EmptyEllipse(100, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture, m,1,1);
 	ring->SetIdentifier(455465);
 	ring->SetCollide(true);
 
