@@ -185,7 +185,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 	ChQuaternion<> quat = QUNIT; //rotation of each plate
 	cyl_container->GetCollisionModel()->ClearModel();
 	cyl_container->SetMaterialSurface(mat_wall);
-
+	cyl_container->SetName("ring");
 	for (int i = 0; i < num_boxes; i++)
 	{
 

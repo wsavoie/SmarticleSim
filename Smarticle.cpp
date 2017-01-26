@@ -852,6 +852,10 @@ void Smarticle::Create() {
 	}
 	else
 	{
+		arm0->SetName("D_smarticle_arm");
+		arm1->SetName("D_smarticle_arm");
+		arm2->SetName("D_smarticle_arm");
+
 		armsController = NULL;
 		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
 		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));

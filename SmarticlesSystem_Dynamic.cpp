@@ -118,7 +118,8 @@ std::ofstream flowRate_of;
 std::ofstream simParams;
 std::ofstream stress_of;
 std::ofstream vol_frac_of;
-std::ofstream ringPos;
+std::ofstream ringPos_of;
+std::ofstream ringContact_of;
 
 double sizeScale = 1;
 int appWidth = 1280;
@@ -140,9 +141,10 @@ double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
 double tFinal = 60*10;
 double ringRad = 0.192 / 2.0;
+bool ringActive = true;
+ChVector<> ringInitPos(0, 0, 0);
 
-
-
+bool oneInactive = true;
 //double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 //double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
 std::shared_ptr<ChMaterialSurface> mat_smarts;
@@ -774,7 +776,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 		myRot.Normalize();
 		/////////////////flat rot/////////////////
 		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
-		smarticle0->Properties(mySmarticlesVec.size(),smartIdCounter * 4,
+		smarticle0->Properties(mySmarticlesVec.size(), smartIdCounter * 4,
 			rho_smarticleArm, rho_smarticleMid, mat_smarts,
 			collisionEnvelope,
 			//l_smarticle+t2_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
@@ -1152,6 +1154,122 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smart
 
 
 }
+
+class _draw_reporter_class : public ChReportContactCallback {
+public:
+	virtual bool ReportContactCallback(const ChVector<>& pA,
+		const ChVector<>& pB,
+		const ChMatrix33<>& plane_coord,
+		const double& distance,
+		const ChVector<>& react_forces,
+		const ChVector<>& react_torques,
+		ChContactable* modA,
+		ChContactable* modB) override 
+	{
+		ChMatrix33<>& mplanecoord = const_cast<ChMatrix33<>&>(plane_coord);
+		ChVector<> v1 = pA;
+		ChVector<> v2;
+		ChVector<> v3;
+		ChVector<> vn = mplanecoord.Get_A_Xaxis();
+
+		irr::video::SColor mcol = irr::video::SColor(150, 255, 0, 0);
+		cdriver->setTransform(irr::video::ETS_WORLD, irr::core::IdentityMatrix);
+		static f32 hsl = .01; //half side length
+		
+			if (modA->GetPhysicsItem()->GetNameString() == "ring" && modB->GetPhysicsItem()->GetNameString() == "smarticle_arm")
+			{
+					if (react_forces.x!= 0)
+					{
+						//GetLog() << "#Ad:" << distance << " rf:" << l << " x:" << react_forces.x << " y:" << react_forces.y << " z:" << react_forces.z <<"\n";
+						const vector3d<f32> min(v1.x - hsl, v1.y - hsl, v1.z - hsl);
+						const vector3d<f32> max(v1.x + hsl, v1.y + hsl, v1.z + hsl);
+						auto c = aabbox3d<irr::f32>(min, max);
+
+						v3 = v1 - ring->GetPos() - ringInitPos;
+						ringContact_of << time << ", " << v3.x << ", " << v3.y << ", " << v3.z << ", " << react_forces.x << ", " << react_forces.y << ", " << react_forces.z << std::endl;
+						cdriver->draw3DBox(c, mcol);
+					}
+			}
+
+		//##############WORKING#######################
+		//if (pA.z > sys->bucket_half_thick)
+		//{
+		//	if (modA->GetPhysicsItem()->GetNameString() == "ring")
+		//	{
+		//		if (distance < minDist)
+		//		{
+		//			//GetLog() << "d:" << distance << "\n";
+
+		//			const vector3d<f32> min(v1.x - hsl, v1.y - hsl, v1.z - hsl);
+		//			const vector3d<f32> max(v1.x + hsl, v1.y + hsl, v1.z + hsl);
+		//			//const auto c = aabbox3d<irr::f32>(v1.x - hsl, v1.x + hsl, v1.y - hsl, v1.y + hsl, v1.z - hsl, v1.z + hsl);
+		//			auto c = aabbox3d<irr::f32>(min, max);
+
+		//			v3 = v1 - ring->GetPos() - ringInitPos;
+		//			ringContact_of << time << ", " << v3.x << ", " << v3.y << ", " << v3.z << std::endl;
+		//			cdriver->draw3DBox(c, mcol);
+		//		}
+		//	}
+		//}
+		//##############WORKING#######################
+		i++;
+		return true;  // to continue scanning contacts
+	}
+	double i = 0;
+	irr::video::IVideoDriver* cdriver;
+	double clen;
+	std::shared_ptr<ChBody> ring;
+	double time;
+	double minDist=0.0001;
+};
+
+
+void PrintRingContact(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec, ChIrrApp* app)
+{
+	//static const int stepPerOut = .1 * 1 / dT;
+	//if (tstep%stepPerOut == 0)
+	//{
+	//
+	//}
+
+
+	//GetLog() << "###########"<< "\n";
+	_draw_reporter_class my_drawer;
+	my_drawer.cdriver = app->GetVideoDriver();
+	my_drawer.clen = 1;
+	my_drawer.ring = ring;
+	my_drawer.time = mphysicalSystem->GetChTime();
+	mphysicalSystem->GetContactContainer()->ReportAllContacts(&my_drawer);
+	double minDist = 9e-5;
+	//auto ff=ring->GetForceList();
+	/*const vector3d<irr::f32>max(55, 55, 5);
+	const vector3d<irr::f32>min(-5, -5, -5);
+	const auto c = aabbox3d<irr::f32>(min, max);
+	irr::video::SColor mcol = irr::video::SColor(255, 255, 0, 0);
+	app->GetVideoDriver()->draw3DBox(c, mcol);*/
+
+
+	//std::vector<std::shared_ptr<ChBody> >::iterator ibody = mphysicalSystem.Get_bodylist()->begin();
+	//std::vector<std::shared_ptr<ChForce> >::iterator ibody = ff.begin();
+	//GetLog() << ff.size();
+	//for (size_t i = 0; i < ff.size(); i++) {
+	//	//ChBody* bodyPtr = *(myIter + i);
+	//	std::shared_ptr<ChForce> f = ff.at(i);
+	//	ChVector<> pos= f->GetVpoint();
+
+	//	//irr::video::SColor mcol(200, 250, 250, 0);  // yellow vectors
+	//	//ChVector<> pos2 = pos + ChVector<>(0, 0, 4);
+	//	//app->GetVideoDriver()->draw3DLine(irr::core::vector3dfCH(pos), irr::core::vector3dfCH(pos2), mcol);
+	//}
+
+	//auto x = ring->GetLastCollPos();
+	//irr::video::SColor mcol(200, 250, 250, 0);  // yellow vectors
+	//ChVector<> pos = x.pos;
+	//ChVector<> pos2 = pos + ChVector<>(0, 0, 4);
+	//app->GetVideoDriver()->draw3DLine(irr::core::vector3dfCH(pos), irr::core::vector3dfCH(pos2), mcol);
+
+	//ringPos_of << mphysicalSystem->GetChTime() << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << ", " << cog.x << ", " << cog.y << ", " << cog.z << std::endl;
+}
 void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec)
 {
 	static const int stepPerOut = .1 * 1 / dT;
@@ -1167,7 +1285,7 @@ void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>
 				cog = cog + sPtr->Get_COG();
 			}
 			cog = cog / totalMass;
-			ringPos << mphysicalSystem->GetChTime() << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << ", " << cog.x << ", " << cog.y << ", " << cog.z << std::endl;
+			ringPos_of << mphysicalSystem->GetChTime() << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << ", " << cog.x << ", " << cog.y << ", " << cog.z << std::endl;
 	}
 }
 void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad) //TODO include knobs in calculation
@@ -1751,17 +1869,11 @@ int main(int argc, char* argv[]) {
 		core::vector3df(0.0139, .298, -.195)*sizeScale);
 
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
-	
 
 	RTSCamera* camera = new RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
 	camera->setTranslateSpeed(0.005);
-////camera->setPosition(core::vector3df(0, -.17, .07));
-//	//camera->setPosition(core::vector3df(0, bucket_interior_halfDim.y, 4 * sys->bucket_rad / 2.0));
-//	//camera->setTarget(core::vector3df(0, 2*bucket_interior_halfDim.y, -sys->bucket_rad / 2.1)); //	camera->setTarget(core::vector3df(0, 0, .01));
 
-	//camera->setPosition(core::vector3df(.0139, -.445, .7));
-	//camera->setTarget(core::vector3df(0.0139, .243, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
 
 	switch (bucketType)
 	{
@@ -1796,8 +1908,11 @@ int main(int argc, char* argv[]) {
 			camera->setTarget(core::vector3df(0.0139, -.50, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
 			if (box_ang == 0)
 			{
-				camera->setPosition(core::vector3df(-0.04, -0.0142, .943));
-				camera->setTarget(core::vector3df(-0.0144, .019, -.497)); //	camera->setTarget(core::vector3df(0, 0, .01));
+				//camera->setPosition(core::vector3df(-0.04, -0.0142, .943));
+				camera->setTarget(core::vector3df(0, 0, 0)); //	camera->setTarget(core::vector3df(0, 0, .01));
+				camera->setPosition(core::vector3df(0,0, .75));
+
+
 			}
 		}
 		break;
@@ -1849,7 +1964,7 @@ int main(int argc, char* argv[]) {
 		break;
 	}
 
-
+	camera->updateAbsolutePosition();
 
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
 		camera->getPosition(),
@@ -1974,38 +2089,44 @@ int main(int argc, char* argv[]) {
 
 	//create_spring(mphysicalSystem);
 	//create_spring_cir(mphysicalSystem);
-	double xPos = 0;
-	double yPos = 1.5 * t2_smarticle;
-	ChVector<> pos2 = sys->bucket_ctr + ChVector<>(xPos, yPos, t2_smarticle);
-	double m = .001;
-	//std::shared_ptr<ChBody> ring = sys->create_EmptyCylinder(25, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture,m);
-	std::shared_ptr<ChBody> ring = sys->create_EmptyEllipse(100, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture, m,1,1);
-	ring->SetIdentifier(455465);
-	ring->SetCollide(true);
 
 
-
-	mphysicalSystem.AddBody(ring);
-	
-	
-	PrintRingPos(&mphysicalSystem, 0,ring,mySmarticlesVec);
 	
 	const std::string stress = out_dir + "/Stress.txt";
 	const std::string flowRate = out_dir + "/flowrate.txt";
 	const std::string vol_frac = out_dir + "/volumeFraction.txt";
+	const std::string ringPos = out_dir + "/RingPos.txt";
+	const std::string ringContact = out_dir + "/RingContact.txt";
 
-
-	ringPos.open(out_dir + "/RingPos.txt");
+	ringPos_of.open(ringPos.c_str());
+	ringContact_of.open(ringContact.c_str());
 	stress_of.open(stress.c_str());
 	flowRate_of.open(flowRate.c_str());
 	vol_frac_of.open(vol_frac.c_str());
-
-	ringPos << "# ring rad = " << ringRad << " tstep, x, y, z, globalGUI, comX, comY, comZ" << std::endl;
+	ringContact_of << "# ring rad = " << ringRad << " tstep, contactx, contacty, contactz, forcex,forcey,forcez" << std::endl;
+	ringPos_of << "# ring rad = " << ringRad << " tstep, x, y, z, globalGUI, comX, comY, comZ" << std::endl;
 	stress_of << dT << ", " << out_fps << ", " << videoFrameInterval << ", " << sys->bucket_rad << ", " << bucketType << std::endl;
 	flowRate_of << 0 << ", " << 0 << ", " << Smarticle::global_GUI_value << std::endl;
 
-	
+	std::shared_ptr<ChBody> ring;
+	if (ringActive)
+	{
+		double xPos = 0;
+		double yPos = 1.5 * t2_smarticle;
+		ChVector<> pos2 = sys->bucket_ctr + ChVector<>(xPos, yPos, t2_smarticle);
+		double m = .001;
+		//std::shared_ptr<ChBody> ring = sys->create_EmptyCylinder(25, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture,m);
+		ring = sys->create_EmptyEllipse(100, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture, m, 1, 1);
+		ring->SetIdentifier(455465);
+		ring->SetCollide(true);
+		ringInitPos = pos2;
 
+
+		mphysicalSystem.AddBody(ring);
+
+
+		//PrintRingPos(&mphysicalSystem, 0, ring, mySmarticlesVec);
+	}
 
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	//START OF LOOP 
@@ -2062,7 +2183,7 @@ int main(int argc, char* argv[]) {
 			{
 				double rotSpeed = 2; //rads/sec
 				sys->bucket_actuator->SetDisabled(false);
-				sys->stick->SetBodyFixed(false);				
+				sys->stick->SetBodyFixed(false);
 				sys->rotate_body_sp(t, sys->stick, sys->bucket_actuator, PPI);
 				break;
 			}
@@ -2148,6 +2269,9 @@ int main(int argc, char* argv[]) {
 		//		armpos3 + vector3df(0, 0, 10), irr::video::SColor(70, 0, 255, 0));*/
 
 		//	//////////////////////////////////////////////////////////////////////
+		if (ringActive)
+			PrintRingContact(&mphysicalSystem, tStep, ring, mySmarticlesVec, &application);
+		//application.GetVideoDriver()->setTransform(irr::video::ETS_VIEW, irr::core::IdentityMatrix);
 
 		application.DrawAll();
 
@@ -2174,7 +2298,7 @@ int main(int argc, char* argv[]) {
 
 
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
-		
+
 		time(&rawtimeCurrent);
 		double timeDiff = difftime(rawtimeCurrent, rawtime);
 		//step_timer.stop("step time");
@@ -2182,24 +2306,28 @@ int main(int argc, char* argv[]) {
 		receiver.dtPerFrame = videoFrameInterval;
 		receiver.fps = out_fps;
 		receiver.screenshot(receiver.dtPerFrame);
-		
+
 
 		std::cout.flush();
-		
-		if (read_from_file == -1|| read_from_file == 2)
+
+		if (read_from_file == -1 || read_from_file == 2)
 		{
 			CheckPointSmarticlesDynamic_Write(mySmarticlesVec,
-			 		tStep,
-			 		mat_smarts,
-			 		l_smarticle,
-			 		w_smarticle,
-			 		t_smarticle,
-			 		t2_smarticle,
-			 		collisionEnvelope,
-					rho_smarticleArm,
-					rho_smarticleMid);
+				tStep,
+				mat_smarts,
+				l_smarticle,
+				w_smarticle,
+				t_smarticle,
+				t2_smarticle,
+				collisionEnvelope,
+				rho_smarticleArm,
+				rho_smarticleMid);
 		}
-		PrintRingPos(&mphysicalSystem, tStep, ring, mySmarticlesVec);
+		if (ringActive)
+		{
+			PrintRingPos(&mphysicalSystem, tStep, ring, mySmarticlesVec);
+			//PrintRingContact(&mphysicalSystem, tStep, ring, mySmarticlesVec,&application);
+		}
   }
 	//simParams.open(simulationParams.c_str(), std::ios::app);
 	simParams << "Smarticle OT: " << mySmarticlesVec.at(0)->OTThresh << std::endl;
@@ -2225,6 +2353,7 @@ int main(int argc, char* argv[]) {
 	simParams.close();
 	stress_of.close();
 	vol_frac_of.close();
-	ringPos.close();
+	ringPos_of.close();
+	ringContact_of.close();
   return 0;
 }
