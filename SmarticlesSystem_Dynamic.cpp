@@ -747,18 +747,17 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 			//double yPos = (i - 4.2) * 2 * t2_smarticle;
 
 
-			//// +/- y  set "i==0" below: (+x,-x)=(0,4)
-			//double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
-			//double yPos = (i)* genRand(1.1, 1.55)* t2_smarticle;
-			//myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
-			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI, 0));
+			//// +/- y  set "i==0" below: (+y,-y)=(4,0)
+			double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
+			double yPos = (i)* genRand(1.1, 1.55)* t2_smarticle;
+			myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
+			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI, 0));
 
 			// +/- x   set "i==0" below: (+x,-x)=(0,4)
-			double yPos = 3*t2_smarticle;// genRand(-3, 3)*t2_smarticle / 1.25;
-			double xPos = -2.5*t2_smarticle +i*genRand(1.1, 1.55)* t2_smarticle;
-			myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
-			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI / 2, 0));
-			//genRand(1.1,1.55)
+			//double yPos = 3*t2_smarticle;// genRand(-3, 3)*t2_smarticle / 1.25;
+			//double xPos = -2.5*t2_smarticle +i*genRand(1.1, 1.55)* t2_smarticle;
+			//myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
+			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI / 2, 0));
 
 
 			
