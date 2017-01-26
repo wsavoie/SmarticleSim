@@ -477,21 +477,21 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 		char comm[150];
 #if defined(_WIN64)
 		sprintf(comm, "ffmpeg -framerate %d -i ", fps);
-		strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -q 0 video_capture/outVid.avi");
+		strcat(comm, "video_capture/screenshot%05d.png -c:v libxvid -q 0 video_capture/outVid.avi");
 
 #else
 		sprintf(comm, "ffmpeg -framerate %d -i ", fps);
-		strcat(comm, "video_capture/screenshot%05d.jpeg -c:v libxvid -q 0 video_capture/outVid.avi");
+		strcat(comm, "video_capture/screenshot%05d.png -c:v libxvid -q 0 video_capture/outVid.avi");
 #endif
 		system(comm);
 
 	}
-	void IrrGui::DeleteJpegs()
+	void IrrGui::DeleteImgs()
 	{
 #if defined(_WIN64)
-		system("del video_capture\\*.jpeg");
+		system("del video_capture\\*.png");
 #else
-		system("rm -f video_capture/*.jpeg");
+		system("rm -f video_capture/*.png");
 #endif
 	}
 	void IrrGui::screenshot(int stepsPerFrame)
@@ -502,7 +502,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 				ChFileutils::MakeDirectory("video_capture");
 				irr::video::IImage* image = app->GetVideoDriver()->createScreenShot();
 				char filename[100];
-				sprintf(filename, "video_capture/screenshot%05d.jpeg", (frameNum + 1) / stepsPerFrame);
+				sprintf(filename, "video_capture/screenshot%05d.png", (frameNum + 1) / stepsPerFrame);
 				if (image)
 					app->GetVideoDriver()->writeImageToFile(image, filename);
 				image->drop();
