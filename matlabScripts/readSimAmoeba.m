@@ -5,18 +5,22 @@ clear all
 center=1; %1 to center ring pos data at (0,0)
 fold=(uigetdir('A:\SmarticleRun'));
 f = dir2(fold,'folders');
-
+binW=5; %bin width for polar plots 
 simAm=struct;
-
 for i =1:length(f);
     d=fullfile(fold,f(i).name,'PostProcess','RingPos.txt');
     simD=importdata(d);
-    simD.data(:,3)=-simD.data(:,3);
+%     tstep, x, y, z, globalGUI, comX, comY, comZ
+        %changing coordinate system
+        %x->-x
+        %y->y
+        %z->z
+    simD.data(:,2)=-simD.data(:,2);
     
     data=[simD.data(:,1:3)];
     
     if(size(simD.data,2)>5)
-        simD.data(:,7)=-simD.data(:,7);
+        simD.data(:,6)=-simD.data(:,6);
         COM=[simD.data(:,1) simD.data(:,6:7)];
     end
     if(center)
@@ -51,8 +55,11 @@ for i =1:length(f);
         error('file with bad timestep');
     end
     
-    if(exist(fullfile(fold,f(i).name,'PostProcess','RingContact.txt'), 'file')==1)
-    
+    if(exist(fullfile(fold,f(i).name,'PostProcess','RingContact.txt'),'file')==2)
+
+        simAm(i).binW=binW;
+        [simAm(i).innerForce,simAm(i).contactAngs,simAm(i).polarForceHist]=readContactDistrib(...
+            fullfile(fold,f(i).name,'PostProcess','RingContact.txt'),binW);
     end
 end
 

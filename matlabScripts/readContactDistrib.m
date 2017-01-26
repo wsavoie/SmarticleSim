@@ -1,23 +1,24 @@
-function [force,angs]=readContactDistrib(fold,fname,binW)
-fold='D:\SimResults\Chrono\SmarticleU\tests\blah';
-fname='blah2';
-simAm=struct;
+function [force,angs,polarForceHist]=readContactDistrib(fname,binWid)
+% fold='A:\SmarticleRun\Amoeba_COG_dead_1_pos_+x\f_0.2_rob_5_v_9\';
+% fname=fullfile(fold,'PostProcess','RingContact.txt');
+% binWid=5;
 
-d=fullfile(fold,fname,'PostProcess','RingContact.txt');
-simD=importdata(d);
+simD=importdata(fname);
 %time, xContact, yContact, zContact, xForce, yForce, zForce
 simD.data(:,2)=-simD.data(:,2);
-simD.data(:,2)=-simD.data(:,5);
+simD.data(:,5)=-simD.data(:,5);
 
 %use negative in x dir since it is a left handed coordinate system
 pos=[simD.data(:,1) simD.data(:,2) simD.data(:,3) ]; %only need time, x, y
 force=[simD.data(:,1) simD.data(:,5) simD.data(:,6)];
-%get radius of circle
-[match, nomatch]=regexp(simD.textdata,'[0-9.]+','match');
-r=str2double(match{1});
-angs=deg2rad(atan2(pos(:,3),pos(:,2)+180));
 
-binwidth=deg2rad(5); %degrees
+% %get radius of circle
+% % [match, nomatch]=regexp(simD.textdata,'[0-9.]+','match');
+% % r=str2double(match{1});
+
+angs=atan2(pos(:,3),pos(:,2))+deg2rad(180);
+
+binW=deg2rad(binWid); %degrees
 
 %% P(theta)
 % figure(1);
@@ -30,7 +31,7 @@ binwidth=deg2rad(5); %degrees
 % subplot(2,2,2);
 % % hold on;
 % 
-% polarhistogram(angs,2*pi/binwidth);
+% polarhistogram(angs,2*pi/binW);
 % hold on;
 % title('P(\theta)');
 % 
@@ -38,9 +39,9 @@ binwidth=deg2rad(5); %degrees
 % subplot(2,2,[3 4]);
 % hold on;
 % title('P(\theta)'); xlabel('\theta'); ylabel('P(\theta)')
-% histogram(angs,2*pi/binwidth);
+% histogram(angs,2*pi/binW);
 % figText(gcf,15)
-% xlim([-180 180])
+
 %% Contact position evolution ///// theta vs. time
 
 % figure(2);
@@ -58,20 +59,23 @@ binwidth=deg2rad(5); %degrees
 %  xlabel('t (s)'); ylabel('\theta');
 % figText(gcf,15)
 % plot(pos(:,1),angs,'.');
-% ylim([-180 180]);
+% % ylim([-180 180]);
 
-%% polar histogram
-figure(3)
-disc=discretize(angs,0:binwidth:2*pi);
+%% polarForce histogram
+% figure(3)
+disc=discretize(angs,0:binW:2*pi);
 ud=unique(disc);
 lenuni=length(ud);
 fcs=zeros(lenuni,1);
-c=[];
+polarForceHist=[];
+
+% sum(norm(force(disc==ud(:),2:3)));
 for(i=1:lenuni)
 fcs(i)=sum(norm(force(disc==ud(i),2:3)));
-c=[c; repmat(ud(i)*binwidth,[round(1000*fcs(i)),1])];
+polarForceHist=[polarForceHist; repmat(ud(i)*binW,[round(1000*fcs(i)),1])];
 end
-% polarhistogram(c,2*pi/binwidth)
+
+% polarhistogram(polarForceHist,2*pi/binW)
 % title('Force (mN) vs. \theta')
 
 %% sort of movie of point creations
