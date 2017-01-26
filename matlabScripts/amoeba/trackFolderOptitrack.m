@@ -1,4 +1,4 @@
-fold=uigetdir('D:\ChronoCode\chronoPkgs\Smarticles\matlabScripts\amoeba\smarticleExpVids');
+fold=uigetdir('D:\ChronoCode\chronoPkgs\Smarticles\matlabScripts\amoeba\smarticleExpVids\optinew\circle\1 inactive');
 f=dir2(fullfile(fold,'*.csv'));
 %     clf;
 movs=struct;
@@ -6,6 +6,7 @@ nMovs=length(f);
 movs(nMovs).fname='';
 r=.192/2;%radius of boundary in meters
 dec=12; %decimate amount
+%HANDEDNESS IN QUATERNIONS ISNT CHANGED?
 conv=zeros(nMovs,1);
 for i=1:nMovs
     pts(i,'/',nMovs);
