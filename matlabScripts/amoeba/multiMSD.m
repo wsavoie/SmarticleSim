@@ -63,6 +63,8 @@ if(showFigs(showFigs==1))
     c=max(abs(x)); xlim([-c,c]);
     c=max(abs(y)); ylim([-c,c]);
     axis equal
+    
+    axis([-.25 .25 -.25 .25]);
     x=xlim; y=ylim;
     plot(x,[0,0],'r');
     plot([0,0],y,'r');

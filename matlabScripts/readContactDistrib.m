@@ -5,6 +5,7 @@ function [force,angs,polarForceHist]=readContactDistrib(fname,binWid)
 
 simD=importdata(fname);
 %time, xContact, yContact, zContact, xForce, yForce, zForce
+simD.data=simD.data(simD.data(:,1)>.2,:);
 simD.data(:,2)=-simD.data(:,2);
 simD.data(:,5)=-simD.data(:,5);
 

@@ -3,10 +3,11 @@ load(fullfile(fold,'amoebaData.mat'));
 
 % load('A:\SmarticleRun\Amoeba_newsquare_1_dead\amoebaData.mat');
 close all
+clear usedSimAm
 SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
-useCOM=0;
+inds=1;
 %************************************************************
 %* Fig numbers:
 %* 1. displacement yvsx
@@ -14,16 +15,16 @@ useCOM=0;
 %* 3. vcorr
 %* 4. fourier transform of vcorr
 %* 5. contact P(\theta) POLAR
-%* 6. contact P(\theta) POLAR
+%* 6. contact P(\theta) LINEAR
 %* 7. inner force vs. theta POLAR
 %* 8. inner force vs. theta LINEAR
 %************************************************************
-showFigs=[1];
+showFigs=[1 5 7];
+useCOM=0;
+f=[.2]; rob=[4:5]; v=[20];
 
-f=[.2]; rob=[5]; v=[2:10];
+
 props={f rob v};
-clear usedSimAm
-inds=1;
 for i=1:length(simAm)
     cond=true;
     for j=1:length(props)
@@ -59,9 +60,9 @@ end
 if(showFigs(showFigs==1))
     figure(1)
     if(useCOM)
-        title('Ring COM y vs. x');
+        title('Ring COM');
     else
-        title('Ring COG y vs. x');
+        title('Ring COG');
     end
     ma.plotTracks
     ma.labelPlotTracks
@@ -71,7 +72,7 @@ if(showFigs(showFigs==1))
     c=max(abs(x)); xlim([-c,c]);
     c=max(abs(y)); ylim([-c,c]);
     axis equal
-    
+    axis([-.25 .25 -.25 .25]);
     x=xlim; y=ylim;
     plot(x,[0,0],'r');
     plot([0,0],y,'r');
@@ -154,6 +155,7 @@ if(isfield(usedSimAm, 'innerForce'))
             histogram(usedSimAm(i).contactAngs,2*pi/deg2rad(usedSimAm(i).binW));
             hold on;
         end
+        xlim([0 2*pi]);
         title('contact distribution on ring P(\theta)');
         xlabel('\theta');
         ylabel('P(\theta)');
@@ -176,6 +178,7 @@ if(isfield(usedSimAm, 'innerForce'))
         xlabel('\theta');
         ylabel('Force (mN)');
         title('Force distribution on ring')
+        xlim([0 2*pi]);
     end
 
 end

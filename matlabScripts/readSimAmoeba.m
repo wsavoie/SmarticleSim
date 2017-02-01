@@ -7,7 +7,7 @@ fold=(uigetdir('A:\SmarticleRun'));
 f = dir2(fold,'folders');
 binW=5; %bin width for polar plots 
 simAm=struct;
-for i =1:length(f);
+for i =1:length(f)
     d=fullfile(fold,f(i).name,'PostProcess','RingPos.txt');
     simD=importdata(d);
 %     tstep, x, y, z, globalGUI, comX, comY, comZ
