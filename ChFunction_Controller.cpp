@@ -213,7 +213,7 @@ double ChFunctionController::OmegaToTorque(double t, double out)
 	double d_omega = out - curr_omega;
 	return d_omega / dT;
 }
-void ChFunctionController::ResetCumulative(double t = 0)	////TODO reset cum_error_ on gui change
+void ChFunctionController::ResetCumulative(double t = 0)
 {
 	
 	static int bothArmsReset = 0;

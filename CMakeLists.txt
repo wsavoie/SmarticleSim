@@ -18,8 +18,6 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR})
 # Always use full RPATH (differentiating between the build and install trees)
 #-----------------------------------------------------------------------------
 
-
-
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 
@@ -104,11 +102,13 @@ endif()
 # 
 # (B) Path to the top of the source tree for this project
 # - for access to utility headers
-
+set(JSON_LIB_PATH "" CACHE FILEPATH "json lib path")
 include_directories(
 
     ${CHRONO_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}
+	${JSON_LIB_PATH}
+	
 )
 
 #--------------------------------------------------------------
@@ -118,6 +118,7 @@ include_directories(
 list(APPEND ALL_DLLS "${CHRONO_DLLS}")
 set(ALL_DLLS "${ALL_DLLS}" PARENT_SCOPE)
 set(CHRONO_BIN_PATH "D:/ChronoCode/chronoPkgs/ChronoBuild/bin/" CACHE FILEPATH "chrono build path")
+
 #--------------------------------------------------------------
 # Loop over all demo programs and build them
 #--------------------------------------------------------------
@@ -128,7 +129,7 @@ foreach(PROGRAM ${DEMOS})
 
   message(STATUS "...add ${PROGRAM}")
 file(GLOB SOURCES "*.cpp")
-file(GLOB HEADERS "*.h")
+file(GLOB HEADERS "*.h*")
   add_executable(${PROGRAM}  "${PROGRAM}.cpp" ${HEADERS} ${SOURCES})
   source_group(""  FILES "${PROGRAM}.cpp")
 

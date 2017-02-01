@@ -124,7 +124,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 				return true;
 				break;
 			case irr::KEY_KEY_R: //vibrate around current theta
-				if (Smarticle::global_GUI_value != MoveType::VIB) //TODO create a boolean and then call a method later which performs this so we don't have to run through smarticle vec here!
+				if (Smarticle::global_GUI_value != MoveType::VIB)
 				{
 
 					double CurrTheta01;

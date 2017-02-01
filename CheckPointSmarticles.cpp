@@ -269,7 +269,6 @@ void CheckPointSmarticlesDynamic_Read(
 		rho_smarticleMid>>
 		friction>>
 		gui_value;
-	//TODO initialize angle1 and angle2
 	angle1 = 0;
 	angle2 = 0;
 	printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f angle1 %f angle2 %f",
@@ -285,7 +284,6 @@ void CheckPointSmarticlesDynamic_Read(
 	getline(inSmarticles, ddSt);
 	ChVector<> p3;
 	ChQuaternion<> q4;
-	//TODO torque threshold
 	inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
 		q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >> q4.e3 >> ddCh >>
 		angle1 >> ddCh >> angle2 >> ddCh >> dumId >> ddCh >>
@@ -294,7 +292,6 @@ void CheckPointSmarticlesDynamic_Read(
 		extra2idx >> ddCh >> midtidx >> ddCh >> otidx >> ddCh >>
 		prevMoveType >> ddCh >> currMoveType >> ddCh >> omega >>
 		ddCh >> yold0 >> ddCh >> yold1 >> ddCh >> activeSmart >> ddCh;
-	//TODO add 
 	while (inSmarticles.good()) {
 		
 		std::shared_ptr<Smarticle> smarticle0(new Smarticle(&mphysicalSystem));

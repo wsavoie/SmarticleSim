@@ -34,6 +34,7 @@
 #include <iostream>
 //#include <IStream>
 
+#include "json.hpp"
 #include "utils/ChUtilsCreators.h"     //Arman: why is this
 #include "utils/ChUtilsInputOutput.h"  //Arman: Why is this
 #include "utils/ChUtilsGenerators.h"
@@ -63,11 +64,10 @@
 #include "core/ChRealtimeStep.h"
 //#include <irrlicht.h>
 #include "assets/ChTexture.h"
-
 using namespace chrono;
 using namespace irrlicht;
 using namespace irr;
-
+using nlohmann::json;
 using namespace irr::core;
 using namespace irr::scene;
 using namespace irr::video;
@@ -120,7 +120,7 @@ std::ofstream stress_of;
 std::ofstream vol_frac_of;
 std::ofstream ringPos_of;
 std::ofstream ringContact_of;
-
+//std::ofstream smartPos_of;
 double sizeScale = 1;
 int appWidth = 1280;
 int appHeight = 720;
@@ -219,7 +219,8 @@ bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surf
 //	double bucket_rad = sizeScale*0.04;
 
 std::vector<std::shared_ptr<ChBody>> bucket_bod_vec;
-
+json ReadJson(std::string fname);
+json ReadCertainSystem(json& j, int robotNum);
 //ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 
 double percentToMoveToGlobal = 1.0/800.0;
@@ -236,7 +237,138 @@ double angle2 = 90;
 double vibAmp = 5 * D2R; //vibrate by some amount of degrees back and forth
 int videoFrameInterval = 1/(out_fps*dT); //dt = [sec/step], fps=[frames/sec] --> 1/(dt*fps)=[(sec*steps)/(sec*frames)]=[steps/frame]
 
+bool writejson = true;
+bool readjson = false;
 int smarticleHopperCount = 0;
+namespace ns { 	// struct to add smarticles to json file
+
+	struct smartInfo {
+		std::vector<smartInfo> smarts;
+		double posX;
+		double posY;
+		double posZ;
+
+		double quatE0;
+		double quatE1;
+		double quatE2;
+		double quatE3;
+
+		double ang0;
+		double ang1;
+		bool alive;
+		smartInfo(std::shared_ptr<Smarticle> s)
+		{
+			posX = s->GetArm(1)->GetPos().x;
+			posY = s->GetArm(1)->GetPos().y;
+			posZ = s->GetArm(1)->GetPos().z;
+
+			quatE0 = s->GetArm(1)->GetRot().e0;
+			quatE1 = s->GetArm(1)->GetRot().e1;
+			quatE2 = s->GetArm(1)->GetRot().e2;
+			quatE3 = s->GetArm(1)->GetRot().e3;
+
+			ang0 = s->GetAngle(0);
+			ang1 = s->GetAngle(1);
+			alive = s->active;
+		}
+		smartInfo()
+		{}
+		smartInfo(std::vector<std::shared_ptr<Smarticle>> mSV)
+		{
+			for (size_t i = 0; i < size(mSV); i++)
+			{
+				//smartInfo c(mSV.at(i));
+				smarts.emplace_back(mSV.at(i));
+			}
+		}
+		
+		void to_json(json& j, const smartInfo& p) {
+			//std::cout << "\n\n\n" << "to_json_smartInfo:" << "\n\n\n";
+			j = json{ { "posX", p.posX },{ "posY", p.posY},{ "posZ", p.posZ},
+			{ "quatE0", p.quatE0 },{ "quatE1", p.quatE1},{ "quatE2", p.quatE2},{ "quatE3", p.quatE3},
+			{ "ang0", p.ang0 },{ "ang1", p.ang1},{ "alive", p.alive } };
+		}
+		void to_json(json& j, const std::shared_ptr<Smarticle>& s) {
+			//std::cout << "\n\n\n" << "to_json_smartInfo:" << "\n\n\n";
+
+			j = json{ { "posX", s->GetArm(1)->GetPos().x },{ "posY", s->GetArm(1)->GetPos().y },{ "posZ", s->GetArm(1)->GetPos().z },
+			{ "quatE0", s->GetArm(1)->GetRot().e0 },{ "quatE1", s->GetArm(1)->GetRot().e1 },{ "quatE2", s->GetArm(1)->GetRot().e2 },{ "quatE3", s->GetArm(1)->GetRot().e3 },
+			{ "ang0", s->GetAngle(0) },{ "ang1", s->GetAngle(1) },{ "alive", s->active } };
+		}
+		void from_json(const json& j, smartInfo& p) {
+			//std::cout << "\n\n\n" << "from_json_smartInfo:" << "\n\n\n";
+			p.posX = j["posX"].get<double>();
+			p.posY = j["posY"].get<double>();
+			p.posZ = j["posZ"].get<double>();
+
+			p.quatE0 = j["quatE0"].get<double>();
+			p.quatE1 = j["quatE1"].get<double>();
+			p.quatE2 = j["quatE2"].get<double>();
+			p.quatE3 = j["quatE3"].get<double>();
+
+			p.ang0 = j["ang0"].get<double>();
+			p.ang1 = j["ang1"].get<double>();
+			p.alive = j["alive"].get<bool>();
+		}
+	};
+	struct System {
+
+		std::vector<smartInfo> smarts;
+		System(std::vector<std::shared_ptr<Smarticle>> mSV)
+		{
+			for (size_t i = 0; i < size(mSV); i++)
+			{
+				//smartInfo c(mSV.at(i));
+				smarts.emplace_back(mSV.at(i));
+			}
+		}
+		System() 
+		{}
+		//void to_json(json& j, const std::vector<smartInfo>& p) {
+		//	for (size_t i = 0; i < size(p); i++)
+		//	{
+		//		j += {std::to_string(i), { { "posX", p.at(i).posX },{ "posY",  p.at(i).posY },{ "posZ",  p.at(i).posZ },
+		//		{ "quatE0",  p.at(i).quatE0 },{ "quatE1",  p.at(i).quatE1 },{ "quatE2",  p.at(i).quatE2 },{ "quatE3",  p.at(i).quatE3 },
+		//		{ "ang0", p.at(i).ang0 },{ "ang1",  p.at(i).ang1 },{ "alive",  p.at(i).alive } }};
+		//	}
+		//}
+		void to_json(json& j, const System& p) {
+			//std::cout << "\n\n\n" << "to_json_system:" << size(p.smarts) << "\n\n\n";
+			json jt;
+			for (size_t i = 0; i < size(p.smarts); i++)
+			{
+				jt +=  { std::to_string(i), { { "posX", p.smarts.at(i).posX },{ "posY", p.smarts.at(i).posY },{ "posZ",  p.smarts.at(i).posZ },
+				{ "quatE0",  p.smarts.at(i).quatE0 },{ "quatE1",  p.smarts.at(i).quatE1 },{ "quatE2",  p.smarts.at(i).quatE2 },{ "quatE3",  p.smarts.at(i).quatE3 },
+				{ "ang0", p.smarts.at(i).ang0 },{ "ang1",  p.smarts.at(i).ang1 },{ "alive",  p.smarts.at(i).alive } } };
+
+			}
+			j.emplace_back(jt);
+		}
+
+		void from_json(const json& j, System& p)
+		{
+			//std::cout << "\n\n\n" << "from_json_system:" << size(p.smarts) << "\n\n\n";
+			for (size_t i = 0; i < size(p.smarts); i++)
+			{
+				
+				auto d =p.smarts.at(i);
+				json jt;
+				d.to_json(jt,d);
+				p.smarts.at(i)= d;
+				//p.smarts.push_back(j[std::to_string(i)]);
+			}
+		}
+		//void from_json(const json& j, System& p)
+		//{
+		//	p.smarts = j["smarts"].get<std::vector<ns::smartInfo>>();
+		//	//for (size_t i = 0; i < size(p.smarts); i++)
+		//	//{
+		//	//	p.smarts.push_back(j.at(i));
+		//	//}
+		//}
+	};
+}
+
 
 // =====================================================================================================
 class MyChCustomCollisionPointCallback : public ChSystem::ChCustomCollisionPointCallback
@@ -304,7 +436,6 @@ public:
 			//GetLog() << "running method";
 			//double a = react_forces.Length();
 			this->m_contact_force += react_forces.Length();
-			//TODO get normal forces only!
 
 			//n_contact_force += react_forces.y;
 			//GetLog() << "Normal Force: " << m_contact_force << "\n";
@@ -317,7 +448,7 @@ public:
 };
 // =============================================================================\
 
-void placeSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<Smarticle*> & mySmarticlesVec, ChIrrApp& application, Smarticle * smarticle0)
+void placeSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application, std::shared_ptr<Smarticle> smarticle0)
 {
 	//be careful about hlaf size and fullsize dimensions
 	//angle1=left angle2=right
@@ -493,7 +624,7 @@ double showForce(CH_SYSTEM *msys)
 		
 		ext_force ef;
 		msys->GetContactContainer()->ReportAllContacts(&ef);
-		return ef.m_contact_force; //TODO return max height too
+		return ef.m_contact_force;
 }
 // =============================================================================
 void MySeed(double s = time(NULL)) { srand(s); }
@@ -648,7 +779,13 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 #else
 void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,double timeForDisp) {
 #endif
-	
+
+	json jsonF;
+	int inactiveP=0;
+	if (readjson)
+	{
+		jsonF = ReadJson("pretty.json");
+	}
 	ChVector<> dropSpeed = VNULL;
 	ChQuaternion<> myRot = QUNIT;
 	double z;
@@ -665,7 +802,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 	{
 		phase = genRand(PI_2);
 		zpos = std::min(3 * sys->bucket_interior_halfDim.z, z) + w_smarticle;
-
+		
 		switch (bucketType){
 		case DRUM:
 			zpos = SaturateValue(z, sys->bucket_rad);
@@ -746,20 +883,47 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 			//double xPos = genRand(-3, 3)*t2_smarticle / 1.25;
 			//double yPos = (i - 4.2) * 2 * t2_smarticle;
 
+			double xPos = 0;
+			double yPos = 0;
+
 
 			//// +/- y  set "i==0" below: (+y,-y)=(4,0)
-			double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
-			double yPos = (i)* genRand(1.1, 1.55)* t2_smarticle;
-			myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
-			myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI, 0));
+			//double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
+			//double yPos = -2.5*t2_smarticle +(i)* genRand(1.1, 1.55)* t2_smarticle;
+			//myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
+			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI, 0));
+			//inactiveP = 0;
 
 			// +/- x   set "i==0" below: (+x,-x)=(0,4)
-			//double yPos = 3*t2_smarticle;// genRand(-3, 3)*t2_smarticle / 1.25;
-			//double xPos = -2.5*t2_smarticle +i*genRand(1.1, 1.55)* t2_smarticle;
-			//myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
-			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI / 2, 0));
 
-
+			if (readjson)
+			{
+				auto p = jsonF;
+				p = ReadCertainSystem(p,i);
+				 
+				myPos = ChVector<>(p["posX"], p["posY"], p["posZ"]);
+				myRot = ChQuaternion<>(p["quatE0"], p["quatE1"], p["quatE2"], p["quatE3"]);
+		
+				double a1 = p["ang0"];
+				double a2 = p["ang1"];
+				angle1 = a1*R2D;
+				angle2 = a2*R2D;
+				//GetLog() << "\ni=" <<i<<"\nang 1:"<< angle1 << "\nang 2: "<< angle2 <<"\n\n";
+				//inactiveP = p.at(i)["alive"]
+				if (!p["alive"])
+				{
+					inactiveP = i;
+				}
+			}
+			/*std::cout<<"\n"<<p["0"]["alive"] << "\n";*/
+			else
+			{
+				xPos = -2.5*t2_smarticle + (i)*genRand(1.1, 1.55)* t2_smarticle;
+				yPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
+				myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
+				myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI / 2, 0));
+				inactiveP = 0;
+			}
 			
 			//////////////////////changed///////////////////
 			break;
@@ -776,7 +940,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 
 		myRot.Normalize();
 		/////////////////flat rot/////////////////
-		Smarticle * smarticle0 = new Smarticle(&mphysicalSystem);
+		std::shared_ptr<Smarticle>smarticle0 = std::make_shared<Smarticle>(&mphysicalSystem);
 		smarticle0->Properties(mySmarticlesVec.size(), smartIdCounter * 4,
 			rho_smarticleArm, rho_smarticleMid, mat_smarts,
 			collisionEnvelope,
@@ -796,9 +960,11 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 
 		if (oneInactive)
 		{
-			if (i == 4)
+			if (i == inactiveP)
 			{
 				smarticle0->active = false;//##################
+				smarticle0->SetAngles(angle1, angle2, true);
+				smarticle0->SetInitialAngles();
 			}
 		}
 		smarticle0->Create();
@@ -814,11 +980,15 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
 		//GetLog()<< "\nMASS:"<<smarticle0->GetMass() <<"\n";
-		double bucketX = sys->boxdim.x;
-		double bucketY = sys->boxdim.y;
+		if (oneInactive)
+		{
+			if (i == inactiveP)
+			{
+				smarticle0->SetBodyFixed(true);
+			}
+		}
 
 		
-
 		//if (bucketType == BOX || bucketType == FLATHOPPER || bucketType == HOPPER)
 		//{
 		//	dropSmartsInLine()
@@ -831,8 +1001,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 		//	placeSmarticles(mphysicalSystem, mySmarticlesVec, application, smarticle0);
 		//}
 
-		mySmarticlesVec.emplace_back((Smarticle*)smarticle0);
-		GetLog() << "Smarticles: " << mySmarticlesVec.size() << "\n";
+		mySmarticlesVec.emplace_back((std::shared_ptr<Smarticle>)smarticle0);
+		GetLog() << "Smarticles in sys: " << mySmarticlesVec.size() << "\n";
 		smarticle0->SetSpeed(dropSpeed);
 			
 	#if irrlichtVisualization
@@ -846,7 +1016,6 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 			
 	#endif
 	}
-
 
 }
 //std::shared_ptr<ChBody> create_flathopper(int num_boxes, int id, bool overlap, CH_SYSTEM* mphysicalSystem, std::shared_ptr<ChMaterialSurfaceBase> wallMat, int ridges = 5)
@@ -1195,28 +1364,6 @@ public:
 						cdriver->draw3DBox(c, mcol);
 					}
 			}
-
-		//##############WORKING#######################
-		//if (pA.z > sys->bucket_half_thick)
-		//{
-		//	if (modA->GetPhysicsItem()->GetNameString() == "ring")
-		//	{
-		//		if (distance < minDist)
-		//		{
-		//			//GetLog() << "d:" << distance << "\n";
-
-		//			const vector3d<f32> min(v1.x - hsl, v1.y - hsl, v1.z - hsl);
-		//			const vector3d<f32> max(v1.x + hsl, v1.y + hsl, v1.z + hsl);
-		//			//const auto c = aabbox3d<irr::f32>(v1.x - hsl, v1.x + hsl, v1.y - hsl, v1.y + hsl, v1.z - hsl, v1.z + hsl);
-		//			auto c = aabbox3d<irr::f32>(min, max);
-
-		//			v3 = v1 - ring->GetPos() - ringInitPos;
-		//			ringContact_of << time << ", " << v3.x << ", " << v3.y << ", " << v3.z << std::endl;
-		//			cdriver->draw3DBox(c, mcol);
-		//		}
-		//	}
-		//}
-		//##############WORKING#######################
 		i++;
 		return true;  // to continue scanning contacts
 	}
@@ -1275,6 +1422,58 @@ void PrintRingContact(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChB
 
 	//ringPos_of << mphysicalSystem->GetChTime() << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << ", " << cog.x << ", " << cog.y << ", " << cog.z << std::endl;
 }
+void WriteJson(CH_SYSTEM* mphysicalSystem, int tstep, std::vector<std::shared_ptr<Smarticle>>& mySmarticlesVec)
+{
+
+
+	static json j;
+
+	static const int stepPerOut = 40;
+	if (tstep>500&&tstep%stepPerOut == 0)
+	{
+		ns::System p(mySmarticlesVec);
+		p.to_json(j,p);
+		std::cout << j;
+		std::ofstream o("pretty.json");
+		o << std::setw(4) << j << std::endl;
+		
+	}	
+	
+	//if (tstep%stepPerOut == 0)
+	//{
+	//	std::ifstream i("pretty.json");
+	//	json jj;
+	//	i >> jj;
+	//	GetLog() << "\n" << jj.size() << "\n";
+	//	auto q = jj;
+	//	//std::cout << q;
+	//	std::cout << q.at(0);
+	//}
+
+}
+json ReadCertainSystem(json& j,int robotNum)
+{
+	//get random initial config from file
+	
+	//std::cout << f;
+	j = j.at(robotNum).at(1);
+	return j;
+}
+json ReadJson(std::string fname)
+{
+	//get random initial config from file
+	std::ifstream i(fname);
+	json jj;
+	i >> jj;
+	int sysSize = jj.size();
+	int randVal = genRand(0, sysSize);
+
+	auto f = jj.at(randVal);
+	//std::cout << f;
+	//f=f.at(robotNum).at(1);
+	return f;
+}
+
 void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec)
 {
 	static const int stepPerOut = .1 * 1 / dT;
@@ -1293,7 +1492,7 @@ void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>
 			ringPos_of << mphysicalSystem->GetChTime() << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << ", " << cog.x << ", " << cog.y << ", " << cog.z << std::endl;
 	}
 }
-void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad) //TODO include knobs in calculation
+void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad)
 {
 
 
@@ -1306,7 +1505,7 @@ void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylra
 	stress_of << mphysicalSystem->GetChTime() << ", " << force <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
 	//stress_of.close();
 }
-void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cylrad, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) //TODO include knobs in calculation
+void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cylrad, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) 
 {
 
 	bool printAllSmarticleInfo = true;
@@ -1937,13 +2136,13 @@ int main(int argc, char* argv[]) {
 
 		if (stapleSize)
 		{
-			camera->setPosition(core::vector3df(-0.0011, -0.115, 0.015));
-			camera->setTarget(core::vector3df(-0.0011, 0.035, 1e-8)); //	camera->setTarget(core::vector3df(0, 0, .01));
+			camera->setPosition(core::vector3df(-0.0011f, -0.115f, 0.015f));
+			camera->setTarget(core::vector3df(-0.0011f, 0.035f, 1e-8f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 		}
 		else
 		{
-			camera->setPosition(core::vector3df(0.0139, -0.65, -.180));
-			camera->setTarget(core::vector3df(0.0139, -.50, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+			camera->setPosition(core::vector3df(0.0139f, -0.65f, -.180f));
+			camera->setTarget(core::vector3df(0.0139f, -.50f, -.195f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 		}
 		
 		break;
@@ -1952,20 +2151,20 @@ int main(int argc, char* argv[]) {
 
 		if (stapleSize)
 		{
-			camera->setPosition(core::vector3df(-0.0061, -0.095, 0.03));
-			camera->setTarget(core::vector3df(-0.0061, 0.055, 0.015)); //	camera->setTarget(core::vector3df(0, 0, .01));
+			camera->setPosition(core::vector3df(-0.0061f, -0.095f, 0.03f));
+			camera->setTarget(core::vector3df(-0.0061f, 0.055f, 0.015f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 		}
 		else
 		{
-			camera->setPosition(core::vector3df(0.0139, -0.65, -.180));
-			camera->setTarget(core::vector3df(0.0139, -.50, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+			camera->setPosition(core::vector3df(0.0139f, -0.65f, -.180f));
+			camera->setTarget(core::vector3df(0.0139f, -.50f, -.195f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 		}
 
 		break;
 
 	default:
-		camera->setPosition(core::vector3df(0.0139, -0.65, -.180));
-		camera->setTarget(core::vector3df(0.0139, -.50, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+		camera->setPosition(core::vector3df(0.0139f, -0.65f, -.180f));
+		camera->setTarget(core::vector3df(0.0139f, -.50f, -.195f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 		break;
 	}
 
@@ -2097,6 +2296,7 @@ int main(int argc, char* argv[]) {
 	const std::string vol_frac = out_dir + "/volumeFraction.txt";
 	const std::string ringPos = out_dir + "/RingPos.txt";
 	const std::string ringContact = out_dir + "/RingContact.txt";
+	//const std::string smartPos = out_dir + "/SmartPos.txt";
 
 	ringPos_of.open(ringPos.c_str());
 	ringContact_of.open(ringContact.c_str());
@@ -2111,16 +2311,22 @@ int main(int argc, char* argv[]) {
 	std::shared_ptr<ChBody> ring;
 	if (ringActive)
 	{
+		//double xPos = 0;
+		//double yPos = 1.5 * t2_smarticle;
+		//ChVector<> pos2 = sys->bucket_ctr + ChVector<>(xPos, yPos, t2_smarticle);
+
 		double xPos = 0;
-		double yPos = 1.5 * t2_smarticle;
+		double yPos = 0;
 		ChVector<> pos2 = sys->bucket_ctr + ChVector<>(xPos, yPos, t2_smarticle);
+
 		double m = .001;
 		//std::shared_ptr<ChBody> ring = sys->create_EmptyCylinder(25, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture,m);
 		ring = sys->create_EmptyEllipse(100, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture, m, 1, 1);
+		//ring = sys->create_ChordRing(100, t2_smarticle, sys->bucket_half_thick, ringRad, t_smarticle, pos2, sys->groundTexture, m);
 		ring->SetIdentifier(455465);
 		ring->SetCollide(true);
 		ringInitPos = pos2;
-
+		ring->SetBodyFixed(true);
 
 		mphysicalSystem.AddBody(ring);
 
@@ -2327,6 +2533,10 @@ int main(int argc, char* argv[]) {
 		{
 			PrintRingPos(&mphysicalSystem, tStep, ring, mySmarticlesVec);
 			//PrintRingContact(&mphysicalSystem, tStep, ring, mySmarticlesVec,&application);
+			if (writejson)
+			{
+				WriteJson(&mphysicalSystem, tStep, mySmarticlesVec);
+			}
 		}
   }
 	//simParams.open(simulationParams.c_str(), std::ios::app);
@@ -2355,5 +2565,6 @@ int main(int argc, char* argv[]) {
 	vol_frac_of.close();
 	ringPos_of.close();
 	ringContact_of.close();
+	//smartPos_of.close();
   return 0;
 }

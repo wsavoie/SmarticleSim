@@ -47,7 +47,7 @@ ang1Arr=(90 90 90 90 90 90 90 90 90 90 90 90 90 90)
 ang2Arr=(90 90 90 90 90 90 90 90 90 90 90 90)
 #boxangArr=(-20 -25 -30 -35 -40)
 boxangArr=(-30 -30 -30 -30 -30 -30 -30 -30 -30 -30)
-numPerLay=(5 5 20 20 20 20 20 20 20 20 5 5 5 5 5 5)
+numPerLay=(4 5 20 20 20 20 20 20 20 20 5 5 5 5 5 5)
 saveFrame=1
 #0.02 0.002
 changeToStressPerc=(0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0)
@@ -55,10 +55,11 @@ changeToStressPerc=(0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0)
 #######regular run
 # foldName='Amoeba_newsquareAC'
 foldName='Amoeba_COG_dead_1_pos_+y'
+########################REMEMBER TO CHANGE (i+1) back to (i) in xpos!!!!!
 mkdir $foldName
-for fric in `seq 2 3`; do
-	for repeats in `seq 1 10`; do
-		for robs in `seq 0 0`; do
+for fric in `seq 2 2`; do
+	for repeats in `seq 11 30`; do
+		for robs in `seq 1 1`; do
 		  a=/cygdrive/a/SmarticleRun/$foldName/f_${changeToStressPerc[$fric]}_rob_${numPerLay[$robs]}_v_${repeats}
 		  mkdir $a
 		  cp /cygdrive/d/SimResults/Chrono/SmarticleU/tests/smarticleMoves.csv $a/smarticleMoves.csv
