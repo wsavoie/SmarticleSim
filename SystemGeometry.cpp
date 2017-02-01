@@ -164,6 +164,119 @@ std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool o
 
 	return create_EmptyCylinder(num_boxes, overlap, true, h, t, r, bucket_ctr, true, bucketTexture,m);
 }
+
+std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double half_h, double t, double r,double sagitta, ChVector<> pos, std::shared_ptr<ChTexture> texture, double m)
+{
+
+
+
+	//https://en.wikipedia.org/wiki/Circular_segment
+	auto chrdCirc = std::make_shared<ChBody>();
+	chrdCirc->SetIdentifier(bucketID);
+	//cyl_container->SetMass(mass);
+	chrdCirc->SetPos(pos);
+	chrdCirc->SetRot(QUNIT);
+	chrdCirc->SetBodyFixed(false);
+	chrdCirc->SetCollide(true);
+	chrdCirc->SetName("ring");
+
+	chrdCirc->SetMaterialSurface(mat_wall);
+	double ang = 2.0 * PPI / num_boxes;
+	ChQuaternion<> quat = QUNIT; //rotation of each plate
+	double box_side = r * 2.0 * sin(PPI / num_boxes) / (cos(PPI / num_boxes));//side length of cyl
+	double wallt = t / 5; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
+	double o_lap = t * 2;
+	ChVector<> pPos = (0, 0, 0);  //position of each plate
+	double centAngle = 2 * acos(1 - sagitta / r);
+	int roundPart=(2*PPI-centAngle)/ang;
+	ChVector<> box_size = ChVector<>((box_side + wallt) / 2.0, //size of plates
+		wallt,
+		half_h + o_lap);
+	ChVector<> gyr(0,0,0);
+	ChVector<> xxIner(0,0,0);
+	ChVector<> cmRel(0,0,0);
+	ChVector<> rel_loc(0,0,0);
+	double mEach = m / (num_boxes);
+
+
+
+	double clen = 2 * r*sin(centAngle / 2.0);//chord length
+	double d = clen*clen / (8 * sagitta) - sagitta / 2;
+	double boxChordAng = 2 * PPI - centAngle / 2;
+
+	ChVector<> bigside_size(clen / 2.0,
+		wallt,
+		half_h + o_lap);
+
+
+	double vSmall = box_size.x*box_size.y*box_size.z;
+	double rho = mEach / vSmall;
+	double vLarge = bigside_size.x*bigside_size.y*bigside_size.z;
+
+	
+	//#################################################################################
+	//TODO change this to non-magic number!!!
+	//#################################################################################
+	double mExtra = 0;
+	double mBig = m-mEach*(roundPart + 1)+mExtra;
+	double mTot = m + mExtra;
+
+	ChVector<>bigWallPos= pos + ChVector<>(sin(boxChordAng)*(d + box_side/2),
+		cos(boxChordAng)*(d + box_side / 2),
+		0 - 1.8*t);
+
+	//get cmREL
+	for (int i = 0; i < roundPart + 1; i++)
+	{
+		pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
+			cos(ang*i)*(wallt + r),
+			0 - 1.8*t);
+		cmRel=cmRel+(mEach*pPos);
+	}
+	cmRel = cmRel + mBig*bigside_size;
+	cmRel = cmRel / mTot;
+
+	for (int i = 0; i < roundPart+1; i++)
+	{
+		
+			pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
+				cos(ang*i)*(wallt + r),
+				0 - 1.8*t);
+
+		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
+		rel_loc = pPos - cmRel;
+		gyr = utils::CalcBoxGyration(box_size, pPos, quat).Get_Diag();
+		xxIner.x = xxIner.x + mEach * (gyr.x + ChVector<>(0, rel_loc.y, rel_loc.z).Length2());
+		xxIner.y = xxIner.y + mEach * (gyr.y + ChVector<>(rel_loc.x, 0, rel_loc.z).Length2());
+		xxIner.z = xxIner.z + mEach * (gyr.z + ChVector<>(rel_loc.x, rel_loc.y, 0).Length2());
+
+
+		chrdCirc->AddAsset(texture);
+		chrdCirc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+		utils::AddBoxGeometry(chrdCirc.get(), box_size, pPos, quat, true);
+	}
+	///big side stuff
+
+	quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, boxChordAng));
+	rel_loc = bigWallPos - cmRel;
+	gyr = utils::CalcBoxGyration(bigside_size, bigWallPos, quat).Get_Diag();
+
+	xxIner.x = xxIner.x + mBig * (gyr.x + ChVector<>(0, rel_loc.y, rel_loc.z).Length2());
+	xxIner.y = xxIner.y + mBig * (gyr.y + ChVector<>(rel_loc.x, 0, rel_loc.z).Length2());
+	xxIner.z = xxIner.z + mBig * (gyr.z + ChVector<>(rel_loc.x, rel_loc.y, 0).Length2());
+	chrdCirc->AddAsset(texture);
+	chrdCirc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(chrdCirc.get(), bigside_size, bigWallPos, quat, true);
+
+	chrdCirc->GetCollisionModel()->BuildModel();
+
+	chrdCirc->SetMass(mTot);
+	//chrdCirc->SetInertiaXX(xxIner);
+	quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 2*PPI-boxChordAng-PPI/2));
+	//auto ro= chrdCirc->GetRot().Rotate(ChVector<>(0, 0, boxChordAng));
+	chrdCirc->SetRot(quat);
+	return chrdCirc;
+}
 std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture, double m,double ax, double by)
 {
 	auto cyl_container = std::make_shared<ChBody>();

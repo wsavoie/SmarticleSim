@@ -41,6 +41,7 @@ namespace chrono {
 				std::shared_ptr<ChBody> create_Bucket_Bott();
 				std::shared_ptr<ChBody> create_Drum(int num_boxes, bool overlap, int ridges = 5);
 				std::shared_ptr<ChBody> create_Hull(double numBoxes);
+				std::shared_ptr<ChBody> create_ChordRing(int num_boxes, double half_h, double t, double r, double sagitta, ChVector<> pos, std::shared_ptr<ChTexture> texture, double m);
 				void										create_CentralColumn(double length);
 				void										create_Prismatic(std::shared_ptr<ChBody> body);
 				void										create_Knobs(double kpr, double rows, double length);
