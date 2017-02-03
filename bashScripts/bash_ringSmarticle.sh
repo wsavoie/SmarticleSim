@@ -51,23 +51,26 @@ numPerLay=(4 5 20 20 20 20 20 20 20 20 5 5 5 5 5 5)
 saveFrame=1
 #0.02 0.002
 changeToStressPerc=(0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0)
-
+#+x +y -x -y
+dirs=(0 1 2 3)
 #######regular run
 # foldName='Amoeba_newsquareAC'
-foldName='Amoeba_COG_dead_1_pos_+y'
+foldName='Amoeba_Ring_v2_dead_1'
 ########################REMEMBER TO CHANGE (i+1) back to (i) in xpos!!!!!
 mkdir $foldName
 for fric in `seq 2 2`; do
-	for repeats in `seq 11 30`; do
-		for robs in `seq 1 1`; do
-		  a=/cygdrive/a/SmarticleRun/$foldName/f_${changeToStressPerc[$fric]}_rob_${numPerLay[$robs]}_v_${repeats}
-		  mkdir $a
-		  cp /cygdrive/d/SimResults/Chrono/SmarticleU/tests/smarticleMoves.csv $a/smarticleMoves.csv
-		  cd $a
-		  # # $smartRunFile ${lwArr[$angs]} 0.00025 ${nlArr[$angs]} ${reArr[$angs]} ${paArr[$angs]} ${ang1Arr[$angs]} ${ang2Arr[$angs]} ${boxangArr[$angs]} ${numPerLay[$angs]} ${changeToStressPerc[$angs]} $saveFrame;
-		  $smartRunFile 0.8 0.001 1 0 1 0 0 0 ${numPerLay[$robs]} ${changeToStressPerc[$fric]} $saveFrame;
-		  cd ..;
-		  # cp -r ./PostProcess $a
+	for deadDir in `seq 0 3`; do
+		for repeats in `seq 16 30`; do
+			for robs in `seq 1 1`; do
+			  a=/cygdrive/a/SmarticleRun/$foldName/f_${changeToStressPerc[$fric]}_rob_${numPerLay[$robs]}_v_${repeats}_dir_${deadDir}
+			  mkdir $a
+			  cp /cygdrive/d/SimResults/Chrono/SmarticleU/tests/smarticleMoves.csv $a/smarticleMoves.csv
+			  cd $a
+			  # # $smartRunFile ${lwArr[$angs]} 0.00025 ${nlArr[$angs]} ${reArr[$angs]} ${paArr[$angs]} ${ang1Arr[$angs]} ${ang2Arr[$angs]} ${boxangArr[$angs]} ${numPerLay[$angs]} ${changeToStressPerc[$angs]} $saveFrame;
+			  $smartRunFile 0.8 0.001 1 0 1 0 0 0 ${numPerLay[$robs]} ${changeToStressPerc[$fric]} $saveFrame $deadDir 801 1
+			  cd ..;
+			  # cp -r ./PostProcess $a
+			  done;
 		done;
 	done;
 done;
