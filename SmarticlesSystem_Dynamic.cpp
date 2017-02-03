@@ -120,11 +120,16 @@ std::ofstream stress_of;
 std::ofstream vol_frac_of;
 std::ofstream ringPos_of;
 std::ofstream ringContact_of;
+std::ofstream inactive_of;
 //std::ofstream smartPos_of;
 double sizeScale = 1;
-int appWidth = 1280;
-int appHeight = 720;
+int appWidth = 800;
+int appHeight = 600;
+int windPosx = 0;
+int windPosy = 0;
 bool saveFrame = false;
+int inactiveLoc = 0; //location of dead particle in ring +x +y -x -y
+
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 
@@ -219,8 +224,12 @@ bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surf
 //	double bucket_rad = sizeScale*0.04;
 
 std::vector<std::shared_ptr<ChBody>> bucket_bod_vec;
+
+bool writejson = false;
+bool readjson = true;
 json ReadJson(std::string fname);
 json ReadCertainSystem(json& j, int robotNum);
+
 //ChVector<> bucket_interior_halfDim = sizeScale * ChVector<>(.1, .1, .05);
 
 double percentToMoveToGlobal = 1.0/800.0;
@@ -237,8 +246,7 @@ double angle2 = 90;
 double vibAmp = 5 * D2R; //vibrate by some amount of degrees back and forth
 int videoFrameInterval = 1/(out_fps*dT); //dt = [sec/step], fps=[frames/sec] --> 1/(dt*fps)=[(sec*steps)/(sec*frames)]=[steps/frame]
 
-bool writejson = true;
-bool readjson = false;
+
 int smarticleHopperCount = 0;
 namespace ns { 	// struct to add smarticles to json file
 
@@ -681,6 +689,21 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		//percentToMoveToGlobal = atof(text);
 		saveFrame = atoi(text);
 	}
+	if (argc > 12) {
+		const char* text = argv[12];
+		//percentToMoveToGlobal = atof(text);
+		inactiveLoc = atoi(text);
+	}
+	if (argc > 13) {
+		const char* text = argv[13];
+		//percentToMoveToGlobal = atof(text);
+		windPosx = atoi(text);
+	}
+	if (argc > 14) {
+		const char* text = argv[14];
+		//percentToMoveToGlobal = atof(text);
+		windPosy = atoi(text);
+	}
 	/// if parallel, get solver setting
   //if (USE_PARALLEL) {
 	 // if (argc > 8) {
@@ -781,10 +804,39 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 #endif
 
 	json jsonF;
-	int inactiveP=0;
-	if (readjson)
+	bool isActive=true;
+	
+	if (ringActive)
 	{
-		jsonF = ReadJson("pretty.json");
+		if (readjson)
+		{
+			std::string jsonFileLoc;
+			switch(inactiveLoc)
+			{
+				case 0: //+x
+				{
+					jsonFileLoc = "A:\\SmarticleRun\\+x.json";
+					break;
+				}
+				case 1: //+y
+				{
+					jsonFileLoc = "A:\\SmarticleRun\\+y.json";
+					break;
+				}
+				case 2: //-x
+				{
+					jsonFileLoc = "A:\\SmarticleRun\\-x.json";
+					break;
+				}
+				case 3: //-y
+				{
+					jsonFileLoc = "A:\\SmarticleRun\\-y.json";
+					break;
+				}
+			}
+			GetLog() << jsonFileLoc;
+			jsonF = ReadJson(jsonFileLoc);
+		}
 	}
 	ChVector<> dropSpeed = VNULL;
 	ChQuaternion<> myRot = QUNIT;
@@ -826,8 +878,6 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 				myRot = Q_from_AngAxis(-PI_2, VECT_X);
 			}
 			////////////////////////////////////
-
-
 
 			break;
 		case HOPPER:
@@ -880,21 +930,16 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 			
 
 			//
-			//double xPos = genRand(-3, 3)*t2_smarticle / 1.25;
-			//double yPos = (i - 4.2) * 2 * t2_smarticle;
-
 			double xPos = 0;
 			double yPos = 0;
 
+			xPos = genRand(-3, 3)*t2_smarticle / 1.25;
+			yPos = (i - 4.2) * 2 * t2_smarticle;
 
-			//// +/- y  set "i==0" below: (+y,-y)=(4,0)
-			//double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
-			//double yPos = -2.5*t2_smarticle +(i)* genRand(1.1, 1.55)* t2_smarticle;
-			//myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
-			//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI, 0));
-			//inactiveP = 0;
+			
 
-			// +/- x   set "i==0" below: (+x,-x)=(0,4)
+
+			
 
 			if (readjson)
 			{
@@ -909,20 +954,25 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 				angle1 = a1*R2D;
 				angle2 = a2*R2D;
 				//GetLog() << "\ni=" <<i<<"\nang 1:"<< angle1 << "\nang 2: "<< angle2 <<"\n\n";
-				//inactiveP = p.at(i)["alive"]
-				if (!p["alive"])
-				{
-					inactiveP = i;
-				}
+				isActive = p["alive"];
 			}
-			/*std::cout<<"\n"<<p["0"]["alive"] << "\n";*/
 			else
 			{
-				xPos = -2.5*t2_smarticle + (i)*genRand(1.1, 1.55)* t2_smarticle;
-				yPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
+
+				//// +/- y  set "i==0" below: (+y,-y)=(4,0)
+				double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
+				double yPos = -2.5*t2_smarticle +(i)* genRand(1.1, 1.55)* t2_smarticle;
 				myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
-				myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI / 2, 0));
-				inactiveP = 0;
+				myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI, 0));
+				i == 4 ? isActive = false : isActive = true;
+
+				
+				// +/- x   set "i==0" below: (+x,-x)=(0,4)
+				//xPos = -2.5*t2_smarticle + (i)*genRand(1.1, 1.55)* t2_smarticle;
+				//yPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
+				//myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
+				//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI / 2, 0));
+				//i == 4 ? isActive = false : isActive = true;
 			}
 			
 			//////////////////////changed///////////////////
@@ -958,42 +1008,45 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 		smarticle0->SetAngles(angle1, angle2, true);
 		smarticle0->SetInitialAngles();
 
-		if (oneInactive)
-		{
-			if (i == inactiveP)
-			{
-				smarticle0->active = false;//##################
-				smarticle0->SetAngles(angle1, angle2, true);
-				smarticle0->SetInitialAngles();
-			}
-		}
+		smarticle0->active = isActive;
+		//if (oneInactive)
+		//{
+		//	if (isActive)
+		//	{
+		//		smarticle0->active = false;//##################
+
+		//	}
+		//}
+
 		smarticle0->Create();
 		smarticle0->setCurrentMoveType((MoveType)Smarticle::global_GUI_value);
+
+
 		smarticle0->vib.emplace_back(angle1*D2R, angle2*D2R);
 		//must put this line because of how linspace is written;
 		smarticle0->AssignState(VIB);
 		smarticle0->GenerateVib(angle1*D2R, angle2*D2R);
 		smarticle0->AssignState(Smarticle::global_GUI_value);
 		smarticle0->activateStress = 0.3;//percentToChangeStressState; //#########################################
-
+		
+		//FUTNOTE uncomment if we want them to start at different phases
+		//smarticle0->moveTypeIdxs.at(MoveType::GLOBAL) = genRandInt(0,smarticle0->global.size()-1);
+		
+		
 		//smarticle0->ss.emplace_back(angle1, angle2);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
 		//GetLog()<< "\nMASS:"<<smarticle0->GetMass() <<"\n";
-		if (oneInactive)
-		{
-			if (i == inactiveP)
-			{
-				smarticle0->SetBodyFixed(true);
-			}
-		}
 
-		
-		//if (bucketType == BOX || bucketType == FLATHOPPER || bucketType == HOPPER)
+		//if (oneInactive)
 		//{
-		//	dropSmartsInLine()
+		//	if (i == isActive)
+		//	{
+		//		//smarticle0->SetBodyFixed(true);
+		//	}
 		//}
 
+	
 
 
 		//if (bucketType == BOX || bucketType == FLATHOPPER || bucketType == HOPPER)
@@ -1347,6 +1400,7 @@ public:
 		ChVector<> vn = mplanecoord.Get_A_Xaxis();
 
 		irr::video::SColor mcol = irr::video::SColor(150, 255, 0, 0);
+		irr::video::SColor mcol2 = irr::video::SColor(u32(.5), u32(.5), u32(.7),u32(0));
 		cdriver->setTransform(irr::video::ETS_WORLD, irr::core::IdentityMatrix);
 		static f32 hsl = .01; //half side length
 		
@@ -1361,8 +1415,44 @@ public:
 
 						v3 = v1 - ring->GetPos() - ringInitPos;
 						ringContact_of << time << ", " << v3.x << ", " << v3.y << ", " << v3.z << ", " << react_forces.x << ", " << react_forces.y << ", " << react_forces.z << std::endl;
-						cdriver->draw3DBox(c, mcol);
+						
+						
+						mcol.setRed(255);
+					
+						cdriver->draw3DBox(c,mcol );
 					}
+			}
+			else if (
+				modA->GetPhysicsItem()->GetNameString() == "ring" && 
+				((modB->GetPhysicsItem()->GetNameString() == "D_smarticle_arm") || (modB->GetPhysicsItem()->GetNameString() == "D_smarticle_cent"))
+				)
+			{
+				if (react_forces.x != 0)
+				{
+					//inactive_of << "# ring rad = " << ringRad << " tstep, contactx, contacty, contactz, forcex,forcey,forcez, arm1Posx, arm1Posy, arm1Posz, arm1RotE0, arm1PosE1, arm1PosE2, arm1PosE3" << std::endl;
+					auto a = modA->GetPhysicsItem()->GetSystem()->Get_bodylist();
+					const vector3d<f32> min(v1.x - hsl, v1.y - hsl, v1.z - hsl);
+					const vector3d<f32> max(v1.x + hsl, v1.y + hsl, v1.z + hsl);
+					auto c = aabbox3d<irr::f32>(min, max);
+					v3 = v1 - ring->GetPos();
+					ChVector<>pos(0,0,0);
+					ChQuaternion<>q(0,0,0,0);
+					//ugly way of getting central link info...
+					for (size_t i = 0; i < a->size(); i++) {
+						std::shared_ptr<ChBody>inactive2 = a->at(i); 
+						if (inactive2->GetNameString() == "D_smarticle_cent")
+						{
+							pos = inactive2->GetPos() - ring->GetPos();
+							q = inactive2->GetRot();
+							break;
+						}
+					}
+							
+	
+					inactive_of << time << ", " << v3.x << ", " << v3.y << ", " << v3.z << ", " << react_forces.x << ", " << react_forces.y << ", " << react_forces.z << ", " <<
+						pos.x << ", " << pos.y << ", " << pos.z << ", " << q.e0 << ", " << q.e1 << ", " << q.e2 << ", " << q.e3 << ring->GetPos().x<< ring->GetPos().y << ring->GetPos().z <<std::endl;
+					cdriver->draw3DBox(c, mcol2);
+				}
 			}
 		i++;
 		return true;  // to continue scanning contacts
@@ -1374,7 +1464,6 @@ public:
 	double time;
 	double minDist=0.0001;
 };
-
 
 void PrintRingContact(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec, ChIrrApp* app)
 {
@@ -1433,7 +1522,6 @@ void WriteJson(CH_SYSTEM* mphysicalSystem, int tstep, std::vector<std::shared_pt
 	{
 		ns::System p(mySmarticlesVec);
 		p.to_json(j,p);
-		std::cout << j;
 		std::ofstream o("pretty.json");
 		o << std::setw(4) << j << std::endl;
 		
@@ -1466,7 +1554,7 @@ json ReadJson(std::string fname)
 	json jj;
 	i >> jj;
 	int sysSize = jj.size();
-	int randVal = genRand(0, sysSize);
+	int randVal = genRandInt(0, sysSize);
 
 	auto f = jj.at(randVal);
 	//std::cout << f;
@@ -2060,6 +2148,9 @@ int main(int argc, char* argv[]) {
 	// bind a simple user interface, etc. etc.)
 	ChIrrApp application(&mphysicalSystem, L"Dynamic Smarticles",
 		core::dimension2d<u32>(appWidth, appHeight), false, true);
+	HWND winhandle = reinterpret_cast<HWND>(application.GetVideoDriver()->getExposedVideoData().OpenGLWin32.HWnd);
+	MoveWindow(winhandle, windPosx, windPosy, appWidth, appHeight, true);
+
 	////////////!@#$%^
 	// Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
 	ChIrrWizard::add_typical_Logo(application.GetDevice());
@@ -2067,12 +2158,12 @@ int main(int argc, char* argv[]) {
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
 		core::vector3df(0, 0, 4*sys->bucket_rad)*sizeScale,
 		core::vector3df(0, 0, 1*sys->bucket_rad)*sizeScale);
-
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
 		core::vector3df(.0139, -.39, -.0281)*sizeScale,
 		core::vector3df(0.0139, .298, -.195)*sizeScale);
 
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
+
 
 	RTSCamera* camera = new RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
 		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
@@ -2296,13 +2387,17 @@ int main(int argc, char* argv[]) {
 	const std::string vol_frac = out_dir + "/volumeFraction.txt";
 	const std::string ringPos = out_dir + "/RingPos.txt";
 	const std::string ringContact = out_dir + "/RingContact.txt";
-	//const std::string smartPos = out_dir + "/SmartPos.txt";
+	const std::string inactivePos = out_dir + "/InactivePos.txt";
 
 	ringPos_of.open(ringPos.c_str());
 	ringContact_of.open(ringContact.c_str());
 	stress_of.open(stress.c_str());
 	flowRate_of.open(flowRate.c_str());
 	vol_frac_of.open(vol_frac.c_str());
+	inactive_of.open(inactivePos.c_str());
+
+
+	inactive_of << "# ring rad = " << ringRad << " tstep, contactx, contacty, contactz, forcex,forcey,forcez, arm1Posx, arm1Posy, arm1Posz, arm1RotE0, arm1PosE1, arm1PosE2, arm1PosE3" << std::endl;
 	ringContact_of << "# ring rad = " << ringRad << " tstep, contactx, contacty, contactz, forcex,forcey,forcez" << std::endl;
 	ringPos_of << "# ring rad = " << ringRad << " tstep, x, y, z, globalGUI, comX, comY, comZ" << std::endl;
 	stress_of << dT << ", " << out_fps << ", " << videoFrameInterval << ", " << sys->bucket_rad << ", " << bucketType << std::endl;
@@ -2326,7 +2421,7 @@ int main(int argc, char* argv[]) {
 		ring->SetIdentifier(455465);
 		ring->SetCollide(true);
 		ringInitPos = pos2;
-		ring->SetBodyFixed(true);
+		//ring->SetBodyFixed(true);
 
 		mphysicalSystem.AddBody(ring);
 
@@ -2476,9 +2571,10 @@ int main(int argc, char* argv[]) {
 
 		//	//////////////////////////////////////////////////////////////////////
 		if (ringActive)
+		{
 			PrintRingContact(&mphysicalSystem, tStep, ring, mySmarticlesVec, &application);
-		//application.GetVideoDriver()->setTransform(irr::video::ETS_VIEW, irr::core::IdentityMatrix);
-
+		}
+			//application.GetVideoDriver()->setTransform(irr::video::ETS_VIEW, irr::core::IdentityMatrix);
 		application.DrawAll();
 
 		application.GetVideoDriver()->endScene();
@@ -2565,6 +2661,7 @@ int main(int argc, char* argv[]) {
 	vol_frac_of.close();
 	ringPos_of.close();
 	ringContact_of.close();
-	//smartPos_of.close();
+	inactive_of.close();
+	winhandle->unused = 0;
   return 0;
 }

@@ -477,7 +477,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 		char comm[150];
 #if defined(_WIN64)
 		sprintf(comm, "ffmpeg -framerate %d -i ", fps);
-		strcat(comm, "video_capture/screenshot%05d.png -c:v libxvid -q 0 video_capture/outVid.avi");
+		strcat(comm, "video_capture/screenshot%05d.png -c:v libxvid -q 0 -vf scale=800:600 video_capture/outVid.avi");
 
 #else
 		sprintf(comm, "ffmpeg -framerate %d -i ", fps);
@@ -500,6 +500,9 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 		if (saveFrame) {
 			if (frameNum % stepsPerFrame == 0) {
 				ChFileutils::MakeDirectory("video_capture");
+				HWND winhandle = reinterpret_cast<HWND>(app->GetVideoDriver()->getExposedVideoData().OpenGLWin32.HWnd);
+				//MoveWindow(winhandle, 700, 200, appWidth,appHeight, true);
+				SetWindowPos(winhandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 				irr::video::IImage* image = app->GetVideoDriver()->createScreenShot();
 				char filename[100];
 				sprintf(filename, "video_capture/screenshot%05d.png", (frameNum + 1) / stepsPerFrame);

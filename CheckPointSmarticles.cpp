@@ -188,7 +188,7 @@ void CheckPointSmarticlesDynamic_Write(
 
 }
 //====================================================================================
-// note : for now, this is only for smarticleU and only for ChSystemParallelDVI
+
 void CheckPointSmarticles_Read(
 		CH_SYSTEM& mphysicalSystem,
 		std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec) {
