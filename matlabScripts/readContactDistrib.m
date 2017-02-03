@@ -1,4 +1,4 @@
-function [force,angs,polarForceHist]=readContactDistrib(fname,binWid)
+function [force,angs,fcs]=readContactDistrib(fname,binWid)
 % fold='A:\SmarticleRun\Amoeba_COG_dead_1_pos_+x\f_0.2_rob_5_v_9\';
 % fname=fullfile(fold,'PostProcess','RingContact.txt');
 % binWid=5;
@@ -17,8 +17,9 @@ force=[simD.data(:,1) simD.data(:,5) simD.data(:,6)];
 % % [match, nomatch]=regexp(simD.textdata,'[0-9.]+','match');
 % % r=str2double(match{1});
 
-angs=atan2(pos(:,3),pos(:,2))+deg2rad(180);
-
+% angs=atan2(pos(:,3),pos(:,2))+deg2rad(180);
+angs=atan2(pos(:,3),pos(:,2));
+angs=mod(angs,2*pi);
 binW=deg2rad(binWid); %degrees
 
 %% P(theta)
@@ -64,16 +65,20 @@ binW=deg2rad(binWid); %degrees
 
 %% polarForce histogram
 % figure(3)
-disc=discretize(angs,0:binW:2*pi);
+% disc=discretize(angs,0:binW:2*pi);
+disc=discretize(angs,linspace(0,2*pi,round(2*pi/binW)+1));
 ud=unique(disc);
 lenuni=length(ud);
-fcs=zeros(lenuni,1);
-polarForceHist=[];
+fcs=zeros(lenuni,2);
+% polarForceHist=[];
 
 % sum(norm(force(disc==ud(:),2:3)));
 for(i=1:lenuni)
-fcs(i)=sum(norm(force(disc==ud(i),2:3)));
-polarForceHist=[polarForceHist; repmat(ud(i)*binW,[round(1000*fcs(i)),1])];
+fcs(i,1)=ud(i)*binW;
+fcs(i,2)=sum(norm(force(disc==ud(i),2:3)));
+
+% fcs(i)=sum(norm(force(disc==ud(i),2:3)));
+% polarForceHist=[polarForceHist; repmat(ud(i)*binW,[round(1000*fcs(i)),1])];
 end
 
 % polarhistogram(polarForceHist,2*pi/binW)
