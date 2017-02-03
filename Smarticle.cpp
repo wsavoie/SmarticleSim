@@ -853,7 +853,7 @@ void Smarticle::Create() {
 	else
 	{
 		arm0->SetName("D_smarticle_arm");
-		arm1->SetName("D_smarticle_arm");
+		arm1->SetName("D_smarticle_cent");
 		arm2->SetName("D_smarticle_arm");
 
 		armsController = NULL;

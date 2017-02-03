@@ -25,6 +25,8 @@
 #define USE_PARALLEL false
 #define irrlichtVisualization true
 #define stapleSize false
+#define dnl "\n\n"
+#define nl "\n"
 	//extern double sizeScale;
 	//extern double dT;
 	//extern bool bucket_exist;
@@ -44,6 +46,8 @@
 	extern SmarticleType smarticleType;
 	extern BucketType bucketType;
 	////////////
+	extern int appWidth;
+	extern int appHeight;
 	extern bool saveFrame;
 	extern int read_from_file;
 	extern double bucket_rad;
