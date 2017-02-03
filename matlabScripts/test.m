@@ -88,3 +88,11 @@ for i = 1:50;
 end
 
 plot(x(:,1),y(:,1),'o',x(:,2),y(:,2),'o');
+
+%% rename vids
+fold=uigetdir('A:\SmarticleRun\');
+f = dir2(fold,'folders');
+for i=1:length(f)
+    ff= fullfile(fold,f(i).name,'video_capture');
+    movefile(fullfile(ff,'outvid.avi'),fullfile(ff,[f(i).name,'.avi']))
+end
