@@ -1,19 +1,24 @@
-function [force,angs,cogpos,rot,fcs]=readInactive(fname,binWid)
+function [force,angs,cogpos,rot,fcs,ringpos]=readInactive(fname,binWid)
 % fold='A:\SmarticleRun\Amoeba_COG_dead_1_pos_+x\f_0.2_rob_5_v_9\';
 % fname=fullfile(fold,'PostProcess','RingContact.txt');
 % binWid=5;
 
 simD=importdata(fname);
 %time, xContact, yContact, zContact, xForce, yForce, zForce
-%,armposx,armposy,armposz, armrote0,armrote1,armrote2,armrote3
+%,armposx,armposy,armposz, armrote0,armrote1,armrote2,armrote3,
+%,ringx, ringy, ringz
+
 simD.data=simD.data(simD.data(:,1)>.2,:);
 simD.data(:,2)=-simD.data(:,2);
 simD.data(:,5)=-simD.data(:,5);
 simD.data(:,8)=-simD.data(:,8);
+simD.data(:,15)=-simD.data(:,15);
 %use negative in x dir since it is a left handed coordinate system
 pos=[simD.data(:,1) simD.data(:,2) simD.data(:,3) ]; %only need time, x, y
 force=[simD.data(:,1) simD.data(:,5) simD.data(:,6)];
 cogpos=[simD.data(:,1) simD.data(:,8) simD.data(:,9)];
+ringpos=[simD.data(:,15) simD.data(:,16)];
+
 q=quaternion([simD.data(:,11),simD.data(:,12),simD.data(:,13),simD.data(:,14)]);
 
 rz=EulerAngles(q(:),'123');

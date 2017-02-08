@@ -120,11 +120,12 @@ std::ofstream stress_of;
 std::ofstream vol_frac_of;
 std::ofstream ringPos_of;
 std::ofstream ringContact_of;
+std::ofstream ringDeadSmart_of;
 std::ofstream inactive_of;
 //std::ofstream smartPos_of;
 double sizeScale = 1;
-int appWidth = 800;
-int appHeight = 600;
+int appWidth = 1280;
+int appHeight = 720;
 int windPosx = 0;
 int windPosy = 0;
 bool saveFrame = false;
@@ -1450,7 +1451,7 @@ public:
 							
 	
 					inactive_of << time << ", " << v3.x << ", " << v3.y << ", " << v3.z << ", " << react_forces.x << ", " << react_forces.y << ", " << react_forces.z << ", " <<
-						pos.x << ", " << pos.y << ", " << pos.z << ", " << q.e0 << ", " << q.e1 << ", " << q.e2 << ", " << q.e3 << ring->GetPos().x<< ring->GetPos().y << ring->GetPos().z <<std::endl;
+						pos.x << ", " << pos.y << ", " << pos.z << ", " << q.e0 << ", " << q.e1 << ", " << q.e2 << ", " << q.e3 << ", " << ring->GetPos().x<< ", " << ring->GetPos().y << ", " << ring->GetPos().z <<std::endl;
 					cdriver->draw3DBox(c, mcol2);
 				}
 			}
@@ -1579,6 +1580,29 @@ void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>
 			cog = cog / totalMass;
 			ringPos_of << mphysicalSystem->GetChTime() << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << Smarticle::global_GUI_value << ", " << cog.x << ", " << cog.y << ", " << cog.z << std::endl;
 	}
+	
+}
+void PrintRingDead(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec)
+{
+	static const int stepPerOut = .1 * 1 / dT;
+	double totalMass = ring->GetMass();
+	ChVector<> cog = ring->GetPos()*ring->GetMass();
+	ChVector<> dead(0,0,0);
+		for (size_t i = 0; i < mySmarticlesVec.size(); i++)
+		{
+			std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
+			if (sPtr->active == false)
+			{
+				dead=sPtr->GetArm(1)->GetPos();
+			}
+			totalMass = totalMass + sPtr->GetMass();
+			cog = cog + sPtr->Get_COG();
+			
+		}
+		cog = cog / totalMass;
+		
+		ringDeadSmart_of<< mphysicalSystem->GetChTime() << ", " << ring->GetPos().x << ", " << ring->GetPos().y << ", " << ring->GetPos().z << ", " << cog.x << ", " << cog.y << ", " << cog.z << ", " << dead.x << ", " << dead.y << ", " << dead.z  << std::endl;
+
 }
 void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad)
 {
@@ -2149,7 +2173,7 @@ int main(int argc, char* argv[]) {
 	ChIrrApp application(&mphysicalSystem, L"Dynamic Smarticles",
 		core::dimension2d<u32>(appWidth, appHeight), false, true);
 	HWND winhandle = reinterpret_cast<HWND>(application.GetVideoDriver()->getExposedVideoData().OpenGLWin32.HWnd);
-	MoveWindow(winhandle, windPosx, windPosy, appWidth, appHeight, true);
+	//MoveWindow(winhandle, windPosx, windPosy, appWidth, appHeight, true);
 
 	////////////!@#$%^
 	// Easy shortcuts to add camera, lights, logo and sky in Irrlicht scene:
@@ -2388,6 +2412,7 @@ int main(int argc, char* argv[]) {
 	const std::string ringPos = out_dir + "/RingPos.txt";
 	const std::string ringContact = out_dir + "/RingContact.txt";
 	const std::string inactivePos = out_dir + "/InactivePos.txt";
+	const std::string ringDead = out_dir + "/RingDead.txt";
 
 	ringPos_of.open(ringPos.c_str());
 	ringContact_of.open(ringContact.c_str());
@@ -2395,14 +2420,14 @@ int main(int argc, char* argv[]) {
 	flowRate_of.open(flowRate.c_str());
 	vol_frac_of.open(vol_frac.c_str());
 	inactive_of.open(inactivePos.c_str());
-
+	ringDeadSmart_of.open(ringDead.c_str());
 
 	inactive_of << "# ring rad = " << ringRad << " tstep, contactx, contacty, contactz, forcex,forcey,forcez, arm1Posx, arm1Posy, arm1Posz, arm1RotE0, arm1PosE1, arm1PosE2, arm1PosE3" << std::endl;
 	ringContact_of << "# ring rad = " << ringRad << " tstep, contactx, contacty, contactz, forcex,forcey,forcez" << std::endl;
 	ringPos_of << "# ring rad = " << ringRad << " tstep, x, y, z, globalGUI, comX, comY, comZ" << std::endl;
 	stress_of << dT << ", " << out_fps << ", " << videoFrameInterval << ", " << sys->bucket_rad << ", " << bucketType << std::endl;
 	flowRate_of << 0 << ", " << 0 << ", " << Smarticle::global_GUI_value << std::endl;
-
+	ringDeadSmart_of << "# ring rad = " << ringRad << " tstep, ringx, ringy, ringz, ringcomX, ringcomY, ringcomZ, ringdeadX, ringdeadY, ringdeadZ" << std::endl;
 	std::shared_ptr<ChBody> ring;
 	if (ringActive)
 	{
@@ -2629,6 +2654,7 @@ int main(int argc, char* argv[]) {
 		{
 			PrintRingPos(&mphysicalSystem, tStep, ring, mySmarticlesVec);
 			//PrintRingContact(&mphysicalSystem, tStep, ring, mySmarticlesVec,&application);
+			PrintRingDead(&mphysicalSystem, tStep, ring, mySmarticlesVec);
 			if (writejson)
 			{
 				WriteJson(&mphysicalSystem, tStep, mySmarticlesVec);

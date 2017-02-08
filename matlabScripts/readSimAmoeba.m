@@ -14,7 +14,7 @@ h = waitbar(0,'Please wait...');
 set(h.Children.Title,'interpreter','none');
 steps = length(f);
 for i =1:length(f)
-    waitbar(i/steps,h,{['Processing:',num2str(i),'/',num2str(length(f))],f(i).name})
+    waitbar(i/steps,h,{['Processing: ',num2str(i),'/',num2str(length(f))],f(i).name})
     d=fullfile(fold,f(i).name,'PostProcess','RingPos.txt');
     simD=importdata(d);
 %     tstep, x, y, z, globalGUI, comX, comY, comZ
@@ -69,11 +69,13 @@ for i =1:length(f)
             fullfile(fold,f(i).name,'PostProcess','RingContact.txt'),binW);
     end
     if(exist(fullfile(fold,f(i).name,'PostProcess','InactivePos.txt'),'file')==2)
-
-        [simAm(i).deadInnerForce,simAm(i).deadContactAngs, simAm(i).deadPos,simAm(i).deadRot,simAm(i).deadFcs]=readInactive(...
+        [simAm(i).deadInnerForce,simAm(i).deadContactAngs, simAm(i).deadPos,simAm(i).deadRot,simAm(i).deadFcs,simAm(i).ringpos]=readInactive(...
         fullfile(fold,f(i).name,'PostProcess','InactivePos.txt'),binW);
     end
- 
+    if(exist(fullfile(fold,f(i).name,'PostProcess','RingDead.txt'),'file')==2)
+        [simAm(i).fullT,simAm(i).fullRingPos,simAm(i).fullDeadSmartPos,~]=readDeadRing(...
+        fullfile(fold,f(i).name,'PostProcess','RingDead.txt'));
+    end
 end
 close(h)
 save(fullfile(fold,'amoebaData.mat'),'fold','simAm')

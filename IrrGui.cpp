@@ -477,8 +477,8 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 		char comm[150];
 #if defined(_WIN64)
 		sprintf(comm, "ffmpeg -framerate %d -i ", fps);
-		strcat(comm, "video_capture/screenshot%05d.png -c:v libxvid -q 0 -vf scale=800:600 video_capture/outVid.avi");
-
+		//strcat(comm, "video_capture/screenshot%05d.png -c:v libxvid -q 0 -vf scale=800:600 video_capture/outVid.avi");
+		strcat(comm, "video_capture/screenshot%05d.png -c:v libxvid -q 0 video_capture/outVid.avi");
 #else
 		sprintf(comm, "ffmpeg -framerate %d -i ", fps);
 		strcat(comm, "video_capture/screenshot%05d.png -c:v libxvid -q 0 video_capture/outVid.avi");
