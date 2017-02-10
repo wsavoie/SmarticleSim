@@ -378,7 +378,7 @@ void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVecto
 	auto arm = std::make_shared<ChBody>();
 
 	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
-	arm->SetName("smarticle_arm");
+
 	arm->SetPos(posArm);
 	arm->SetRot(rotation*armRelativeRot);
 	arm->SetCollide(true);
@@ -407,37 +407,19 @@ void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVecto
 	{
 		switch (armID) {
 		case 0:
+			arm->SetName("smarticle_arm");
 			arm0_textureAsset = std::make_shared<ChTexture>();
 			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 			arm->AddAsset(arm0_textureAsset);
 			break;
 		case 1:
-		{
+			arm->SetName("smarticle_cent");
 			arm1_textureAsset = std::make_shared<ChTexture>();
 			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_SmarticlePicture.png"));
 			arm->AddAsset(arm1_textureAsset);
-
-			//auto centerMesh = std::make_shared<ChObjShapeFile>();
-			//centerMesh->SetFilename("C:/Users/root/Desktop/Case.obj");
-			//centerMesh->SetColor(ChColor(.4, .2, .5, 0));
-			//ChMatrix33<> a = centerMesh->Rot;
-			////ChQuaternion<> b = a.ClipQuaternion(3,3);
-			////b = b*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI/2, PI/2, 0));
-			////a.PasteQuaternion(b, 3, 3);
-			////GetLog() << a;
-			//a.Set_A_Rxyz(ChVector<>(PI / 2, PI / 2, PI / 2));
-			//centerMesh->Rot = a;
-			//centerMesh->Pos = ChVector<>(1, 1, 1);
-			//GetLog() << "\n ROTATED\n";
-			//GetLog() << a;
-			//GetLog() << centerMesh->Rot;
-			//centerMesh->SetFading(0.1);
-			//arm->AddAsset(centerMesh);
-			//ChFrame<> fr = arm->GetAssetsFrame();
-			//fr.SetRot(a);
 			break;
-		}
 		case 2:
+			arm->SetName("smarticle_arm");
 			arm2_textureAsset = std::make_shared<ChTexture>();
 			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 			arm->AddAsset(arm2_textureAsset);
@@ -748,8 +730,8 @@ void Smarticle::CreateActuators() {
 	qy2.Normalize();
 
 
-	if (active)
-	{
+	//if (active)
+	//{
 		link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 		link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
@@ -771,15 +753,23 @@ void Smarticle::CreateActuators() {
 		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
 		link_actuator12->GetLimit_Rz()->Set_min(D2R*angLow);
 		link_actuator12->GetLimit_Rz()->Set_max(D2R*angHigh);
-		//link_actuator12->Set_mot_inertia(1);
 		link_actuator12->GetLimit_Rz()->Set_active(true);
-	}
-	else
-	{
-		link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
+		//link_actuator12->Set_mot_inertia(1);
+
+		if (!active)
+		{
+			link_actuator01->GetLimit_Rz()->Set_min(D2R * GetInitialAngle(0));
+			link_actuator01->GetLimit_Rz()->Set_max(D2R * GetInitialAngle(0));
+			link_actuator12->GetLimit_Rz()->Set_min(D2R * GetInitialAngle(1));
+			link_actuator12->GetLimit_Rz()->Set_max(D2R * GetInitialAngle(1));
+		}
+	//}
+	//else
+	//{
+	/*	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-		
-	}
+	*/	
+	//}
 
 	m_system->AddLink(link_actuator01);
 	m_system->AddLink(link_actuator12);	
@@ -817,7 +807,7 @@ void Smarticle::Create() {
 	}
 	else
 	{
-		offPlaneoffset = .00825-r2;//smarticle arms arent centered in plane, arm is offset 8.25mm from front or offPlaneoffset-t2
+		offPlaneoffset = .00825 - r2;//smarticle arms arent centered in plane, arm is offset 8.25mm from front or offPlaneoffset-t2
 		jointClearance = .0065;//6.5 mm in x dir jc in y dir is r2
 		double armt = r*.96;
 		double armt2 = .00806 / 2 * sizeScale; //8.06 mm with solar 3.2 without
@@ -843,26 +833,88 @@ void Smarticle::Create() {
 	// mass property
 	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
 
-
-	if (active)
+	armsController = (new Controller(m_system, this));
+	armsController->outputLimit = torqueLimit;
+	armsController->omegaLimit = omegaLim;
+	if (!active)
 	{
-		armsController = (new Controller(m_system,this));
-		armsController->outputLimit= torqueLimit;
-		armsController->omegaLimit = omegaLim;
-	}
-	else
-	{
-		arm0->SetName("D_smarticle_arm");
-		arm1->SetName("D_smarticle_cent");
-		arm2->SetName("D_smarticle_arm");
+			arm0->SetName("D_smarticle_arm");
+			arm1->SetName("D_smarticle_cent");
+			arm2->SetName("D_smarticle_arm");
 
-		armsController = NULL;
-		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+			//armsController = NULL;
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+			
+			//link_actuators[0]->SetBroken(true);
+			//link_actuators[0]->SetDisabled(1);
+			//link_actuators[1]->SetDisabled(1);
 	}
+	//if (active)
+	//{
+	//	armsController = (new Controller(m_system,this));
+	//	armsController->outputLimit= torqueLimit;
+	//	armsController->omegaLimit = omegaLim;
+	//}
+	//else
+	//{
+
+	//	arm0->SetName("D_smarticle_arm");
+	//	arm1->SetName("D_smarticle_cent");
+	//	arm2->SetName("D_smarticle_arm");
+
+	//	armsController = NULL;
+	//	arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+	//	arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+	//	arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+	//}
 }
 
+void Smarticle::ChangeActive(bool m_active)
+{
+	if (m_active != active)
+	{
+		if (m_active)
+		{
+			arm0->SetName("smarticle_arm");
+			arm1->SetName("smarticle_cent");
+			arm2->SetName("smarticle_arm");
+
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
+			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_SmarticlePicture.png"));
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
+			getLinkActuator(0)->GetLimit_Rz()->Set_min(D2R * angLow);
+			getLinkActuator(0)->GetLimit_Rz()->Set_max(D2R * angHigh);
+			getLinkActuator(1)->GetLimit_Rz()->Set_min(D2R * angLow);
+			getLinkActuator(1)->GetLimit_Rz()->Set_max(D2R * angHigh);
+		}
+		else 
+		{
+			arm0->SetName("D_smarticle_arm");
+			arm1->SetName("D_smarticle_cent");
+			arm2->SetName("D_smarticle_arm");
+
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+			
+
+			//link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+			getLinkActuator(0)->GetLimit_Rz()->Set_min(D2R * 0);
+			getLinkActuator(0)->GetLimit_Rz()->Set_max(D2R * 0);
+			getLinkActuator(1)->GetLimit_Rz()->Set_min(D2R * 0);
+			getLinkActuator(1)->GetLimit_Rz()->Set_max(D2R * 0);
+			//this->armsController->resetCumError = true;
+
+			//link_actuators[0]->SetDisabled(1);
+			//link_actuators[1]->SetDisabled(1);
+		}
+	}
+
+	this->active = m_active;
+
+}
 std::shared_ptr<ChFunction> Smarticle::GetActuatorFunction(int id) {
 	if (id <= numEngs - 1)
 	{

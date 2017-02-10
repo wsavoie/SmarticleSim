@@ -84,6 +84,29 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 
 			switch (event.KeyInput.Key)
 			{
+			case irr::KEY_F1:
+			{
+				sv->at(0)->ChangeActive(!sv->at(0)->active);
+				return true;
+				break;
+			}
+			case irr::KEY_F2:
+				sv->at(1)->ChangeActive(!sv->at(1)->active);
+				return true;
+				break;
+			case irr::KEY_F3:
+				sv->at(2)->ChangeActive(!sv->at(2)->active);
+				return true;
+				break;
+			case irr::KEY_F4:
+				sv->at(3)->ChangeActive(!sv->at(3)->active);
+				return true;
+				break;
+			case irr::KEY_F5:
+				sv->at(4)->ChangeActive(!sv->at(4)->active);
+				return true;
+				break;
+
 			case irr::KEY_KEY_Q:
 				if (Smarticle::global_GUI_value != MoveType::GUI1)
 					Smarticle::global_GUI_value = MoveType::GUI1;

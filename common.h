@@ -108,6 +108,26 @@
 #endif
 
 	////////////deprecated code which may still be useful in the future////////////////////////////
+	///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& SOLIDWORKS CODE  &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+	//auto centerMesh = std::make_shared<ChObjShapeFile>();
+	//centerMesh->SetFilename("C:/Users/root/Desktop/Case.obj");
+	//centerMesh->SetColor(ChColor(.4, .2, .5, 0));
+	//ChMatrix33<> a = centerMesh->Rot;
+	////ChQuaternion<> b = a.ClipQuaternion(3,3);
+	////b = b*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI/2, PI/2, 0));
+	////a.PasteQuaternion(b, 3, 3);
+	////GetLog() << a;
+	//a.Set_A_Rxyz(ChVector<>(PI / 2, PI / 2, PI / 2));
+	//centerMesh->Rot = a;
+	//centerMesh->Pos = ChVector<>(1, 1, 1);
+	//GetLog() << "\n ROTATED\n";
+	//GetLog() << a;
+	//GetLog() << centerMesh->Rot;
+	//centerMesh->SetFading(0.1);
+	//arm->AddAsset(centerMesh);
+	//ChFrame<> fr = arm->GetAssetsFrame();
+	//fr.SetRot(a);
+	///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& SOLIDWORKS CODE &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 	///&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& OLD TORQUE CONTROLLER CODE &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 	//double ChFunctionController::ComputeOutputTorque(double t) { //old torque controller

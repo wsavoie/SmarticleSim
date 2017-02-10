@@ -109,7 +109,7 @@ namespace chrono {
 
 		virtual double GetArmTorque(int index); 
 		virtual double GetTotalTorque();
-
+		void ChangeActive(bool m_active);
 		virtual bool ChangeArmColor(double torque01, double torque12, bool LA, bool MA, bool OA);
 		bool MoveOverStress(double torque01, double torque12);
 		bool MoveMidStress(double torque01, double torque12);
@@ -136,6 +136,8 @@ namespace chrono {
 		// jointID belongs to {0, 1}, i.e. the joint between 0 and 1, or between 1 and 2
 		virtual std::shared_ptr<ChLinkLockRevolute> GetRevoluteJoint(int jointID);
 
+
+
 		// get actuator function
 		// actuatorID belongs to {0, 1}, i.e. the actuatorID between 0 and 1, or between 1 and 2
 		virtual std::shared_ptr<ChFunction> GetActuatorFunction(int actuatorID);
@@ -154,6 +156,7 @@ namespace chrono {
 		virtual void RotateSmarticleBy(ChQuaternion<>);
 		virtual void SetEdges();
 		virtual void SetSpeed(ChVector<> newSpeed);
+
 
 
 		//smarticle arm angle

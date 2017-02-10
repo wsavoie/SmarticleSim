@@ -150,7 +150,7 @@ double ringRad = 0.192 / 2.0;
 bool ringActive = true;
 ChVector<> ringInitPos(0, 0, 0);
 
-bool oneInactive = true;
+bool oneInactive = false;
 //double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 //double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
 std::shared_ptr<ChMaterialSurface> mat_smarts;
@@ -855,8 +855,8 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 	{
 		phase = genRand(PI_2);
 		zpos = std::min(3 * sys->bucket_interior_halfDim.z, z) + w_smarticle;
-		
-		switch (bucketType){
+
+		switch (bucketType) {
 		case DRUM:
 			zpos = SaturateValue(z, sys->bucket_rad);
 			myPos = sys->bucket_ctr + ChVector<>(genRand(sys->bucket_interior_halfDim.z / 2.5),
@@ -928,7 +928,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 			////////myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI / 2, 0));
 
 
-			
+
 
 			//
 			double xPos = 0;
@@ -937,19 +937,19 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 			xPos = genRand(-3, 3)*t2_smarticle / 1.25;
 			yPos = (i - 4.2) * 2 * t2_smarticle;
 
-			
 
 
-			
+
+
 
 			if (readjson)
 			{
 				auto p = jsonF;
-				p = ReadCertainSystem(p,i);
-				 
+				p = ReadCertainSystem(p, i);
+
 				myPos = ChVector<>(p["posX"], p["posY"], p["posZ"]);
 				myRot = ChQuaternion<>(p["quatE0"], p["quatE1"], p["quatE2"], p["quatE3"]);
-		
+
 				double a1 = p["ang0"];
 				double a2 = p["ang1"];
 				angle1 = a1*R2D;
@@ -962,12 +962,12 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 
 				//// +/- y  set "i==0" below: (+y,-y)=(4,0)
 				double xPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
-				double yPos = -2.5*t2_smarticle +(i)* genRand(1.1, 1.55)* t2_smarticle;
+				double yPos = -2.5*t2_smarticle + (i)* genRand(1.1, 1.55)* t2_smarticle;
 				myPos = sys->bucket_ctr + ChVector<>(xPos, yPos, (-yPos - 2 * sys->bucket_half_thick)*tan(buckRotAngx) + t_smarticle / 1.99);
 				myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI, 0));
 				i == 4 ? isActive = false : isActive = true;
 
-				
+
 				// +/- x   set "i==0" below: (+x,-x)=(0,4)
 				//xPos = -2.5*t2_smarticle + (i)*genRand(1.1, 1.55)* t2_smarticle;
 				//yPos = 0;// genRand(-3, 3)*t2_smarticle / 1.25;
@@ -975,7 +975,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 				//myRot = buckRot*Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI / 2, PI / 2, 0));
 				//i == 4 ? isActive = false : isActive = true;
 			}
-			
+
 			//////////////////////changed///////////////////
 			break;
 		}
@@ -1009,7 +1009,14 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 		smarticle0->SetAngles(angle1, angle2, true);
 		smarticle0->SetInitialAngles();
 
-		smarticle0->active = isActive;
+		if (oneInactive)
+		{
+			smarticle0->active = isActive;
+		}
+		else
+		{
+			smarticle0->active = true;
+		}
 		//if (oneInactive)
 		//{
 		//	if (isActive)
@@ -1109,12 +1116,6 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<std:
 	//mat_wall->SetFriction(wall_fric); //steel- plexiglass   (plexiglass was outer cylinder material) // .6 for wall to staple using tan (theta) tested on 7/20
 	smart_fric = percentToChangeStressState;//###############
 	mat_smarts->SetFriction(smart_fric);
-
-	
-
-	// 1: create bucket
-
-		
 }
 // =============================================================================
 
@@ -1399,9 +1400,7 @@ public:
 		ChVector<> v2;
 		ChVector<> v3;
 		ChVector<> vn = mplanecoord.Get_A_Xaxis();
-
-		irr::video::SColor mcol = irr::video::SColor(150, 255, 0, 0);
-		irr::video::SColor mcol2 = irr::video::SColor(u32(.5), u32(.5), u32(.7),u32(0));
+		irr::video::SColor boxCol = irr::video::SColor(255, 119, 171, 48);
 		cdriver->setTransform(irr::video::ETS_WORLD, irr::core::IdentityMatrix);
 		static f32 hsl = .01; //half side length
 		
@@ -1417,10 +1416,8 @@ public:
 						v3 = v1 - ring->GetPos() - ringInitPos;
 						ringContact_of << time << ", " << v3.x << ", " << v3.y << ", " << v3.z << ", " << react_forces.x << ", " << react_forces.y << ", " << react_forces.z << std::endl;
 						
-						
-						mcol.setRed(255);
-					
-						cdriver->draw3DBox(c,mcol );
+						cdriver->draw3DBox(c, boxCol);
+
 					}
 			}
 			else if (
@@ -1452,14 +1449,20 @@ public:
 	
 					inactive_of << time << ", " << v3.x << ", " << v3.y << ", " << v3.z << ", " << react_forces.x << ", " << react_forces.y << ", " << react_forces.z << ", " <<
 						pos.x << ", " << pos.y << ", " << pos.z << ", " << q.e0 << ", " << q.e1 << ", " << q.e2 << ", " << q.e3 << ", " << ring->GetPos().x<< ", " << ring->GetPos().y << ", " << ring->GetPos().z <<std::endl;
-					cdriver->draw3DBox(c, mcol2);
+					cdriver->draw3DBox(c, boxCol);
+
 				}
 			}
-		i++;
+			
+
+			//cdriver->draw3DLine(irr::core::vector3dfCH(pA), irr::core::vector3dfCH(pA+ChVector<>(0,0,1)), redcol);
+
+//(622 - 15, 298, 622 + 15, 298 + 10)
 		return true;  // to continue scanning contacts
 	}
 	double i = 0;
 	irr::video::IVideoDriver* cdriver;
+	ChIrrApp* myapp;
 	double clen;
 	std::shared_ptr<ChBody> ring;
 	double time;
@@ -1478,11 +1481,50 @@ void PrintRingContact(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChB
 	//GetLog() << "###########"<< "\n";
 	_draw_reporter_class my_drawer;
 	my_drawer.cdriver = app->GetVideoDriver();
+	my_drawer.myapp = app;
 	my_drawer.clen = 1;
 	my_drawer.ring = ring;
 	my_drawer.time = mphysicalSystem->GetChTime();
 	mphysicalSystem->GetContactContainer()->ReportAllContacts(&my_drawer);
 	double minDist = 9e-5;
+
+
+	//gui::IGUIFont* font = app->GetDevice()->getGUIEnvironment()->getBuiltInFont();
+	//char buffer[25];
+	//sprintf(buffer, "AAAA", i);
+
+	for (size_t i = 0; i < mySmarticlesVec.size(); i++)
+	{
+		std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
+		auto col = irr::video::SColor(255, i*40, i*40, i*40);  // X red
+		switch (i % 5)
+		{
+		case 0:
+			col = irr::video::SColor(255, 0, 114, 189);//
+			break;
+		case 1:
+			col = irr::video::SColor(255, 217, 83,25);//
+			break;
+		case 2:
+			col = irr::video::SColor(255, 237, 177, 32);//
+			break;
+		case 3:
+			col = irr::video::SColor(255, 126, 47, 141);//
+			break;
+		case 4:
+			col = irr::video::SColor(255, 119, 171, 48);//
+			break;
+		default:
+			col = irr::video::SColor(255, 0, 0, 0);  // X red
+			break;
+		}
+	
+		irr::core::vector3df mpos((irr::f32)sPtr->GetArm(1)->GetPos().x, (irr::f32)sPtr->GetArm(1)->GetPos().y, (irr::f32) sPtr->GetArm(1)->GetPos().z);
+		irr::core::position2d<s32> spos = app->GetDevice()->getSceneManager()->getSceneCollisionManager()->getScreenCoordinatesFrom3DPosition(mpos);
+
+		//font->draw(irr::core::stringw(buffer).c_str(), irr::core::rect<s32>(spos.X - 15, spos.Y, spos.X + 15, spos.Y + 10), col);
+		app->GetVideoDriver()->draw2DRectangle(col, irr::core::rect<s32>(spos.X-5, spos.Y-5, spos.X + 5, spos.Y + 5));
+	}
 	//auto ff=ring->GetForceList();
 	/*const vector3d<irr::f32>max(55, 55, 5);
 	const vector3d<irr::f32>min(-5, -5, -5);
@@ -1570,7 +1612,6 @@ void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>
 	ChVector<> cog = ring->GetPos()*ring->GetMass();
 	if (tstep%stepPerOut == 0)
 	{
-		double totalMass;
 			for (size_t i = 0; i < mySmarticlesVec.size(); i++)
 			{
 				std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
@@ -2558,13 +2599,14 @@ int main(int argc, char* argv[]) {
 		for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
 		{
 			application.AssetUpdate(mySmarticlesVec[i]->GetArm(0));
+			application.AssetUpdate(mySmarticlesVec[i]->GetArm(1));
 			application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
 		}
 
 		application.DoStep();
 		//mphysicalSystem.DoStepDynamics(dT);
 		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
-
+		
 
 
 		receiver.drawSmarticleAmt(numGeneratedLayers);
@@ -2595,12 +2637,13 @@ int main(int argc, char* argv[]) {
 		//		armpos3 + vector3df(0, 0, 10), irr::video::SColor(70, 0, 255, 0));*/
 
 		//	//////////////////////////////////////////////////////////////////////
+		application.DrawAll();
 		if (ringActive)
 		{
 			PrintRingContact(&mphysicalSystem, tStep, ring, mySmarticlesVec, &application);
 		}
 			//application.GetVideoDriver()->setTransform(irr::video::ETS_VIEW, irr::core::IdentityMatrix);
-		application.DrawAll();
+		
 
 		application.GetVideoDriver()->endScene();
 
@@ -2633,7 +2676,6 @@ int main(int argc, char* argv[]) {
 		receiver.dtPerFrame = videoFrameInterval;
 		receiver.fps = out_fps;
 		receiver.screenshot(receiver.dtPerFrame);
-
 
 		std::cout.flush();
 
@@ -2688,6 +2730,6 @@ int main(int argc, char* argv[]) {
 	ringPos_of.close();
 	ringContact_of.close();
 	inactive_of.close();
-	winhandle->unused = 0;
+
   return 0;
 }
