@@ -7,7 +7,7 @@ simD=importdata(fname);
 %time, xContact, yContact, zContact, xForce, yForce, zForce
 %,armposx,armposy,armposz, armrote0,armrote1,armrote2,armrote3,
 %,ringx, ringy, ringz
-
+if(isfield(simD,'data'))
 simD.data=simD.data(simD.data(:,1)>.2,:);
 simD.data(:,2)=-simD.data(:,2);
 simD.data(:,5)=-simD.data(:,5);
@@ -45,4 +45,6 @@ for(i=1:lenuni)
 fcs(i,1)=ud(i)*binW;
 fcs(i,2)=sum(norm(force(disc==ud(i),2:3)));
 end
-%     
+else
+    [force,angs,cogpos,rot,fcs,ringpos]=deal(0);
+end

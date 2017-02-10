@@ -4,7 +4,7 @@ simD=importdata(fname);
 % ringcomX, ringcomY, ringcomZ, 
 % ringdeadX, ringdeadY, ringdeadZ
 
-simD.data=simD.data(simD.data(:,1)>.2,:);
+% simD.data=simD.data(simD.data(:,1)>.2,:);
 simD.data(:,2)=-simD.data(:,2);
 simD.data(:,5)=-simD.data(:,5);
 simD.data(:,8)=-simD.data(:,8);

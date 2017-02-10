@@ -25,16 +25,19 @@ close all
 %*15  v dot fixed final r
 %*16  v dot fixed final r full data
 %*17  v dot normalized direct r full data
-%*18  and 19 fluctuation theorem based plot must also use 17!!
+%*18  /19 fluctuation theorem based plot must also use 17!!
+%*20  plot vectors at each position relating position of deadparticle
+%*21  vcorr
+% 22 for each msd traj get linear fit of log
 %************************************************************
 %%
 SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1 17 18];
+showFigs=[22];
 useCOM=0;
-f=[.2]; rob=[4:5]; v=[25];dirs=[0];
+f=[.2]; rob=[4:5]; v=[];dirs=[];
 
 props={f rob v dirs};
 for i=1:length(simAm)
@@ -300,18 +303,31 @@ xx=12;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
+    
+    leg=[];
+    legT={};
     for i=1:length(usedSimAm)
         %         plot(usedSimAm(i).deadInnerForce(:,1),mod(rad2deg(usedSimAm(i).deadRot),180));
-        plot(usedSimAm(i).deadPos(:,2),usedSimAm(i).deadPos(:,3));
-        plot(usedSimAm(i).deadPos(1,2),usedSimAm(i).deadPos(1,3),'k.','markersize',15);
-        plot(usedSimAm(i).deadPos(end,2),usedSimAm(i).deadPos(end,3),'r.','markersize',15);
+        %         plot(usedSimAm(i).deadPos(:,2),usedSimAm(i).deadPos(:,3));
+        %         plot(usedSimAm(i).deadPos(1,2),usedSimAm(i).deadPos(1,3),'k.','markersize',15);
+        %         plot(usedSimAm(i).deadPos(end,2),usedSimAm(i).deadPos(end,3),'r.','markersize',15);
+        %
+        deadPos=usedSimAm(i).fullDeadSmartPos-usedSimAm(i).fullRingPos;
+        h=plot(deadPos(:,1),deadPos(:,2));
+        
+        plot(deadPos(end,1),deadPos(end,2),'r.','markersize',15);
+        leg(i)=h;
+        x=['v',num2str(usedSimAm(i).pars(3))];
+        legT{i}=['v',num2str(usedSimAm(i).pars(3))];
     end
     minR=0.05;
     %     plot(minR,0,'g.','markersize',15);
     cols=get(groot,'defaultaxescolororder');
     viscircles([0,0],usedSimAm(1).r,'color',cols(4,:),'linewidth',4);
+    plot(usedSimAm(1).fullDeadSmartPos(1,1),usedSimAm(1).fullDeadSmartPos(1,2),'k.','markersize',15);
     axis equal
     title('inactive smarticle position relative to ring');
+    legend(leg,legT);
 end
 %% 13 v dot rhat
 xx=13;
@@ -451,10 +467,12 @@ if(showFigs(showFigs==xx))
         %         t=(usedSimAm(i).deadPos(N>minR));
         
         deadPos=usedSimAm(i).fullDeadSmartPos(1:end,:);
+        deadPos2t=usedSimAm(i).fullDeadSmartPos(1:2:end,:);
+        
         ringPos=usedSimAm(i).fullRingPos(1:end,:);
         vRing=diff(ringPos)./diff(usedSimAm(i).fullT(1:end,:));
         
-        deadPos2t=usedSimAm(i).fullDeadSmartPos(1:2:end,:);
+        
         ringPos2t=usedSimAm(i).fullRingPos(1:2:end,:);
         vRing2t=diff(ringPos2t)./diff(usedSimAm(i).fullT(1:2:end,:));
         
@@ -470,9 +488,9 @@ if(showFigs(showFigs==xx))
     ylabel('counts');
     text(.1,.8,['mean = ',num2str(mean(dotProd))],'units','normalized');
     
-    pts('final pos=(',deadPos(1,1),',',deadPos(1,2),')');
-    pts('norm of pos=',norm(deadPos(1,:)),')');
-%     set(gca,'yscale','log');
+    %     pts('final pos=(',deadPos(1,1),',',deadPos(1,2),')');
+    %     pts('norm of pos=',norm(deadPos(1,:)),')');
+    set(gca,'yscale','log');
 end
 %% 18 19 fluctuation theorem based plot must also use 17!!
 xx=18;
@@ -480,7 +498,7 @@ if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
     subplot(2,2,1)
-
+    
     dp=histogram(dotProd);
     s=dp.Values;
     s(s==0)=.001;
@@ -497,20 +515,20 @@ if(showFigs(showFigs==xx))
     plot(1:length(cl),(cl),'g')
     plot(length(cl):length(s),cr,'r')
     
-    subplot(2,2,3); 
+    subplot(2,2,3);
     hold on;
     title('slopes of left and right side of $\vec{v}_{ring}\cdot\vec{r}$','interpreter','latex');
     indL=round(length(cl)*.4);
     plot(cl(indL:end-1))
     x2=(indL:length(cl));
     [a2 b2]=polyfit([x2]',cl(x2)',1);
-    plot(x2-x2(1),a2(1)*(x2)+a2(2),'g','linewidth',2);  
+    plot(x2-x2(1),a2(1)*(x2)+a2(2),'g','linewidth',2);
     indR=round(length(cr)*.6);
     [a b]=polyfit([1:length(cr(2:indR))]',cr(2:indR)',1);
     plot(cr(2:indR))
     x=1:length(cr(2:indR));
     plot(x,a(1)*(x)+a(2),'r','linewidth',2);
-
+    
     subplot(2,2,4);
     hold on;
     plot(x,a(1)*(x)+a(2),'g','linewidth',1);
@@ -519,7 +537,7 @@ if(showFigs(showFigs==xx))
     suptitle('window = t');
     
     %2t figure
-    figure(xx+1)  
+    figure(xx+1)
     hold on;
     subplot(2,2,1)
     hold on;
@@ -554,11 +572,150 @@ if(showFigs(showFigs==xx))
     plot(cr_2t(2:indR_2t))
     x_2t=1:length(cr_2t(2:indR_2t));
     plot(x_2t,a_2t(1)*(x_2t)+a_2t(2),'r','linewidth',2);
-
+    
     subplot(2,2,4);
     hold on;
     plot(x_2t,a_2t(1)*(x_2t)+a_2t(2),'r','linewidth',1);
     plot(x2_2t-x2_2t(1),-a2_2t(1)*(x2_2t-x2_2t(1))+a_2t(2),'g','linewidth',1);
     pts('left2t + right2t= (',a2_2t(1),')+ (',a_2t(1),') =',a2_2t(1)+a_2t(1));
     suptitle('window = 2t');
+end
+
+%% 20 plot vectors at each position relating position of deadparticle
+xx=20;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    NE=length(usedSimAm);
+    xp=-1;
+    yp=-1;
+    dec=500;
+    tick=.25;
+    leg=[];
+    legT={};
+    for i=1:length(usedSimAm)
+        
+        xp=mod(xp+1,5);
+        if(xp==0)
+            yp=yp+1;
+        end
+        %         pts('xp=',xp,' yp=',yp);
+        XP=xp*tick;
+        YP=yp*tick;
+        
+        %         deadPos=normr(usedSimAm(i).fullDeadSmartPos-repmat(usedSimAm(i).fullRingPos(1,:),[size(usedSimAm(i).fullRingPos,1),1]));
+        %         ringPos=usedSimAm(i).fullRingPos-repmat(usedSimAm(i).fullRingPos(1,:),[size(usedSimAm(i).fullRingPos,1),1]);
+        deadPos=normr(usedSimAm(i).fullDeadSmartPos);
+        ringPos=usedSimAm(i).fullRingPos;
+        h=plot(ringPos(:,1)+XP,ringPos(:,2)+YP,'linewidth',1.5);
+        quiver(ringPos(1:dec:end,1)+XP,ringPos(1:dec:end,2)+YP,deadPos(1:dec:end,1),deadPos(1:dec:end,2),'color','k')
+        plot(ringPos(1,1)+XP,ringPos(1,2)+YP,'.k','markersize',15);
+        plot(ringPos(end,1)+XP,ringPos(end,2)+YP,'.r','markersize',15);
+        
+        leg=[leg h];
+        x=['v',num2str(usedSimAm(i).pars(3))];
+        legT{i}=['v',num2str(usedSimAm(i).pars(3))];
+    end
+    ax=gca;
+    ax.XTick=[-.25:tick:max(xticks)];
+    ax.YTick=[-.25:tick:max(yticks)];
+    grid on;
+    legend(leg,legT);
+end
+
+%% 21
+xx=21;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    dt=diff(usedSimAm(1).fullT(1:2));
+    dec=1;
+    pks=[];
+    for i=1:length(usedSimAm)
+        %         deadPos=normr(usedSimAm(i).fullDeadSmartPos-repmat(usedSimAm(i).fullRingPos(1,:),[size(usedSimAm(i).fullRingPos,1),1]));
+        %         ringPos=usedSimAm(i).fullRingPos-repmat(usedSimAm(i).fullRingPos(1,:),[size(usedSimAm(i).fullRingPos,1),1]);
+        deadPos=normr(usedSimAm(i).fullDeadSmartPos(1:end-1,:));
+        ringPos=usedSimAm(i).fullRingPos;
+        vRing=diff(ringPos)./diff(usedSimAm(i).fullT(1:end,:));
+        vRing=normr(vRing);
+        deadPos=normr(deadPos);
+        
+        vTheta=atan2(vRing(:,2),vRing(:,1));
+        dTheta=atan2(deadPos(:,2),deadPos(:,1));
+        vTheta=decimate(vTheta,dec);
+        dTheta=decimate(dTheta,dec);
+        [Rmm,lags]=xcorr(vTheta,dTheta,55*dec/dt,'unbiased');
+        lags=lags*dt/dec;
+        %         Rmm=Rmm(lags<0);
+        %         lags=lags(lags<0);
+        %         Rmm=Rmm(lags>-55);
+        %         lags=lags(lags>-55);
+        Rmm=Rmm/max(Rmm);
+        subplot(1,2,1);
+        hold on; title('correlation');
+        xlabel('Lag (s)');ylabel('normalized correlation');
+        h=plot(lags,Rmm);
+        [pksY,pksX]=findpeaks(Rmm,lags,'MinPeakDistance',10,'minpeakheight',.75,'SortStr','descend');
+        %         [pksY,pksX]=findpeaks(abs(Rmm),lags,'MinPeakDistance',10,'SortStr','descend');
+        pksY=Rmm(round(lags,5)==round(pksX(1),5));
+        
+        pks(i)=pksX(1);
+        plot(pksX(1),pksY,'^','color',h.Color,'markerfacecolor',h.Color)
+        %         pause;
+        %         [Rmm]=xcorr2(vRing);
+        
+    end
+    subplot(1,2,2);
+    hold on;
+    plot(pks,'-o');
+    plot(abs(pks),'.-','markersize',15);
+    %     [Rmm,lags]=xcorr(vTheta,dTheta);
+    %     %         [Rmm]=xcorr2(vRing);
+    %     Rmm=Rmm/max(abs(Rmm));
+    %     lags=lags*dt*dec;
+    %     plot(lags,Rmm);
+    %     xlabel('Lag (s)');
+    %     [a,b]=findpeaks(abs(Rmm),lags,'MinPeakDistance',10,'minpeakheight',.75)
+    
+    %         figure(22);
+    %          [Rmm,lags]=xcorr(vTheta);
+    % %         [Rmm]=xcorr2(vRing);
+    %         plot(lags,Rmm/max(Rmm))
+    %         xlabel('Lag (s)');
+end
+%% 22 for each msd traj get linear fit of log
+xx=22;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    
+    if(isempty(ma.msd))
+        ma = ma.computeMSD;       
+    end
+    p=ma.getMeanMSD([]);
+    x=p(:,1);
+    y=p(:,2);
+    y=y(x>1.2&x<15);
+    x=x(x>1.2&x<15);
+    lx=log(x);
+    ly=log(y);
+    pom=fit(lx,ly,'poly1');
+    %mean of powers
+    clear x y lx ly
+    fs=zeros(length(ma.msd),1);
+    for i=1:length(ma.msd)
+        a=ma.msd{i}(:,1:2);
+        x=a(:,1);
+        y=a(:,2);
+        y=y(x>1.2&x<15);
+        x=x(x>1.2&x<15);
+        [lx]=log(x);
+        [ly]=log(y);
+        [f,gof]=fit(lx,ly,'poly1');
+        fs(i)=f.p1;
+    end
+    plot(fs);
+    
+    pts('mean of powers=',mean(fs),'  power of mean=',pom.p1);
+    % std(fs);
 end
