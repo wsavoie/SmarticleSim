@@ -77,19 +77,27 @@ xx=1;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
-    if(useCOM)
-        title('Ring COM');
-    else
-        title('Ring COG');
-    end
+    %     if(useCOM)
+    %         title('Ring COM');
+    %     else
+    %         title('Ring COG');
+    %     end
     ma.plotTracks
     ma.labelPlotTracks
-    text(0,0+.01,'start')
+%     text(0,0+.01,'start')
     plot(0,0,'ro','markersize',8,'MarkerFaceColor','k');
-    
+    leg=[];
+    legT={};
     for i=1:length(ma.tracks)
         plot(ma.tracks{i}(end,2),ma.tracks{i}(end,3),'ko','markersize',4,'MarkerFaceColor','r');
+        %         leg(i)=h;
+        x=['v',num2str(usedSimAm(i).pars(3))];
+        legT{i}=['v',num2str(usedSimAm(i).pars(3))];
     end
+
+        
+        
+    set(gca,'xtick',[-.2:.1:.2],'ytick',[-.2:.1:.2]);
     y=get(gca,'ylim'); x=get(gca,'xlim');
     c=max(abs(x)); xlim([-c,c]);
     c=max(abs(y)); ylim([-c,c]);
@@ -98,7 +106,7 @@ if(showFigs(showFigs==xx))
     x=xlim; y=ylim;
     plot(x,[0,0],'r');
     plot([0,0],y,'r');
-    
+    legend(legT);
     figText(gcf,14)
 end
 
@@ -109,8 +117,9 @@ if(showFigs(showFigs==xx))
     
     ma = ma.computeMSD;
     ma.plotMeanMSD(gca, true);
-    ma.plotMSD;
+%     ma.plotMSD;
     [a b]=ma.fitMeanMSD;
+    xlim([0 15])
     figText(gcf,14)
 end
 %% 3 plot vcorr
@@ -647,19 +656,18 @@ if(showFigs(showFigs==xx))
         dTheta=decimate(dTheta,dec);
         [Rmm,lags]=xcorr(vTheta,dTheta,55*dec/dt,'unbiased');
         lags=lags*dt/dec;
-        %         Rmm=Rmm(lags<0);
-        %         lags=lags(lags<0);
-        %         Rmm=Rmm(lags>-55);
-        %         lags=lags(lags>-55);
-        Rmm=Rmm/max(Rmm);
+        %                 Rmm=Rmm(lags>3);
+        %                 lags=lags(lags>3);
+        %                 Rmm=Rmm(lags<20);
+        %                 lags=lags(lags<20);
+        Rmm=Rmm/max(abs(Rmm));
         subplot(1,2,1);
-        hold on; title('correlation');
+        hold on; title('cross correlation (v_{ring}*r_{inactive})');
         xlabel('Lag (s)');ylabel('normalized correlation');
         h=plot(lags,Rmm);
-        [pksY,pksX]=findpeaks(Rmm,lags,'MinPeakDistance',10,'minpeakheight',.75,'SortStr','descend');
+        [pksY,pksX]=findpeaks(abs(Rmm),lags,'MinPeakDistance',10,'minpeakheight',.75,'SortStr','descend');
         %         [pksY,pksX]=findpeaks(abs(Rmm),lags,'MinPeakDistance',10,'SortStr','descend');
         pksY=Rmm(round(lags,5)==round(pksX(1),5));
-        
         pks(i)=pksX(1);
         plot(pksX(1),pksY,'^','color',h.Color,'markerfacecolor',h.Color)
         %         pause;
@@ -668,8 +676,12 @@ if(showFigs(showFigs==xx))
     end
     subplot(1,2,2);
     hold on;
+    title('max(abs(crosscorr)) ');
+    xlabel('run number');
+    ylabel('time lag(s)');
     plot(pks,'-o');
     plot(abs(pks),'.-','markersize',15);
+    set(gca,'xtick',v);
     %     [Rmm,lags]=xcorr(vTheta,dTheta);
     %     %         [Rmm]=xcorr2(vRing);
     %     Rmm=Rmm/max(abs(Rmm));
@@ -691,7 +703,7 @@ if(showFigs(showFigs==xx))
     hold on;
     
     if(isempty(ma.msd))
-        ma = ma.computeMSD;       
+        ma = ma.computeMSD;
     end
     p=ma.getMeanMSD([]);
     x=p(:,1);
