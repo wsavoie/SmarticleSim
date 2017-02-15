@@ -53,21 +53,21 @@ saveFrame=1
 changeToStressPerc=(0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0)
 #+x +y -x -y
 dirs=(0 1 2 3)
+inactiveParticle=1;
 #######regular run
-# foldName='Amoeba_newsquareAC'
-foldName='Amoeba_Ring_v2_dead_1'
-########################REMEMBER TO CHANGE (i+1) back to (i) in xpos!!!!!
+foldName='Amoeba_Ring_180s_dead_1'
+# foldName='Amoeba_Ring_Active'
 mkdir $foldName
 for fric in `seq 2 2`; do
 	for deadDir in `seq 0 3`; do
-		for repeats in `seq 16 30`; do
+		for repeats in `seq 0 10`; do
 			for robs in `seq 1 1`; do
 			  a=/cygdrive/a/SmarticleRun/$foldName/f_${changeToStressPerc[$fric]}_rob_${numPerLay[$robs]}_v_${repeats}_dir_${deadDir}
 			  mkdir $a
 			  cp /cygdrive/d/SimResults/Chrono/SmarticleU/tests/smarticleMoves.csv $a/smarticleMoves.csv
 			  cd $a
 			  # # $smartRunFile ${lwArr[$angs]} 0.00025 ${nlArr[$angs]} ${reArr[$angs]} ${paArr[$angs]} ${ang1Arr[$angs]} ${ang2Arr[$angs]} ${boxangArr[$angs]} ${numPerLay[$angs]} ${changeToStressPerc[$angs]} $saveFrame;
-			  $smartRunFile 0.8 0.001 1 0 1 0 0 0 ${numPerLay[$robs]} ${changeToStressPerc[$fric]} $saveFrame $deadDir 801 1
+			  $smartRunFile 0.8 0.001 1 0 1 0 0 0 ${numPerLay[$robs]} ${changeToStressPerc[$fric]} $saveFrame $deadDir 801 1 $inactiveParticle
 			  cd ..;
 			  # cp -r ./PostProcess $a
 			  done;
