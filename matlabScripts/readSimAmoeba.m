@@ -8,6 +8,9 @@ clear all
 center=1; %1 to center ring pos data at (0,0)
 fold=(uigetdir('A:\SmarticleRun'));
 f = dir2(fold,'folders');
+
+
+
 binW=5; %bin width for polar plots 
 simAm=struct;
 h = waitbar(0,'Please wait...');
@@ -75,6 +78,12 @@ for i =1:length(f)
     if(exist(fullfile(fold,f(i).name,'PostProcess','RingDead.txt'),'file')==2)
         [simAm(i).fullT,simAm(i).fullRingPos,simAm(i).fullDeadSmartPos,~]=readDeadRing(...
         fullfile(fold,f(i).name,'PostProcess','RingDead.txt'));
+    end
+    
+    %rename video files to the name of the system
+    ff= fullfile(fold,f(i).name,'video_capture');
+    if(exist(fullfile(fold,f(i).name,'video_capture','outvid.avi'),'file')==2)
+        movefile(fullfile(ff,'outvid.avi'),fullfile(ff,[f(i).name,'.avi']))
     end
 end
 close(h)
