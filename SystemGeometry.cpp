@@ -127,6 +127,108 @@ std::shared_ptr<ChMaterialSurface> SystemGeometry::mat_wall = std::make_shared<C
 SystemGeometry::~SystemGeometry()
 {
 }
+std::shared_ptr<ChBody> SystemGeometry::create_Maze()
+{
+	auto cc = std::make_shared<ChBody>();
+	ChVector<> sz;
+	ChVector<> pos;
+	double h = bucket_half_thick * 5;
+	ChVector<> ip = bucket->GetPos(); //initial pos
+	std::shared_ptr<ChTexture> mazeText = std::make_shared<ChTexture>();
+	mazeText->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+	cc->AddAsset(mazeText);
+	cc->SetPos(ip);
+	cc->SetRot(QUNIT);
+	cc->SetBodyFixed(true);
+	cc->SetCollide(true);
+	cc->SetMaterialSurface(mat_wall);
+	cc->SetName("MAZE WALL");
+
+	double LW = 0.6;
+	double lFL = .6;
+
+	//top first lane
+	cc->GetCollisionModel()->ClearModel();
+	sz = ChVector<>(lFL, h, h);
+	pos = ip + (ChVector<>(-lFL/2+h, LW /2, h*1.5));
+	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
+	
+	//bott first lane
+	sz = ChVector<>(lFL+LW/2+h, h, h);
+	pos = ip + (ChVector<>(-lFL/2-LW/2, -LW / 2, h*1.5));
+	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
+
+	//back first lane
+	sz = ChVector<>(h, LW / 2.0, h);
+	pos = ip + (ChVector<>(lFL / 2.0, 0, h*1.5));
+	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
+
+	
+	ChVector<> L2P = ip + ChVector<>(-lFL - LW / 2+h, LW+3*h, 0);
+
+	lFL = .8;
+
+	//left second lane
+	sz = ChVector<>(h, lFL/2, h);
+	pos = L2P + (ChVector<>(0, 0, h*1.5));
+	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
+
+	//right second lane
+	sz = ChVector<>(h, lFL / 2+LW, h);
+	pos = L2P + (ChVector<>( -LW-2*h, 0, h*1.5));
+	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
+
+	lFL = .8;
+
+	//bott third lane
+
+	sz = ChVector<>(lFL, h, h);
+	pos = ip + (ChVector<>(-lFL/2 +LW/2, 2 * lFL-LW+2*h, h*1.5));
+	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
+
+	//top third lane
+	sz = ChVector<>(lFL + LW / 2+h, h, h);
+	pos = ip + (ChVector<>(-lFL / 2-h, 2 * lFL + 4 * h, h*1.5));
+	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
+
+
+
+	cc->GetCollisionModel()->BuildModel();
+	sys->AddBody(cc);
+	return cc;
+}
+
+std::shared_ptr<ChBody> SystemGeometry::create_BoxBig()
+{
+	//blahblah
+	//auto mmaterial = std::make_shared<ChMaterialSurface>();
+	//mmaterial->SetFriction(0.4f);
+	//mmaterial->SetCompliance(0.0000005f);
+	//mmaterial->SetComplianceT(0.0000005f);
+	//mmaterial->SetDampingF(0.2f);
+
+	boxdim = ChVector<>(.28 / 1.5 *10, .55245*4, 2 * bucket_rad / 8);
+	bucket = utils::CreateBoxContainer(sys, bucketID, mat_wall,
+		boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
+
+
+	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+
+	bucket->SetCollide(true);
+	bucket->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+	bucket_bott->GetCollisionModel()->SetFamily(envFamily);
+	bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+
+
+	return bucket;
+}
 
 std::shared_ptr<ChBody> SystemGeometry::create_Box()
 {
@@ -140,6 +242,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_Box()
 
 	bucket = utils::CreateBoxContainer(sys, bucketID, mat_wall,
 		boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
+
 
 	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 
@@ -708,7 +811,12 @@ void SystemGeometry::create_Container()
 	{
 		case BOX:
 		{
-			bucket = create_Box();
+			//FUTNOTE uncomment for old box
+			//bucket = create_Box();
+			
+			//Maze
+			bucket = create_BoxBig();
+			//std::shared_ptr<ChBody> maze = create_Maze();
 			bucket_bott = create_Bucket_Bott();
 			bucket_bott->SetCollide(false);
 			bucket_bott->SetPos(ChVector<>(5, 5, 5));
