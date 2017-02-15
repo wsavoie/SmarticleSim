@@ -22,22 +22,23 @@ close all
 %*12. positions of inactive smarticle
 %*13. v.rhat histogram
 %*14. v.r histogram
-%*15  v dot fixed final r
-%*16  v dot fixed final r full data
-%*17  v dot normalized direct r full data
-%*18  /19 fluctuation theorem based plot must also use 17!!
-%*20  plot vectors at each position relating position of deadparticle
-%*21  vcorr
-% 22 for each msd traj get linear fit of log
+%*15. v dot fixed final r
+%*16. v dot fixed final r full data
+%*17. v dot normalized direct r full data
+%*18. /19 fluctuation theorem based plot must also use 17!!
+%*20. plot vectors at each position relating position of deadparticle
+%*21. vcorr
+%*22. for each msd traj get linear fit of log
+%*23. %% 23 histogram of probability(theta_R-theta_r) make vid
 %************************************************************
 %%
 SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[22];
+showFigs=[2 22];
 useCOM=0;
-f=[.2]; rob=[4:5]; v=[];dirs=[];
+f=[.2]; rob=[]; v=[];dirs=[];
 
 props={f rob v dirs};
 for i=1:length(simAm)
@@ -716,6 +717,76 @@ if(showFigs(showFigs==xx))
     end
     plot(fs);
     
-    pts('mean of powers=',mean(fs),'  power of mean=',pom.p1);
+     msd=ma.getMeanMSD;
+    msd=msd(msd(:,1)<15&msd(:,1)>0.1,:);
+    [lx]=log(msd(:,1));
+    [ly]=log(msd(:,2));
+    [f2]=polyfit(lx,ly,1);
+    meanPow=f2(1);
+    
+    pts('(*)mean of powers=',mean(fs),'  power of mean=',pom.p1,' meanpow=',meanPow);
     % std(fs);
+end
+%% 23 histogram of probability(theta_R-theta_r) make vid
+xx=23;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    fps=10;
+    writeVid=true;
+    if(writeVid)
+        outputVideo = VideoWriter(fullfile('','prob(theta).avi'));
+        outputVideo.FrameRate=fps;
+        open(outputVideo);
+    end
+    for j=[2:1:60]
+        for i=1:length(usedSimAm)
+            tt=usedSimAm(i).fullT;
+            ringPos(i,:)=normr(usedSimAm(i).fullRingPos(round(tt,5)==j,:));
+            deadPos(i,:)=normr(usedSimAm(i).fullDeadSmartPos(1,:));
+            %             histogra
+        end
+        ringTheta=atan2(ringPos(:,2),ringPos(:,1));
+        deadTheta=atan2(deadPos(:,2),deadPos(:,1));
+        res=mod(ringTheta-deadTheta+pi,2*pi);
+        res=res-pi;
+        %         res=atan2(ringPos(:,2)-deadPos(:,2),ringPos(:,1)-deadPos(:,1));
+        %         figure(j);
+        bins=11;
+        edges=linspace(-pi,pi,bins+1);
+        histogram(res,'BinEdges',edges,'Normalization','probability');
+        
+        %axis limits x
+        set(gca,'xticklabel',{'-\pi' '-\pi/2' '0' '\pi/2','\pi'},'xtick',[-pi,-pi/2,0,pi/2,pi]);
+        xlim([-pi,pi]);
+        
+        %axis limits y
+        set(gca,'yticklabel',{'0' '0.25' '0.5' '0.75','1'},'ytick',[0 0.25 0.5 0.75 1]);
+        ylim([0,1]);
+        
+        
+        % title('Probability distribution of \theta_{ring}(t=0) - \theta_{inactive}(t=t_f)');
+%         ylabel('P(\theta_r(t=t_f)-\theta_{is}(t=0))');
+
+        xlabel('angle (rads)');
+        ylabel('P(\theta_R(t)-\theta_r(0))');
+
+        figtxt=text(.1,.9,['t = ',num2str(j),' s'],'units','normalized');
+        figText(gcf,15);
+
+
+        if(writeVid)
+            writeVideo(outputVideo,getframe(gcf));  
+        else
+           pause(1/fps); 
+        end
+        clf;
+        
+        %        pause(.25);
+        
+    end
+    
+    if(writeVid)
+           close(outputVideo);  
+    end
 end
