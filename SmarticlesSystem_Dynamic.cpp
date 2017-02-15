@@ -145,8 +145,11 @@ unsigned int smartIdCounter = 4; //start at non-zero value to not collide
 //double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
-double tFinal = 60*10;
+double tFinal = 60*20;
+//double ringRad = 0.192 / 2.0;
+
 double ringRad = 0.192 / 2.0;
+
 bool ringActive = true;
 ChVector<> ringInitPos(0, 0, 0);
 
@@ -704,6 +707,12 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[14];
 		//percentToMoveToGlobal = atof(text);
 		windPosy = atoi(text);
+	}
+
+	if (argc > 15) {
+		const char* text = argv[15];
+		//percentToMoveToGlobal = atof(text);
+		oneInactive = atoi(text);
 	}
 	/// if parallel, get solver setting
   //if (USE_PARALLEL) {
@@ -2028,7 +2037,7 @@ bool SetGait(double time)
 		Smarticle::global_GUI_value = 2;
 	else if (time>.05)
 		Smarticle::global_GUI_value = 0;
-	if (time > 60)
+	if (time > 180)
 		return true;
 	/*else
 		Smarticle::global_GUI_value = 1;
@@ -2270,7 +2279,7 @@ int main(int argc, char* argv[]) {
 			{
 				//camera->setPosition(core::vector3df(-0.04, -0.0142, .943));
 				camera->setTarget(core::vector3df(0, 0, 0)); //	camera->setTarget(core::vector3df(0, 0, .01));
-				camera->setPosition(core::vector3df(0,0, .75));
+				camera->setPosition(core::vector3df(0,0, 1.05));
 
 
 			}
@@ -2334,7 +2343,7 @@ int main(int argc, char* argv[]) {
 	camera->setMinZoom(0.01f);
 	camera->setZoomSpeed(0.1f);
 
-
+	
 	drawGlobalCoordinateFrame(mphysicalSystem);
 
 	//framerecord
@@ -2363,6 +2372,7 @@ int main(int argc, char* argv[]) {
 
 	receiver.drawAngle();//initialize draw angle
 	application.SetShowInfos(true);
+
 
 #endif
 
@@ -2497,6 +2507,7 @@ int main(int argc, char* argv[]) {
 
 //  for (int tStep = 0; tStep < 1; tStep++) {
 	//START OF LOOP 
+
 	application.DrawAll();
 	
 	for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
@@ -2611,6 +2622,7 @@ int main(int argc, char* argv[]) {
 
 		receiver.drawSmarticleAmt(numGeneratedLayers);
 		receiver.drawSuccessful();
+
 		/////////////////////////////////////////////////////////////
 		//	double jointClearance = .0065;
 		//	double armt = t_smarticle;
@@ -2638,6 +2650,7 @@ int main(int argc, char* argv[]) {
 
 		//	//////////////////////////////////////////////////////////////////////
 		application.DrawAll();
+		ChIrrTools::drawGrid(application.GetVideoDriver(), 0.1, 0.1,40,40);
 		if (ringActive)
 		{
 			PrintRingContact(&mphysicalSystem, tStep, ring, mySmarticlesVec, &application);
