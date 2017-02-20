@@ -57,7 +57,7 @@ function smartSoundGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 global sampRate tt player
 sampRate = 8192;
-tt=(0:sampRate*10)/sampRate;
+tt=(0:sampRate*1000)/sampRate;
 player = audioplayer(sin(tt*15*2*pi), sampRate);
 % Update handles structure
 guidata(hObject, handles);
@@ -99,7 +99,7 @@ freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
 play(player);
-pts(freq);
+% pts(freq);
 
 % --- Executes on button press in pushbutton1.
 function pushbutton3_Callback(hObject, eventdata, handles)
@@ -111,7 +111,7 @@ freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
 play(player);
-pts(freq);
+% pts(freq);
 
 % --- Executes on button press in pushbutton1.
 function pushbutton4_Callback(hObject, eventdata, handles)
@@ -123,7 +123,7 @@ freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
 play(player);
-pts(freq);
+% pts(freq);
 
 % --- Executes on button press in pushbutton1.
 function pushbutton5_Callback(hObject, eventdata, handles)
@@ -135,7 +135,7 @@ freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
 play(player);
-pts(freq);
+% pts(freq);
 
 % --- Executes on button press in pushbutton1.
 function pushbutton6_Callback(hObject, eventdata, handles)
@@ -147,7 +147,7 @@ freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
 play(player);
-pts(freq);
+% pts(freq);
 
 % --- Executes on button press in pushbutton1.
 function pushbutton7_Callback(hObject, eventdata, handles)
@@ -159,7 +159,7 @@ freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
 play(player);
-pts(freq);
+% pts(freq);
 
 % --- Executes on button press in pushbutton1.
 function pushbutton8_Callback(hObject, eventdata, handles)
@@ -171,7 +171,7 @@ freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
 play(player);
-pts(freq);
+% pts(freq);
 
 % --- Executes on button press in pushbutton9.
 function pushbutton9_Callback(hObject, eventdata, handles)
@@ -186,7 +186,6 @@ function KeyPress(hObject, eventdata, handles)
 % determine the key that was pressed
 global sampRate tt player
 key = get(gcf,'CurrentKey');
-pts(key);
 switch eventdata.Key
     
     case 'f1'
@@ -214,4 +213,4 @@ global sampRate tt player
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
 play(player);
-pts(freq);
+% pts(freq);
