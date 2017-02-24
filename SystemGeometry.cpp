@@ -812,10 +812,10 @@ void SystemGeometry::create_Container()
 		case BOX:
 		{
 			//FUTNOTE uncomment for old box
-			//bucket = create_Box();
+			bucket = create_Box();
 			
 			//Maze
-			bucket = create_BoxBig();
+			//bucket = create_BoxBig();
 			//std::shared_ptr<ChBody> maze = create_Maze();
 			bucket_bott = create_Bucket_Bott();
 			bucket_bott->SetCollide(false);

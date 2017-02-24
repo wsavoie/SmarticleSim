@@ -192,9 +192,9 @@ double gaitChangeLengthTime = .5;
 	double rho_smarticleArm = 925;
 	double rho_smarticleMid = 739.18;
 
-	double p_gain =1;   //.1//.2         //0.133
-	double i_gain = 1;// 0.03;	 //.5//.225						//0.05
-	double d_gain = 1; //.0025 //.01       //0.0033
+	double p_gain = 1; //3;   //.1//.2         //0.133
+	double i_gain = 1; // .4;// 0.03;	 //.5//.225						//0.05
+	double d_gain = 1; //.1; //.0025 //.01       //0.0033
 
 
 #endif
@@ -2034,10 +2034,10 @@ bool SetGait(double time)
 
 
 	if (time <= .05)
-		Smarticle::global_GUI_value = 2;
+		Smarticle::global_GUI_value = 0;
 	else if (time>.05)
 		Smarticle::global_GUI_value = 0;
-	if (time > 180)
+	if (time > 60)
 		return true;
 	/*else
 		Smarticle::global_GUI_value = 1;
@@ -2279,7 +2279,8 @@ int main(int argc, char* argv[]) {
 			{
 				//camera->setPosition(core::vector3df(-0.04, -0.0142, .943));
 				camera->setTarget(core::vector3df(0, 0, 0)); //	camera->setTarget(core::vector3df(0, 0, .01));
-				camera->setPosition(core::vector3df(0,0, 1.05));
+				camera->setPosition(core::vector3df(0, 0, 0.8));
+				//camera->setPosition(core::vector3df(0,0, 1.05));
 
 
 			}

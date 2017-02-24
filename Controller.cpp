@@ -165,6 +165,8 @@ double Controller::GetActuatorOmega(size_t index, double t)
 
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
+	//static double errLim = dT*omegaLimit;
+	//static double errLim = (smarticle_->global.at(1).first - smarticle_->global.at(2).first)*dT*omegaLimit;
 	double errLim = 1.05*D2R; // 
 	double err = (des - curr);
 	err = SaturateValue(err, errLim);
