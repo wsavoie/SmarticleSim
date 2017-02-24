@@ -10,7 +10,7 @@ close all
 %* Fig numbers:
 %* 1. displacement yvsx
 %* 2. MSD
-%* 3. vcorr
+%* 3. v autocorrelation
 %* 4. fourier transform of vcorr
 %* 5. contact P(\theta) POLAR
 %* 6. contact P(\theta) LINEAR
@@ -27,16 +27,17 @@ close all
 %*17. v dot normalized direct r full data
 %*18. /19 fluctuation theorem based plot must also use 17!!
 %*20. plot vectors at each position relating position of deadparticle
-%*21. vcorr
+%*21. v crosscorr with deadpos
 %*22. for each msd traj get linear fit of log
-%*23. %% 23 histogram of probability(theta_R-theta_r) make vid
+%*23. histogram of probability(theta_R-theta_r) make vid
+%*24. track length plotting
 %************************************************************
 %%
 SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[2 22];
+showFigs=[1 23];
 useCOM=0;
 f=[.2]; rob=[]; v=[];dirs=[];
 
@@ -72,6 +73,7 @@ end
 if(isempty(ma.tracks))
     error('no tracks found with given f,rob,v, specifications');
 end
+L=length(usedSimAm);
 %% 1 plot displacement yvsx
 xx=1;
 if(showFigs(showFigs==xx))
@@ -86,26 +88,29 @@ if(showFigs(showFigs==xx))
     ma.labelPlotTracks
 %     text(0,0+.01,'start')
     plot(0,0,'ro','markersize',8,'MarkerFaceColor','k');
-    leg=[];
-    legT={};
+    legT=cell(1,length(ma.tracks));
     for i=1:length(ma.tracks)
         plot(ma.tracks{i}(end,2),ma.tracks{i}(end,3),'ko','markersize',4,'MarkerFaceColor','r');
         %         leg(i)=h;
-        x=['v',num2str(usedSimAm(i).pars(3))];
         legT{i}=['v',num2str(usedSimAm(i).pars(3))];
     end
-
-        
-        
-    set(gca,'xtick',[-.2:.1:.2],'ytick',[-.2:.1:.2]);
-    y=get(gca,'ylim'); x=get(gca,'xlim');
-    c=max(abs(x)); xlim([-c,c]);
-    c=max(abs(y)); ylim([-c,c]);
-    axis equal
-    axis([-.25 .25 -.25 .25]);
-    x=xlim; y=ylim;
-    plot(x,[0,0],'r');
-    plot([0,0],y,'r');
+    
+   
+    
+    axis tight
+ 	x=get(gca,'xlim');y=get(gca,'ylim'); 
+    c=max(abs(x));
+    if c<=.25
+        c=.25;
+    else
+        c=.45;
+    end    
+    axis([-c c -c c]);
+    set(gca,'xtick',-c-.05:.1:c-.05,'ytick',-c-.05:.1:c-.05);
+    
+    %plot red grid lines
+    plot([-c c],[0,0],'r');
+    plot([0,0],[-c c],'r');
     legend(legT);
     figText(gcf,14)
 end
@@ -118,8 +123,8 @@ if(showFigs(showFigs==xx))
     ma = ma.computeMSD;
     ma.plotMeanMSD(gca, true);
 %     ma.plotMSD;
-    [a b]=ma.fitMeanMSD;
-    xlim([0 15])
+    [a, b]=ma.fitMeanMSD;
+%     xlim([0 15])
     figText(gcf,14)
 end
 %% 3 plot vcorr
@@ -134,7 +139,7 @@ if(showFigs(showFigs==xx))
     hold on;
     for i= 1:length(ma.vcorr)
         nansN=sum(isnan(ma.vcorr{i}(:,2)));
-        M(i)= mean([ma.vcorr{i}(10:end-nansN,2)]);
+        M(i)= mean(ma.vcorr{i}(10:end-nansN,2));
         
     end
     M=mean(M);
@@ -174,7 +179,7 @@ xx=5;
 if(showFigs(showFigs==xx))
     figure(xx);
     
-    for i=1:length(usedSimAm)
+    for i=1:L
         polarhistogram(usedSimAm(i).contactAngs,2*pi/deg2rad(usedSimAm(i).binW),'binLimits',[0,2*pi]);
         hold on;
     end
@@ -185,7 +190,7 @@ xx=6;
 if(showFigs(showFigs==xx))
     figure(xx);
     
-    for i=1:length(usedSimAm)
+    for i=1:L
         histogram(usedSimAm(i).contactAngs,2*pi/deg2rad(usedSimAm(i).binW));
         hold on;
     end
@@ -198,7 +203,7 @@ end
 xx=7;
 if(showFigs(showFigs==xx))
     h=figure(xx);
-    for i=1:length(usedSimAm)
+    for i=1:L
         binW=deg2rad(usedSimAm(i).binW);
         polarhistogram('binLimits',[0,2*pi],'BinEdges',[0:binW:2*pi],'BinCounts',[usedSimAm(i).fcs(:,2)])
         %             polarhistogram(usedSimAm(i).polarForceHist,2*pi/deg2rad(usedSimAm(i).binW),'binLimits',[0,2*pi])
@@ -210,7 +215,7 @@ end
 xx=8;
 if(showFigs(showFigs==xx))
     figure(xx); hold on;
-    for i=1:length(usedSimAm)
+    for i=1:L
         histogram(usedSimAm(i).polarForceHist,2*pi/deg2rad(usedSimAm(i).binW))
     end
     xlabel('\theta');
@@ -232,7 +237,7 @@ if(showFigs(showFigs==xx))
     ca=caxis;
     cbins=100;
     cols=fire(cbins);
-    for i=1:length(usedSimAm)
+    for i=1:L
         %get binW, Nbins, binVec for ang matrix
         binW=deg2rad(usedSimAm(i).binW); Nbins=2*pi/binW; binVec=linspace(0,2*pi,Nbins+1);
         
@@ -270,7 +275,7 @@ if(showFigs(showFigs==xx))
     ca=caxis;
     cbins=100;
     cols=fire(cbins);
-    for i=1:length(usedSimAm)
+    for i=1:L
         %get binW, Nbins, binVec for ang matrix
         binW=deg2rad(usedSimAm(i).binW); Nbins=2*pi/binW; binVec=linspace(0,2*pi,Nbins+1);
         
@@ -302,7 +307,7 @@ xx=11;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
-    for i=1:length(usedSimAm)
+    for i=1:L
         plot(usedSimAm(i).deadInnerForce(:,1),mod(rad2deg(usedSimAm(i).deadRot),180));
         
     end
@@ -314,9 +319,10 @@ if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
     
-    leg=[];
+    leg=zeros(L,1);
     legT={};
-    for i=1:length(usedSimAm)
+    
+    for i=1:L
         %         plot(usedSimAm(i).deadInnerForce(:,1),mod(rad2deg(usedSimAm(i).deadRot),180));
         %         plot(usedSimAm(i).deadPos(:,2),usedSimAm(i).deadPos(:,3));
         %         plot(usedSimAm(i).deadPos(1,2),usedSimAm(i).deadPos(1,3),'k.','markersize',15);
@@ -349,7 +355,7 @@ if(showFigs(showFigs==xx))
     maxR=0.0653;
     dotProd=[];
     
-    for i=1:length(usedSimAm)
+    for i=1:L
         %         get all where |r| from center > minR
         %         N = sqrt(sum(abs(usedSimAm(i).deadPos(:,[2,3])).^2,2));
         %         t=(usedSimAm(i).deadPos(N>minR));
@@ -377,7 +383,7 @@ if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
     dotProd=[];
-    for i=1:length(usedSimAm)
+    for i=1:L
         %         get all where |r| from center > minR
         %         N = sqrt(sum(abs(usedSimAm(i).deadPos(:,[2,3])).^2,2));
         %         t=(usedSimAm(i).deadPos(N>minR));
@@ -404,7 +410,7 @@ if(showFigs(showFigs==xx))
     hold on;
     %random min distance can change
     dotProd=[];
-    for i=1:length(usedSimAm)
+    for i=1:L
         %         get all where |r| from center > minR
         %         N = sqrt(sum(abs(usedSimAm(i).deadPos(:,[2,3])).^2,2));
         %         t=(usedSimAm(i).deadPos(N>minR));
@@ -438,7 +444,7 @@ if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
     dotProd=[];
-    for i=1:length(usedSimAm)
+    for i=1:L
         %         get all where |r| from center > minR
         %         N = sqrt(sum(abs(usedSimAm(i).deadPos(:,[2,3])).^2,2));
         %         t=(usedSimAm(i).deadPos(N>minR));
@@ -471,7 +477,7 @@ if(showFigs(showFigs==xx))
     hold on;
     dotProd=[];
     dotProd2t=[];
-    for i=1:length(usedSimAm)
+    for i=1:L
         %         get all where |r| from center > minR
         %         N = sqrt(sum(abs(usedSimAm(i).deadPos(:,[2,3])).^2,2));
         %         t=(usedSimAm(i).deadPos(N>minR));
@@ -596,14 +602,14 @@ xx=20;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
-    NE=length(usedSimAm);
+    NE=L;
     xp=-1;
     yp=-1;
     dec=500;
     tick=.25;
     leg=[];
     legT={};
-    for i=1:length(usedSimAm)
+    for i=1:L
         
         xp=mod(xp+1,5);
         if(xp==0)
@@ -633,7 +639,7 @@ if(showFigs(showFigs==xx))
     legend(leg,legT);
 end
 
-%% 21
+%% 21 vcorr
 xx=21;
 if(showFigs(showFigs==xx))
     figure(xx)
@@ -641,7 +647,7 @@ if(showFigs(showFigs==xx))
     dt=diff(usedSimAm(1).fullT(1:2));
     dec=1;
     pks=[];
-    for i=1:length(usedSimAm)
+    for i=1:L
         %         deadPos=normr(usedSimAm(i).fullDeadSmartPos-repmat(usedSimAm(i).fullRingPos(1,:),[size(usedSimAm(i).fullRingPos,1),1]));
         %         ringPos=usedSimAm(i).fullRingPos-repmat(usedSimAm(i).fullRingPos(1,:),[size(usedSimAm(i).fullRingPos,1),1]);
         deadPos=normr(usedSimAm(i).fullDeadSmartPos(1:end-1,:));
@@ -650,8 +656,8 @@ if(showFigs(showFigs==xx))
         vRing=normr(vRing);
         deadPos=normr(deadPos);
         
-        vTheta=atan2(vRing(:,2),vRing(:,1));
-        dTheta=atan2(deadPos(:,2),deadPos(:,1));
+        vTheta=atan2(vRing(:,2),vRing(:,1))+pi;
+        dTheta=atan2(deadPos(:,2),deadPos(:,1))+pi;
         vTheta=decimate(vTheta,dec);
         dTheta=decimate(dTheta,dec);
         [Rmm,lags]=xcorr(vTheta,dTheta,55*dec/dt,'unbiased');
@@ -741,30 +747,32 @@ if(showFigs(showFigs==xx))
 end
 %% 23 histogram of probability(theta_R-theta_r) make vid
 xx=23;
+clear ringPos deadPos;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
     fps=10;
-    writeVid=true;
+    writeVid=1;
     if(writeVid)
         outputVideo = VideoWriter(fullfile('','prob(theta).avi'));
         outputVideo.FrameRate=fps;
         open(outputVideo);
     end
     for j=[2:1:60]
-        for i=1:length(usedSimAm)
+        for i=1:L
             tt=usedSimAm(i).fullT;
             ringPos(i,:)=normr(usedSimAm(i).fullRingPos(round(tt,5)==j,:));
-            deadPos(i,:)=normr(usedSimAm(i).fullDeadSmartPos(1,:));
+            deadPos(i,:)=normr(usedSimAm(i).fullDeadSmartPos(round(tt,5)==j,:));
             %             histogra
         end
+        clf;
         ringTheta=atan2(ringPos(:,2),ringPos(:,1));
         deadTheta=atan2(deadPos(:,2),deadPos(:,1));
         res=mod(ringTheta-deadTheta+pi,2*pi);
         res=res-pi;
         %         res=atan2(ringPos(:,2)-deadPos(:,2),ringPos(:,1)-deadPos(:,1));
         %         figure(j);
-        bins=11;
+        bins=21;
         edges=linspace(-pi,pi,bins+1);
         histogram(res,'BinEdges',edges,'Normalization','probability');
         
@@ -792,7 +800,7 @@ if(showFigs(showFigs==xx))
         else
            pause(1/fps); 
         end
-        clf;
+        
         
         %        pause(.25);
         
@@ -801,4 +809,63 @@ if(showFigs(showFigs==xx))
     if(writeVid)
            close(outputVideo);  
     end
+end
+%% 24 track length
+xx=24;
+if(showFigs(showFigs==xx))
+    d=75;
+    figure(xx)
+    a = 1;
+    b = 1/d*ones(1,d);
+    hold on;
+    %     if(useCOM)
+    %         title('Ring COM');
+    %     else
+    %         title('Ring COG');
+    %     end
+    ma.plotTracks
+    ma.labelPlotTracks
+%     text(0,0+.01,'start')
+    plot(0,0,'ro','markersize',8,'MarkerFaceColor','k');
+    leg=zeros(1,length(ma.tracks));
+    legT=cell(1,length(ma.tracks));
+    CL=zeros(1,length(ma.tracks));
+    for i=1:length(ma.tracks)      
+                
+        f=filter(b,a,ma.tracks{i}(:,2:3));
+        %add final position to matrix
+        f(end,:)=[ma.tracks{i}(end,2),ma.tracks{i}(end,3)];
+        
+        plot(f(:,1),f(:,2),'linewidth',1.5);
+        legT{i}=['v',num2str(usedSimAm(i).pars(3))];
+
+        CLF = hypot(diff(f(:,1)), diff(f(:,2)));   
+        CL(i) = trapz(CLF);                   % Integrate to calculate arc length
+    end
+    
+   for i=1:length(ma.tracks)
+       plot(ma.tracks{i}(end,2),ma.tracks{i}(end,3),'ko','markersize',4,'MarkerFaceColor','r');
+   end
+    
+    axis tight
+ 	x=get(gca,'xlim');y=get(gca,'ylim'); 
+    c=max(abs(x));
+    if c<=.25
+        c=.25;
+    else
+        c=.45;
+    end    
+    axis([-c c -c c]);
+    set(gca,'xtick',-c-.05:.1:c-.05,'ytick',-c-.05:.1:c-.05);
+    
+    %plot red grid lines
+    plot([-c c],[0,0],'r');
+    plot([0,0],[-c c],'r');
+    legend(legT);
+    figText(gcf,14)
+    
+    figure
+    c=errorbar(1,mean(CL),std(CL));
+    pts('avg=',c.YData,',    +-=',c.YPositiveDelta);
+
 end

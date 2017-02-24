@@ -55,12 +55,12 @@ changeToStressPerc=(0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0)
 dirs=(0 1 2 3)
 inactiveParticle=1;
 #######regular run
-foldName='Amoeba_Ring_180s_dead_1'
-# foldName='Amoeba_Ring_Active'
+foldName=Amoeba_Ring_t_60_Rect_pi_pi-2_d_$inactiveParticle
+# foldName='Amoeba_Ring_t_60_Square_s_pi_d_1'
 mkdir $foldName
 for fric in `seq 2 2`; do
 	for deadDir in `seq 0 3`; do
-		for repeats in `seq 0 10`; do
+		for repeats in `seq 0 20`; do
 			for robs in `seq 1 1`; do
 			  a=/cygdrive/a/SmarticleRun/$foldName/f_${changeToStressPerc[$fric]}_rob_${numPerLay[$robs]}_v_${repeats}_dir_${deadDir}
 			  mkdir $a
