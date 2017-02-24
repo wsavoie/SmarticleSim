@@ -6,8 +6,13 @@ set READFILE=0
 set ACTIVEPCT=1
 set ANGLE1=0
 set ANGLE2=0
-set BOXANG=-30
-set NUMPERLAYER=1
-set STRESSACTIVATE=0.3
-set SCREENSHOT=0
-start "SmarticlesSystem_Dynamic.exe" /high "D:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem_Dynamic.exe" %LW% %DT% %NUMLAYER% %READFILE% %ACTIVEPCT% %ANGLE1% %ANGLE2% %BOXANG% %NUMPERLAYER% %STRESSACTIVATE% %SCREENSHOT%
+set BOXANG=0
+set NUMPERLAYER=5
+set STRESSACTIVATE=0.2
+set SCREENSHOT=1
+REM +X=0,+Y=1,-X=2,-Y=3
+set RINGPART=0
+set WINDX=0 
+set WINDY=0 
+set SMARTINACTIVE=1 
+start "SmarticlesSystem_Dynamic.exe" /high "D:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem_Dynamic.exe" %LW% %DT% %NUMLAYER% %READFILE% %ACTIVEPCT% %ANGLE1% %ANGLE2% %BOXANG% %NUMPERLAYER% %STRESSACTIVATE% %SCREENSHOT% %RINGPART% %WINDX% %WINDY% %SMARTINACTIVE%
