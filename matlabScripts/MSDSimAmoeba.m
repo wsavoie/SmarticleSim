@@ -31,13 +31,14 @@ close all
 %*22. for each msd traj get linear fit of log
 %*23. histogram of probability(theta_R-theta_r) make vid
 %*24. track length plotting
+%*25. rotational track length
 %************************************************************
 %%
 SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1 23];
+showFigs=[25];
 useCOM=0;
 f=[.2]; rob=[]; v=[];dirs=[];
 
@@ -866,6 +867,69 @@ if(showFigs(showFigs==xx))
     
     figure
     c=errorbar(1,mean(CL),std(CL));
+    pts('avg=',c.YData,',    +-=',c.YPositiveDelta);
+
+end
+
+%% 25 rotational track length
+xx=25;
+if(showFigs(showFigs==xx))
+    d=75;
+    figure(xx)
+    a = 1;
+    b = 1/d*ones(1,d);
+    hold on;
+    %     if(useCOM)
+    %         title('Ring COM');
+    %     else
+    %         title('Ring COG');
+    %     end
+%     ma.plotTracks
+    ma.labelPlotTracks
+%     text(0,0+.01,'start')
+    plot(0,0,'ro','markersize',8,'MarkerFaceColor','k');
+    leg=zeros(1,L);
+    legT=cell(1,L);
+    CL=zeros(1,L);
+    for i=1:L     
+        
+        dp=usedSimAm(i).fullDeadSmartPos-usedSimAm(i).fullRingPos;
+        f=filter(b,a,dp);
+        %add final position to matrix
+        
+        f(end,:)=dp(end,:);
+        t=usedSimAm(i).deadInnerForce(:,1);
+        plot(dp(:,1),dp(:,2),'linewidth',1.5);
+        legT{i}=['v',num2str(usedSimAm(i).pars(3))];
+
+        CLF = hypot(diff(dp(:,1)), diff(dp(:,2)));   
+        CL(i) = trapz(CLF);                   % Integrate to calculate arc length
+    end
+    
+%    for i=1:length(ma.tracks)
+%        plot(ma.tracks{i}(end,2),ma.tracks{i}(end,3),'ko','markersize',4,'MarkerFaceColor','r');
+%    end
+    
+%     axis tight
+%  	x=get(gca,'xlim');y=get(gca,'ylim'); 
+%     c=max(abs(x));
+%     if c<=.25
+%         c=.25;
+%     else
+%         c=.45;
+%     end    
+%     axis([-c c -c c]);
+%     set(gca,'xtick',-c-.05:.1:c-.05,'ytick',-c-.05:.1:c-.05);
+    
+%     %plot red grid lines
+%     plot([-c c],[0,0],'r');
+%     plot([0,0],[-c c],'r');
+%     legend(legT);
+%     figText(gcf,14)
+%     
+    figure(1000)
+    c=errorbar(1,mean(CL),std(CL));
+%     close(1000);
     pts('avg=',c.YData,',    +-=',c.YPositiveDelta);
 
 end
