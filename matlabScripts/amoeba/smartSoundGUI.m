@@ -22,7 +22,7 @@ function varargout = smartSoundGUI(varargin)
 
 % Edit the above text to modify the response to help smartSoundGUI
 
-% Last Modified by GUIDE v2.5 16-Feb-2017 11:56:44
+% Last Modified by GUIDE v2.5 28-Feb-2017 09:14:08
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,13 +55,14 @@ function smartSoundGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for smartSoundGUI
 handles.output = hObject;
-global sampRate tt player
-sampRate = 8192;
-tt=(0:sampRate*1000)/sampRate;
-player = audioplayer(sin(tt*15*2*pi), sampRate);
+global sampRate tt player playTime
+
 % Update handles structure
 guidata(hObject, handles);
-
+sampRate = 8192;
+playTime=100;
+tt=(0:sampRate*playTime)/sampRate;
+player = audioplayer(sin(tt*15*2*pi), sampRate);
 % UIWAIT makes smartSoundGUI wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 set(gcf, 'WindowKeyPressFcn', @KeyPress)
@@ -82,10 +83,10 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global sampRate tt player
+global sampRate tt player playTime
 freq=str2double(hObject.String);
 % handles.freq=freq;
-guidata(hObject,freq);
+% guidata(hObject,freq);
 playfreq(freq);
 
 
@@ -94,7 +95,7 @@ function pushbutton2_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global sampRate tt player
+global sampRate tt player playTime
 freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
@@ -106,7 +107,7 @@ function pushbutton3_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global sampRate tt player
+global sampRate tt player playTime
 freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
@@ -118,7 +119,7 @@ function pushbutton4_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global sampRate tt player
+global sampRate tt player playTime
 freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
@@ -130,7 +131,7 @@ function pushbutton5_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global sampRate tt player
+global sampRate tt player playTime
 freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
@@ -142,7 +143,7 @@ function pushbutton6_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global sampRate tt player
+global sampRate tt player playTime
 freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
@@ -154,7 +155,7 @@ function pushbutton7_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global sampRate tt player
+global sampRate tt player playTime
 freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
@@ -166,7 +167,7 @@ function pushbutton8_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global sampRate tt player
+global sampRate tt player playTime
 freq=str2double(hObject.String);
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
@@ -178,13 +179,13 @@ function pushbutton9_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton9 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-global sampRate tt player
+global sampRate tt player playTime
 pause(player);
 
 
 function KeyPress(hObject, eventdata, handles)
 % determine the key that was pressed
-global sampRate tt player
+global sampRate tt player playTime
 key = get(gcf,'CurrentKey');
 switch eventdata.Key
     
@@ -209,8 +210,40 @@ switch eventdata.Key
 end
 
 function playfreq(freq)
-global sampRate tt player
+global sampRate tt player playTime
 pause(player);
 player=audioplayer(sin(tt*freq*2*pi), sampRate);
 play(player);
 % pts(freq);
+
+
+
+function time_Callback(hObject, eventdata, handles)
+% hObject    handle to time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of time as text
+%        str2double(get(hObject,'String')) returns contents of time as a double
+global sampRate tt player playTime
+sampRate = 8192;
+% val=get(hObject,'String');
+val=str2double(get(hObject,'String'));
+playTime=val;
+tt=(0:sampRate*playTime)/sampRate;
+
+% --- Executes during object creation, after setting all properties.
+function time_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to time (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+global sampRate tt player playTime
+sampRate = 8192;
+
+playTime=100;
+tt=(0:sampRate*playTime)/sampRate;
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
