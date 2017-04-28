@@ -99,3 +99,28 @@ ma = ma.computeDrift('centroid'); % note: no extra parameters.
 ma = ma.computeMSD;
 ma.fitMeanMSD
 
+%%
+b=2; a=1;
+p=0:.01:12*pi;
+x=a*p-b*sin(p);
+z=a-b*cos(p);
+y=p;
+figure(1);
+
+hold on;
+
+
+x1 = 0:40 ;
+y1 =x1;
+z1=0;
+hold on;
+[xx,yy,zz]=meshgrid(x1,y1,z1);
+plot3(x(z>0),y(z>0),z(z>0),'linewidth',2)
+surf(xx,yy,zz,'edgecolor','none');
+plot3(x,y,z,'linewidth',2);
+grid on
+alpha(0.5)
+
+
+figure(2);
+plot3(x(z>0),y(z>0),z(z>0),'linewidth',2)

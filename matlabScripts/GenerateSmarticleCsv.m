@@ -70,7 +70,7 @@ end
 angLow=-120;
 angHigh=120;
 
-global_gait= 6;
+global_gait= 2;
 gui1_gait = 1;
 gui2_gait = 1;
 gui3_gait = 2;
@@ -130,7 +130,7 @@ switch global_gait
         end
     case 2% square gait
         %not implemented yet!
-        sL = 2*pi/3; %square gait side length
+        sL = pi; %square gait side length
         %       theta1
         t1 = sL/2:-ss:-sL/2;
         

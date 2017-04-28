@@ -2491,7 +2491,7 @@ int main(int argc, char* argv[]) {
 		double yPos = 0;
 		ChVector<> pos2 = sys->bucket_ctr + ChVector<>(xPos, yPos, t2_smarticle);
 
-		double m = .001;
+		double m = .1;//was .001
 		//std::shared_ptr<ChBody> ring = sys->create_EmptyCylinder(25, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture,m);
 		ring = sys->create_EmptyEllipse(100, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture, m, 1, 1);
 		//ring = sys->create_ChordRing(100, t2_smarticle, sys->bucket_half_thick, ringRad, t_smarticle, pos2, sys->groundTexture, m);

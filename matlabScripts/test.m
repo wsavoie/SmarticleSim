@@ -96,3 +96,66 @@ for i=1:length(f)
     ff= fullfile(fold,f(i).name,'video_capture');
     movefile(fullfile(ff,'outvid.avi'),fullfile(ff,[f(i).name,'.avi']))
 end
+%% crosscor
+% load relatedsig.mat
+% [Rmm,lags]=xcorr(s1,s3);
+
+
+% Rmm = Rmm(lags>0);
+% lags = lags(lags>0);
+figure(55);
+hold on;
+t=0:0.01:2*pi;
+x=cos(t);
+y=sin(t);
+% both=x+y;
+% x=rand(10,1);
+% y=rand(10,1);
+[Rmm,lags]=xcorr(x,y,'unbiased');
+% Rmm = Rmm(lags>0);
+% lags = lags(lags>0);
+% 
+
+% figure
+plot(lags*.01/pi,Rmm/max(Rmm),'linewidth',2)
+plot(t/pi,x,'r',t/pi,y,'g');
+
+xlabel('Lag (s)');
+axis tight
+
+%%
+aa=ma.getMeanMSD;
+[x]=aa(:,1);
+[y]=aa(:,2);
+
+
+y=y(x<15);
+x=x(x<15);
+y=y(x>1.2);
+x=x(x>1.2);
+
+[lx]=log(x);
+[ly]=log(y);
+
+subplot(1,2,1);
+plot(x,y);
+subplot(1,2,2);
+plot(lx,ly);
+
+[f,gof]=fit(lx,ly,'poly1')
+
+%%
+minn=0; midd=90; maxx=180; angSp=60;
+p1=1500; oldP1=1500;
+p2=1500; oldP2=1500;
+
+oldP1=p1;
+oldP2=p2;
+p1=maxx * 10 + 600
+p2=minn * 10 + 600
+
+oldP1=p1;
+oldP2=p2;
+p1=maxx * 10 + 600
+p2=maxx * 10 + 600
+max(abs(p1-oldP1),abs(p2-oldP2))/10.0

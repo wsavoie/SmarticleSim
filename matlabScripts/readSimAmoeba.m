@@ -1,9 +1,7 @@
 % simD=importdata('A:\SmarticleRun\Amoeba\5 rob\f_1.0_v_1\PostProcess\RingPos.txt');
 % d=simD.data;
 % fh = @eig;
-if(exist('h','var')&&ishandle(h))
-delete(h);
-end
+closeWaitbar;
 clear all
 center=1; %1 to center ring pos data at (0,0)
 fold=(uigetdir('A:\SmarticleRun'));
@@ -86,5 +84,5 @@ for i =1:length(f)
         movefile(fullfile(ff,'outvid.avi'),fullfile(ff,[f(i).name,'.avi']))
     end
 end
-close(h)
+closeWaitbar;
 save(fullfile(fold,'amoebaData.mat'),'fold','simAm')

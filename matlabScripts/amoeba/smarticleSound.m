@@ -13,7 +13,7 @@ tic
 
 
 ff=[325];
-dd=[60];
+dd=[5];
 sampRate = 8192; %default sample rate of 8192 hertz
 for nn=1:length(ff);
 tt=(0:sampRate*dd(nn))/sampRate;

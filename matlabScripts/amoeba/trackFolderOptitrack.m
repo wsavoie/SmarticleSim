@@ -1,3 +1,4 @@
+clear all
 fold=uigetdir('D:\ChronoCode\chronoPkgs\Smarticles\matlabScripts\amoeba\smarticleExpVids\optinew\circle\1 inactive');
 f=dir2(fullfile(fold,'*.csv'));
 %     clf;
@@ -8,7 +9,15 @@ r=.192/2;%radius of boundary in meters
 dec=12; %decimate amount
 %HANDEDNESS IN QUATERNIONS ISNT CHANGED?
 conv=zeros(nMovs,1);
+
+closeWaitbar;
+fold
+h = waitbar(0,'Please wait...');
+    steps = nMovs;
 for i=1:nMovs
+
+% for i =1:length(f)
+    waitbar(i/steps,h,{['Processing: ',num2str(i),'/',num2str(length(f))],f(i).name})
     pts(i,'/',nMovs);
 %     [t,x,y,tracks]
     [movs(i).t,movs(i).x,movs(i).y,movs(i).data,movs(i).rot]= trackOptitrack(fullfile(fold,f(i).name),dec);
@@ -26,5 +35,5 @@ for i=1:nMovs
 %     pause(1);
 
 end
-
+closeWaitbar;
 save(fullfile(fold,'movieInfo.mat'),'movs','fold','nMovs')

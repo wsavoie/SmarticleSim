@@ -443,7 +443,6 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 		}
 		cyl_container->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 		utils::AddBoxGeometry(cyl_container.get(), box_size, pPos, quat, m_visualization);
-
 	}
 
 

@@ -38,9 +38,9 @@ SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[25];
+showFigs=[1];
 useCOM=0;
-f=[.2]; rob=[]; v=[];dirs=[];
+f=[.2]; rob=[]; v=[];dirs=[3];
 
 props={f rob v dirs};
 for i=1:length(simAm)

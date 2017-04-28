@@ -1,4 +1,4 @@
-function [t,x,y,tracks varargout]=trackOptitrack(file,dec)
+function [t,x,y,tracks, varargout]=trackOptitrack(file,dec)
 
 % figure(1);clf;
 
@@ -21,6 +21,7 @@ q=[data.data(:,6) data.data(:,3) data.data(:,5) data.data(:,4)];
 q=quaternion(q'); %I need to transpose it before setting to quat for matrix
 angles = EulerAngles(q,'123');
 ang=reshape(angles(3,1,:),[size(angles,3),1]);
+
 %decimate by dec
 t = data.data(:,2); 
 x = -data.data(:,7);
@@ -33,7 +34,7 @@ comx=x(1:dec:end,:);
 comy=y(1:dec:end,:);
 % comz=z(1:dec:end,:);
 ang=ang(1:dec:end,:);
-
+% pts('rigid body sys');
 varargout{1}=ang;
 else
 % -repmat(data.data(1,3:3:end),[size(data.data(:,3:3:end),1),1])

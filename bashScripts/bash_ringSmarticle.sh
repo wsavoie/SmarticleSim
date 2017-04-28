@@ -28,7 +28,7 @@ echo "run vars!: $lw $dt $nl $re $pa"
   # echo $i
   # a=./volFrac2/${lwArr[$i]}-$(date '+%Y%m%d-%H%M%S')
   # mkdir $a
-  # # cd $a
+  # # cd $a 
   # $smartRunFile ${lwArr[$i]} ${dtArr[$i]} ${nlArr[$i]} ${reArr[$i]} ${paArr[$i]};
   # cp -r ./PostProcess $a
   # # cd ../..;
@@ -55,7 +55,7 @@ changeToStressPerc=(0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0)
 dirs=(0 1 2 3)
 inactiveParticle=1;
 #######regular run
-foldName=Amoeba_Ring_t_60_Rect_pi_pi-2_d_$inactiveParticle
+foldName=Amoeba_Ring_t_60_Square_pi_m_.1_d_$inactiveParticle
 # foldName='Amoeba_Ring_t_60_Square_s_pi_d_1'
 mkdir $foldName
 for fric in `seq 2 2`; do
