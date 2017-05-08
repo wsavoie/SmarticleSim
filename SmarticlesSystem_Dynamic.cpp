@@ -829,28 +829,36 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 		if (readjson)
 		{
 			std::string jsonFileLoc;
+			std::string jsonFold;
+	#if defined(_WIN64)
+			jsonFold = "A:\\SmarticleRun\\";
+	#else
+			jsonFold = "/home/ws/SmartSim/Results/";
+	#endif
 			switch(inactiveLoc)
 			{
+			
 				case 0: //+x
 				{
-					jsonFileLoc = "A:\\SmarticleRun\\+x.json";
+					jsonFileLoc = jsonFold+"+x.json";
 					break;
 				}
 				case 1: //+y
 				{
-					jsonFileLoc = "A:\\SmarticleRun\\+y.json";
+					jsonFileLoc = jsonFold+"+y.json";
 					break;
 				}
 				case 2: //-x
 				{
-					jsonFileLoc = "A:\\SmarticleRun\\-x.json";
+					jsonFileLoc = jsonFold + "-x.json";
 					break;
 				}
 				case 3: //-y
 				{
-					jsonFileLoc = "A:\\SmarticleRun\\-y.json";
+					jsonFileLoc = jsonFold + "-y.json";
 					break;
 				}
+
 			}
 			GetLog() << jsonFileLoc;
 			jsonF = ReadJson(jsonFileLoc);
