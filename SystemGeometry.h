@@ -23,7 +23,7 @@ namespace chrono {
 
 			public:
 				
-				SystemGeometry(ChSystem* msys, BucketType sysType,double collisionEnv,double l_smart, double w_smart, double t_smart, double t2_smart);
+				SystemGeometry(CH_SYSTEM* msys, BucketType sysType,double collisionEnv,double l_smart, double w_smart, double t_smart, double t2_smart);
 				~SystemGeometry(); 
 
 				
@@ -57,7 +57,7 @@ namespace chrono {
 				void rotate_body_rot(double t, std::shared_ptr<ChBody> body, std::shared_ptr<ChLinkEngine> actuator,double ang);
 				void rotate_body_sp(double t, std::shared_ptr<ChBody> body, std::shared_ptr<ChLinkEngine> actuator, double w);
 				//vars
-				ChSystem* sys;
+				CH_SYSTEM* sys;
 
 				
 				std::shared_ptr<ChBody> bucket_bott;

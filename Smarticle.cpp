@@ -20,7 +20,7 @@
 using namespace chrono;
 
 Smarticle::Smarticle(
-		  ChSystem* otherSystem
+		  CH_SYSTEM* otherSystem
 		  ) : m_system(otherSystem) {
 	smarticleID = -1;
 	arm_density = 7800;
@@ -1103,8 +1103,6 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	omegaLim = mOmegaLim;
 
 	char ddCh;
-	char ddCh1;
-	char ddCh2;
 	angHigh = mangHigh;
 	angLow = mangLow;
 	distThresh = mdt*momega;

@@ -4,10 +4,14 @@
 #include <queue>
 #include <vector>
 #include <motion_functions/ChFunction_Base.h>
-#include <physics/ChSystem.h>
 #include <physics/ChLinkEngine.h>
 #include "ChFunction_Controller.h"
-
+#include "chrono/physics/ChSystemNSC.h"
+#if USE_PARALLEL
+#define CH_SYSTEM ChSystemParallelDVI
+#else
+#define CH_SYSTEM ChSystemNSC
+#endif
 
 namespace chrono {
 
@@ -17,7 +21,7 @@ namespace chrono {
 
 	class Controller {
 	public:
-		Controller(chrono::ChSystem *ch_system, Smarticle *smarticle);
+		Controller(CH_SYSTEM *ch_system, Smarticle *smarticle);
 		~Controller();
 		// Step the controller
 		bool Step(double dt);
@@ -87,7 +91,7 @@ namespace chrono {
 		std::vector <double> mLastValue;
 
 	protected:
-		chrono::ChSystem *ch_system_;
+		CH_SYSTEM *ch_system_;
 
 
 	};

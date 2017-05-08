@@ -74,7 +74,7 @@ private:
 };
 
 
-SystemGeometry::SystemGeometry(ChSystem* msys, BucketType sysType, double collisionEnv,double l_smart, double w_smart, double t_smart, double t2_smart)
+SystemGeometry::SystemGeometry(CH_SYSTEM* msys, BucketType sysType, double collisionEnv,double l_smart, double w_smart, double t_smart, double t2_smart)
 {
 	
 	mat_wall = std::make_shared<ChMaterialSurfaceNSC>();

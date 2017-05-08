@@ -20,7 +20,12 @@
 #include <deque>
 #include "common.h"
 #include "Controller.h"
-
+#include "chrono/physics/ChSystemNSC.h"
+#if USE_PARALLEL
+#define CH_SYSTEM ChSystemParallelDVI
+#else
+#define CH_SYSTEM ChSystemNSC
+#endif
 namespace chrono {
 
 
@@ -45,8 +50,8 @@ namespace chrono {
 		double timeSinceLastGait = 0;
 		// Construct a smarticle and add it to ChSystem.
 		Smarticle(
-				ChSystem* otherSystem
-				//			ChSystemParallelDVI* otherSystem
+				CH_SYSTEM* otherSystem
+				//			CH_SYSTEMParallelDVI* otherSystem
 				);
 
 		// Destructor. Nothing happens
@@ -336,7 +341,7 @@ namespace chrono {
 
 		
 		///< pointer to the Chrono system
-		ChSystem* m_system;  // Arman : take care of this later
+		CH_SYSTEM* m_system;  // Arman : take care of this later
 
 	 private:
 		double OTTimer;//timer which keeps current value of time in the OT phase

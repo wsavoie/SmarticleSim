@@ -9,17 +9,13 @@
 #define CHECKPOINTSMARTICLES_H_
 
 //#include "chrono_parallel/physics/ChSystemParallel.h"
-#include "physics/ChSystem.h"
+//#include "physics/ChSystem.h"
 #include "Smarticle.h" //do we need this if smarticleU imports smarticle?
 //#include "SmarticleU.h"
 using namespace chrono::irrlicht;
 using namespace irr;
 using namespace irr::video;
-#if USE_PARALLEL
-#define CH_SYSTEM ChSystemParallelDVI
-#else
-#define CH_SYSTEM ChSystem
-#endif
+
 
 namespace chrono {
 

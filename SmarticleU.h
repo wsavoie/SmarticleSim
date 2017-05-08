@@ -18,7 +18,7 @@ class SmarticleU : public Smarticle {
 public:
 	// Construct a smarticleU and add it to ChSystem.
 	SmarticleU(
-			  ChSystem* otherSystem
+			  CH_SYSTEM* otherSystem
 			  ) : Smarticle(otherSystem) {
 		volume = GetVolume();
 	}
