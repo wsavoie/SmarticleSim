@@ -523,9 +523,11 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 		if (saveFrame) {
 			if (frameNum % stepsPerFrame == 0) {
 				ChFileutils::MakeDirectory("video_capture");
+				#if defined(_WIN64)
 				HWND winhandle = reinterpret_cast<HWND>(app->GetVideoDriver()->getExposedVideoData().OpenGLWin32.HWnd);
 				//MoveWindow(winhandle, 700, 200, appWidth,appHeight, true);
 				SetWindowPos(winhandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+				#endif
 				irr::video::IImage* image = app->GetVideoDriver()->createScreenShot();
 				char filename[100];
 				sprintf(filename, "video_capture/screenshot%05d.png", (frameNum + 1) / stepsPerFrame);

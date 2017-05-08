@@ -288,7 +288,7 @@ namespace ns { 	// struct to add smarticles to json file
 		{}
 		smartInfo(std::vector<std::shared_ptr<Smarticle>> mSV)
 		{
-			for (size_t i = 0; i < size(mSV); i++)
+			for (size_t i = 0; i < mSV.size(); i++)
 			{
 				//smartInfo c(mSV.at(i));
 				smarts.emplace_back(mSV.at(i));
@@ -329,7 +329,7 @@ namespace ns { 	// struct to add smarticles to json file
 		std::vector<smartInfo> smarts;
 		System(std::vector<std::shared_ptr<Smarticle>> mSV)
 		{
-			for (size_t i = 0; i < size(mSV); i++)
+			for (size_t i = 0; i < mSV.size(); i++)
 			{
 				//smartInfo c(mSV.at(i));
 				smarts.emplace_back(mSV.at(i));
@@ -348,7 +348,7 @@ namespace ns { 	// struct to add smarticles to json file
 		void to_json(json& j, const System& p) {
 			//std::cout << "\n\n\n" << "to_json_system:" << size(p.smarts) << "\n\n\n";
 			json jt;
-			for (size_t i = 0; i < size(p.smarts); i++)
+			for (size_t i = 0; i < p.smarts.size(); i++)
 			{
 				jt +=  { std::to_string(i), { { "posX", p.smarts.at(i).posX },{ "posY", p.smarts.at(i).posY },{ "posZ",  p.smarts.at(i).posZ },
 				{ "quatE0",  p.smarts.at(i).quatE0 },{ "quatE1",  p.smarts.at(i).quatE1 },{ "quatE2",  p.smarts.at(i).quatE2 },{ "quatE3",  p.smarts.at(i).quatE3 },
@@ -361,7 +361,7 @@ namespace ns { 	// struct to add smarticles to json file
 		void from_json(const json& j, System& p)
 		{
 			//std::cout << "\n\n\n" << "from_json_system:" << size(p.smarts) << "\n\n\n";
-			for (size_t i = 0; i < size(p.smarts); i++)
+			for (size_t i = 0; i < p.smarts.size(); i++)
 			{
 				
 				auto d =p.smarts.at(i);
@@ -2232,7 +2232,9 @@ int main(int argc, char* argv[]) {
 	// bind a simple user interface, etc. etc.)
 	ChIrrApp application(&mphysicalSystem, L"Dynamic Smarticles",
 		core::dimension2d<u32>(appWidth, appHeight), false, true);
+	#if defined(_WIN64)
 	HWND winhandle = reinterpret_cast<HWND>(application.GetVideoDriver()->getExposedVideoData().OpenGLWin32.HWnd);
+	#endif
 	//MoveWindow(winhandle, windPosx, windPosy, appWidth, appHeight, true);
 
 	////////////!@#$%^
