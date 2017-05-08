@@ -40,7 +40,7 @@ void CheckPointSmarticles_Write(
 void CheckPointSmarticlesDynamic_Write(
 	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
 	int tStep,
-	std::shared_ptr<ChMaterialSurface> mat_g,
+	std::shared_ptr<ChMaterialSurfaceNSC> mat_g,
 	double l_smarticle,
 	double w_smarticle,
 	double t_smarticle,

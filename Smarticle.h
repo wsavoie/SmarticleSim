@@ -55,7 +55,7 @@ namespace chrono {
 		virtual void Properties(
 				int sID,
 				double other_density,
-				std::shared_ptr<ChMaterialSurface> surfaceMaterial,
+				std::shared_ptr<ChMaterialSurfaceNSC> surfaceMaterial,
 				double other_envelop,
 				double other_l,
 				double other_w,
@@ -69,7 +69,7 @@ namespace chrono {
 		virtual void Properties(
 				int sID,
 				double other_density,
-				std::shared_ptr<ChMaterialSurface> surfaceMaterial,
+				std::shared_ptr<ChMaterialSurfaceNSC> surfaceMaterial,
 				double other_envelop,
 				double other_l,
 				double other_w,
@@ -86,7 +86,7 @@ namespace chrono {
 			int mdumID,
 			double other_Armdensity,
 			double other_Middensity,
-			std::shared_ptr<ChMaterialSurface> surfaceMaterial,
+			std::shared_ptr<ChMaterialSurfaceNSC> surfaceMaterial,
 			double other_envelop,
 			double other_l,
 			double other_w,
@@ -329,7 +329,7 @@ namespace chrono {
 		double mid_density;
 
 		double density;
-		std::shared_ptr<ChMaterialSurface> mat_smarts;
+		std::shared_ptr<ChMaterialSurfaceNSC> mat_smarts;
 
 
 
