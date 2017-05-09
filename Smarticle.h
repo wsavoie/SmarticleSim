@@ -50,7 +50,7 @@ namespace chrono {
 		double timeSinceLastGait = 0;
 		// Construct a smarticle and add it to ChSystem.
 		Smarticle(
-				CH_SYSTEM* otherSystem
+				std::shared_ptr<CH_SYSTEM> otherSystem
 				//			CH_SYSTEMParallelDVI* otherSystem
 				);
 
@@ -341,7 +341,7 @@ namespace chrono {
 
 		
 		///< pointer to the Chrono system
-		CH_SYSTEM* m_system;  // Arman : take care of this later
+		std::shared_ptr<CH_SYSTEM> m_system;  // Arman : take care of this later
 
 	 private:
 		double OTTimer;//timer which keeps current value of time in the OT phase

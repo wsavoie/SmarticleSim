@@ -21,7 +21,7 @@ namespace chrono {
 
 	class Controller {
 	public:
-		Controller(CH_SYSTEM *ch_system, Smarticle *smarticle);
+		Controller(std::shared_ptr<CH_SYSTEM> ch_system,Smarticle* smarticle);
 		~Controller();
 		// Step the controller
 		bool Step(double dt);
@@ -68,7 +68,7 @@ namespace chrono {
 	
 		double omegaLimit = 5;
 		double outputLimit = 0;
-		Smarticle *smarticle_;
+		std::shared_ptr<Smarticle> smarticle_;
 		bool resetCumError = false;
 		//void setMoveVector(unsigned int guiState);
 		std::vector <double> prevError_;
@@ -91,7 +91,7 @@ namespace chrono {
 		std::vector <double> mLastValue;
 
 	protected:
-		CH_SYSTEM *ch_system_;
+		std::shared_ptr<CH_SYSTEM> ch_system_;
 
 
 	};

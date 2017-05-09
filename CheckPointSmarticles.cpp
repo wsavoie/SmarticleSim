@@ -190,7 +190,7 @@ void CheckPointSmarticlesDynamic_Write(
 //====================================================================================
 
 void CheckPointSmarticles_Read(
-		CH_SYSTEM& mphysicalSystem,
+		std::shared_ptr<CH_SYSTEM> mphysicalSystem,
 		std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec) {
 	std::ifstream inSmarticles;
 	inSmarticles.open("smarticles.csv");
@@ -225,7 +225,7 @@ void CheckPointSmarticles_Read(
 	inSmarticles >> p3.x() >> ddCh >> p3.y() >> ddCh >> p3.z() >> ddCh >>
 	q4.e0() >> ddCh >> q4.e1() >> ddCh >> q4.e2() >> ddCh >>  q4.e3() >> ddCh;
 	while (inSmarticles.good()) {
-		SmarticleU * smarticle0  = new SmarticleU(&mphysicalSystem);
+		SmarticleU * smarticle0  = new SmarticleU(mphysicalSystem);
 		smarticle0->Properties(mySmarticlesVec.size(),
 						  rho_smarticle, mat_g,
 						  collisionEnvelop,
@@ -245,7 +245,7 @@ void CheckPointSmarticles_Read(
 }
 
 void CheckPointSmarticlesDynamic_Read(
-	CH_SYSTEM& mphysicalSystem,
+	std::shared_ptr<CH_SYSTEM> mphysicalSystem,
 	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application) {
 	std::ifstream inSmarticles;
 	std::pair<double, double> angPair;
@@ -294,7 +294,7 @@ void CheckPointSmarticlesDynamic_Read(
 		ddCh >> yold0 >> ddCh >> yold1 >> ddCh >> activeSmart >> ddCh;
 	while (inSmarticles.good()) {
 		
-		std::shared_ptr<Smarticle> smarticle0(new Smarticle(&mphysicalSystem));
+		std::shared_ptr<Smarticle> smarticle0(new Smarticle(mphysicalSystem));
 		smarticle0->active = activeSmart;
 		smarticle0->Properties(mySmarticlesVec.size(), dumId,
 			rho_smarticleArm,rho_smarticleMid, mat_g,

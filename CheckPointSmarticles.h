@@ -45,10 +45,10 @@ void CheckPointSmarticlesDynamic_Write(
 	double rho_smarticleArm,
 	double rho_smarticleMid);
 void CheckPointSmarticles_Read(
-	CH_SYSTEM& mphysicalSystem,
+	std::shared_ptr<CH_SYSTEM> mphysicalSystem,
 	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec);
 void CheckPointSmarticlesDynamic_Read(
-	CH_SYSTEM& mphysicalSystem,
+	std::shared_ptr<CH_SYSTEM> mphysicalSystem,
 	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application);
 //void CheckPointSmarticles_Read(
 //		#include "SmarticleU.h",

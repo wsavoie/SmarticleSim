@@ -8,7 +8,7 @@
 
 using namespace chrono;
 
-Controller::Controller(chrono::CH_SYSTEM *ch_system, Smarticle *smarticle)
+Controller::Controller(std::shared_ptr<CH_SYSTEM> ch_system, Smarticle* smarticle)
 	: ch_system_(ch_system), smarticle_(smarticle)
 {
 	int len = smarticle_->numEngs;

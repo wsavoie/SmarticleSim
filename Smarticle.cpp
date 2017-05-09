@@ -20,7 +20,7 @@
 using namespace chrono;
 
 Smarticle::Smarticle(
-		  CH_SYSTEM* otherSystem
+		  std::shared_ptr<CH_SYSTEM> otherSystem
 		  ) : m_system(otherSystem) {
 	smarticleID = -1;
 	arm_density = 7800;

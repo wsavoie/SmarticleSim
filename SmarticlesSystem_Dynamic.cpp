@@ -112,7 +112,7 @@ BucketType bucketType = BOX;
 //std::shared_ptr<ChBody> bucket;
 //std::shared_ptr<ChBody> bucket_bott;
 int overlaptest(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4);
-double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mSmartVec);
+double Find_Max_Z(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mSmartVec);
 //double Find_Max_Z(CH_SYSTEM& mphysicalSystem);
 
 std::ofstream flowRate_of;
@@ -465,7 +465,7 @@ public:
 };
 // =============================================================================\
 
-void placeSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application, std::shared_ptr<Smarticle> smarticle0)
+void placeSmarticles(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application, std::shared_ptr<Smarticle> smarticle0)
 {
 	//be careful about hlaf size and fullsize dimensions
 	//angle1=left angle2=right
@@ -636,7 +636,7 @@ retry:
 
 
 }
-double showForce(CH_SYSTEM *msys)
+double showForce(std::shared_ptr<CH_SYSTEM> msys)
 {
 		
 		ext_force ef;
@@ -736,7 +736,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
   //}
 }
 // =============================================================================
-void InitializeMbdPhysicalSystem_NonParallel(CH_SYSTEM& mphysicalSystem, int argc, char* argv[]) {
+void InitializeMbdPhysicalSystem_NonParallel(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int argc, char* argv[]) {
 	// initializd random seeder
 	MySeed();
 	ChSetRandomSeed(time(NULL));
@@ -753,7 +753,7 @@ void InitializeMbdPhysicalSystem_NonParallel(CH_SYSTEM& mphysicalSystem, int arg
 	int threads = 1;
 	if (threads > max_threads)
 		threads = max_threads;
-	mphysicalSystem.SetParallelThreadNumber(threads);
+	mphysicalSystem->SetParallelThreadNumber(threads);
 	omp_set_num_threads(threads);
 
 
@@ -790,15 +790,15 @@ void InitializeMbdPhysicalSystem_NonParallel(CH_SYSTEM& mphysicalSystem, int arg
   // Modify some setting of the physical system for the simulation, if you want
 	
 	//mphysicalSystem.SetSolverType(ChSystem::SOLVER_DEM);
-	mphysicalSystem.SetSolverType(ChSolver::Type::SOR);
+	mphysicalSystem->SetSolverType(ChSolver::Type::SOR);
 
 	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
-	mphysicalSystem.SetMaxItersSolverSpeed(50+.3*numPerLayer*numLayers);
-  mphysicalSystem.SetMaxItersSolverStab(0);   // unuseful for Anitescu, only Tasora uses this
-  mphysicalSystem.SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
-  mphysicalSystem.SetSolverWarmStarting(true);
-  mphysicalSystem.SetUseSleeping(false);
-  mphysicalSystem.Set_G_acc(ChVector<>(0, 0, gravity));
+	mphysicalSystem->SetMaxItersSolverSpeed(50+.3*numPerLayer*numLayers);
+  mphysicalSystem->SetMaxItersSolverStab(0);   // unuseful for Anitescu, only Tasora uses this
+  mphysicalSystem->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
+  mphysicalSystem->SetSolverWarmStarting(true);
+  mphysicalSystem->SetUseSleeping(false);
+  mphysicalSystem->Set_G_acc(ChVector<>(0, 0, gravity));
 	vol = (t2_smarticle)* (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
 	//mphysicalSystem.SetTolForce(.0005);
 	//mphysicalSystem.SetTol(.0001);
@@ -816,9 +816,9 @@ int overlaptest(double x1, double y1, double x2, double y2, double x3, double y3
 		return 0;
 }
 #if irrlichtVisualization
-void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application, double timeForDisp) {
+void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application, double timeForDisp) {
 #else
-void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,double timeForDisp) {
+void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,double timeForDisp) {
 #endif
 
 	json jsonF;
@@ -1017,7 +1017,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 
 		myRot.Normalize();
 		/////////////////flat rot/////////////////
-		std::shared_ptr<Smarticle>smarticle0 = std::make_shared<Smarticle>(&mphysicalSystem);
+		std::shared_ptr<Smarticle>smarticle0 = std::make_shared<Smarticle>(mphysicalSystem);
 		smarticle0->Properties(mySmarticlesVec.size(), smartIdCounter * 4,
 			rho_smarticleArm, rho_smarticleMid, mat_smarts,
 			collisionEnvelope,
@@ -1123,7 +1123,7 @@ void AddParticlesLayer1(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<
 //}
 
 
-void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec) {
+void CreateMbdPhysicalSystemObjects(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec) {
 	/////////////////
 	// Ground body
 	////////////////
@@ -1145,7 +1145,7 @@ void CreateMbdPhysicalSystemObjects(CH_SYSTEM& mphysicalSystem, std::vector<std:
 }
 // =============================================================================
 
-void SavePovFilesMBD(CH_SYSTEM& mphysicalSystem,
+void SavePovFilesMBD(std::shared_ptr<CH_SYSTEM> mphysicalSystem,
                      int tStep) {
   int out_steps = std::ceil((1.0 / dT) / out_fps);
   //printf("tStep %d , outstep %d, num bodies %d chrono_time %f\n", tStep, out_steps, mphysicalSystem.Get_bodylist()->size(), mphysicalSystem.GetChTime());
@@ -1156,14 +1156,14 @@ void SavePovFilesMBD(CH_SYSTEM& mphysicalSystem,
   if (povray_output && tStep % out_steps == 0) {
     char filename[100];
     sprintf(filename, "%s/data_%03d.dat", pov_dir_mbd.c_str(), out_frame + 1);
-    utils::WriteShapesPovray(&mphysicalSystem, filename);
+    utils::WriteShapesPovray(mphysicalSystem.get(), filename);
 
     ++out_frame;
   }
 }
 // =============================================================================
 
-double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec) {
+double Find_Max_Z(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec) {
 	std::string smarticleTypeName;
 	if (smarticleType == SMART_ARMS) {
 		smarticleTypeName = "smarticle_arm";
@@ -1176,9 +1176,9 @@ double Find_Max_Z(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarti
 	}
 	double zMax = -999999999;
 	//std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
-	std::vector<std::shared_ptr<ChBody> >::iterator ibody = mphysicalSystem.Get_bodylist()->begin();
+	std::vector<std::shared_ptr<ChBody> >::iterator ibody = mphysicalSystem->Get_bodylist()->begin();
 
-	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+	for (size_t i = 0; i < mphysicalSystem->Get_bodylist()->size(); i++) {
 		//ChBody* bodyPtr = *(myIter + i);
 		std::shared_ptr<ChBody> bodyPtr = *(ibody + i);
 		if (strcmp(bodyPtr->GetName(), smarticleTypeName.c_str()) == 0) {
@@ -1221,7 +1221,7 @@ void printFlowRate(double time,int count,bool end = false) //SAVE smarticle gait
 	flowRate_of << time << ", " << count << ", " << Smarticle::global_GUI_value<<std::endl;
 }
 // =============================================================================
-void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
+void drawGlobalCoordinateFrame(std::shared_ptr<CH_SYSTEM> mphysicalSystem)
 {	
 	double len = w_smarticle*2;
 	double rad = t_smarticle/2;
@@ -1248,7 +1248,7 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
 	xaxis->AddAsset(std::make_shared<ChColorAsset>(1.0f, 0, 0));
 	yaxis->AddAsset(std::make_shared<ChColorAsset>(0, 1.0f, 0));
 	zaxis->AddAsset(std::make_shared<ChColorAsset>(0, 0, 1.0f));
-	mphysicalSystem.AddBody(xaxis); mphysicalSystem.AddBody(yaxis); mphysicalSystem.AddBody(zaxis);
+	mphysicalSystem->AddBody(xaxis); mphysicalSystem->AddBody(yaxis); mphysicalSystem->AddBody(zaxis);
 	xaxis->GetCollisionModel()->SyncPosition();
 	yaxis->GetCollisionModel()->SyncPosition();
 	zaxis->GetCollisionModel()->SyncPosition();
@@ -1257,7 +1257,7 @@ void drawGlobalCoordinateFrame(CH_SYSTEM& mphysicalSystem)
 
 
 
-void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec)
+void recycleSmarticles(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec)
 {
 	double pos = -.75*sys->bucket_interior_halfDim.z();//z position below which smarticles are regenerated above pile inside container
 	double ang = 2 * PI / numPerLayer;
@@ -1297,14 +1297,14 @@ void recycleSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<S
 			inc = (inc+1)%numPerLayer;
 		}
 	}
-	printFlowRate(mphysicalSystem.GetChTime(), recycledSmarticles);
+	printFlowRate(mphysicalSystem->GetChTime(), recycledSmarticles);
 }
 // =============================================================================
-void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
+void FixBodies(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep) {
 	//std::vector<ChBody*>::iterator myIter = mphysicalSystem.Get_bodylist()->begin();
-	std::vector<std::shared_ptr<ChBody> >::iterator ibody = mphysicalSystem.Get_bodylist()->begin();
+	std::vector<std::shared_ptr<ChBody> >::iterator ibody = mphysicalSystem->Get_bodylist()->begin();
 
-	for (size_t i = 0; i < mphysicalSystem.Get_bodylist()->size(); i++) {
+	for (size_t i = 0; i < mphysicalSystem->Get_bodylist()->size(); i++) {
 		//ChBody* bodyPtr = *(myIter + i);
 		auto bodyPtr = *(ibody + i);
 		if (bodyPtr->GetPos().z() < -5.0*sys->bucket_interior_halfDim.z()) {
@@ -1314,7 +1314,7 @@ void FixBodies(CH_SYSTEM& mphysicalSystem, int tStep) {
 }
 // =============================================================================
 
-void FixRotation(CH_SYSTEM& mphysicalSystem, std::shared_ptr<Smarticle> sPtr) //reduces rotation speed by half 
+void FixRotation(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::shared_ptr<Smarticle> sPtr) //reduces rotation speed by half 
 {
 	//if (sPtr->GetArm(0)->GetRot_dt().GetVector().Length2() > 10000)//added this because small arms can start to spin uncontrollably
 	//{
@@ -1325,15 +1325,15 @@ void FixRotation(CH_SYSTEM& mphysicalSystem, std::shared_ptr<Smarticle> sPtr) //
 	//}
 	
 }
-void EraseSmarticle(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>>::iterator& myIter, Smarticle& sPtr, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec)
+void EraseSmarticle(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::shared_ptr<Smarticle>>::iterator& myIter, std::shared_ptr<Smarticle> sPtr, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec)
 {
-	sPtr.~Smarticle();
+	sPtr->~Smarticle();
 	myIter = mySmarticlesVec.erase(myIter); 
 
 	//sPtr->~Smarticle();
 	//myIter = mySmarticlesVec.erase(myIter);
 }
-void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec, double tstep) { ///remove all traces of smarticle from system //TODO REMAKE METHOD
+void FixSmarticles(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> &mySmarticlesVec, double tstep) { ///remove all traces of smarticle from system //TODO REMAKE METHOD
 	if (bucketType == HOPPER && bucket_exist == false) //if hopper, put smarticles back inside after reaching below hopper if bucket_bott still exists delete
 	{
 		recycleSmarticles(mphysicalSystem, mySmarticlesVec);
@@ -1362,7 +1362,7 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smart
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
 			if (!IsInRadial(sPtr->Get_cm(), sys->bucket_bott->GetPos() + ChVector<>(0, 0, sys->bucket_interior_halfDim.z()), ChVector<>(sys->bucket_rad*3, sys->bucket_bott->GetPos().z(), sys->bucket_bott->GetPos().z() + 4 * sys->bucket_interior_halfDim.z())))
 			{
-				EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
+				EraseSmarticle(mphysicalSystem, myIter, sPtr, mySmarticlesVec);
 				GetLog() << "\nRemoving smarticle outside system \n";
 				continue;
 			}
@@ -1391,9 +1391,9 @@ void FixSmarticles(CH_SYSTEM& mphysicalSystem, std::vector<std::shared_ptr<Smart
 		case FLATHOPPER:
 			if (sPtr->Get_cm().z() < -3.2*sys->bucket_interior_halfDim.z())
 			{
-				EraseSmarticle(mphysicalSystem, myIter, *sPtr, mySmarticlesVec);
+				EraseSmarticle(mphysicalSystem, myIter, sPtr, mySmarticlesVec);
 				smarticleHopperCount++;
-				printFlowRate(mphysicalSystem.GetChTime(), smarticleHopperCount);
+				printFlowRate(mphysicalSystem->GetChTime(), smarticleHopperCount);
 				GetLog() << "\nRemoving Smarticle far below container \n";
 				continue;
 			}
@@ -1496,7 +1496,7 @@ public:
 	double minDist=0.0001;
 };
 
-void PrintRingContact(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec, ChIrrApp* app)
+void PrintRingContact(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec, ChIrrApp* app)
 {
 	//static const int stepPerOut = .1 * 1 / dT;
 	//if (tstep%stepPerOut == 0)
@@ -1581,7 +1581,7 @@ void PrintRingContact(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChB
 
 	//ringPos_of << mphysicalSystem->GetChTime() << ", " << ring->GetPos().x() << ", " << ring->GetPos().y() << ", " << ring->GetPos().z() << ", " << Smarticle::global_GUI_value << ", " << cog.x() << ", " << cog.y() << ", " << cog.z() << std::endl;
 }
-void WriteJson(CH_SYSTEM* mphysicalSystem, int tstep, std::vector<std::shared_ptr<Smarticle>>& mySmarticlesVec)
+void WriteJson(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, std::vector<std::shared_ptr<Smarticle>>& mySmarticlesVec)
 {
 
 
@@ -1632,7 +1632,7 @@ json ReadJson(std::string fname)
 	return f;
 }
 
-void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec)
+void PrintRingPos(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec)
 {
 	static const int stepPerOut = .1 * 1 / dT;
 	double totalMass = ring->GetMass();
@@ -1650,7 +1650,7 @@ void PrintRingPos(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>
 	}
 	
 }
-void PrintRingDead(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec)
+void PrintRingDead(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, std::shared_ptr<ChBody>ring, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec)
 {
 	static const int stepPerOut = .1 * 1 / dT;
 	double totalMass = ring->GetMass();
@@ -1672,7 +1672,7 @@ void PrintRingDead(CH_SYSTEM* mphysicalSystem, int tstep, std::shared_ptr<ChBody
 		ringDeadSmart_of<< mphysicalSystem->GetChTime() << ", " << ring->GetPos().x() << ", " << ring->GetPos().y() << ", " << ring->GetPos().z() << ", " << cog.x() << ", " << cog.y() << ", " << cog.z() << ", " << dead.x() << ", " << dead.y() << ", " << dead.z()  << std::endl;
 
 }
-void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylrad)
+void PrintStress(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, double zmax,double cylrad)
 {
 
 
@@ -1685,7 +1685,7 @@ void PrintStress(CH_SYSTEM* mphysicalSystem, int tstep, double zmax,double cylra
 	stress_of << mphysicalSystem->GetChTime() << ", " << force <<","<< Smarticle::global_GUI_value <<", "<< currBuckRad<< std::endl;
 	//stress_of.close();
 }
-void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cylrad, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) 
+void PrintStress2(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, double zmax, double cylrad, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) 
 {
 
 	bool printAllSmarticleInfo = true;
@@ -1731,7 +1731,7 @@ void PrintStress2(CH_SYSTEM* mphysicalSystem, int tstep, double zmax, double cyl
 	//stress_of.close();
 	frame = frame + 1;
 }
-void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) {
+void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) {
 
 	static int stepSave = 10;
 	if (tStep % stepSave != 0) return;
@@ -1839,7 +1839,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<std::shar
 		break;
 	}
 	//totalEnergy used to be meanOT
-	vol_frac_of << mphysicalSystem.GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << totalTorque << ", " << Smarticle::global_GUI_value << std::endl;
+	vol_frac_of << mphysicalSystem->GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << totalTorque << ", " << Smarticle::global_GUI_value << std::endl;
 	//vol_frac_of.close();
 	return;
 }
@@ -1857,7 +1857,7 @@ void PrintFractions(CH_SYSTEM& mphysicalSystem, int tStep, std::vector<std::shar
 	//hres = CreateStreamOnHGlobal(0, TRUE, &pStream);
 	//hr = myImage.Save(pStream, Gdiplus::ImageFormatPNG);
 void UpdateSmarticles(
-		CH_SYSTEM& mphysicalSystem,
+		std::shared_ptr<CH_SYSTEM> mphysicalSystem,
 		std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) {
 	double pctglob[30] =
 	{ 0.0009,
@@ -1891,7 +1891,7 @@ void UpdateSmarticles(
 	0.1199,
 	0.1423 };
 
-	double t = mphysicalSystem.GetChTime(); 
+	double t = mphysicalSystem->GetChTime(); 
 	
 	for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 		double tor1 = 0;
@@ -1920,7 +1920,7 @@ void UpdateSmarticles(
 }
 
 
-void create_spring_cir(CH_SYSTEM& mphysicalSystem)
+void create_spring_cir(std::shared_ptr<CH_SYSTEM> mphysicalSystem)
 {
 	int n_parts = 50;
 	double rad = .0055;
@@ -1956,7 +1956,7 @@ void create_spring_cir(CH_SYSTEM& mphysicalSystem)
 		part->GetCollisionModel()->BuildModel();
 		part->GetCollisionModel()->SetFamily(3); 
 		part->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(3);
-		mphysicalSystem.Add(part);
+		mphysicalSystem->Add(part);
 		////////////
 		
 		partVec.emplace_back(part);
@@ -1968,7 +1968,7 @@ void create_spring_cir(CH_SYSTEM& mphysicalSystem)
 			//spring->Set_SpringRestLength(rad * 2.1);
 			spring->Set_SpringK(k);
 			spring->Set_SpringR(r);
-			mphysicalSystem.Add(spring);
+			mphysicalSystem->Add(spring);
 		}
 			if (i == n_parts-1)
 		{
@@ -1977,7 +1977,7 @@ void create_spring_cir(CH_SYSTEM& mphysicalSystem)
 			//spring->Set_SpringRestLength(rad * 2.1);
 			springLast->Set_SpringK(k);
 			springLast->Set_SpringR(r);
-			mphysicalSystem.Add(springLast);
+			mphysicalSystem->Add(springLast);
 			partLast = part;
 		}
 
@@ -1988,7 +1988,7 @@ void create_spring_cir(CH_SYSTEM& mphysicalSystem)
 	}
 	//partLast->Accumulate_force(ChVector<>(0, .4, 0), VNULL, true);
 }
-void create_spring(CH_SYSTEM& mphysicalSystem)
+void create_spring(std::shared_ptr<CH_SYSTEM> mphysicalSystem)
 {
 	double rad = .025;
 	double k = 10000.0;
@@ -2018,8 +2018,8 @@ void create_spring(CH_SYSTEM& mphysicalSystem)
 	b2->GetCollisionModel()->BuildModel();
 	b2->SetCollide(true);
 	b2->SyncCollisionModels();
-	mphysicalSystem.Add(b1);
-	mphysicalSystem.Add(b2);
+	mphysicalSystem->Add(b1);
+	mphysicalSystem->Add(b2);
 
 	
 	auto spring = std::make_shared<ChLinkSpring>();
@@ -2033,7 +2033,7 @@ void create_spring(CH_SYSTEM& mphysicalSystem)
 	//mphysicalSystem.Add(spring);
 	spring->AddAsset(sys->groundTexture);
 	b1->Accumulate_force(ChVector<>(0, .5, 0), VNULL,true);
-	mphysicalSystem.Add(spring);
+	mphysicalSystem->Add(spring);
 }
 // =============================================================================
 bool SetGait(double time)
@@ -2173,11 +2173,13 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	
-	CH_SYSTEM mphysicalSystem;
+	//CH_SYSTEM mphysicalSystem;
+	std::shared_ptr<CH_SYSTEM> mphysicalSystem= std::make_shared<CH_SYSTEM>();
+
 	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	simParams.open(simulationParams.c_str());
 
-	sys = std::shared_ptr<SystemGeometry> (new SystemGeometry(&mphysicalSystem, bucketType, collisionEnvelope,
+	sys = std::shared_ptr<SystemGeometry> (new SystemGeometry(mphysicalSystem, bucketType, collisionEnvelope,
 		l_smarticle, w_smarticle, t_smarticle, t2_smarticle));
 
 	InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
@@ -2203,7 +2205,7 @@ int main(int argc, char* argv[]) {
 	GetLog() << "\npctActive" << pctActive << "\n";
 	Smarticle::pctActive = pctActive;
 	MyBroadPhaseCallback mySmarticleBroadphaseCollisionCallback;
-	mphysicalSystem.GetCollisionSystem()->RegisterBroadphaseCallback(&mySmarticleBroadphaseCollisionCallback);
+	mphysicalSystem->GetCollisionSystem()->RegisterBroadphaseCallback(&mySmarticleBroadphaseCollisionCallback);
 
 	//MyChCustomCollisionPointCallback myContactCallbackFriction;
 	//mphysicalSystem.GetContactContainer()->SetAddContactCallback(myContactCallbackFriction.get());
@@ -2238,7 +2240,7 @@ int main(int argc, char* argv[]) {
 	std::cout << "@@@@@@@@@@@@@@@@  irrlicht stuff  @@@@@@@@@@@@@@@@" << std::endl;
 	// Create the Irrlicht visualization (open the Irrlicht device,
 	// bind a simple user interface, etc. etc.)
-	ChIrrApp application(&mphysicalSystem, L"Dynamic Smarticles",
+	ChIrrApp application(mphysicalSystem.get(), L"Dynamic Smarticles",
 		core::dimension2d<u32>(appWidth, appHeight), false, true);
 	#if defined(_WIN64)
 	HWND winhandle = reinterpret_cast<HWND>(application.GetVideoDriver()->getExposedVideoData().OpenGLWin32.HWnd);
@@ -2520,7 +2522,7 @@ int main(int argc, char* argv[]) {
 		ringInitPos = pos2;
 		//ring->SetBodyFixed(true);
 
-		mphysicalSystem.AddBody(ring);
+		mphysicalSystem->AddBody(ring);
 
 
 		//PrintRingPos(&mphysicalSystem, 0, ring, mySmarticlesVec);
@@ -2532,7 +2534,7 @@ int main(int argc, char* argv[]) {
 	application.DrawAll();
 	
 	for (int tStep = 0; tStep < stepEnd + 1; tStep++) {
-		double t = mphysicalSystem.GetChTime();
+		double t = mphysicalSystem->GetChTime();
 		if (read_from_file < 1)
 		{
 			if ((fmod(t, timeForVerticalDisplacement) < dT) &&
@@ -2674,7 +2676,7 @@ int main(int argc, char* argv[]) {
 		ChIrrTools::drawGrid(application.GetVideoDriver(), 0.1, 0.1,40,40);
 		if (ringActive)
 		{
-			PrintRingContact(&mphysicalSystem, tStep, ring, mySmarticlesVec, &application);
+			PrintRingContact(mphysicalSystem, tStep, ring, mySmarticlesVec, &application);
 		}
 			//application.GetVideoDriver()->setTransform(irr::video::ETS_VIEW, irr::core::IdentityMatrix);
 		
@@ -2695,7 +2697,7 @@ int main(int argc, char* argv[]) {
 		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER || bucketType == CYLINDER || bucketType == BOX)
 		{
 			double zmax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
-			PrintStress2(&mphysicalSystem, tStep, zmax, sys->rad, mySmarticlesVec);
+			PrintStress2(mphysicalSystem, tStep, zmax, sys->rad, mySmarticlesVec);
 		}
 
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
@@ -2728,12 +2730,12 @@ int main(int argc, char* argv[]) {
 		}
 		if (ringActive)
 		{
-			PrintRingPos(&mphysicalSystem, tStep, ring, mySmarticlesVec);
+			PrintRingPos(mphysicalSystem, tStep, ring, mySmarticlesVec);
 			//PrintRingContact(&mphysicalSystem, tStep, ring, mySmarticlesVec,&application);
-			PrintRingDead(&mphysicalSystem, tStep, ring, mySmarticlesVec);
+			PrintRingDead(mphysicalSystem, tStep, ring, mySmarticlesVec);
 			if (writejson)
 			{
-				WriteJson(&mphysicalSystem, tStep, mySmarticlesVec);
+				WriteJson(mphysicalSystem, tStep, mySmarticlesVec);
 			}
 		}
   }

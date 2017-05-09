@@ -74,7 +74,7 @@ private:
 };
 
 
-SystemGeometry::SystemGeometry(CH_SYSTEM* msys, BucketType sysType, double collisionEnv,double l_smart, double w_smart, double t_smart, double t2_smart)
+SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysType, double collisionEnv,double l_smart, double w_smart, double t_smart, double t2_smart)
 {
 	
 	mat_wall = std::make_shared<ChMaterialSurfaceNSC>();
@@ -215,7 +215,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_BoxBig()
 	//mmaterial->SetDampingF(0.2f);
 
 	boxdim = ChVector<>(.28 / 1.5 *10, .55245*4, 2 * bucket_rad / 8);
-	bucket = utils::CreateBoxContainer(sys, bucketID, mat_wall,
+	bucket = utils::CreateBoxContainer(sys.get(), bucketID, mat_wall,
 		boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(AngleSet::RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
 
 
@@ -240,7 +240,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_Box()
 	//mmaterial->SetDampingF(0.2f);
 
 
-	bucket = utils::CreateBoxContainer(sys, bucketID, mat_wall,
+	bucket = utils::CreateBoxContainer(sys.get(), bucketID, mat_wall,
 		boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(AngleSet::RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
 
 
