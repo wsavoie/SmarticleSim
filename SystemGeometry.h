@@ -81,7 +81,7 @@ namespace chrono {
 				static std::shared_ptr <ChTexture> sphereTexture;
 				static std::shared_ptr <ChTexture> floorTexture;
 				static std::shared_ptr <ChTexture> groundTexture;
-				static std::shared_ptr<ChMaterialSurfaceNSC> mat_wall;
+				static std::shared_ptr<SOLVER(ChMaterialSurface)> mat_wall;
 
 				double collisionEnvelope;
 

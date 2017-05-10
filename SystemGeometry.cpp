@@ -50,7 +50,7 @@ public:
 		Set_y_dxdx(source->Get_y_dxdx(0));
 	}
 	virtual ChFunction* new_Duplicate() {
-		ChFunctionCustom* m_func;
+		ChFunctionCustom* m_func=new ChFunctionCustom();
 		/*	m_func = new ChFunctionCustom;
 		m_func->Copy(this);*/
 		return (m_func);
@@ -77,7 +77,7 @@ private:
 SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysType, double collisionEnv,double l_smart, double w_smart, double t_smart, double t2_smart)
 {
 	
-	mat_wall = std::make_shared<ChMaterialSurfaceNSC>();
+	mat_wall = std::make_shared<SOLVER(ChMaterialSurface)>();
 
 
 	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
@@ -123,7 +123,7 @@ std::shared_ptr<ChTexture> SystemGeometry::bucketTexture = std::make_shared<ChTe
 std::shared_ptr<ChTexture> SystemGeometry::sphereTexture = std::make_shared<ChTexture>();
 std::shared_ptr<ChTexture> SystemGeometry::groundTexture = std::make_shared<ChTexture>();
 std::shared_ptr<ChTexture> SystemGeometry::floorTexture = std::make_shared<ChTexture>();
-std::shared_ptr<ChMaterialSurfaceNSC> SystemGeometry::mat_wall = std::make_shared<ChMaterialSurfaceNSC>();
+std::shared_ptr<SOLVER(ChMaterialSurface)> SystemGeometry::mat_wall = std::make_shared<SOLVER(ChMaterialSurface)>();
 SystemGeometry::~SystemGeometry()
 {
 }
@@ -502,6 +502,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 
 		}
 	}
+	GetLog() <<cyl_container->GetMass();
 	return cyl_container;
 }
 std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture,double m)
@@ -837,7 +838,7 @@ void SystemGeometry::create_Container()
 		{
 			bucket = create_FlatHopper(boxdim);
 			floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
-			GetLog() << "\n\nfriction: " << bucket->GetMaterialSurfaceNSC()->GetKfriction() << " " << bucket->GetMaterialSurfaceNSC()->GetSfriction() << "\n";
+			GetLog() << "\n\nfriction: " << bucket->SOLVER(GetMaterialSurface)()->GetKfriction() << " " << bucket->SOLVER(GetMaterialSurface)()->GetSfriction() << "\n";
 			break;
 		}
 		case HOPPER:

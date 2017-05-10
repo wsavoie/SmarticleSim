@@ -55,7 +55,6 @@
 #ifdef CHRONO_OPENGL
 #undef CHRONO_OPENGL
 #endif
-#include "chrono/physics/ChSystemNSC.h"
 #include "chrono/collision/ChCCollisionSystem.h"
 //#include "unit_IRRLICHT/ChIrrApp.h"
 #include "chrono_irrlicht/ChBodySceneNode.h"  //changed path from unit to chrono to reflect changes in updated chrono
@@ -94,12 +93,6 @@ using namespace irr::gui;
 
 #ifndef false
 #define false 0
-#endif
-
-#if USE_PARALLEL
-#define CH_SYSTEM ChSystemParallelDVI
-#else
-#define CH_SYSTEM ChSystemNSC
 #endif
 
 //***********************************
@@ -157,8 +150,8 @@ ChVector<> ringInitPos(0, 0, 0);
 bool oneInactive = false;
 //double rho_smarticle = 7850.0 / (sizeScale * sizeScale * sizeScale);
 //double rho_cylinder = 1180.0 / (sizeScale * sizeScale * sizeScale);
-std::shared_ptr<ChMaterialSurfaceNSC> mat_smarts;
-//std::shared_ptr<ChMaterialSurfaceNSC> mat_wall;
+std::shared_ptr<SOLVER(ChMaterialSurface)> mat_smarts;
+//std::shared_ptr<SOLVER(ChMaterialSurface)> mat_wall;
 int numLayers = 100;
 double armAngle = 90;
 double sOmega = 5;  // smarticle omega
@@ -190,13 +183,16 @@ double gaitChangeLengthTime = .5;
 	//real value
 	double t_smarticle = sizeScale * .029982 / 1.0; //height of solar panels
 	double t2_smarticle = sizeScale * .02122 / 1.0;
-	double rho_smarticleArm = 925;
+	double rho_smarticleArm = 906.2992;
 	double rho_smarticleMid = 739.18;
 
-	double p_gain = 1; //3;   //.1//.2         //0.133
-	double i_gain = 1; // .4;// 0.03;	 //.5//.225						//0.05
-	double d_gain = 1; //.1; //.0025 //.01       //0.0033
+	//double p_gain = 1;// 2;
+	//double i_gain = 1;//30;
+	//double d_gain = 1;//.01; 
 
+	double p_gain = 2;// 2;
+	double i_gain = 30;//30;
+	double d_gain = .01;//.01; 
 
 #endif
 
@@ -384,7 +380,7 @@ namespace ns { 	// struct to add smarticles to json file
 
 
 // =====================================================================================================
-class MyChCustomCollisionPointCallback : public ChSystemNSC::CustomCollisionCallback
+class MyChCustomCollisionPointCallback : public CH_SYSTEM::CustomCollisionCallback
 	{
 	public:
 		/// Callback used to report contact points being added to the container.
@@ -392,7 +388,7 @@ class MyChCustomCollisionPointCallback : public ChSystemNSC::CustomCollisionCall
 
 		virtual void ContactCallback(
 			const collision::ChCollisionInfo& mcontactinfo,  ///< get info about contact (cannot change it)
-			ChMaterialCompositeNSC& material                       ///< you can modify this!
+			SOLVER(ChMaterialComposite)& material                       ///< you can modify this!
 			)
 		{
 			//int bucketId = bucket->GetIdentifier();
@@ -790,7 +786,7 @@ void InitializeMbdPhysicalSystem_NonParallel(std::shared_ptr<CH_SYSTEM> mphysica
   // Modify some setting of the physical system for the simulation, if you want
 	
 	//mphysicalSystem.SetSolverType(ChSystem::SOLVER_DEM);
-	mphysicalSystem->SetSolverType(ChSolver::Type::SOR);
+	mphysicalSystem->SetSolverType(ChSolver::Type::SOLVER_SMC);
 
 	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
 	mphysicalSystem->SetMaxItersSolverSpeed(50+.3*numPerLayer*numLayers);
@@ -1070,7 +1066,7 @@ void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<
 		//smarticle0->ss.emplace_back(angle1, angle2);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
 		//smarticle0->midTorque.emplace_back(angle1*D2R + vibAmp, angle2*D2R + vibAmp);
-		//GetLog()<< "\nMASS:"<<smarticle0->GetMass() <<"\n";
+		GetLog()<< "MASS:"<<smarticle0->GetMass()<<" " ;
 
 		//if (oneInactive)
 		//{
@@ -2194,8 +2190,8 @@ int main(int argc, char* argv[]) {
 
 	// define material property for everything
 	//!@#$%
-	//mat_wall = std::make_shared<ChMaterialSurfaceNSC>();
-	mat_smarts= std::make_shared<ChMaterialSurfaceNSC>();
+	//mat_wall = std::make_shared<SOLVER(ChMaterialSurface)>();
+	mat_smarts= std::make_shared<SOLVER(ChMaterialSurface)>();
 	// Create a ChronoENGINE physical system
 
 
@@ -2252,18 +2248,18 @@ int main(int argc, char* argv[]) {
 	ChIrrWizard::add_typical_Logo(application.GetDevice());
 	ChIrrWizard::add_typical_Sky(application.GetDevice());
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
-		core::vector3df(0, 0, 4*sys->bucket_rad)*sizeScale,
-		core::vector3df(0, 0, 1*sys->bucket_rad)*sizeScale);
+		core::vector3df(0.0f, 0.0f, 4.0f*sys->bucket_rad)*(float)sizeScale,
+		core::vector3df(0.0f, 0.0f, 1.0f*sys->bucket_rad)*(float)sizeScale);
 	ChIrrWizard::add_typical_Lights(application.GetDevice(),
-		core::vector3df(.0139, -.39, -.0281)*sizeScale,
-		core::vector3df(0.0139, .298, -.195)*sizeScale);
+		core::vector3df(.0139f, -.39f, -.0281f)*(float)sizeScale,
+		core::vector3df(0.0139f, .298f, -.195f)*(float)sizeScale);
 
 	ChIrrWizard::add_typical_Lights(application.GetDevice());
 
 
 	RTSCamera* camera = new RTSCamera(application.GetDevice(), application.GetDevice()->getSceneManager()->getRootSceneNode(),
-		application.GetDevice()->getSceneManager(), -1, -50.0f, 0.5f, 0.0005f);
-	camera->setTranslateSpeed(0.005);
+		application.GetDevice()->getSceneManager(), -1.0f, -50.0f, 0.5f, 0.0005f);
+	camera->setTranslateSpeed(0.005f);
 
 
 	switch (bucketType)
@@ -2272,36 +2268,36 @@ int main(int argc, char* argv[]) {
 	{
 		if (stapleSize)
 		{
-			camera->setPosition(core::vector3df(0.00024, -0.181, .102));
-			camera->setTarget(core::vector3df(0.00024, -.033, .0759)); //	camera->setTarget(core::vector3df(0, 0, .01));
+			camera->setPosition(core::vector3df(0.00024f, -0.181f, .102f));
+			camera->setTarget(core::vector3df(0.00024f, -.033f, .0759f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 		}
 		else
 		{
-			camera->setPosition(core::vector3df(0.0139, -.45, .25));
-			camera->setTarget(core::vector3df(0.0139, -.3, .24)); //	camera->setTarget(core::vector3df(0, 0, .01));
+			camera->setPosition(core::vector3df(0.0139f, -.45f, .25f));
+			camera->setTarget(core::vector3df(0.0139f, -.3f, .24f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 		}
 	}
 		break;
 	case BOX:
 		if (stapleSize)
 		{
-			camera->setPosition(core::vector3df(0.0139, -0.255, .045));
-			camera->setTarget(core::vector3df(0.0139, -.1050, .03)); //	camera->setTarget(core::vector3df(0, 0, .01));
+			camera->setPosition(core::vector3df(0.0139f, -0.255f, .045f));
+			camera->setTarget(core::vector3df(0.0139f, -.1050f, .03f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 			if (box_ang == 0)
 			{
-				camera->setPosition(core::vector3df(0.0139, -0.255, .045));
-				camera->setTarget(core::vector3df(0.0139, -.1050, .03)); //	camera->setTarget(core::vector3df(0, 0, .01));
+				camera->setPosition(core::vector3df(0.0139f, -0.255f, .045f));
+				camera->setTarget(core::vector3df(0.0139f, -.1050f, .03f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 			}
 		}
 		else
 		{
-			camera->setPosition(core::vector3df(0.0139, -0.65, -.180));
-			camera->setTarget(core::vector3df(0.0139, -.50, -.195)); //	camera->setTarget(core::vector3df(0, 0, .01));
+			camera->setPosition(core::vector3df(0.0139f, -0.65f, -.180f));
+			camera->setTarget(core::vector3df(0.0139f, -.50f, -.195f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 			if (box_ang == 0)
 			{
 				//camera->setPosition(core::vector3df(-0.04, -0.0142, .943));
-				camera->setTarget(core::vector3df(0, 0, 0)); //	camera->setTarget(core::vector3df(0, 0, .01));
-				camera->setPosition(core::vector3df(0, 0, 0.8));
+				camera->setTarget(core::vector3df(0.0f, 0.0f, 0.0f)); //	camera->setTarget(core::vector3df(0, 0, .01));
+				camera->setPosition(core::vector3df(0.0f, 0.0f, 0.8f));
 				//camera->setPosition(core::vector3df(0,0, 1.05));
 
 
@@ -2309,13 +2305,13 @@ int main(int argc, char* argv[]) {
 		}
 		break;
 	case FLATHOPPER:
-		camera->setPosition(core::vector3df(0.014, -1.34, -.4338));
-		camera->setTarget(core::vector3df(0.0139, -.50, -.495)); //	camera->setTarget(core::vector3df(0, 0, .01));
+		camera->setPosition(core::vector3df(0.014f, -1.34f, -.4338f));
+		camera->setTarget(core::vector3df(0.0139f, -.50f, -.495f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 
 		if (box_ang == 0)
 		{
-			camera->setPosition(core::vector3df(-0.04, -0.0142, .943));
-			camera->setTarget(core::vector3df(-0.0144, .019, -.497)); //	camera->setTarget(core::vector3df(0, 0, .01));
+			camera->setPosition(core::vector3df(-0.04f, -0.0142f, .943f));
+			camera->setTarget(core::vector3df(-0.0144f, .019f, -.497f)); //	camera->setTarget(core::vector3df(0, 0, .01));
 		}
 
 		break;
@@ -2513,9 +2509,9 @@ int main(int argc, char* argv[]) {
 		double yPos = 0;
 		ChVector<> pos2 = sys->bucket_ctr + ChVector<>(xPos, yPos, t2_smarticle);
 
-		double m = .1;//was .001
+		double m = .055;
 		//std::shared_ptr<ChBody> ring = sys->create_EmptyCylinder(25, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture,m);
-		ring = sys->create_EmptyEllipse(100, true, false, t2_smarticle, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture, m, 1, 1);
+		ring = sys->create_EmptyEllipse(100, true, false, t2_smarticle/2, sys->bucket_half_thick, ringRad, pos2, false, sys->groundTexture, m, 1, 1);
 		//ring = sys->create_ChordRing(100, t2_smarticle, sys->bucket_half_thick, ringRad, t_smarticle, pos2, sys->groundTexture, m);
 		ring->SetIdentifier(455465);
 		ring->SetCollide(true);
@@ -2523,7 +2519,6 @@ int main(int argc, char* argv[]) {
 		//ring->SetBodyFixed(true);
 
 		mphysicalSystem->AddBody(ring);
-
 
 		//PrintRingPos(&mphysicalSystem, 0, ring, mySmarticlesVec);
 	}
@@ -2754,8 +2749,10 @@ int main(int argc, char* argv[]) {
 	{
 		receiver.SaveToMovie();
 		receiver.DeleteImgs();
+		
+
 	}
-  mySmarticlesVec.clear();
+  //mySmarticlesVec.clear();
 
 	simParams << "completed"<<std::endl;
 
@@ -2767,5 +2764,7 @@ int main(int argc, char* argv[]) {
 	ringContact_of.close();
 	inactive_of.close();
 
+	exit(1);
   return 0;
+
 }

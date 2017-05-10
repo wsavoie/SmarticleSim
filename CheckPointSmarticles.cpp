@@ -14,7 +14,7 @@ namespace chrono {
 void CheckPointSmarticles_Write(
 	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
 		int tStep,
-		std::shared_ptr<ChMaterialSurfaceNSC> mat_g,
+		std::shared_ptr<SOLVER(ChMaterialSurface)> mat_g,
 		double l_smarticle,
 		double w_smarticle,
 		double t_smarticle,
@@ -89,7 +89,7 @@ void CheckPointSmarticles_Write(
 void CheckPointSmarticlesDynamic_Write(
 	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
 	int tStep,
-	std::shared_ptr<ChMaterialSurfaceNSC> mat_g,
+	std::shared_ptr<SOLVER(ChMaterialSurface)> mat_g,
 	double l_smarticle,
 	double w_smarticle,
 	double t_smarticle,
@@ -196,7 +196,7 @@ void CheckPointSmarticles_Read(
 	inSmarticles.open("smarticles.csv");
 	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction,angle1,angle2;
 	double rho_smarticle;
-	auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+	auto mat_g = std::make_shared<SOLVER(ChMaterialSurface)>();
 	char ddCh;
 	inSmarticles >>
 	l_smarticle >>
@@ -256,7 +256,7 @@ void CheckPointSmarticlesDynamic_Read(
 	unsigned int currMoveType, prevMoveType, gui_value;
 	double rho_smarticleArm;
 	double rho_smarticleMid;
-	auto mat_g = std::make_shared<ChMaterialSurfaceNSC>();
+	auto mat_g = std::make_shared<SOLVER(ChMaterialSurface)>();
 	char ddCh;
 	double omega;
 	inSmarticles >>

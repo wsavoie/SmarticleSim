@@ -1,19 +1,44 @@
-path = 'A:\SmarticleRun\TestActive\';
-% path = 'D:\SimResults\Chrono\SmarticleU\tests\lazy .05\';
-a=dir(horzcat(path,'-*'));
-for i=1:length(a)
-    ff= horzcat(path,a(i).name,'\PostProcess\Stress.txt');
-    pts(ff);
-    matFile =  horzcat(path,a(i).name,'\PostProcess\stressData.mat');
-    if exist(matFile, 'file') == 2 
-        pts('matrix file already created');
-        continue
-    end
-   
-    readAllSmarticlesAngles(ff,0);
-end
-beep;
-beep;
+%%
+hold on;
+% plot(t,forcex,t,forcey,t,forcez);
+R=0.042528;
+RR=R/.8+.5*R/.8;
+marm=0.00355;
+mtot=0.0321;
+T=2*.4290;
+omeg=2*pi/T;
+farm=(R/2)*omeg^2*marm
+ftot=(R/2)*omeg^2*mtot
+plot(t,forcex);
+plot(t,forcey);
+plot(t,forcez);
+
+title('Penalty');
+xlabel('time (s)');
+ylabel('Force (N)');
+figText(gcf,16);
+legend({'x force','y force', 'z force'})
+% 
+% plot(t1,forcex1);
+% plot(t1,forcey1);
+% plot(t1,forcez1);
+%%
+% path = 'A:\SmarticleRun\TestActive\';
+% % path = 'D:\SimResults\Chrono\SmarticleU\tests\lazy .05\';
+% a=dir(horzcat(path,'-*'));
+% for i=1:length(a)
+%     ff= horzcat(path,a(i).name,'\PostProcess\Stress.txt');
+%     pts(ff);
+%     matFile =  horzcat(path,a(i).name,'\PostProcess\stressData.mat');
+%     if exist(matFile, 'file') == 2 
+%         pts('matrix file already created');
+%         continue
+%     end
+%    
+%     readAllSmarticlesAngles(ff,0);
+% end
+% beep;
+% beep;
 %%%%%%%%
 % 
 % SPACE_UNITS = 'µm';
@@ -94,7 +119,7 @@ fold=uigetdir('A:\SmarticleRun\');
 f = dir2(fold,'folders');
 for i=1:length(f)
     ff= fullfile(fold,f(i).name,'video_capture');
-    movefile(fullfile(ff,'outvid.avi'),fullfile(ff,[f(i).name,'.avi']))
+    movefile(fullfile(ff,'outVid.avi'),fullfile(ff,[f(i).name,'.avi']))
 end
 %% crosscor
 % load relatedsig.mat

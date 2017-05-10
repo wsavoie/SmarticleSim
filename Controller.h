@@ -6,13 +6,9 @@
 #include <motion_functions/ChFunction_Base.h>
 #include <physics/ChLinkEngine.h>
 #include "ChFunction_Controller.h"
-#include "chrono/physics/ChSystemNSC.h"
-#if USE_PARALLEL
-#define CH_SYSTEM ChSystemParallelDVI
-#else
-#define CH_SYSTEM ChSystemNSC
-#endif
-
+#include "common.h"
+//#include "chrono/physics/ChSystemSMC.h"
+//#include "chrono/physics/ChSystemNSC.h"
 namespace chrono {
 
 

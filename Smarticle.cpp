@@ -19,6 +19,7 @@
 
 using namespace chrono;
 
+	double armt2 = .0032 / 2 * sizeScale; //8.06 mm with solar 3.2 without
 Smarticle::Smarticle(
 		  std::shared_ptr<CH_SYSTEM> otherSystem
 		  ) : m_system(otherSystem) {
@@ -74,7 +75,7 @@ Smarticle::~Smarticle()
 void Smarticle::Properties(
 		int sID,
 		double other_density,
-		std::shared_ptr<ChMaterialSurfaceNSC> surfaceMaterial,
+		std::shared_ptr<SOLVER(ChMaterialSurface)> surfaceMaterial,
 		double other_envelope,
 		double other_l,
 		double other_w,
@@ -109,7 +110,7 @@ void Smarticle::Properties(
 void Smarticle::Properties(
 		int sID,
 		double other_density,
-		std::shared_ptr<ChMaterialSurfaceNSC> surfaceMaterial,
+		std::shared_ptr<SOLVER(ChMaterialSurface)> surfaceMaterial,
 		double other_envelope,
 		double other_l,
 		double other_w,
@@ -131,7 +132,7 @@ void Smarticle::Properties(
 	int mdumID,
 	double otherArm_density,
 	double otherMid_density,
-	std::shared_ptr<ChMaterialSurfaceNSC> surfaceMaterial,
+	std::shared_ptr<SOLVER(ChMaterialSurface)> surfaceMaterial,
 	double other_envelope,
 	double other_l,
 	double other_w,
@@ -528,7 +529,7 @@ void Smarticle::SetEdges()
 	
 
 	double armt = r;
-	double armt2 = .00806 / 2 * sizeScale; //8.06 mm with solar 3.2 without
+	//double armt2 = .0032 / 2 * sizeScale; //8.06 mm with solar 3.2 without
 	if (!stapleSize)
 	{
 		//verts
@@ -810,7 +811,7 @@ void Smarticle::Create() {
 		offPlaneoffset = .00825 - r2;//smarticle arms arent centered in plane, arm is offset 8.25mm from front or offPlaneoffset-t2
 		jointClearance = .0065;//6.5 mm in x dir jc in y dir is r2
 		double armt = r*.96;
-		double armt2 = .00806 / 2 * sizeScale; //8.06 mm with solar 3.2 without
+		double armt2 = .0032 / 2 * sizeScale; //8.06 mm with solar 3.2 without
 
 		CreateArm2(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angles[0])*l / 2), 0, -(l / 2.0)*sin(-angles[0]) - offPlaneoffset), quat0);
 		CreateArm2(1, w, r, r2, ChVector<>(0, 0, 0));

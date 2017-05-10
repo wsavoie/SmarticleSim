@@ -22,11 +22,29 @@
 #define R2D 180.0/CH_C_PI   //rad to deg
 #define PI_2 CH_C_PI/2.0   
 
+#define solverSMC true
+
 #define USE_PARALLEL false
 #define irrlichtVisualization true
 #define stapleSize false
 #define dnl "\n\n"
 #define nl "\n"
+#if USE_PARALLEL
+#define CH_SYSTEM ChSystemParallelDVI
+#else
+#if solverSMC
+#define SOLVETYPE ChSolver::Type::SOLVER_SMC
+#define SOLVER SMC
+#define SOLVER(x) x##SMC
+#include "chrono/physics/ChSystemSMC.h"
+#define CH_SYSTEM ChSystemSMC
+#else
+#define SOLVETYPE ChSolver::Type::SOR
+#define SOLVER(x) x##NSC
+#include "chrono/physics/ChSystemNSC.h"
+#define CH_SYSTEM ChSystemNSC
+#endif
+#endif
 	//extern double sizeScale;
 	//extern double dT;
 	//extern bool bucket_exist;
