@@ -47,14 +47,15 @@ foldName=Amoeba_Ring_t_60_Square_pi_m_.055_d_$inactiveParticle
 mkdir $sys/$foldName
 for fric in `seq 4 4`; do
 	for deadDir in `seq 0 3`; do
-		for repeats in `seq 0 20`; do
+		# for repeats in `seq 0 20`; do
+			for repeats in `seq 0 0`; do
 			for robs in `seq 1 1`; do
 			  a=$sys/$foldName/f_${changeToStressPerc[$fric]}_rob_${numPerLay[$robs]}_v_${repeats}_dir_${deadDir}
 			  mkdir $a
 			  cp $csvFold/smarticleMoves.csv $a/smarticleMoves.csv
 			  cd $a
 			  # # $smartRunFile ${lwArr[$angs]} 0.00025 ${nlArr[$angs]} ${reArr[$angs]} ${paArr[$angs]} ${ang1Arr[$angs]} ${ang2Arr[$angs]} ${boxangArr[$angs]} ${numPerLay[$angs]} ${changeToStressPerc[$angs]} $saveFrame;
-			  $smartRunFile 0.8 0.0001 1 0 1 0 0 0 ${numPerLay[$robs]} ${changeToStressPerc[$fric]} $saveFrame $deadDir 801 1 $inactiveParticle
+			  $smartRunFile 0.8 0.001 1 0 1 0 0 0 ${numPerLay[$robs]} ${changeToStressPerc[$fric]} $saveFrame $deadDir 801 1 $inactiveParticle
 			  cd ..;
 			  # cp -r ./PostProcess $a
 			  done;
