@@ -185,16 +185,21 @@ double gaitChangeLengthTime = .5;
 	double t2_smarticle = sizeScale * .02122 / 1.0;
 	double rho_smarticleArm = 906.2992;
 	double rho_smarticleMid = 739.18;
+#endif
 
-	//double p_gain = 1;// 2;
-	//double i_gain = 1;//30;
-	//double d_gain = 1;//.01; 
+#if solverSMC
 
 	double p_gain = 2;// 2;
 	double i_gain = 30;//30;
 	double d_gain = .01;//.01; 
 
+#else
+
+	double p_gain = 1;// 2;
+	double i_gain = 1;//30;
+	double d_gain = 1;//.01; 
 #endif
+
 
 	// double t_smarticle 	= sizeScale * .00254;
 	// double t2_smarticle	= sizeScale * .001;
@@ -1915,13 +1920,16 @@ void UpdateSmarticles(
 			mySmarticlesVec[i]->updateTorqueDeque();
 			tor1 = std::get<0>(mySmarticlesVec[i]->torqueAvg);
 			tor2 = std::get<1>(mySmarticlesVec[i]->torqueAvg);
+			//tor1 = mySmarticlesVec[i]->GetMotTorque(0);
+			//tor2 = mySmarticlesVec[i]->GetMotTorque(1);
+			//GetLog() << "\nm0torque:" << tor1 << "\tm0v" << mySmarticlesVec[i]->getLinkActuator(0)->Get_mot_rot_dt() << "\tm1v" << mySmarticlesVec[i]->getLinkActuator(1)->Get_mot_rot_dt();
 		}
 		int moveType=0;
 		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
-			if (genRand() > .99)
-			{
-			moveType = Smarticle::global_GUI_value;
-			}
+		if (genRand() > .99)
+		{
+		moveType = Smarticle::global_GUI_value;
+		}
 		
 		else
 		{
@@ -2069,7 +2077,7 @@ bool SetGait(double time)
 		Smarticle::global_GUI_value = 0;
 	else if (time>.05)
 		Smarticle::global_GUI_value = 0;
-	if (time > 60)
+	if (time > 10*60)
 		return true;
 	/*else
 		Smarticle::global_GUI_value = 1;
@@ -2513,7 +2521,8 @@ int main(int argc, char* argv[]) {
 	inactive_of << "# ring rad = " << ringRad << " tstep, contactx, contacty, contactz, forcex,forcey,forcez, arm1Posx, arm1Posy, arm1Posz, arm1RotE0, arm1PosE1, arm1PosE2, arm1PosE3" << std::endl;
 	ringContact_of << "# ring rad = " << ringRad << " tstep, contactx, contacty, contactz, forcex,forcey,forcez" << std::endl;
 	ringPos_of << "# ring rad = " << ringRad << " tstep, x, y, z, globalGUI, comX, comY, comZ" << std::endl;
-	stress_of << dT << ", " << out_fps << ", " << videoFrameInterval << ", " << sys->bucket_rad << ", " << bucketType << std::endl;
+	//stress_of << dT << ", " << out_fps << ", " << videoFrameInterval << ", " << sys->bucket_rad << ", " << bucketType << std::endl;
+	stress_of << dT << ", " << out_fps << ", " << videoFrameInterval << ", " << numPerLayer << ", " << ringRad<< std::endl;
 	flowRate_of << 0 << ", " << 0 << ", " << Smarticle::global_GUI_value << std::endl;
 	ringDeadSmart_of << "# ring rad = " << ringRad << " tstep, ringx, ringy, ringz, ringcomX, ringcomY, ringcomZ, ringdeadX, ringdeadY, ringdeadZ" << std::endl;
 	std::shared_ptr<ChBody> ring;

@@ -22,7 +22,7 @@
 #define R2D 180.0/CH_C_PI   //rad to deg
 #define PI_2 CH_C_PI/2.0   
 
-#define solverSMC true
+#define solverSMC false
 
 #define USE_PARALLEL false
 #define irrlichtVisualization true

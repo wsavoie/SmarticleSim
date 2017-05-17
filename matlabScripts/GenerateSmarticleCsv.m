@@ -25,7 +25,8 @@
 %T=0.0588399
 stapleSize = false;
 % dt=.0001; %.00025
-dt=.0001; %.00025
+dt=.001; %.00025
+alen=0.3; %smc= 0.1 %nsc=0.3
 sizeScale=1;
 % omega = 4.9244e-5;
 %%limit speed in sim (5.3 for 90 deg, 6.3 for 180 deg, takes time to slow so probably 7
@@ -62,7 +63,7 @@ else
     mass = volume*rho;
     %     torqueThresh=.0325; %.008 previously cd
 %     torqueLimit=.015; %..0325 previously cd
- torqueLimit=.01; %..0325 previously cd
+ torqueLimit=.02; %..0325 previously cd
 end
 
 
@@ -102,8 +103,8 @@ fprintf(fid,'#\n');
 % define some positions in the angular phase space (TO BE CHANGED)
 % ss= 2.75*pi/180; %step size save value as in linear interpolate method
 radI=(pi/2); %intial radius to base arclength off of
-ss=radI*(.1)*(pi/180); %rad*degs*degToRads   this is arc length each step
-% ss=radI*(.3)*(pi/180); %rad*degs*degToRads   this is arc length each step
+
+ss=radI*alen*(pi/180); %rad*degs*degToRads   this is arc length each step
 
 %want to make sure arclength/step is >> than rads/step
 %i.e  ss>>(omega*dt)
