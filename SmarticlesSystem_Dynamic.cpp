@@ -1687,45 +1687,63 @@ void PrintStress2(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, double 
 	bool printAllSmarticleInfo = true;
 	static int frame = 0;
 	
-
-	//else {
-	//	stress_of.open(stress.c_str(), std::ios::app);
-	//}
-	//GetLog() << sys->bucket_half_thick<< "thick\n";
-	//showForce(mphysicalSystem)/(PI*2*cylrad*zmax)
-	ChVector<> temp;
-	double currBuckRad;
-	switch (bucketType)
+	static const int stepPerOut = .1 * 1 / dT;
+	
+	if (tstep%stepPerOut == 0)
 	{
-	case CYLINDER:
-		temp = bucket_bod_vec.at(1)->GetPos();
-		currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
-		stress_of << mphysicalSystem->GetChTime() << ", " << 0 << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl; //final 0 is a placeholder 
-		break;
-	case STRESSSTICK: case KNOBCYLINDER:
-		temp = bucket_bod_vec.at(1)->GetPos();
-		currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
-		stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl;
-		break;
-	case BOX:
-		stress_of << mphysicalSystem->GetChTime() << ", " << angle1 << ", " << Smarticle::global_GUI_value << ", " << box_ang << ", " << angle2 << std::endl;
-		break;
-
-	}
-
-
-	if (printAllSmarticleInfo)
-	{
-		for (size_t i = 0; i < mySmarticlesVec.size(); i++)
+		//else {
+		//	stress_of.open(stress.c_str(), std::ios::app);
+		//}
+		//GetLog() << sys->bucket_half_thick<< "thick\n";
+		//showForce(mphysicalSystem)/(PI*2*cylrad*zmax)
+		ChVector<> temp;
+		double currBuckRad;
+		switch (bucketType)
 		{
-			//works for plotlazy matlabfile
-			stress_of << mySmarticlesVec[i]->GetAngle(0,true) << ", " << mySmarticlesVec[i]->GetAngle(1,true) << ", " << mySmarticlesVec[i]->moveType << ", " << mySmarticlesVec[i]->Get_cm().z() << std::endl;
-			//stress_of << mySmarticlesVec[i]->active << ", " << mySmarticlesVec[i]->Get_cm().x() << ", " << mySmarticlesVec[i]->Get_cm().y() << ", " << mySmarticlesVec[i]->Get_cm().z() << std::endl;
+		case CYLINDER:
+			temp = bucket_bod_vec.at(1)->GetPos();
+			currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
+			stress_of << mphysicalSystem->GetChTime() << ", " << 0 << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl; //final 0 is a placeholder 
+			break;
+		case STRESSSTICK: case KNOBCYLINDER:
+			temp = bucket_bod_vec.at(1)->GetPos();
+			currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
+			stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl;
+			break;
+		case BOX:
+			//stress_of << mphysicalSystem->GetChTime() << ", " << angle1 << ", " << Smarticle::global_GUI_value << ", " << box_ang << ", " << angle2 << std::endl;
+
+			//box with ring data
+			//stress_of << mphysicalSystem->GetChTime() << ", " << angle1 << ", " << Smarticle::global_GUI_value << ", " << box_ang << ", " << angle2 << std::endl;
+			break;
+
 		}
-		stress_of << "#EF" <<frame<< std::endl;
+
+
+		if (printAllSmarticleInfo)
+		{
+			for (size_t i = 0; i < mySmarticlesVec.size(); i++)
+			{
+				//works for plotlazy matlabfile
+				//stress_of << mySmarticlesVec[i]->GetAngle(0,true) << ", " << mySmarticlesVec[i]->GetAngle(1,true) << ", " << mySmarticlesVec[i]->moveType << ", " << mySmarticlesVec[i]->Get_cm().z() << std::endl;
+				auto q = mySmarticlesVec[i]->GetArm(1)->GetRot();
+				auto rot = Quat_to_Angle(AngleSet::RXYZ, q);
+
+				//stress_of << mySmarticlesVec[i]->GetAngle(0, true) << ", " << mySmarticlesVec[i]->GetAngle(1, true) << ", " << mySmarticlesVec[i]->moveType << ", " 
+				//	<< mySmarticlesVec[i]->Get_cm().x() << ", "<< mySmarticlesVec[i]->Get_cm().y() << ", "<< mySmarticlesVec[i]->Get_cm().z() << ", "
+				//	<< q.e0() << ", " << q.e1() << ", " << q.e2() << ", " << q.e3() << ", " <<std::endl;
+
+				stress_of << mySmarticlesVec[i]->GetAngle(0, true) << ", " << mySmarticlesVec[i]->GetAngle(1, true) << ", " << mySmarticlesVec[i]->moveType << ", "
+					<< mySmarticlesVec[i]->Get_cm().x() << ", " << mySmarticlesVec[i]->Get_cm().y() << ", " << mySmarticlesVec[i]->Get_cm().z() << ", "
+					<< rot.x() << ", " << rot.y() << ", " << rot.z() << ", " << mySmarticlesVec[i]->active << ", " <<std::endl;
+
+				//stress_of << mySmarticlesVec[i]->active << ", " << mySmarticlesVec[i]->Get_cm().x() << ", " << mySmarticlesVec[i]->Get_cm().y() << ", " << mySmarticlesVec[i]->Get_cm().z() << std::endl;
+			}
+			stress_of << "#EF" << frame << ", "<< mphysicalSystem->GetChTime()<< ", " <<std::endl;
+		}
+		//stress_of.close();
+		frame = frame + 1;
 	}
-	//stress_of.close();
-	frame = frame + 1;
 }
 void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::vector<std::shared_ptr<Smarticle>> mySmarticlesVec) {
 

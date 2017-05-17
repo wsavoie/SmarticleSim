@@ -32,15 +32,17 @@ close all
 %*23. histogram of probability(theta_R-theta_r) make vid
 %*24. track length plotting
 %*25. rotational track length
+%*26. smarticle rotation 
+%*27.test
 %************************************************************
 %%
 SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1];
+showFigs=[1 26];
 useCOM=0;
-f=[.2]; rob=[]; v=[];dirs=[3];
+f=[]; rob=[]; v=[];dirs=[2];
 
 props={f rob v dirs};
 for i=1:length(simAm)
@@ -931,5 +933,101 @@ if(showFigs(showFigs==xx))
     c=errorbar(1,mean(CL),std(CL));
 %     close(1000);
     pts('avg=',c.YData,',    +-=',c.YPositiveDelta);
+
+end
+%% 26 smarticle rotation 
+xx=26;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    numSmarts=size(usedSimAm(1).AllSmartPos{1},1);
+    frames=size(usedSimAm(1).AllSmartPos{1},2);
+    sDat=cell(numSmarts,1);
+    sPt=30;
+    t=[usedSimAm(1).AllSmartPos{sPt:end,2}];
+    for j=2:numSmarts
+        qq=cellfun(@(x) x(j,:),usedSimAm(1).AllSmartPos(sPt:end,1),'UniformOutput',0);
+        sDat{j}=vertcat(qq{:});
+    end
+%     t=ma.tracks{1}(1:end,1)';
+    %plot rotation
+    yyaxis left
+%     q=zeros(size(sDat{1},1),numSmarts);
+    for(j=2:numSmarts)
+    	angs(:,j)=sDat{j}(:,6);    
+    end
+%     angs=double(mod(int32(angs*180/pi),180));
+%     angs=sgolayfilt(angs,3,25);
+    
+
+    mq=mean(angs,2);
+    stda=std(angs,0,2);
+    
+%     errorbar(t,mq,stdq)
+     plot(t,stda/max(stda));
+        
+     v= [diff(ma.tracks{1}(sPt:end,2))/diff(ma.tracks{1}(1:2,1)),... %vx
+         diff(ma.tracks{1}(sPt:end,3))/diff(ma.tracks{1}(1:2,1))];%vy
+     vnew=sqrt(v(:,1).^2+v(:,2).^2);
+     ylabel('std(all smarticle rotation angles) normalized');
+% v=sqrt((diff(ma.tracks{1}(1:1:end,2))).^2+(diff(ma.tracks{1}(1:1:end,3))).^2)/.1;
+    yyaxis right
+%     plot(t,ma.tracks{1}(:,2),'k-','linewidth',2);
+%     plot(t,ma.tracks{1}(:,3),'k.-','linewidth',2);
+%     a=sgolayfilt(vnew,3,11);
+      a=vnew;
+%     plot(t(3:end),a,'k')
+%     plot(t(3:end),vnew/max(vnew),'-','linewidth',2);
+    plot(t(2:end),vnew/max(vnew),'-','linewidth',2);
+%     ylim([-.2,.2])
+    ylabel('velocity normalized');
+    xlabel('time (s)');
+    figText(gcf,16);
+
+
+%     a = wgn(1000,1,0);
+S=a;    
+Fs =10;            % Sampling frequency                    
+T = 1/Fs;             % Sampling period       
+L = length(S);             % Length of signal
+t = (0:L-1)*T;        % Time vector
+f = Fs*(0:(L/2))/L;
+Y = fft(S);
+P2 = abs(Y/L);
+P1 = P2(1:L/2+1);
+P1(2:end-1) = 2*P1(2:end-1);
+figure(7899);
+plot(f(3:end),P1(3:end))
+xlabel('f (Hz)')
+ylabel('|P1(f)|')
+title('Single-sided FFT of filtered velocity');
+figText(gcf,18);
+
+
+[Rmm,lags]=xcorr(vnew/max(vnew),stda/max(stda));
+figure(2222);
+plot(lags/length(vnew)*max(t),Rmm/max(Rmm));
+title('cross-correlation (vel, std(ang)) filtered');
+xlabel('lag(s)');
+figText(gcf,16);
+end
+%% 27 test
+xx=27;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    xlabel('time(s)')
+    ylabel('velocity(mm/s)')
+	t=ma.tracks{1}(2:10:end,1);
+    x=sqrt((diff(ma.tracks{1}(1:1:end,2))/.1).^2+(diff(ma.tracks{1}(1:1:end,3))/.1).^2);
+    vv=diff(x)/.1;
+    
+    v=vv(1:10:end);
+%     v=diff(x(1:10:end));
+    vnew=mean(reshape(diff(x)/.1,[10,length(t)]));
+    plot(t,vnew*1000);
+    plot(t,v*1000)
+    plot([0,600],[0,0],'k','linewidth',2);
+    
 
 end

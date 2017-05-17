@@ -1,4 +1,5 @@
 % simD=importdata('A:\SmarticleRun\Amoeba\5 rob\f_1.0_v_1\PostProcess\RingPos.txt');
+% function readSimAmoeba()
 % d=simD.data;
 % fh = @eig;
 closeWaitbar;
@@ -63,19 +64,27 @@ for i =1:length(f)
         error('file with bad timestep');
     end
     
-    if(exist(fullfile(fold,f(i).name,'PostProcess','RingContact.txt'),'file')==2)
+%     if(exist(fullfile(fold,f(i).name,'PostProcess','RingContact.txt'),'file')==2)
+%         simAm(i).binW=binW;
+%         [simAm(i).innerForce,simAm(i).contactAngs,simAm(i).fcs]=readContactDistrib(...
+%             fullfile(fold,f(i).name,'PostProcess','RingContact.txt'),binW);
+%     end
 
-        simAm(i).binW=binW;
-        [simAm(i).innerForce,simAm(i).contactAngs,simAm(i).fcs]=readContactDistrib(...
-            fullfile(fold,f(i).name,'PostProcess','RingContact.txt'),binW);
-    end
-    if(exist(fullfile(fold,f(i).name,'PostProcess','InactivePos.txt'),'file')==2)
-        [simAm(i).deadInnerForce,simAm(i).deadContactAngs, simAm(i).deadPos,simAm(i).deadRot,simAm(i).deadFcs,simAm(i).ringpos]=readInactive(...
-        fullfile(fold,f(i).name,'PostProcess','InactivePos.txt'),binW);
-    end
+%     if(exist(fullfile(fold,f(i).name,'PostProcess','InactivePos.txt'),'file')==2)
+%         [simAm(i).deadInnerForce,simAm(i).deadContactAngs, simAm(i).deadPos,simAm(i).deadRot,simAm(i).deadFcs,simAm(i).ringpos]=readInactive(...
+%         fullfile(fold,f(i).name,'PostProcess','InactivePos.txt'),binW);
+%     end
+
     if(exist(fullfile(fold,f(i).name,'PostProcess','RingDead.txt'),'file')==2)
         [simAm(i).fullT,simAm(i).fullRingPos,simAm(i).fullDeadSmartPos,~]=readDeadRing(...
         fullfile(fold,f(i).name,'PostProcess','RingDead.txt'));
+    end
+    
+    if(exist(fullfile(fold,f(i).name,'PostProcess','Stress.txt'),'file')==2)
+        [simAm(i).AllSmartPos]=readAllSmarticlesPos(...
+        fullfile(fold,f(i).name,'PostProcess','Stress.txt'));
+        %          readAllSmarticlesPos(...
+%         fullfile(fold,f(i).name,'PostProcess','Stress.txt'));
     end
     
     %rename video files to the name of the system
@@ -85,4 +94,5 @@ for i =1:length(f)
     end
 end
 closeWaitbar;
-save(fullfile(fold,'amoebaData.mat'),'fold','simAm')
+save(fullfile(fold,'amoebaData.mat'),'fold','simAm','-v7.3')
+% end

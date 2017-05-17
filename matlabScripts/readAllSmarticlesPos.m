@@ -1,35 +1,34 @@
-function [smartPos simParams frameInfo]=readAllSmarticlesPos(filename,varargin)
-%reads smarticle file into system and saves
-%data into cell array
-%out{frameNumber} 
-%%angle1 angle2, movetype,zHeight
-%%%TODO want to determine size of text
-%%%to preallocate size of out matrix
+function [smartInfo]=readAllSmarticlesPos(filename,varargin)
+% function [smartPos simParams frameInfo]=readAllSmarticlesPos(filename,varargin)
+% filename='D:\SimResults\Chrono\SmarticleU\tests\PostProcess\Stress.txt';
 
-%read in all data 
+
+%read in all data
 % path = 'D:\SimResults\Chrono\SmarticleU\tests\BoxAngChangeTorPct30v2\';
 % a=dir(horzcat(path,'-*'))
-% 
+%
 % for i=1:length(a)
 %     ff= horzcat(path,a(i).name,'\PostProcess\Stress.txt')
 %     readAllSmarticlesAngles(ff,0);
 % end
 
 %stress_of << mySmarticlesVec[i]->active << ", " << mySmarticlesVec[i]->Get_cm().x << ", " << mySmarticlesVec[i]->Get_cm().y << ", " << mySmarticlesVec[i]->Get_cm().z << std::endl;
-fid = fopen(filename','r');     %# Open the file as a binary
+fid = fopen(filename,'r');     %# Open the file as a binary
 lastLine = '';                   %# Initialize to empty
 offset = 1;                      %# Offset from the end of file
 fseek(fid,-offset,'eof');        %# Seek to the file end, minus the offset
 newChar = fread(fid,1,'*char');  %# Read one character
 while (~strcmp(newChar,char(10))) || (offset == 1)
-  lastLine = [newChar lastLine];   %# Add the character to a string
-  offset = offset+1;
-  fseek(fid,-offset,'eof');        %# Seek to the file end, minus the offset
-  newChar = fread(fid,1,'*char');  %# Read one character
+    lastLine = [newChar lastLine];   %# Add the character to a string
+    offset = offset+1;
+    fseek(fid,-offset,'eof');        %# Seek to the file end, minus the offset
+    newChar = fread(fid,1,'*char');  %# Read one character
 end
 fclose(fid);  %# Close the fil
 totFrames = sscanf(lastLine,'#EF%f')+1;
-totFrames
+% totFrames;
+smartInfo=cell(totFrames,2);
+t=zeros(totFrames,1);
 
 
 
@@ -37,57 +36,53 @@ i=1;
 fid = fopen(filename);
 tline = fgets(fid);%first line contains sim info
 simParams = sscanf(tline,'%f,')';
+n=simParams(4); %number of smarticles
+% warning('change this to n=simParams(4)');
 
+%%%%%%%%%
+% tline = fgets(fid);
+% inf=sscanf(tline,'%f,')';
+% angleInfo = [inf(2) inf(5)];
+%%%%%%%%%%%%%%%
 
-tline = fgets(fid);
-angleInfo = [tline(2) tline(5)];
-lineType=0;%-1= ef, %0= volfrac stuff
-frameInfo = zeros(totFrames,5);
 frame=1;
+vals=10; %number of values per line for smarticle
+x=zeros(n,vals);
 
-x=[];
-if isempty(varargin{1})
-    frameStart=0;
-else
-    frameStart=varargin{1};
-    totFrames= totFrames-frameStart;
-end
 
 while ischar(tline)
-%     disp(tline)
-    if(strncmpi('#EF',tline,3))
-        if(~isempty(x) && frame>frameStart)
-%             timestep(:,:,(frame-frameStart))=x;
-            smartPos{frame-frameStart}=x;
-            x=[];
-        end
-        x=[];
-        i = i+1;
-        lineType=-1;
-        frame=frame+1;
-     
+    if(i==n+1)
+        x(:,4)=-x(:,4);%negative x since left-handed coord
+        %         q=quaternion([x(:,7),x(:,8),x(:,9),x(:,10)]);
+        %         rz=EulerAngles(q(:),'123');
+        %         rot=[pi-rz(3,:)]';
+        rot=pi-x(:,8);
+        alive=x(:,10);
+        %
+        angs=x(:,1:2);
+        smartInfo{frame,1}=[x(:,4:6),angs,rot,alive];
+        % smartInfo{frame}=[x(:,4:6),angs,rot];
         
-        lineType=lineType+1;
+        
+        x=zeros(n,vals);
+        %         i = 0;
+        i = 1;
+        d=sscanf(tline,'%s%f,')';
+        smartInfo{frame,2}=d(end);
         tline = fgets(fid);
+        
+        
+        frame=frame+1;
         continue;
     end
+    
     d=sscanf(tline,'%f,')';
-    if(length(d)==4) %4 is number of params output per smarticle
-        x=[x;d];
-    else % output will be about each fram
-%         tline
-         frameInfo(i,:) = d;
+    if(length(d)>=vals) %4 is number of params output per smarticle
+        x(i,:)=d;
+        i=i+1;
     end
-    
-%     if(lineType>0)
-%         %angle1 angle2, movetype,zHeight
-%        d=sscanf(tline,'%f,')';
-%        x=[x;d];
-%     end
-    
-    lineType=lineType+1;
-    tline = fgets(fid);
-
+        tline = fgets(fid);
 end
-save(horzcat(filename,'\..\PosData.mat'),'simParams','smartPos','frameInfo','filename','angleInfo');
+save(horzcat(filename,'\..\PosData.mat'),'smartInfo','t');
 fclose(fid);
+% toc
