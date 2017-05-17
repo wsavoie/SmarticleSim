@@ -212,7 +212,7 @@ void Smarticle::updateTorqueDeque()
 	torques.pop_back();
 	torques.emplace_front(getLinkActuator(0)->Get_mot_torque(), getLinkActuator(1)->Get_mot_torque(), getLinkActuator(0)->Get_mot_rot_dt(), getLinkActuator(1)->Get_mot_rot_dt());
 	updateTorqueAvg(oldT);
-
+	
 
 }
 void Smarticle::updateTorqueAvg(std::tuple <double,double,double,double > oldT)

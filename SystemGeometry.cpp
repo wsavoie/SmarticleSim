@@ -412,14 +412,14 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 		if (createVector)
 		{
 			//sin for x and cos for y because we want them *tangent* to angle specified!
-			pPos = pos + ChVector<>(sin(ang * i) * (wallt + r*ax),
+			pPos = pos + ChVector<>(sin(ang * i) * (-wallt + r*ax),
 				cos(ang*i)*(wallt + r*by),
 				half_h);
 		}
 		else
 		{
-			pPos = pos + ChVector<>(sin(ang * i) * (wallt + ax*r),
-				cos(ang*i)*(wallt + by*r),
+			pPos = pos + ChVector<>(sin(ang * i) * (-wallt + ax*r),
+				cos(ang*i)*(-wallt + by*r),
 				0 - 1.8*t);
 
 			//TODO ######take into account angle of box!!
@@ -468,8 +468,8 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 				wallt,
 				half_h + o_lap);
 
-			pPos = pos + ChVector<>(ax*sin(ang * i) * (wallt + r),
-				by*cos(ang*i)*(wallt + r),
+			pPos = pos + ChVector<>(ax*sin(ang * i) * (-wallt + r),
+				by*cos(ang*i)*(-wallt + r),
 				half_h);
 
 			quat = Angle_to_Quat(AngleSet::RXYZ, ChVector<>(0, 0, ang*i));
