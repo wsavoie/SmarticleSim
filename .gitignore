@@ -17,3 +17,6 @@
 # jpegs#
 ########################
 *.avi
+
+#experimental data
+\matlabScripts\amoeba\smarticleExpVids\*
