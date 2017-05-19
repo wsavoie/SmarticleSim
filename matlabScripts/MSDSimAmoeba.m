@@ -32,17 +32,23 @@ close all
 %*23. histogram of probability(theta_R-theta_r) make vid
 %*24. track length plotting
 %*25. rotational track length
-%*26. smarticle rotation 
-%*27.test
+%*26. smarticle rotation
+%*27 v dot rhat dt sampling histogram
+%*28 v dot rhat collision event sampling histogram
+%*29 v dot rhat dt sampling
+%*30 v dot rhat scatter collision event sampling
+%*31 v dot rhat heatmap dt sampling
+%*32 v dot rhat heatmap collision event sampling
+%*35. test
 %************************************************************
 %%
 SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1 26];
+showFigs=[1  27:32];
 useCOM=0;
-f=[]; rob=[]; v=[];dirs=[2];
+f=[]; rob=[]; v=[];dirs=[0];
 
 props={f rob v dirs};
 for i=1:length(simAm)
@@ -89,7 +95,7 @@ if(showFigs(showFigs==xx))
     %     end
     ma.plotTracks
     ma.labelPlotTracks
-%     text(0,0+.01,'start')
+    %     text(0,0+.01,'start')
     plot(0,0,'ro','markersize',8,'MarkerFaceColor','k');
     legT=cell(1,length(ma.tracks));
     for i=1:length(ma.tracks)
@@ -98,16 +104,16 @@ if(showFigs(showFigs==xx))
         legT{i}=['v',num2str(usedSimAm(i).pars(3))];
     end
     
-   
+    
     
     axis tight
- 	x=get(gca,'xlim');y=get(gca,'ylim'); 
+    x=get(gca,'xlim');y=get(gca,'ylim');
     c=max(abs(x));
     if c<=.25
         c=.25;
     else
         c=.45;
-    end    
+    end
     axis([-c c -c c]);
     set(gca,'xtick',-c-.05:.1:c-.05,'ytick',-c-.05:.1:c-.05);
     
@@ -115,6 +121,8 @@ if(showFigs(showFigs==xx))
     plot([-c c],[0,0],'r');
     plot([0,0],[-c c],'r');
     legend(legT);
+    r=simAm(1).r;
+    t = linspace(0,2*pi);plot(r*cos(t),r*sin(t),'-k','linewidth',2);
     figText(gcf,14)
 end
 
@@ -125,9 +133,9 @@ if(showFigs(showFigs==xx))
     
     ma = ma.computeMSD;
     ma.plotMeanMSD(gca, true);
-%     ma.plotMSD;
+    %     ma.plotMSD;
     [a, b]=ma.fitMeanMSD;
-%     xlim([0 15])
+    %     xlim([0 15])
     figText(gcf,14)
 end
 %% 3 plot vcorr
@@ -738,7 +746,7 @@ if(showFigs(showFigs==xx))
     end
     plot(fs);
     
-     msd=ma.getMeanMSD;
+    msd=ma.getMeanMSD;
     msd=msd(msd(:,1)<15&msd(:,1)>0.1,:);
     [lx]=log(msd(:,1));
     [ly]=log(msd(:,2));
@@ -789,19 +797,19 @@ if(showFigs(showFigs==xx))
         
         
         % title('Probability distribution of \theta_{ring}(t=0) - \theta_{inactive}(t=t_f)');
-%         ylabel('P(\theta_r(t=t_f)-\theta_{is}(t=0))');
-
+        %         ylabel('P(\theta_r(t=t_f)-\theta_{is}(t=0))');
+        
         xlabel('angle (rads)');
         ylabel('P(\theta_R(t)-\theta_r(0))');
-
+        
         figtxt=text(.1,.9,['t = ',num2str(j),' s'],'units','normalized');
         figText(gcf,15);
-
-
+        
+        
         if(writeVid)
-            writeVideo(outputVideo,getframe(gcf));  
+            writeVideo(outputVideo,getframe(gcf));
         else
-           pause(1/fps); 
+            pause(1/fps);
         end
         
         
@@ -810,7 +818,7 @@ if(showFigs(showFigs==xx))
     end
     
     if(writeVid)
-           close(outputVideo);  
+        close(outputVideo);
     end
 end
 %% 24 track length
@@ -828,36 +836,36 @@ if(showFigs(showFigs==xx))
     %     end
     ma.plotTracks
     ma.labelPlotTracks
-%     text(0,0+.01,'start')
+    %     text(0,0+.01,'start')
     plot(0,0,'ro','markersize',8,'MarkerFaceColor','k');
     leg=zeros(1,length(ma.tracks));
     legT=cell(1,length(ma.tracks));
     CL=zeros(1,length(ma.tracks));
-    for i=1:length(ma.tracks)      
-                
+    for i=1:length(ma.tracks)
+        
         f=filter(b,a,ma.tracks{i}(:,2:3));
         %add final position to matrix
         f(end,:)=[ma.tracks{i}(end,2),ma.tracks{i}(end,3)];
         
         plot(f(:,1),f(:,2),'linewidth',1.5);
         legT{i}=['v',num2str(usedSimAm(i).pars(3))];
-
-        CLF = hypot(diff(f(:,1)), diff(f(:,2)));   
+        
+        CLF = hypot(diff(f(:,1)), diff(f(:,2)));
         CL(i) = trapz(CLF);                   % Integrate to calculate arc length
     end
     
-   for i=1:length(ma.tracks)
-       plot(ma.tracks{i}(end,2),ma.tracks{i}(end,3),'ko','markersize',4,'MarkerFaceColor','r');
-   end
+    for i=1:length(ma.tracks)
+        plot(ma.tracks{i}(end,2),ma.tracks{i}(end,3),'ko','markersize',4,'MarkerFaceColor','r');
+    end
     
     axis tight
- 	x=get(gca,'xlim');y=get(gca,'ylim'); 
+    x=get(gca,'xlim');y=get(gca,'ylim');
     c=max(abs(x));
     if c<=.25
         c=.25;
     else
         c=.45;
-    end    
+    end
     axis([-c c -c c]);
     set(gca,'xtick',-c-.05:.1:c-.05,'ytick',-c-.05:.1:c-.05);
     
@@ -870,7 +878,7 @@ if(showFigs(showFigs==xx))
     figure
     c=errorbar(1,mean(CL),std(CL));
     pts('avg=',c.YData,',    +-=',c.YPositiveDelta);
-
+    
 end
 
 %% 25 rotational track length
@@ -886,14 +894,14 @@ if(showFigs(showFigs==xx))
     %     else
     %         title('Ring COG');
     %     end
-%     ma.plotTracks
+    %     ma.plotTracks
     ma.labelPlotTracks
-%     text(0,0+.01,'start')
+    %     text(0,0+.01,'start')
     plot(0,0,'ro','markersize',8,'MarkerFaceColor','k');
     leg=zeros(1,L);
     legT=cell(1,L);
     CL=zeros(1,L);
-    for i=1:L     
+    for i=1:L
         
         dp=usedSimAm(i).fullDeadSmartPos-usedSimAm(i).fullRingPos;
         f=filter(b,a,dp);
@@ -903,39 +911,39 @@ if(showFigs(showFigs==xx))
         t=usedSimAm(i).deadInnerForce(:,1);
         plot(dp(:,1),dp(:,2),'linewidth',1.5);
         legT{i}=['v',num2str(usedSimAm(i).pars(3))];
-
-        CLF = hypot(diff(dp(:,1)), diff(dp(:,2)));   
+        
+        CLF = hypot(diff(dp(:,1)), diff(dp(:,2)));
         CL(i) = trapz(CLF);                   % Integrate to calculate arc length
     end
     
-%    for i=1:length(ma.tracks)
-%        plot(ma.tracks{i}(end,2),ma.tracks{i}(end,3),'ko','markersize',4,'MarkerFaceColor','r');
-%    end
+    %    for i=1:length(ma.tracks)
+    %        plot(ma.tracks{i}(end,2),ma.tracks{i}(end,3),'ko','markersize',4,'MarkerFaceColor','r');
+    %    end
     
-%     axis tight
-%  	x=get(gca,'xlim');y=get(gca,'ylim'); 
-%     c=max(abs(x));
-%     if c<=.25
-%         c=.25;
-%     else
-%         c=.45;
-%     end    
-%     axis([-c c -c c]);
-%     set(gca,'xtick',-c-.05:.1:c-.05,'ytick',-c-.05:.1:c-.05);
+    %     axis tight
+    %  	x=get(gca,'xlim');y=get(gca,'ylim');
+    %     c=max(abs(x));
+    %     if c<=.25
+    %         c=.25;
+    %     else
+    %         c=.45;
+    %     end
+    %     axis([-c c -c c]);
+    %     set(gca,'xtick',-c-.05:.1:c-.05,'ytick',-c-.05:.1:c-.05);
     
-%     %plot red grid lines
-%     plot([-c c],[0,0],'r');
-%     plot([0,0],[-c c],'r');
-%     legend(legT);
-%     figText(gcf,14)
-%     
+    %     %plot red grid lines
+    %     plot([-c c],[0,0],'r');
+    %     plot([0,0],[-c c],'r');
+    %     legend(legT);
+    %     figText(gcf,14)
+    %
     figure(1000)
     c=errorbar(1,mean(CL),std(CL));
-%     close(1000);
+    %     close(1000);
     pts('avg=',c.YData,',    +-=',c.YPositiveDelta);
-
+    
 end
-%% 26 smarticle rotation 
+%% 26 smarticle rotation
 xx=26;
 if(showFigs(showFigs==xx))
     figure(xx)
@@ -949,85 +957,329 @@ if(showFigs(showFigs==xx))
         qq=cellfun(@(x) x(j,:),usedSimAm(1).AllSmartPos(sPt:end,1),'UniformOutput',0);
         sDat{j}=vertcat(qq{:});
     end
-%     t=ma.tracks{1}(1:end,1)';
+    %     t=ma.tracks{1}(1:end,1)';
     %plot rotation
     yyaxis left
-%     q=zeros(size(sDat{1},1),numSmarts);
+    %     q=zeros(size(sDat{1},1),numSmarts);
     for(j=2:numSmarts)
-    	angs(:,j)=sDat{j}(:,6);    
+        angs(:,j)=sDat{j}(:,6);
     end
-%     angs=double(mod(int32(angs*180/pi),180));
-%     angs=sgolayfilt(angs,3,25);
+    %     angs=double(mod(int32(angs*180/pi),180));
+    %     angs=sgolayfilt(angs,3,25);
     
-
+    
     mq=mean(angs,2);
     stda=std(angs,0,2);
+    plot(t,stda/max(stda));
+    %     errorbar(t,mq,stdq)
+    % v=sqrt((diff(ma.tracks{1}(1:1:end,2))).^2+(diff(ma.tracks{1}(1:1:end,3))).^2)/.1;
+    v= [diff(ma.tracks{1}(sPt:end,2))/diff(ma.tracks{1}(1:2,1)),... %vx
+        diff(ma.tracks{1}(sPt:end,3))/diff(ma.tracks{1}(1:2,1))];%vy
+    vnew=sqrt(v(:,1).^2+v(:,2).^2);
+    ylabel('std(all smarticle rotation angles) normalized');
     
-%     errorbar(t,mq,stdq)
-     plot(t,stda/max(stda));
-        
-     v= [diff(ma.tracks{1}(sPt:end,2))/diff(ma.tracks{1}(1:2,1)),... %vx
-         diff(ma.tracks{1}(sPt:end,3))/diff(ma.tracks{1}(1:2,1))];%vy
-     vnew=sqrt(v(:,1).^2+v(:,2).^2);
-     ylabel('std(all smarticle rotation angles) normalized');
-% v=sqrt((diff(ma.tracks{1}(1:1:end,2))).^2+(diff(ma.tracks{1}(1:1:end,3))).^2)/.1;
     yyaxis right
-%     plot(t,ma.tracks{1}(:,2),'k-','linewidth',2);
-%     plot(t,ma.tracks{1}(:,3),'k.-','linewidth',2);
-%     a=sgolayfilt(vnew,3,11);
-      a=vnew;
-%     plot(t(3:end),a,'k')
-%     plot(t(3:end),vnew/max(vnew),'-','linewidth',2);
+    %     plot(t(3:end),a,'k')
+    %     plot(t(3:end),vnew/max(vnew),'-','linewidth',2);
     plot(t(2:end),vnew/max(vnew),'-','linewidth',2);
-%     ylim([-.2,.2])
+    
+    
+    %     ylim([-.2,.2])
     ylabel('velocity normalized');
     xlabel('time (s)');
     figText(gcf,16);
-
-
-%     a = wgn(1000,1,0);
-S=a;    
-Fs =10;            % Sampling frequency                    
-T = 1/Fs;             % Sampling period       
-L = length(S);             % Length of signal
-t = (0:L-1)*T;        % Time vector
-f = Fs*(0:(L/2))/L;
-Y = fft(S);
-P2 = abs(Y/L);
-P1 = P2(1:L/2+1);
-P1(2:end-1) = 2*P1(2:end-1);
-figure(7899);
-plot(f(3:end),P1(3:end))
-xlabel('f (Hz)')
-ylabel('|P1(f)|')
-title('Single-sided FFT of filtered velocity');
-figText(gcf,18);
-
-
-[Rmm,lags]=xcorr(vnew/max(vnew),stda/max(stda));
-figure(2222);
-plot(lags/length(vnew)*max(t),Rmm/max(Rmm));
-title('cross-correlation (vel, std(ang)) filtered');
-xlabel('lag(s)');
-figText(gcf,16);
+    
+    S=vnew;
+    Fs =10;            % Sampling frequency
+    T = 1/Fs;             % Sampling period
+    L = length(S);             % Length of signal
+    tfft = (0:L-1)*T;        % Time vector
+    f = Fs*(0:(L/2))/L;
+    Y = fft(S);
+    P2 = abs(Y/L);
+    P1 = P2(1:L/2+1);
+    P1(2:end-1) = 2*P1(2:end-1);
+    figure(7899);
+    plot(f(3:end),P1(3:end))
+    xlabel('f (Hz)')
+    ylabel('|P1(f)|')
+    title('Single-sided FFT velocity');
+    figText(gcf,18);
+    
+    
+    [Rmm,lags]=xcorr(vnew/max(vnew),stda/max(stda));
+    figure(2222);
+    plot(lags/length(vnew)*max(tfft),Rmm/max(Rmm));
+    title('cross-correlation (vel, std(ang))');
+    xlabel('lag(s)');
+    figText(gcf,16);
 end
-%% 27 test
+
+%% 27 v dot rhat histogram for dt sampled system
 xx=27;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    dotProd=[];
+    for i=1:L
+        dt=diff(usedSimAm(i).fullT(1:2));
+        ringPos=usedSimAm(i).fullRingPos;
+        %subtract ring position to get vector of deadpos in ring
+        deadPos=usedSimAm(i).fullDeadSmartPos-ringPos;
+        deadPos=deadPos(1:end-1,:); %remove 1 index to equal vel vec size
+        %get velocity
+        vRing=diff(ringPos)./dt;
+        %get vhat and deadposhat
+        vHat=vRing./sqrt(sum(vRing.^2,2));
+        dpHat=deadPos./sqrt(sum(deadPos.^2,2));
+        
+        dprod=dot(vHat,dpHat,2);
+        dotProd=[dotProd, dprod];
+    end
+    
+    histogram(dotProd);
+    
+    xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    ylabel('counts');
+    title('dt sampling');
+    axis tight
+    figText(gcf,18)
+end
+
+%% 28 v dot rhat histogram for collision event sampled system
+xx=28;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    dotProd=[];
+    for i=1:L
+        [deadPos,idx]=unique(usedSimAm(i).deadPos,'rows');
+        t=deadPos(:,1);
+        deadPos=deadPos(:,2:3);
+        ringPos=usedSimAm(i).ringpos(idx,:);
+        
+        %center deadpos by ring pos first position
+        deadPos=bsxfun(@minus, deadPos,ringPos(1,:));
+        %center ringPos
+        ringPos=bsxfun(@minus, ringPos,ringPos(1,:));
+        %subtract ring position to get vector of deadpos in ring
+        deadPos=deadPos-ringPos;
+        deadPos=deadPos(1:end-1,:);%remove 1 index to equal vel vec size
+        vRing=diff(ringPos)./diff(t(:,1));
+        %get vhat and deadPoshat
+        vHat=vRing./sqrt(sum(vRing.^2,2));
+        dpHat=deadPos./sqrt(sum(deadPos.^2,2));
+        dprod=dot(vHat,dpHat,2);
+        dotProd=[dotProd; dprod];
+    end
+    
+    histogram(dotProd);
+    
+    xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    ylabel('counts');
+    title('collision event sampling');
+    axis tight
+    figText(gcf,18)
+end
+
+
+%% 29 v dot rhat scatter dt sampling
+xx=29;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    dotProd=[];    ringVel=[];
+    for i=1:L
+        dt=diff(usedSimAm(i).fullT(1:2));
+        ringPos=usedSimAm(i).fullRingPos;
+        %subtract ring position to get vector of deadpos in ring
+        deadPos=usedSimAm(i).fullDeadSmartPos-ringPos;
+        deadPos=deadPos(1:end-1,:); %remove 1 index to equal vel vec size
+        %get velocity
+        vRing=diff(ringPos)./dt;
+        
+        %get vhat and deadposhat
+        vHat=vRing./sqrt(sum(vRing.^2,2));
+        dpHat=deadPos./sqrt(sum(deadPos.^2,2));
+        dprod=dot(vHat,dpHat,2);
+        
+        dotProd=[dotProd, dprod];
+        ringVel=[ringVel, sqrt(sum(vRing.^2,2))];
+    end
+    
+    scatter(dotProd, ringVel,'.');
+    xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    ylabel('|v_{ring}|');
+    title('dt sampling');
+    figText(gcf,18)
+end
+
+
+%% 30 v dot rhat scatter collision event sampling
+xx=30;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    dotProd=[];   ringVel=[];
+    for i=1:L
+        [deadPos,idx]=unique(usedSimAm(i).deadPos,'rows');
+        t=deadPos(:,1);
+        deadPos=deadPos(:,2:3);
+        ringPos=usedSimAm(i).ringpos(idx,:);
+        
+        %center deadpos by ring pos first position
+        deadPos=bsxfun(@minus, deadPos,ringPos(1,:));
+        %center ringPos
+        ringPos=bsxfun(@minus, ringPos,ringPos(1,:));
+        %subtract ring position to get vector of deadpos in ring
+        deadPos=deadPos-ringPos;
+        deadPos=deadPos(1:end-1,:);%remove 1 index to equal vel vec size
+        vRing=diff(ringPos)./diff(t(:,1));
+        %get vhat and deadPoshat
+        vHat=vRing./sqrt(sum(vRing.^2,2));
+        dpHat=deadPos./sqrt(sum(deadPos.^2,2));
+        dprod=dot(vHat,dpHat,2);
+        
+        dotProd=[dotProd; dprod];
+        ringVel=[ringVel, sqrt(sum(vRing.^2,2))];
+    end
+    
+    scatter(dotProd, ringVel,'.');
+    
+    xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    ylabel('|v_{ring}|');
+    title('collision sampling');
+    figText(gcf,18)
+end
+
+
+%% 31 v dot rhat heatmap dt sampling
+xx=31;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    dotProd=[]; ringVel=[];
+    for i=1:L
+        dt=diff(usedSimAm(i).fullT(1:2));
+        ringPos=usedSimAm(i).fullRingPos;
+        %subtract ring position to get vector of deadpos in ring
+        deadPos=usedSimAm(i).fullDeadSmartPos-ringPos;
+        deadPos=deadPos(1:end-1,:); %remove 1 index to equal vel vec size
+        %get velocity
+        vRing=diff(ringPos)./dt;
+        
+        %get vhat and deadposhat
+        vHat=vRing./sqrt(sum(vRing.^2,2));
+        dpHat=deadPos./sqrt(sum(deadPos.^2,2));
+        dprod=dot(vHat,dpHat,2);
+        
+        dotProd=[dotProd, dprod];
+        ringVel=[ringVel, sqrt(sum(vRing.^2,2))];
+    end
+    %add 1 so index is never zero
+    dotProd1=dotProd+1;
+    binCountVel = 100;
+    binCountDot = 100;
+    
+    maxVel = max(ringVel);
+    minVel = min(ringVel);
+    binWVel=(maxVel-minVel)/binCountVel;
+    binWDot=2/binCountDot;
+    mat = zeros(binCountDot, binCountVel);
+    for idx = 1:length(ringVel)
+        if(isnan(ceil(dotProd1(idx)/binCountDot)))
+            continue;
+        end
+        mat(ceil(dotProd1(idx)/binWDot), ceil(ringVel(idx)/binWVel)) ...
+            = mat(ceil(dotProd1(idx)/binWDot), ceil(ringVel(idx)/binWVel)) + 1;
+    end
+    
+    colormap fire
+    surf(log(mat)');
+    
+    xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    ylabel('|v_{ring}|');
+    title('dt sampling');
+    figText(gcf,18)
+    axis tight
+    axis square
+    %     text(.1,.8,['mean = ',num2str(mean(dotProd))],'units','normalized');
+end
+
+%% 32 v dot rhat heatmap collision event sampling
+xx=32;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    dotProd=[];     ringVel=[];
+    for i=1:L
+        [deadPos,idx]=unique(usedSimAm(i).deadPos,'rows');
+        t=deadPos(:,1);
+        deadPos=deadPos(:,2:3);
+        ringPos=usedSimAm(i).ringpos(idx,:);
+        
+        %center deadpos by ring pos first position
+        deadPos=bsxfun(@minus, deadPos,ringPos(1,:));
+        %center ringPos
+        ringPos=bsxfun(@minus, ringPos,ringPos(1,:));
+        %subtract ring position to get vector of deadpos in ring
+        deadPos=deadPos-ringPos;
+        deadPos=deadPos(1:end-1,:);%remove 1 index to equal vel vec size
+        vRing=diff(ringPos)./diff(t(:,1));
+        %get vhat and deadPoshat
+        vHat=vRing./sqrt(sum(vRing.^2,2));
+        dpHat=deadPos./sqrt(sum(deadPos.^2,2));
+        dprod=dot(vHat,dpHat,2);
+        
+        dotProd=[dotProd; dprod];
+        ringVel=[ringVel, sqrt(sum(vRing.^2,2))];
+    end
+    %add 1 so index is never zero
+    dotProd1=dotProd+1;
+    binCountVel = 50;
+    binCountDot = 50;
+    
+    maxVel = max(ringVel);
+    minVel = min(ringVel);
+    binWVel=(maxVel-minVel)/binCountVel;
+    binWDot=2/binCountDot;
+    mat = zeros(binCountDot, binCountVel);
+    for idx = 1:length(ringVel)
+        if(isnan(ceil(dotProd1(idx)/binCountDot)))
+            continue;
+        end
+        mat(ceil(dotProd1(idx)/binWDot), ceil(ringVel(idx)/binWVel)) ...
+            = mat(ceil(dotProd1(idx)/binWDot), ceil(ringVel(idx)/binWVel)) + 1;
+    end
+    
+    colormap fire
+    
+    imagesc((mat)');
+    xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    ylabel('|v_{ring}|');
+    title('collision sampling');
+    figText(gcf,18)
+    axis tight
+    axis square
+end
+
+%% 35 test
+xx=35;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
     xlabel('time(s)')
     ylabel('velocity(mm/s)')
-	t=ma.tracks{1}(2:10:end,1);
+    t=ma.tracks{1}(2:10:end,1);
     x=sqrt((diff(ma.tracks{1}(1:1:end,2))/.1).^2+(diff(ma.tracks{1}(1:1:end,3))/.1).^2);
     vv=diff(x)/.1;
     
     v=vv(1:10:end);
-%     v=diff(x(1:10:end));
+    %     v=diff(x(1:10:end));
     vnew=mean(reshape(diff(x)/.1,[10,length(t)]));
     plot(t,vnew*1000);
     plot(t,v*1000)
     plot([0,600],[0,0],'k','linewidth',2);
     
-
+    
 end
