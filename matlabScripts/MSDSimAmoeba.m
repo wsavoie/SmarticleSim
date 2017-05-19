@@ -3,7 +3,7 @@ fold=uigetdir('A:\SmarticleRun\')
 load(fullfile(fold,'amoebaData.mat'));
 
 % load('A:\SmarticleRun\Amoeba_newsquare_1_dead\amoebaData.mat');
-close all
+% close all
 
 
 %************************************************************
@@ -39,6 +39,7 @@ close all
 %*30 v dot rhat scatter collision event sampling
 %*31 v dot rhat heatmap dt sampling
 %*32 v dot rhat heatmap collision event sampling
+% 33 log(pdf) vs |vel|
 %*35. test
 %************************************************************
 %%
@@ -46,9 +47,9 @@ SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1  27:32];
+showFigs=[1  33];
 useCOM=0;
-f=[]; rob=[]; v=[];dirs=[0];
+f=[]; rob=[]; v=[];dirs=[];
 
 props={f rob v dirs};
 for i=1:length(simAm)
@@ -1193,17 +1194,23 @@ if(showFigs(showFigs==xx))
         mat(ceil(dotProd1(idx)/binWDot), ceil(ringVel(idx)/binWVel)) ...
             = mat(ceil(dotProd1(idx)/binWDot), ceil(ringVel(idx)/binWVel)) + 1;
     end
-    
+    subplot(1,2,1);
     colormap fire
-    surf(log(mat)');
-    
+    imagesc(log(mat'));
+    axis tight
     xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
     ylabel('|v_{ring}|');
+    
+    subplot(1,2,2);
+    colormap fire
+    surf(log(mat)');
+    xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    ylabel('|v_{ring}|');
+    zlabel('log(P(|v|) counts');
     title('dt sampling');
     figText(gcf,18)
     axis tight
     axis square
-    %     text(.1,.8,['mean = ',num2str(mean(dotProd))],'units','normalized');
 end
 
 %% 32 v dot rhat heatmap collision event sampling
@@ -1236,8 +1243,8 @@ if(showFigs(showFigs==xx))
     end
     %add 1 so index is never zero
     dotProd1=dotProd+1;
-    binCountVel = 50;
-    binCountDot = 50;
+    binCountVel = 100;
+    binCountDot = 100;
     
     maxVel = max(ringVel);
     minVel = min(ringVel);
@@ -1251,18 +1258,82 @@ if(showFigs(showFigs==xx))
         mat(ceil(dotProd1(idx)/binWDot), ceil(ringVel(idx)/binWVel)) ...
             = mat(ceil(dotProd1(idx)/binWDot), ceil(ringVel(idx)/binWVel)) + 1;
     end
-    
+    subplot(1,2,1);
     colormap fire
-    
-    imagesc((mat)');
+    imagesc(log(mat'));
+    axis tight
     xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
     ylabel('|v_{ring}|');
-    title('collision sampling');
+    
+    subplot(1,2,2);
+    surf(log(mat)');
+    xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    ylabel('|v_{ring}|');
+    zlabel('log(P(|v|) counts');
+    title('collision event sampling');
     figText(gcf,18)
     axis tight
     axis square
+    
 end
+%% 33 log(pdf) vs |vel|
+xx=33;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    dotProd=[]; ringVel=[]; y=[];
+    binCountVel = 200;
+    for i=1:L
+        dt=diff(usedSimAm(i).fullT(1:2));
+        ringPos=usedSimAm(i).fullRingPos;
+        %subtract ring position to get vector of deadpos in ring
+        %         deadPos=usedSimAm(i).fullDeadSmartPos-ringPos;
+        %         deadPos=deadPos(1:end-1,:); %remove 1 index to equal vel vec size
+        %get velocity
+        vRing=diff(ringPos)./dt;
+        
+        %get vhat and deadposhat
+        vHat=vRing./sqrt(sum(vRing.^2,2));
+        %         dpHat=deadPos./sqrt(sum(deadPos.^2,2));
+        %         dprod=dot(vHat,dpHat,2);
+        %
+        %         dotProd=[dotProd, dprod];
+        ringVel=[ringVel, sqrt(sum(vRing.^2,2))];
+        y = [y;histcounts(sqrt(sum(vRing.^2,2)),binCountVel)];
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     maxVel = max(ringVel);
+%     minVel = min(ringVel);
+%     binWVel=(maxVel-minVel)/binCountVel;
+%     y = histcounts(ringVel,binCountVel);
+%     y=y/max(y);
+%     
+%     x=binWVel*(1:length(y));
+%     plot(x,y,'-o');
+%     % errorbar(x,y,err);
+%     xlabel('|v|');
+%     ylabel('P(|v|)');
+%     figText(gcf,18);
+%     set(gca,'yscale','log');
+%%%%%%%%%%%%%%%%%%%%%%%%
+    maxVel = max(max(ringVel));
+    minVel = min(min(ringVel));
+    binWVel=(maxVel-minVel)/binCountVel;
+    
+    
+    y=y./sum(y,2);
+    err=std(y,0,1);
+    ym=mean(y,1);
+    x=binWVel*(1:length(y));
+%     plot(x,y,'-o');
+    errorbar(x,ym,err);
+    xlabel('|v| (m/s)');
+    ylabel('P(|v|)');
+    figText(gcf,18);
+    set(gca,'yscale','log');
 
+
+end
 %% 35 test
 xx=35;
 if(showFigs(showFigs==xx))
