@@ -70,10 +70,10 @@ for i =1:length(f)
 %             fullfile(fold,f(i).name,'PostProcess','RingContact.txt'),binW);
 %     end
 
-%     if(exist(fullfile(fold,f(i).name,'PostProcess','InactivePos.txt'),'file')==2)
-%         [simAm(i).deadInnerForce,simAm(i).deadContactAngs, simAm(i).deadPos,simAm(i).deadRot,simAm(i).deadFcs,simAm(i).ringpos]=readInactive(...
-%         fullfile(fold,f(i).name,'PostProcess','InactivePos.txt'),binW);
-%     end
+    if(exist(fullfile(fold,f(i).name,'PostProcess','InactivePos.txt'),'file')==2)
+        [simAm(i).deadInnerForce,simAm(i).deadContactAngs, simAm(i).deadPos,simAm(i).deadRot,simAm(i).deadFcs,simAm(i).ringpos]=readInactive(...
+        fullfile(fold,f(i).name,'PostProcess','InactivePos.txt'),binW);
+    end
 
     if(exist(fullfile(fold,f(i).name,'PostProcess','RingDead.txt'),'file')==2)
         [simAm(i).fullT,simAm(i).fullRingPos,simAm(i).fullDeadSmartPos,~]=readDeadRing(...
