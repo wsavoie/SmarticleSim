@@ -460,7 +460,114 @@ void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVecto
 		break;
 	}
 }
+void Smarticle::CreateArm3(int armID, double len, double mr, double mr2, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
+	ChVector<> gyr;  	// components gyration
+	double vol;			// components volume
+	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, mr, mr2));
+	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, mr, mr2)).Get_Diag();
+	// create body, set position and rotation, add surface property, and clear/make collision model
+	auto arm = std::make_shared<ChBody>();
 
+	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
+
+	arm->SetPos(posArm);
+	arm->SetRot(rotation*armRelativeRot);
+	arm->SetCollide(true);
+	arm->SetBodyFixed(false);
+	arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
+
+	double m = 0;
+	if (armID == 1) //this was old code from when I was fixing them to fit
+	{
+		m = vol*mid_density;
+		arm->SetDensity(mid_density);
+		arm->SetBodyFixed(false);
+	}
+	else
+	{
+		m = vol*arm_density;
+		arm->SetDensity(arm_density);
+		arm->SetBodyFixed(false);
+	}
+	//mat_g->SetFriction(.05);
+	arm->SetMaterialSurface(mat_smarts);
+	//double mass = .005;//.043/3.0; //robot weight 43 grams
+	arm->GetCollisionModel()->ClearModel();
+
+	if (visualize)
+	{
+		switch (armID) {
+		case 0:
+		{
+			arm->SetName("smarticle_arm");
+			arm0_textureAsset = std::make_shared<ChTexture>();
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
+			arm->AddAsset(arm0_textureAsset);
+			arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+			utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
+			break;
+		}
+		case 1:
+		{
+			arm->SetName("smarticle_cent");
+			arm1_textureAsset = std::make_shared<ChTexture>();
+			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_SmarticlePicture.png"));
+			arm->AddAsset(arm1_textureAsset);
+			arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+			utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
+			//radius,h,pos,rot,vis
+			auto a = Angle_to_Quat(AngleSet::RXYZ, ChVector<>(0, PI / 2, PI/2));
+			utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .01131,-mr+.0085, mr2), a, true);
+			utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0+.03406, -mr+.0055, -mr2), a, true);
+
+			break;
+		}
+		case 2:
+		{
+			arm->SetName("smarticle_arm");
+			arm2_textureAsset = std::make_shared<ChTexture>();
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
+			arm->AddAsset(arm2_textureAsset);
+			arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+			utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
+			break;
+		}
+		default:
+		{
+			std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
+			break;
+		}
+		}
+	}
+	
+
+	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
+
+																					// change mass and inertia property
+	arm->SetMass(m);
+	arm->SetInertiaXX(m * gyr);
+	//arm->SetDensity(density);
+
+	m_system->AddBody(arm);
+
+
+
+	switch (armID) {
+	case 0: {
+		arm0 = arm;
+	} break;
+	case 1: {
+		arm1 = arm;
+	} break;
+	case 2: {
+		arm2 = arm;
+	} break;
+	default:
+		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
+		break;
+	}
+}
 std::shared_ptr<ChBody> Smarticle::GetArm(int armID) {
 	switch (armID) {
 	case 0:
