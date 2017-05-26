@@ -48,7 +48,7 @@ SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1 3 27];
+showFigs=[1 2 3 27];
 useCOM=0;
 f=[]; rob=[]; v=[];dirs=[];
 
@@ -113,6 +113,8 @@ if(showFigs(showFigs==xx))
     c=max(abs(x));
     if c<=.25
         c=.25;
+    elseif c<=.35
+    c=.35;            
     else
         c=.45;
     end
@@ -1024,7 +1026,7 @@ if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
     dotProd=[];ringVel=[];
-    bins=68;
+    bins=200;
     for i=1:L
         dt=diff(usedSimAm(i).fullT(1:2));
         ringPos=usedSimAm(i).fullRingPos;
