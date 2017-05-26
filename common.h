@@ -22,7 +22,7 @@
 #define R2D 180.0/CH_C_PI   //rad to deg
 #define PI_2 CH_C_PI/2.0   
 
-#define solverSMC false
+#define SOLVERTYPE 1   //1==old 2==smc 3==nsc
 
 #define USE_PARALLEL false
 #define irrlichtVisualization true
@@ -32,18 +32,26 @@
 #if USE_PARALLEL
 #define CH_SYSTEM ChSystemParallelDVI
 #else
-#if solverSMC
-#define SOLVETYPE ChSolver::Type::SOLVER_SMC
-#define SOLVER SMC
-#define SOLVER(x) x##SMC
-#include "chrono/physics/ChSystemSMC.h"
-#define CH_SYSTEM ChSystemSMC
-#else
-#define SOLVETYPE ChSolver::Type::SOR
-#define SOLVER(x) x##NSC
-#include "chrono/physics/ChSystemNSC.h"
-#define CH_SYSTEM ChSystemNSC
-#endif
+	#if SOLVERTYPE==1 //OLD
+		#define SOLVETYPE  ChSystem::SOLVER_DEM
+		#define SOLVER 
+		#include "chrono/physics/ChSystem.h"
+		#define CH_SYSTEM ChSystem
+		#define ANGLE ANGLESET_RXYZ
+	#elif SOLVERTYPE==2 //smc
+		#define SOLVETYPE ChSolver::Type::SOLVER_SMC
+		#define SOLVER SMC
+		#define SOLVER(x) x##SMC
+		#include "chrono/physics/ChSystemSMC.h"
+		#define CH_SYSTEM ChSystemSMC
+		#define ANGLE AngleSet::RXYZ
+	#elif SOLVERTYPE==3 //nsc
+		#define SOLVETYPE ChSolver::Type::SOR
+		#define SOLVER(x) x##NSC
+		#include "chrono/physics/ChSystemNSC.h"
+		#define CH_SYSTEM ChSystemNSC
+		#define ANGLE AngleSet::RXYZ
+	#endif
 #endif
 	//extern double sizeScale;
 	//extern double dT;

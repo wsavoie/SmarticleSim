@@ -234,9 +234,9 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 							bucket_bod_vec.at(i)->SetBodyFixed(false);
 
 							bucket_bod_vec.at(i)->SetPos(ChVector<>(
-								bucket_bod_vec.at(i)->GetPos().x(),
-								bucket_bod_vec.at(i)->GetPos().y() + 1,
-								bucket_bod_vec.at(i)->GetPos().z()));
+								bucket_bod_vec.at(i)->GetPos().x,
+								bucket_bod_vec.at(i)->GetPos().y + 1,
+								bucket_bod_vec.at(i)->GetPos().z));
 						}
 						break;
 					case HOPPER:
@@ -263,9 +263,9 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 						//bucket_bod_vec.at(i)->SetBodyFixed(false);
 						bucket_bod_vec.at(i)->SetBodyFixed(true);
 
-						double x = bucket_bod_vec.at(i)->GetPos().x();
-						double y = bucket_bod_vec.at(i)->GetPos().y();
-						double z = bucket_bod_vec.at(i)->GetPos().z();
+						double x = bucket_bod_vec.at(i)->GetPos().x;
+						double y = bucket_bod_vec.at(i)->GetPos().y;
+						double z = bucket_bod_vec.at(i)->GetPos().z;
 						//GetLog() << "\n" << bucket_bod_vec.at(i).get_ptr()->GetPos() << "\n";
 
 						double theta = atan2(y, x);
@@ -299,9 +299,9 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 						//bucket_bod_vec.at(i)->SetBodyFixed(false);
 						bucket_bod_vec.at(i)->SetBodyFixed(true);
 
-						double x = bucket_bod_vec.at(i)->GetPos().x();
-						double y = bucket_bod_vec.at(i)->GetPos().y();
-						double z = bucket_bod_vec.at(i)->GetPos().z();
+						double x = bucket_bod_vec.at(i)->GetPos().x;
+						double y = bucket_bod_vec.at(i)->GetPos().y;
+						double z = bucket_bod_vec.at(i)->GetPos().z;
 						//GetLog() << "\n" << bucket_bod_vec.at(i).get_ptr()->GetPos() << "\n";
 
 						double theta = atan2(y, x);
@@ -331,18 +331,18 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 					break;
 				case FLATHOPPER: case BOX:
 					box_ang = box_ang - rampInc* D2R;
-					//rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x() - rampInc * D2R;
+					//rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R;
 					//bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x() - rampInc * D2R
+					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R
 					//	, 0, 0)));
 					//bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x() - rampInc * D2R
+					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x - rampInc * D2R
 					//	, 0, 0)));
 					break;
 				default:
-					box_ang = Quat_to_Angle(AngleSet::RXYZ, sys->bucket->GetRot()).x() - rampInc * D2R;
-					sys->bucket->SetRot(Angle_to_Quat(AngleSet::RXYZ, ChVector<>(
-						Quat_to_Angle(AngleSet::RXYZ, sys->bucket->GetRot()).x() - rampInc * D2R
+					box_ang = Quat_to_Angle(ANGLESET_RXYZ, sys->bucket->GetRot()).x - rampInc * D2R;
+					sys->bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
+						Quat_to_Angle(ANGLESET_RXYZ, sys->bucket->GetRot()).x - rampInc * D2R
 						, 0, 0)));
 					break;
 				}
@@ -357,18 +357,18 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 					break;
 				case FLATHOPPER: case BOX:
 					box_ang = box_ang + rampInc* D2R;
-					//rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x() + rampInc * D2R;
+					//rampAngle = Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R;
 					//bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x() + rampInc * D2R
+					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R
 					//	, 0, 0)));
 					//bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
-					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x() + rampInc * D2R
+					//	Quat_to_Angle(ANGLESET_RXYZ, bucket->GetRot()).x + rampInc * D2R
 					//	, 0, 0)));
 					break;
 				default:
-					box_ang = Quat_to_Angle(AngleSet::RXYZ, sys->bucket->GetRot()).x() + rampInc * D2R;
-					sys->bucket->SetRot(Angle_to_Quat(AngleSet::RXYZ, ChVector<>(
-						Quat_to_Angle(AngleSet::RXYZ, sys->bucket->GetRot()).x() + rampInc * D2R
+					box_ang = Quat_to_Angle(ANGLESET_RXYZ, sys->bucket->GetRot()).x + rampInc * D2R;
+					sys->bucket->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(
+						Quat_to_Angle(ANGLESET_RXYZ, sys->bucket->GetRot()).x + rampInc * D2R
 						, 0, 0)));
 					break;
 				}
@@ -489,7 +489,7 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 			this->text_Angle->setText(core::stringw(message).c_str());
 		}
 		else{
-			char message[100]; sprintf(message, "Angle: %1.3g, Increment: %1.3g", Quat_to_Angle(AngleSet::RXYZ, sys->bucket->GetRot()).x() * R2D, rampInc);
+			char message[100]; sprintf(message, "Angle: %1.3g, Increment: %1.3g", Quat_to_Angle(ANGLESET_RXYZ, sys->bucket->GetRot()).x * R2D, rampInc);
 			this->text_Angle->setText(core::stringw(message).c_str());
 		}
 
@@ -544,8 +544,8 @@ IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmart
 		//double w = app->GetVideoDriver()->getScreenSize().Width;
 		//auto vp = app->GetVideoDriver()->getViewPort();
 		////app.GetIGUIEnvironment()->saveGUI("lolol.jpeg",irr::gui::wind);
-		//double centx = app->GetVideoDriver()->getViewPort().getCenter().x();
-		//double centy = app->GetVideoDriver()->getViewPort().getCenter().y();
+		//double centx = app->GetVideoDriver()->getViewPort().getCenter().x;
+		//double centy = app->GetVideoDriver()->getViewPort().getCenter().y;
 		//GetLog() << "Screen Size: " << h << " " << w << "\tScreen: " << centx << " " << centy;
 		//if (saveFrame) {
 		//	if (frameNum % stepsPerFrame == 0) {

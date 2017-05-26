@@ -42,7 +42,7 @@ changeToStressPerc=(0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0)
 dirs=(0 1 2 3)
 inactiveParticle=1;
 #######regular run
-foldName=Amoeba_Ring_t_60_Square_pi_m_.055_d_${inactiveParticle}_LIGHTPIPE_om=6.3
+foldName=Amoeba_Ring_t_60_Square_pi_m_.055_d_${inactiveParticle}_OLDCODE_om=6.3
 # foldName='Amoeba_Ring_t_60_Square_s_pi_d_1'
 mkdir $sys/$foldName
 for fric in `seq 4 4`; do

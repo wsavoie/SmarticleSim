@@ -137,7 +137,7 @@ std::shared_ptr<ChLinkEngine> Controller::GetEngine(size_t index)
 double Controller::GetCurrReactTorque(size_t index, double t=0)
 {
 	//return smarticle_->GetZReactTorque(index);
-	return smarticle_->GetReactTorqueVector(index).z();
+	return smarticle_->GetReactTorqueVector(index).z;
 }
 double Controller::GetCurrTorque(size_t index, double t)
 {

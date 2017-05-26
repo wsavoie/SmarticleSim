@@ -48,7 +48,7 @@ SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1 2];
+showFigs=[1 3 27];
 useCOM=0;
 f=[]; rob=[]; v=[];dirs=[];
 
@@ -159,6 +159,7 @@ if(showFigs(showFigs==xx))
     line([ma.vcorr{1}(10,1) ma.vcorr{1}(end,1)], [M M],'color','r','linewidth',3);
     figText(gcf,14);
     text(.5,.7,['mean = ',num2str(M,'%2.3f')],'units','normalized','fontsize',16)
+    set(gca,'yscale','log')
 end
 
 %% 4 fourier transform of vcorr
@@ -1022,7 +1023,8 @@ xx=27;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
-    dotProd=[];
+    dotProd=[];ringVel=[];
+    bins=68;
     for i=1:L
         dt=diff(usedSimAm(i).fullT(1:2));
         ringPos=usedSimAm(i).fullRingPos;
@@ -1032,14 +1034,14 @@ if(showFigs(showFigs==xx))
         xxx=deadPos(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
         %get velocity
         vRing=diff(ringPos)./dt;
-        
-        %         %%%%
-        vRing=vRing(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
-        deadPos=deadPos(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
-        m=mean(sqrt(sum(vRing.^2,2))); %%%****
-        vRing=vRing(sqrt(sum(vRing.^2,2))>m,:);%%%********
-        deadPos=deadPos(sqrt(sum(vRing.^2,2))>m,:);%%%********
-        %         %%%%
+        vRing2=sqrt(sum(vRing.^2,2));
+%         %         %%%%
+%         vRing=vRing(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
+%         deadPos=deadPos(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
+%         m=mean(sqrt(sum(vRing.^2,2))); %%%****
+%         vRing=vRing(sqrt(sum(vRing.^2,2))>m,:);%%%********
+%         deadPos=deadPos(sqrt(sum(vRing.^2,2))>m,:);%%%********
+%         %         %%%%
         
         %get vhat and deadposhat
         vHat=vRing./sqrt(sum(vRing.^2,2));
@@ -1051,12 +1053,30 @@ if(showFigs(showFigs==xx))
         %         end
         %add cat
         dotProd=[dotProd; dprod];
+        ringVel=[ringVel;vRing2];
     end
-    
-    histogram(dotProd);
-    
+    cc=histogram(dotProd,bins);
     xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
-    ylabel('counts');
+    ylabel('counts')
+    title('dt sampling');
+    axis tight
+    figText(gcf,18)
+    
+    
+%     bins=201;
+    x=linspace(-1,1,bins);
+    disc=discretize(dotProd,bins);
+    y=zeros(1,bins);
+    for(i=1:length(y))
+        y(i)=sum(ringVel(disc==i));
+    end
+    figure(40);
+    bb=bar(x,y);
+    
+%     xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+%     ylabel('counts');
+        xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    zlabel('counts scaled by velocity')
     title('dt sampling');
     axis tight
     figText(gcf,18)

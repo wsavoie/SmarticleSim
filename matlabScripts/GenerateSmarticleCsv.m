@@ -63,7 +63,7 @@ else
     mass = volume*rho;
     %     torqueThresh=.0325; %.008 previously cd
 %     torqueLimit=.015; %..0325 previously cd
- torqueLimit=.02; %..0325 previously cd
+ torqueLimit=.01; %..0325 previously cd
 end
 
 
