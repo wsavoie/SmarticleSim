@@ -3,7 +3,7 @@ fold=uigetdir('A:\SmarticleRun\')
 load(fullfile(fold,'amoebaData.mat'));
 
 % load('A:\SmarticleRun\Amoeba_newsquare_1_dead\amoebaData.mat');
-% close all
+close all
 
 
 %************************************************************
@@ -35,19 +35,20 @@ load(fullfile(fold,'amoebaData.mat'));
 %*26. smarticle rotation
 %*27 v dot rhat dt sampling histogram
 %*28 v dot rhat collision event sampling histogram
-%*29 v dot rhat dt sampling
+%*29 v dot rhat dt sampling scatter
 %*30 v dot rhat scatter collision event sampling
 %*31 v dot rhat heatmap dt sampling
 %*32 v dot rhat heatmap collision event sampling
-% 33 log(pdf) vs |vel|
-%*35. test
+%*33 log(pdf) vs |vel|
+%*34 %% 34 log(pdf) vs |vel| fit line
+%*45. test
 %************************************************************
 %%
 SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1  33];
+showFigs=[1 2];
 useCOM=0;
 f=[]; rob=[]; v=[];dirs=[];
 
@@ -1028,14 +1029,28 @@ if(showFigs(showFigs==xx))
         %subtract ring position to get vector of deadpos in ring
         deadPos=usedSimAm(i).fullDeadSmartPos-ringPos;
         deadPos=deadPos(1:end-1,:); %remove 1 index to equal vel vec size
+        xxx=deadPos(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
         %get velocity
         vRing=diff(ringPos)./dt;
+        
+        %         %%%%
+        vRing=vRing(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
+        deadPos=deadPos(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
+        m=mean(sqrt(sum(vRing.^2,2))); %%%****
+        vRing=vRing(sqrt(sum(vRing.^2,2))>m,:);%%%********
+        deadPos=deadPos(sqrt(sum(vRing.^2,2))>m,:);%%%********
+        %         %%%%
+        
         %get vhat and deadposhat
         vHat=vRing./sqrt(sum(vRing.^2,2));
         dpHat=deadPos./sqrt(sum(deadPos.^2,2));
         
         dprod=dot(vHat,dpHat,2);
-        dotProd=[dotProd, dprod];
+        %         if(i==15)
+        %             continue;
+        %         end
+        %add cat
+        dotProd=[dotProd; dprod];
     end
     
     histogram(dotProd);
@@ -1104,8 +1119,8 @@ if(showFigs(showFigs==xx))
         dpHat=deadPos./sqrt(sum(deadPos.^2,2));
         dprod=dot(vHat,dpHat,2);
         
-        dotProd=[dotProd, dprod];
-        ringVel=[ringVel, sqrt(sum(vRing.^2,2))];
+        dotProd=[dotProd; dprod];
+        ringVel=[ringVel; sqrt(sum(vRing.^2,2))];
     end
     
     scatter(dotProd, ringVel,'.');
@@ -1283,6 +1298,8 @@ if(showFigs(showFigs==xx))
     hold on;
     dotProd=[]; ringVel=[]; y=[];
     binCountVel = 200;
+    ti=.005;
+    tf=0.4;
     for i=1:L
         dt=diff(usedSimAm(i).fullT(1:2));
         ringPos=usedSimAm(i).fullRingPos;
@@ -1302,20 +1319,20 @@ if(showFigs(showFigs==xx))
         y = [y;histcounts(sqrt(sum(vRing.^2,2)),binCountVel)];
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     maxVel = max(ringVel);
-%     minVel = min(ringVel);
-%     binWVel=(maxVel-minVel)/binCountVel;
-%     y = histcounts(ringVel,binCountVel);
-%     y=y/max(y);
-%     
-%     x=binWVel*(1:length(y));
-%     plot(x,y,'-o');
-%     % errorbar(x,y,err);
-%     xlabel('|v|');
-%     ylabel('P(|v|)');
-%     figText(gcf,18);
-%     set(gca,'yscale','log');
-%%%%%%%%%%%%%%%%%%%%%%%%
+    %     maxVel = max(ringVel);
+    %     minVel = min(ringVel);
+    %     binWVel=(maxVel-minVel)/binCountVel;
+    %     y = histcounts(ringVel,binCountVel);
+    %     y=y/max(y);
+    %
+    %     x=binWVel*(1:length(y));
+    %     plot(x,y,'-o');
+    %     % errorbar(x,y,err);
+    %     xlabel('|v|');
+    %     ylabel('P(|v|)');
+    %     figText(gcf,18);
+    %     set(gca,'yscale','log');
+    %%%%%%%%%%%%%%%%%%%%%%%%
     maxVel = max(max(ringVel));
     minVel = min(min(ringVel));
     binWVel=(maxVel-minVel)/binCountVel;
@@ -1323,19 +1340,87 @@ if(showFigs(showFigs==xx))
     
     y=y./sum(y,2);
     err=std(y,0,1);
-    ym=mean(y,1);
-    x=binWVel*(1:length(y));
-%     plot(x,y,'-o');
-    errorbar(x,ym,err);
+    ym=mean(y,1)';
+    x=binWVel*(1:length(y))';
+    %     plot(x,y,'-o');
+    %     errorbar(x,ym,err);
+    y2=(ym(x>ti&x<tf));
+    x2=x(x>ti&x<tf);
+    
+    
     xlabel('|v| (m/s)');
     ylabel('P(|v|)');
     figText(gcf,18);
     set(gca,'yscale','log');
-
-
+    ft= fittype('a*x.^2.*exp(-x.^2.*b)',...
+        'dependent',{'y'},'independent',{'x'},...
+        'coefficients',{'a','b'});
+    
+    
+    f = fit(x2,y2,ft);
+    plot(f,x2,y2)
+    %     plot(x,ym);
+    %  set(gca,'xscale','log');
+    % x1=0.005:0.0001:0.2;
+    % x2=0.005:.0001:0.6;
+    % x1=0.005:0.0001:0.6;
+    % x2=0.005:.0001:0.6;
+    % x3=0.005:0.0001:0.2;
+    % plot(x1,exp(-27*x1)/(1*10^(1.4)),'linewidth',2);
+    % plot(x2,x2.^(-2.4)/(1*10^(5.4)),'linewidth',2)
+    % plot(x1,
+    % semilogy(x2,10*exp(-5*x2)./(x2.^(3))/(1*10^(8)),'.-')
+    
 end
-%% 35 test
-xx=35;
+%% 34 log(pdf) vs |vel| fit line
+xx=34;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    dotProd=[]; ringVel=[]; y=[];
+    binCountVel = 200;
+    ti=.005;
+    tf=0.1;
+    m=zeros(1,length(L));
+    for i=1:L
+        
+        dt=diff(usedSimAm(i).fullT(1:2));
+        ringPos=usedSimAm(i).fullRingPos;
+        vRing=diff(ringPos)./dt;
+        
+        vHat=vRing./sqrt(sum(vRing.^2,2));
+        ringVel=[sqrt(sum(vRing.^2,2))];
+        y = [histcounts(sqrt(sum(vRing.^2,2)),binCountVel)];
+        y=y/sum(y);
+        
+        maxVel = max(max(ringVel));
+        minVel = min(min(ringVel));
+        binWVel=(maxVel-minVel)/binCountVel;
+        x=binWVel*(1:length(y));
+        
+        y2=log(y(x>ti&x<tf));
+        x2=x(x>ti&x<tf);
+        p = polyfit(x2,y2,1);
+        %         f=fit(x2',y2','poly1');
+        %         plot(x,y,'o');
+        h1= plot(x2,y2,'o');
+        %     h1= plot(f,x2,y2,'o');
+        %                hold on;
+        plot(x2,x2*p(1)+p(2),'color',h1.Color);
+        %         hold off;
+        %         pause
+        m(i)=p(1);
+    end
+    
+    pts(mean(m),'+-',std(m))
+    xlabel('|v| (m/s)');
+    ylabel('P(|v|)');
+    figText(gcf,18);
+    
+    
+end
+%% 45 test
+xx=45;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
