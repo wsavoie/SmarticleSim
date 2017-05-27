@@ -77,7 +77,7 @@ private:
 SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysType, double collisionEnv,double l_smart, double w_smart, double t_smart, double t2_smart)
 {
 	
-	mat_wall = std::make_shared<ChMaterialSurface>();
+	mat_wall = std::make_shared<MATSURF>();
 
 
 	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));
@@ -123,7 +123,7 @@ std::shared_ptr<ChTexture> SystemGeometry::bucketTexture = std::make_shared<ChTe
 std::shared_ptr<ChTexture> SystemGeometry::sphereTexture = std::make_shared<ChTexture>();
 std::shared_ptr<ChTexture> SystemGeometry::groundTexture = std::make_shared<ChTexture>();
 std::shared_ptr<ChTexture> SystemGeometry::floorTexture = std::make_shared<ChTexture>();
-std::shared_ptr<ChMaterialSurface> SystemGeometry::mat_wall = std::make_shared<ChMaterialSurface>();
+std::shared_ptr<MATSURF> SystemGeometry::mat_wall = std::make_shared<MATSURF>();
 SystemGeometry::~SystemGeometry()
 {
 }
@@ -216,7 +216,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_BoxBig()
 
 	boxdim = ChVector<>(.28 / 1.5 *10, .55245*4, 2 * bucket_rad / 8);
 	bucket = utils::CreateBoxContainer(sys.get(), bucketID, mat_wall,
-		boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
+		boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLE, ChVector<>(box_ang, 0, 0)), true, false, true, false);
 
 
 	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
@@ -241,7 +241,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_Box()
 
 
 	bucket = utils::CreateBoxContainer(sys.get(), bucketID, mat_wall,
-		boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true, false, true, false);
+		boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLE, ChVector<>(box_ang, 0, 0)), true, false, true, false);
 
 
 	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
@@ -258,7 +258,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool o
 {
 	double t = bucket_half_thick;
 	double r = bucket_rad;
-	double h = bucket_interior_halfDim.z;
+	double h = bucket_interior_halfDim.z();
 	double o_lap = 0;
 	if (overlap){ o_lap = t * 2; }
 	double th = h +o_lap;//for use in cyl volume;
@@ -312,9 +312,9 @@ std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double h
 		half_h + o_lap);
 
 
-	double vSmall = box_size.x*box_size.y*box_size.z;
+	double vSmall = box_size.x()*box_size.y()*box_size.z();
 	double rho = mEach / vSmall;
-	double vLarge = bigside_size.x*bigside_size.y*bigside_size.z;
+	double vLarge = bigside_size.x()*bigside_size.y()*bigside_size.z();
 
 	
 	//#################################################################################
@@ -346,12 +346,12 @@ std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double h
 				cos(ang*i)*(wallt + r),
 				0 - 1.8*t);
 
-		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
+		quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, ang*i));
 		rel_loc = pPos - cmRel;
 		gyr = utils::CalcBoxGyration(box_size, pPos, quat).Get_Diag();
-		xxIner.x = xxIner.x + mEach * (gyr.x + ChVector<>(0, rel_loc.y, rel_loc.z).Length2());
-		xxIner.y = xxIner.y + mEach * (gyr.y + ChVector<>(rel_loc.x, 0, rel_loc.z).Length2());
-		xxIner.z = xxIner.z + mEach * (gyr.z + ChVector<>(rel_loc.x, rel_loc.y, 0).Length2());
+		xxIner.x() = xxIner.x() + mEach * (gyr.x() + ChVector<>(0, rel_loc.y(), rel_loc.z()).Length2());
+		xxIner.y() = xxIner.y() + mEach * (gyr.y() + ChVector<>(rel_loc.x(), 0, rel_loc.z()).Length2());
+		xxIner.z() = xxIner.z() + mEach * (gyr.z() + ChVector<>(rel_loc.x(), rel_loc.y(), 0).Length2());
 
 
 		chrdCirc->AddAsset(texture);
@@ -360,13 +360,13 @@ std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double h
 	}
 	///big side stuff
 
-	quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, boxChordAng));
+	quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, boxChordAng));
 	rel_loc = bigWallPos - cmRel;
 	gyr = utils::CalcBoxGyration(bigside_size, bigWallPos, quat).Get_Diag();
 
-	xxIner.x = xxIner.x + mBig * (gyr.x + ChVector<>(0, rel_loc.y, rel_loc.z).Length2());
-	xxIner.y = xxIner.y + mBig * (gyr.y + ChVector<>(rel_loc.x, 0, rel_loc.z).Length2());
-	xxIner.z = xxIner.z + mBig * (gyr.z + ChVector<>(rel_loc.x, rel_loc.y, 0).Length2());
+	xxIner.x() = xxIner.x() + mBig * (gyr.x() + ChVector<>(0, rel_loc.y(), rel_loc.z()).Length2());
+	xxIner.y() = xxIner.y() + mBig * (gyr.y() + ChVector<>(rel_loc.x(), 0, rel_loc.z()).Length2());
+	xxIner.z() = xxIner.z() + mBig * (gyr.z() + ChVector<>(rel_loc.x(), rel_loc.y(), 0).Length2());
 	chrdCirc->AddAsset(texture);
 	chrdCirc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(chrdCirc.get(), bigside_size, bigWallPos, quat, true);
@@ -375,7 +375,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double h
 
 	chrdCirc->SetMass(mTot);
 	//chrdCirc->SetInertiaXX(xxIner);
-	quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, 2*PPI-boxChordAng-PPI/2));
+	quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, 2*PPI-boxChordAng-PPI/2));
 	//auto ro= chrdCirc->GetRot().Rotate(ChVector<>(0, 0, boxChordAng));
 	chrdCirc->SetRot(quat);
 	return chrdCirc;
@@ -392,7 +392,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 	ChVector<> box_size = (0, 0, 0); //size of plates
 	//double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double wallt = t / 5; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
-	//double half_height = bucket_interior_halfDim.z;
+	//double half_height = bucket_interior_halfDim.z();
 	double box_side = r * 2.0 * by*sin(PPI / num_boxes)/ax*(cos(PPI/num_boxes));//side length of cyl
 	double o_lap = 0;
 	if (overlap){ o_lap = t * 2; }
@@ -424,7 +424,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 
 			//TODO ######take into account angle of box!!
 		}
-		quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
+		quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, ang*i));
 
 		//this is here to make half the cylinder invisible.
 		bool m_visualization = false;
@@ -472,7 +472,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 				by*cos(ang*i)*(-wallt + r),
 				half_h);
 
-			quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
+			quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, ang*i));
 
 			//this is here to make half the cylinder invisible.
 			bool m_visualization = false;
@@ -533,30 +533,30 @@ std::shared_ptr<ChBody> SystemGeometry::create_FlatHopper(ChVector<> hdim)
 	flathopper->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	flathopper->SetMaterialSurface(mat_wall);
 
-	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hdim.x + o_lap, 2.5*hdim.y + o_lap, hthick), ChVector<>(0, 0, -hthick)); //bottom
-	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hthick, hdim.y + o_lap, hdim.z + o_lap), //-x
-		ChVector<>(-hdim.x - hthick, 0, hdim.z));
-	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hthick, hdim.y + o_lap, hdim.z + o_lap), //+x
-		ChVector<>(hdim.x + hthick, 0, hdim.z));
-	//utils::AddBoxGeometry(flathopper.get(), ChVector<>(hdim.x + o_lap, hthick, hdim.z + o_lap), //-y
-	//	ChVector<>(0, -hdim.y - hthick, hdim.z));
-	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hdim.x + o_lap, hthick, hdim.z + o_lap), //+y
-		ChVector<>(0, hdim.y + hthick, hdim.z));
+	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hdim.x() + o_lap, 2.5*hdim.y() + o_lap, hthick), ChVector<>(0, 0, -hthick)); //bottom
+	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hthick, hdim.y() + o_lap, hdim.z() + o_lap), //-x
+		ChVector<>(-hdim.x() - hthick, 0, hdim.z()));
+	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hthick, hdim.y() + o_lap, hdim.z() + o_lap), //+x
+		ChVector<>(hdim.x() + hthick, 0, hdim.z()));
+	//utils::AddBoxGeometry(flathopper.get(), ChVector<>(hdim.x() + o_lap, hthick, hdim.z() + o_lap), //-y
+	//	ChVector<>(0, -hdim.y() - hthick, hdim.z()));
+	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hdim.x() + o_lap, hthick, hdim.z() + o_lap), //+y
+		ChVector<>(0, hdim.y() + hthick, hdim.z()));
 
-	double hopperWallWidth = (hdim.x - hole) / 2;
+	double hopperWallWidth = (hdim.x() - hole) / 2;
 	double hopperWallHeight = hopperWallWidth / sin(wallAngle);
 	double hopperWallAngleHeight = hopperWallHeight*cos(wallAngle);
 	///////////hopper walls////////
-	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hthick, hopperWallHeight, hdim.z + o_lap), //left side
-		ChVector<>(hdim.x - hopperWallWidth, -hdim.y - hopperWallHeight*cos(wallAngle), hdim.z), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, wallAngle)));
+	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hthick, hopperWallHeight, hdim.z() + o_lap), //left side
+		ChVector<>(hdim.x() - hopperWallWidth, -hdim.y() - hopperWallHeight*cos(wallAngle), hdim.z()), Angle_to_Quat(ANGLE, ChVector<>(0, 0, wallAngle)));
 
-	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hthick, hopperWallHeight, hdim.z + o_lap), //right side
-		ChVector<>(-(hdim.x - hopperWallWidth), -hdim.y - hopperWallAngleHeight, hdim.z), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, -wallAngle)));
+	utils::AddBoxGeometry(flathopper.get(), ChVector<>(hthick, hopperWallHeight, hdim.z() + o_lap), //right side
+		ChVector<>(-(hdim.x() - hopperWallWidth), -hdim.y() - hopperWallAngleHeight, hdim.z()), Angle_to_Quat(ANGLE, ChVector<>(0, 0, -wallAngle)));
 	flathopper->GetCollisionModel()->BuildModel();
 
-	flathopper->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)));
+	flathopper->SetRot(Angle_to_Quat(ANGLE, ChVector<>(box_ang, 0, 0)));
 	sys->AddBody(flathopper);
-	ChVector<> buckBottPos = ChVector<>(bucket_ctr.x, -hdim.y - 2 * hopperWallAngleHeight + hthick, hdim.z);
+	ChVector<> buckBottPos = ChVector<>(bucket_ctr.x(), -hdim.y() - 2 * hopperWallAngleHeight + hthick, hdim.z());
 
 	///////////hopper walls////
 	///width of box = hole width + 2*xwidth of side wall
@@ -583,8 +583,8 @@ std::shared_ptr<ChBody> SystemGeometry::create_FlatHopper(ChVector<> hdim)
 	bucket_bott->SetPos(bucket_ctr);
 	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));//custom file
 	bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	utils::AddBoxGeometry(bucket_bott.get(), ChVector<>(hdim.x + o_lap, hthick, hdim.z + o_lap), //-y
-		//ChVector<>(0, -hdim.y - hthick, hdim.z));
+	utils::AddBoxGeometry(bucket_bott.get(), ChVector<>(hdim.x() + o_lap, hthick, hdim.z() + o_lap), //-y
+		//ChVector<>(0, -hdim.y() - hthick, hdim.z()));
 		buckBottPos);
 
 	bucket_bott->AddAsset(floorTexture);
@@ -592,7 +592,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_FlatHopper(ChVector<> hdim)
 	bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
 	bucket_bott->GetCollisionModel()->BuildModel();
-	bucket_bott->SetRot(Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)));
+	bucket_bott->SetRot(Angle_to_Quat(ANGLE, ChVector<>(box_ang, 0, 0)));
 	sys->AddBody(bucket_bott);
 
 	return flathopper;
@@ -604,7 +604,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_Hopper(double theta, bool overlap
 	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double r = bucket_rad;
 	double ang = theta;
-	double h = bucket_interior_halfDim.z;
+	double h = bucket_interior_halfDim.z();
 	double sH = (h - t) / sin(ang); //side height
 	//double w = hole_size / 2 + cos(ang)*h;
 	double w = cos(ang)*h - t / 2;
@@ -631,9 +631,9 @@ std::shared_ptr<ChBody> SystemGeometry::create_Hopper(double theta, bool overlap
 	//utils::AddBoxGeometry(ramp.get(), ChVector<>(w, w, t), rampPos, QUNIT, true);//bucket_bottom
 
 
-	utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos - VECT_X*(-sin(ang)*h + hole_size + cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -ang, 0)), true);// -x negAngle
-	//utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos - VECT_X*(sin(ang)*(h)+hole_size+cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, ang, 0)), true);// -x negAngle +theta
-	utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos + VECT_X*(-sin(ang)*h + hole_size + cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, ang, 0)), true);// +x  -theta = /
+	utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos - VECT_X*(-sin(ang)*h + hole_size + cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLE, ChVector<>(0, -ang, 0)), true);// -x negAngle
+	//utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos - VECT_X*(sin(ang)*(h)+hole_size+cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLE, ChVector<>(0, ang, 0)), true);// -x negAngle +theta
+	utils::AddBoxGeometry(hopper.get(), ChVector<>(t, r + t, h), hop_pos + VECT_X*(-sin(ang)*h + hole_size + cos(ang)*t) + VECT_Z*(h - o_lap), Angle_to_Quat(ANGLE, ChVector<>(0, ang, 0)), true);// +x  -theta = /
 
 
 	utils::AddBoxGeometry(hopper.get(), ChVector<>(2 * -sin(ang)*h + hole_size + 2 * cos(ang)*t, t, h), hop_pos - VECT_Y*(r + o_lap) + VECT_Z*(h - o_lap), QUNIT, false);//camera pos -y
@@ -688,7 +688,7 @@ drum->SetBodyFixed(false);
 drum->SetCollide(true);
 double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 double wallt = t / 5.0; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
-double half_height = bucket_interior_halfDim.z / (radMult * 2);
+double half_height = bucket_interior_halfDim.z() / (radMult * 2);
 double box_side = bucket_rad * radMult * 2 * tan(PPI / num_boxes);//side length of cyl
 double o_lap = 0;
 if (overlap){ o_lap = t * 2; }
@@ -710,7 +710,7 @@ for (int i = 0; i < num_boxes; i++)
 		cos(ang*i)*(wallt + bucket_rad*radMult),
 		0);
 
-	quat = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, ang*i));
+	quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, ang*i));
 
 	drum->AddAsset(bucketTexture);
 
@@ -793,7 +793,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_Hull(double numBoxes)
 	ChVector<> rampSize(w_smarticle * 5, w_smarticle * 5, t);
 
 
-	//utils::AddBoxGeometry(convexShape.get(), rampSize, rampPos, Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(box_ang, 0, 0)), true);
+	//utils::AddBoxGeometry(convexShape.get(), rampSize, rampPos, Angle_to_Quat(ANGLE, ChVector<>(box_ang, 0, 0)), true);
 
 
 
@@ -838,7 +838,7 @@ void SystemGeometry::create_Container()
 		{
 			bucket = create_FlatHopper(boxdim);
 			floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
-			GetLog() << "\n\nfriction: " << bucket->GetMaterialSurface()->GetKfriction() << " " << bucket->GetMaterialSurface()->GetSfriction() << "\n";
+			GetLog() << "\n\nfriction: " << bucket->GetMaterialSurfaceNSC()->GetKfriction() << " " << bucket->GetMaterialSurfaceNSC()->GetSfriction() << "\n";
 			break;
 		}
 		case HOPPER:
@@ -875,7 +875,7 @@ void SystemGeometry::create_Ground()
 {
 
 	ChVector<> boxDim = sizeScale * ChVector<>(0.1, 0.1, .002);
-	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*this->bucket_interior_halfDim.z);
+	ChVector<> boxLoc = sizeScale * ChVector<>(0, 0, -5.0*this->bucket_interior_halfDim.z());
 
 	ground = std::make_shared<ChBody>();
 
@@ -888,7 +888,7 @@ void SystemGeometry::create_Ground()
 
 	ground->GetCollisionModel()->ClearModel();
 	ground->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	utils::AddCylinderGeometry(ground.get(), boxDim.x, boxDim.z, ChVector<>(0, 0, 0), Q_from_AngAxis(PI_2, VECT_X));
+	utils::AddCylinderGeometry(ground.get(), boxDim.x(), boxDim.z(), ChVector<>(0, 0, 0), Q_from_AngAxis(PI_2, VECT_X));
 	ground->GetCollisionModel()->SetFamily(envFamily);
 	ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 	ground->AddAsset(groundTexture);
@@ -908,8 +908,8 @@ void SystemGeometry::create_VibrateLink(double w, double A, double t_0, std::sha
 	//auto vibMotion = std::make_shared<ChFunction_Sine>();
 	
 	
-	ChFunction_Sine* vibMotion = new ChFunction_Sine();  // phase freq ampl
-	//auto vibMotion = std::make_shared<ChFunction_Sine>();  // phase freq ampl
+	//ChFunction_Sine* vibMotion = new ChFunction_Sine();  // phase freq ampl
+	auto vibMotion = std::make_shared<ChFunction_Sine>();  // phase freq ampl
 
 	vibMotion->Set_phase(phase);
 	vibMotion->Set_amp(A);
@@ -922,9 +922,9 @@ void SystemGeometry::create_VibrateLink(double w, double A, double t_0, std::sha
 void SystemGeometry::create_Prismatic(std::shared_ptr<ChBody> body)
 {
 	////
-	ChFunctionCustom* pris_motion = new ChFunctionCustom(0, 1.5, 0);  // phase freq ampl
+	//ChFunctionCustom* pris_motion = new ChFunctionCustom(0, 1.5, 0);  // phase freq ampl
 
-	//auto pris_motion = std::make_shared<ChFunctionCustom>(0,1.5,0);  // phase freq ampl
+	auto pris_motion = std::make_shared<ChFunctionCustom>(0,1.5,0);  // phase freq ampl
 	//pris_motion->Set_y(.1);
 	//pris_motion->Set_y_dx(.1);
 	//pris_motion->Set_y_dxdx(.1);
@@ -969,7 +969,7 @@ void SystemGeometry::create_Truss()
 	truss = std::make_shared<ChBody>();
 	truss->SetBodyFixed(true);
 	truss->GetCollisionModel()->ClearModel();
-	utils::AddCylinderGeometry(truss.get(), t2_smarticle / 2, bucket_interior_halfDim.z * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(-PI_2, 0, 0)), false);
+	utils::AddCylinderGeometry(truss.get(), t2_smarticle / 2, bucket_interior_halfDim.z() * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z()), Angle_to_Quat(ANGLE, ChVector<>(-PI_2, 0, 0)), false);
 	truss->GetCollisionModel()->BuildModel();
 	truss->AddAsset(sphereTexture);
 	truss->SetCollide(false);
@@ -979,7 +979,7 @@ void SystemGeometry::create_Truss()
 void SystemGeometry::create_Knobs(double kpr,double rows, double length)
 {
 	//utils should be -PI_2?
-	//utils::AddCylinderGeometry(truss.get(), t2_smarticle / 2, bucket_interior_halfDim.z * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(PI_2, 0, 0)), true);
+	//utils::AddCylinderGeometry(truss.get(), t2_smarticle / 2, bucket_interior_halfDim.z() * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z()), Angle_to_Quat(ANGLE, ChVector<>(PI_2, 0, 0)), true);
 	auto knobstick = std::make_shared<ChBody>();
 
 	double knobRad;
@@ -1011,7 +1011,7 @@ void SystemGeometry::create_Knobs(double kpr,double rows, double length)
 		{
 			double theta = col*ang + row*pOffset;
 			//utils::AddSphereGeometry(knobstick.get(), knobRad, bucket_ctr + ChVector<>(rad*cos(col*ang + row*pOffset), rad*sin(col*ang + row*pOffset), hp*(row + 1)), Angle_to_Quat(col*ang + row*pOffset, VECT_Y), true);
-			utils::AddBoxGeometry(stick.get(), ChVector<>(knobRad*1.5, rad / 4, rad / 8), bucket_ctr + ChVector<>(rad*cos(theta), rad*sin(theta), hp*(row + 1)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, 0, theta + row % 2 * PI_2)), true);
+			utils::AddBoxGeometry(stick.get(), ChVector<>(knobRad*1.5, rad / 4, rad / 8), bucket_ctr + ChVector<>(rad*cos(theta), rad*sin(theta), hp*(row + 1)), Angle_to_Quat(ANGLE, ChVector<>(0, 0, theta + row % 2 * PI_2)), true);
 			sphereStick.emplace_back(stick);
 		}
 	}
@@ -1078,7 +1078,7 @@ void SystemGeometry::create_CentralColumn(double length)
 		rad = t_smarticle*mult / 4.0;
 	}
 
-	//bucket_interior_halfDim.z*1.5;
+	//bucket_interior_halfDim.z()*1.5;
 	stickLen = length;
 
 	int sphereNum = stickLen / (t_smarticle / 2);
@@ -1093,7 +1093,7 @@ void SystemGeometry::create_CentralColumn(double length)
 		//utils::AddSphereGeometry(stick.get(), t2_smarticle/2.0, sys->bucket_ctr + ChVector<>(0, 0, t2_smarticle*(i + 1 /2.0)), QUNIT, true); // upper part, min_x plate
 
 		//if you change z height between spheres, you must change sphereStickHeight above!
-		utils::AddSphereGeometry(stick.get(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i)), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(0, 0, PPI)), true);
+		utils::AddSphereGeometry(stick.get(), rad, bucket_ctr + ChVector<>(0, 0, stickLen / sphereNum * (i)), Angle_to_Quat(ANGLE, ChVector<double>(0, 0, PPI)), true);
 		sphereStick.emplace_back(stick);
 	}
 
@@ -1108,12 +1108,12 @@ void SystemGeometry::create_CentralColumn(double length)
 			{
 
 				//AddBoxGeometry
-				utils::AddSphereGeometry(stick.get(), rad, bucket_ctr + ChVector<>(rad*(i + 1), 0, stickLen / sphereNum), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(PPI, 0, 0)), true);
+				utils::AddSphereGeometry(stick.get(), rad, bucket_ctr + ChVector<>(rad*(i + 1), 0, stickLen / sphereNum), Angle_to_Quat(ANGLE, ChVector<double>(PPI, 0, 0)), true);
 
 			}
 			else
 			{
-				utils::AddSphereGeometry(stick.get(), rad, bucket_ctr + ChVector<>(rad*(i + 1), 0, stickLen / sphereNum), Angle_to_Quat(ANGLESET_RXYZ, ChVector<double>(PPI, 0, 0)), true);
+				utils::AddSphereGeometry(stick.get(), rad, bucket_ctr + ChVector<>(rad*(i + 1), 0, stickLen / sphereNum), Angle_to_Quat(ANGLE, ChVector<double>(PPI, 0, 0)), true);
 			}
 			sphereStick.emplace_back(stick);
 		}
@@ -1254,7 +1254,7 @@ void SystemGeometry::rotate_body_rot(double t, std::shared_ptr<ChBody> body, std
 	mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_rot_funct());
 	//set rotation amount equal to box_ang-currentangle, therefore no rotation if 2 values are equal
 	mfun2->Set_yconst(box_ang - ang);
-	//bucket->GetRot()).x
+	//bucket->GetRot()).x()
 }
 void SystemGeometry::rotate_body_sp(double t, std::shared_ptr<ChBody> body, std::shared_ptr<ChLinkEngine> actuator, double w)//method is called on each iteration to rotate drum at an angular velocity of drum_omega
 {

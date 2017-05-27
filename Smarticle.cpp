@@ -516,7 +516,7 @@ void Smarticle::CreateArm3(int armID, double len, double mr, double mr2, ChVecto
 			arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 			utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
 			//radius,h,pos,rot,vis
-			auto a = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, PI / 2, PI/2));
+			auto a = Angle_to_Quat(ANGLE, ChVector<>(0, PI / 2, PI/2));
 			utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .01131,-mr+.0085, mr2), a, true);
 			utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0+.03406, -mr+.0055, -mr2), a, true);
 
@@ -624,8 +624,8 @@ void Smarticle::SetEdges()
 	//ChVector<>pos(mySmarticlesVec[0]->GetArm(1)->TransformPointLocalToParent(ChVector<>(w_smarticle / 2.0, 0, 0)));
 	//ChVector<>pos2(mySmarticlesVec[0]->GetArm(2)->TransformPointLocalToParent(ChVector<>(l_smarticle / 2, 0, 0)));
 
-	//vector3df armpos(pos.x, pos.y, pos.z);
-	//vector3df armpos2(pos2.x, pos2.y, pos2.z);
+	//vector3df armpos(pos.x(), pos.y(), pos.z());
+	//vector3df armpos2(pos2.x(), pos2.y(), pos2.z());
 	//application.GetVideoDriver()->setTransform(irr::video::ETS_WORLD, core::IdentityMatrix);
 	//application.GetVideoDriver()->draw3DLine(armpos - vector3df(0, 10, 0),
 	//	armpos + vector3df(0, 10, 0), irr::video::SColor(70, 255, 0, 0));
@@ -671,10 +671,10 @@ void Smarticle::SetEdges()
 		arm0Back =			(armVerts[0][2]) - (armVerts[0][1]);
 		arm0Edge =			(armVerts[0][3]) - (armVerts[0][2]);
 
-		arm0Front = ChVector<>(-arm0Front.y, arm0Front.x, arm0Front.z);
-		arm0OuterEdge = ChVector<>(-arm0OuterEdge.y, arm0OuterEdge.x, arm0OuterEdge.z);
-		arm0Back = ChVector<>(-arm0Back.y, arm0Back.x, arm0Back.z);
-		arm0Edge = ChVector<>(-arm0Edge.y, arm0Edge.x, arm0Edge.z);
+		arm0Front = ChVector<>(-arm0Front.y(), arm0Front.x(), arm0Front.z());
+		arm0OuterEdge = ChVector<>(-arm0OuterEdge.y(), arm0OuterEdge.x(), arm0OuterEdge.z());
+		arm0Back = ChVector<>(-arm0Back.y(), arm0Back.x(), arm0Back.z());
+		arm0Edge = ChVector<>(-arm0Edge.y(), arm0Edge.x(), arm0Edge.z());
 
 		//arm1
 		arm1Front =			(armVerts[1][0]) - (armVerts[1][3]);
@@ -682,10 +682,10 @@ void Smarticle::SetEdges()
 		arm1Back =			(armVerts[1][2]) - (armVerts[1][1]);
 		arm12Shared =		(armVerts[1][3]) - (armVerts[1][2]);
 
-		arm1Front = ChVector<>(-arm1Front.y, arm1Front.x, arm1Front.z);
-		arm10Shared = ChVector<>(-arm10Shared.y, arm10Shared.x, arm10Shared.z);
-		arm1Back = ChVector<>(-arm1Back.y, arm1Back.x, arm1Back.z);
-		arm12Shared = ChVector<>(-arm12Shared.y, arm12Shared.x, arm12Shared.z);
+		arm1Front = ChVector<>(-arm1Front.y(), arm1Front.x(), arm1Front.z());
+		arm10Shared = ChVector<>(-arm10Shared.y(), arm10Shared.x(), arm10Shared.z());
+		arm1Back = ChVector<>(-arm1Back.y(), arm1Back.x(), arm1Back.z());
+		arm12Shared = ChVector<>(-arm12Shared.y(), arm12Shared.x(), arm12Shared.z());
 
 
 
@@ -695,10 +695,10 @@ void Smarticle::SetEdges()
 		arm2Back=				(armVerts[2][2]) - (armVerts[2][1]);
 		arm2OuterEdge = (armVerts[2][3]) - (armVerts[2][2]);
 
-		arm2Front = ChVector<>(-arm2Front.y, arm2Front.x, arm2Front.z);
-		arm2Edge = ChVector<>(-arm2Edge.y, arm2Edge.x, arm2Edge.z);
-		arm2Back = ChVector<>(-arm2Back.y, arm2Back.x, arm2Back.z);
-		arm2OuterEdge = ChVector<>(-arm2OuterEdge.y, arm2OuterEdge.x, arm2OuterEdge.z);
+		arm2Front = ChVector<>(-arm2Front.y(), arm2Front.x(), arm2Front.z());
+		arm2Edge = ChVector<>(-arm2Edge.y(), arm2Edge.x(), arm2Edge.z());
+		arm2Back = ChVector<>(-arm2Back.y(), arm2Back.x(), arm2Back.z());
+		arm2OuterEdge = ChVector<>(-arm2OuterEdge.y(), arm2OuterEdge.x(), arm2OuterEdge.z());
 
 
 		armAxes[0][0] = arm0Front;
@@ -722,14 +722,14 @@ void Smarticle::SetEdges()
 
 void Smarticle::RotateSmarticleBy(ChQuaternion<> newAng)
 {
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angles[0], 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angles[1], 0));
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLE, ChVector<>(0, -angles[0], 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLE, ChVector<>(0, angles[1], 0));
 	quat0.Normalize();
 	quat2.Normalize();
 	newAng.Normalize();
 
 	auto c = arm1->GetCoord();
-	c.pos.z = c.pos.z + 1;
+	c.pos.z() = c.pos.z() + 1;
 	//ChTransform<>::TransformLocalToParent()
 	
 	auto ca = arm1->GetRotAxis();
@@ -895,8 +895,8 @@ void Smarticle::Create() {
 
 	//ChQuaternion<> quat0 = Q_from_AngAxis(angle1, VECT_Y);
 	//ChQuaternion<> quat2 = Q_from_AngAxis(-angle2, VECT_Y);
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angles[0], 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angles[1], 0));
+	ChQuaternion<> quat0 = Angle_to_Quat(ANGLE, ChVector<>(0, -angles[0], 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLE, ChVector<>(0, angles[1], 0));
 	quat0.Normalize();
 	quat2.Normalize();
 
@@ -1236,11 +1236,11 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	SetAngles(0, 0, false);
 	//for some reason it only works with vectors?
 	ChVector<> angVals;
-	smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-	angPair.first = angVals.x;
-	angPair.second = angVals.y;
-	firstAngPair.first = angVals.x;
-	firstAngPair.second = angVals.y;
+	smarticleMoves >> angVals.x() >> ddCh >> angVals.y() >> ddCh;
+	angPair.first = angVals.x();
+	angPair.second = angVals.y();
+	firstAngPair.first = angVals.x();
+	firstAngPair.second = angVals.y();
 	//TODO need to rewrite the below way of reading file, very ugly!
 
 	ot.emplace_back(GetAngle(0), GetAngle(1));
@@ -1257,12 +1257,12 @@ std::pair<double, double> Smarticle::populateMoveVector()
 
 
 		while (smarticleMoves.good()) {
-			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-			angPair.first = angVals.x;
-			angPair.second = angVals.y;
+			smarticleMoves >> angVals.x() >> ddCh >> angVals.y() >> ddCh;
+			angPair.first = angVals.x();
+			angPair.second = angVals.y();
 
 			global.push_back(angPair);
-			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//GetLog() << angVals.x() << " " << angVals.y() << " ddch:" << ddCh << "\n";
 			if (ddCh == '#')
 				break;
 		}
@@ -1272,12 +1272,12 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	{
 		//GUI1
 		while (smarticleMoves.good()) {
-			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-			angPair.first = angVals.x;
-			angPair.second = angVals.y;
+			smarticleMoves >> angVals.x() >> ddCh >> angVals.y() >> ddCh;
+			angPair.first = angVals.x();
+			angPair.second = angVals.y();
 
 			gui1.push_back(angPair);
-			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//GetLog() << angVals.x() << " " << angVals.y() << " ddch:" << ddCh << "\n";
 			if (ddCh == '#')
 				break;
 		}
@@ -1287,12 +1287,12 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	{
 		//GUI2
 		while (smarticleMoves.good()) {
-			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-			angPair.first = angVals.x;
-			angPair.second = angVals.y;
+			smarticleMoves >> angVals.x() >> ddCh >> angVals.y() >> ddCh;
+			angPair.first = angVals.x();
+			angPair.second = angVals.y();
 
 			gui2.push_back(angPair);
-			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//GetLog() << angVals.x() << " " << angVals.y() << " ddch:" << ddCh << "\n";
 			//exit(-1);
 			if (ddCh == '#')
 				break;
@@ -1303,12 +1303,12 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	{
 		//GUI3
 		while (smarticleMoves.good()) {
-			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-			angPair.first = angVals.x;
-			angPair.second = angVals.y;
+			smarticleMoves >> angVals.x() >> ddCh >> angVals.y() >> ddCh;
+			angPair.first = angVals.x();
+			angPair.second = angVals.y();
 
 			gui3.push_back(angPair);
-			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//GetLog() << angVals.x() << " " << angVals.y() << " ddch:" << ddCh << "\n";
 			//exit(-1);
 			if (ddCh == '#')
 				break;
@@ -1317,12 +1317,12 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	if (extra1.size() < 1)
 	{
 		while (smarticleMoves.good()) {
-			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-			angPair.first = angVals.x;
-			angPair.second = angVals.y;
+			smarticleMoves >> angVals.x() >> ddCh >> angVals.y() >> ddCh;
+			angPair.first = angVals.x();
+			angPair.second = angVals.y();
 
 			extra1.push_back(angPair);
-			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//GetLog() << angVals.x() << " " << angVals.y() << " ddch:" << ddCh << "\n";
 			//exit(-1);
 			if (ddCh == '#')
 				break;
@@ -1332,12 +1332,12 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	if (extra2.size() < 1)
 	{
 		while (smarticleMoves.good()) {
-			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-			angPair.first = angVals.x;
-			angPair.second = angVals.y;
+			smarticleMoves >> angVals.x() >> ddCh >> angVals.y() >> ddCh;
+			angPair.first = angVals.x();
+			angPair.second = angVals.y();
 
 			extra2.push_back(angPair);
-			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//GetLog() << angVals.x() << " " << angVals.y() << " ddch:" << ddCh << "\n";
 			//exit(-1);
 			if (ddCh == '#')
 				break;
@@ -1347,12 +1347,12 @@ std::pair<double, double> Smarticle::populateMoveVector()
 	{
 		//midtorque
 		while (smarticleMoves.good()) {
-			smarticleMoves >> angVals.x >> ddCh >> angVals.y >> ddCh;
-			angPair.first = angVals.x;
-			angPair.second = angVals.y;
+			smarticleMoves >> angVals.x() >> ddCh >> angVals.y() >> ddCh;
+			angPair.first = angVals.x();
+			angPair.second = angVals.y();
 
 			midTorque.push_back(angPair);
-			//GetLog() << angVals.x << " " << angVals.y << " ddch:" << ddCh << "\n";
+			//GetLog() << angVals.x() << " " << angVals.y() << " ddch:" << ddCh << "\n";
 			//exit(-1);
 			if (ddCh == '#')
 				break;

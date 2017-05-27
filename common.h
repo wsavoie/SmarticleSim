@@ -22,7 +22,7 @@
 #define R2D 180.0/CH_C_PI   //rad to deg
 #define PI_2 CH_C_PI/2.0   
 
-#define SOLVERTYPE 1   //1==old 2==smc 3==nsc
+#define SOLVERTYPE 3   //1==old 2==smc 3==nsc
 
 #define USE_PARALLEL false
 #define irrlichtVisualization true
@@ -35,6 +35,7 @@
 	#if SOLVERTYPE==1 //OLD
 		#define SOLVETYPE  ChSystem::SOLVER_DEM
 		#define SOLVER 
+		#define MATSURF	ChMaterialSurface
 		#include "chrono/physics/ChSystem.h"
 		#define CH_SYSTEM ChSystem
 		#define ANGLE ANGLESET_RXYZ
@@ -42,12 +43,15 @@
 		#define SOLVETYPE ChSolver::Type::SOLVER_SMC
 		#define SOLVER SMC
 		#define SOLVER(x) x##SMC
+		#define MATSURF	ChMaterialSurfaceSMC
 		#include "chrono/physics/ChSystemSMC.h"
 		#define CH_SYSTEM ChSystemSMC
 		#define ANGLE AngleSet::RXYZ
 	#elif SOLVERTYPE==3 //nsc
+		#define ANGLE AngleSet::RXYZ
 		#define SOLVETYPE ChSolver::Type::SOR
 		#define SOLVER(x) x##NSC
+		#define MATSURF ChMaterialSurfaceNSC
 		#include "chrono/physics/ChSystemNSC.h"
 		#define CH_SYSTEM ChSystemNSC
 		#define ANGLE AngleSet::RXYZ

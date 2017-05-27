@@ -14,7 +14,7 @@ namespace chrono {
 void CheckPointSmarticles_Write(
 	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
 		int tStep,
-		std::shared_ptr<ChMaterialSurface> mat_g,
+		std::shared_ptr<MATSURF> mat_g,
 		double l_smarticle,
 		double w_smarticle,
 		double t_smarticle,
@@ -71,13 +71,13 @@ void CheckPointSmarticles_Write(
 	for (size_t i = 0; i < mySmarticlesVec.size(); i ++) {
 		std::shared_ptr<Smarticle> mSmart = (std::shared_ptr<Smarticle>)mySmarticlesVec[i];
 		outSmarticles <<
-				mSmart->GetSmarticleBodyPointer()->GetPos().x << ", " <<
-				mSmart->GetSmarticleBodyPointer()->GetPos().y << ", " <<
-				mSmart->GetSmarticleBodyPointer()->GetPos().z << ", " <<
-				mSmart->GetSmarticleBodyPointer()->GetRot().e0 << ", " <<
-				mSmart->GetSmarticleBodyPointer()->GetRot().e1 << ", " <<
-				mSmart->GetSmarticleBodyPointer()->GetRot().e2 << ", " <<
-				mSmart->GetSmarticleBodyPointer()->GetRot().e3 << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetPos().x() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetPos().y() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetPos().z() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetRot().e0() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetRot().e1() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetRot().e2() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetRot().e3() << ", " <<
 				mSmart->GetAngle(0,true) << ", " <<
 				mSmart->GetAngle(1,true) << ", " <<
 				std::endl;
@@ -89,7 +89,7 @@ void CheckPointSmarticles_Write(
 void CheckPointSmarticlesDynamic_Write(
 	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
 	int tStep,
-	std::shared_ptr<ChMaterialSurface> mat_g,
+	std::shared_ptr<MATSURF> mat_g,
 	double l_smarticle,
 	double w_smarticle,
 	double t_smarticle,
@@ -140,8 +140,8 @@ void CheckPointSmarticlesDynamic_Write(
 		Smarticle::global_GUI_value << std::endl <<
 		'#' << std::endl;
 		
-	//inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
-	//	q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >> q4.e3 >> ddCh >>
+	//inSmarticles >> p3.x() >> ddCh >> p3.y() >> ddCh >> p3.z() >> ddCh >>
+	//	q4.e0() >> ddCh >> q4.e1() >> ddCh >> q4.e2() >> ddCh >> q4.e3() >> ddCh >>
 	//	angle1 >> ddCh >> angle2 >> ddCh >>
 	//	dumId >> globalidx >> ddCh >> gui1idx >> ddCh >> gui2idx >> ddCh >>
 	//	gui3idx >> ddCh >> prevMoveType >> ddCh >> currMoveType >> ddCh;
@@ -157,13 +157,13 @@ void CheckPointSmarticlesDynamic_Write(
 			yold1 = mSmart->armsController->yold[1];
 		}
 		outSmarticles <<
-			mSmart->GetSmarticleBodyPointer()->GetPos().x << ", " <<
-			mSmart->GetSmarticleBodyPointer()->GetPos().y << ", " <<
-			mSmart->GetSmarticleBodyPointer()->GetPos().z << ", " <<
-			mSmart->GetSmarticleBodyPointer()->GetRot().e0 << ", " <<
-			mSmart->GetSmarticleBodyPointer()->GetRot().e1 << ", " <<
-			mSmart->GetSmarticleBodyPointer()->GetRot().e2 << ", " <<
-			mSmart->GetSmarticleBodyPointer()->GetRot().e3 << ", " <<
+			mSmart->GetSmarticleBodyPointer()->GetPos().x() << ", " <<
+			mSmart->GetSmarticleBodyPointer()->GetPos().y() << ", " <<
+			mSmart->GetSmarticleBodyPointer()->GetPos().z() << ", " <<
+			mSmart->GetSmarticleBodyPointer()->GetRot().e0() << ", " <<
+			mSmart->GetSmarticleBodyPointer()->GetRot().e1() << ", " <<
+			mSmart->GetSmarticleBodyPointer()->GetRot().e2() << ", " <<
+			mSmart->GetSmarticleBodyPointer()->GetRot().e3() << ", " <<
 			mSmart->GetAngle(0) << ", " <<
 			mSmart->GetAngle(1) << ", " <<
 			mSmart->GetID() << ", " <<
@@ -196,7 +196,7 @@ void CheckPointSmarticles_Read(
 	inSmarticles.open("smarticles.csv");
 	double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction,angle1,angle2;
 	double rho_smarticle;
-	auto mat_g = std::make_shared<ChMaterialSurface>();
+	auto mat_g = std::make_shared<MATSURF>();
 	char ddCh;
 	inSmarticles >>
 	l_smarticle >>
@@ -222,8 +222,8 @@ void CheckPointSmarticles_Read(
 
 	ChVector<> p3;
 	ChQuaternion<> q4;
-	inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
-	q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >>  q4.e3 >> ddCh;
+	inSmarticles >> p3.x() >> ddCh >> p3.y() >> ddCh >> p3.z() >> ddCh >>
+	q4.e0() >> ddCh >> q4.e1() >> ddCh >> q4.e2() >> ddCh >>  q4.e3() >> ddCh;
 	while (inSmarticles.good()) {
 		SmarticleU * smarticle0  = new SmarticleU(mphysicalSystem);
 		smarticle0->Properties(mySmarticlesVec.size(),
@@ -236,8 +236,8 @@ void CheckPointSmarticles_Read(
 		smarticle0->Create();
 		mySmarticlesVec.emplace_back(smarticle0);
 
-		inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
-		q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >>  q4.e3 >> ddCh;
+		inSmarticles >> p3.x() >> ddCh >> p3.y() >> ddCh >> p3.z() >> ddCh >>
+		q4.e0() >> ddCh >> q4.e1() >> ddCh >> q4.e2() >> ddCh >>  q4.e3() >> ddCh;
 	}
 
 	printf("num smarticles: %d\n", mySmarticlesVec.size());
@@ -256,7 +256,7 @@ void CheckPointSmarticlesDynamic_Read(
 	unsigned int currMoveType, prevMoveType, gui_value;
 	double rho_smarticleArm;
 	double rho_smarticleMid;
-	auto mat_g = std::make_shared<ChMaterialSurface>();
+	auto mat_g = std::make_shared<MATSURF>();
 	char ddCh;
 	double omega;
 	inSmarticles >>
@@ -284,8 +284,8 @@ void CheckPointSmarticlesDynamic_Read(
 	getline(inSmarticles, ddSt);
 	ChVector<> p3;
 	ChQuaternion<> q4;
-	inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
-		q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >> q4.e3 >> ddCh >>
+	inSmarticles >> p3.x() >> ddCh >> p3.y() >> ddCh >> p3.z() >> ddCh >>
+		q4.e0() >> ddCh >> q4.e1() >> ddCh >> q4.e2() >> ddCh >> q4.e3() >> ddCh >>
 		angle1 >> ddCh >> angle2 >> ddCh >> dumId >> ddCh >>
 		globalidx >> ddCh >> gui1idx >> ddCh >> gui2idx >> ddCh >>
 		gui3idx >> ddCh >> vibidx >> ddCh >> extra1idx >> ddCh >>
@@ -341,8 +341,8 @@ void CheckPointSmarticlesDynamic_Read(
 
 #endif
 
-		inSmarticles >> p3.x >> ddCh >> p3.y >> ddCh >> p3.z >> ddCh >>
-			q4.e0 >> ddCh >> q4.e1 >> ddCh >> q4.e2 >> ddCh >> q4.e3 >> ddCh >>
+		inSmarticles >> p3.x() >> ddCh >> p3.y() >> ddCh >> p3.z() >> ddCh >>
+			q4.e0() >> ddCh >> q4.e1() >> ddCh >> q4.e2() >> ddCh >> q4.e3() >> ddCh >>
 			angle1 >> ddCh >> angle2 >> ddCh >> dumId >> ddCh >>
 			globalidx >> ddCh >> gui1idx >> ddCh >> gui2idx >> ddCh >>
 			gui3idx >> ddCh >> vibidx >> ddCh >> extra1idx >> ddCh >> 

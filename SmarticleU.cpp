@@ -36,8 +36,8 @@ void SmarticleU::Create() {
 		(l / 2.0 + r2)*sin(angles[1]));
 
 	// relative location of the boxes wrt smarticle initPos,
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, -angles[0] +PI_2, 0));
-	ChQuaternion<> quat3 = Angle_to_Quat(ANGLESET_RXYZ, ChVector<>(0, angles[1] - PI_2, 0));
+	ChQuaternion<> quat2 = Angle_to_Quat(ANGLE, ChVector<>(0, -angles[0] +PI_2, 0));
+	ChQuaternion<> quat3 = Angle_to_Quat(ANGLE, ChVector<>(0, angles[1] - PI_2, 0));
 
 
 	ChVector<> gyr1 = utils::CalcBoxGyration(box1_dim,box1_loc).Get_Diag();
@@ -58,20 +58,20 @@ void SmarticleU::Create() {
 	ChVector<> rel_loc3 = box3_loc - cmRel;
 
 	ChVector<> mInertia;
-	mInertia.x =
-			m1 * (gyr1.x + ChVector<>(0, rel_loc1.y, rel_loc1.z).Length2()) +
-			m2 * (gyr2.x + ChVector<>(0, rel_loc2.y, rel_loc2.z).Length2()) +
-			m3 * (gyr3.x + ChVector<>(0, rel_loc3.y, rel_loc3.z).Length2()) ;
+	mInertia.x() =
+			m1 * (gyr1.x() + ChVector<>(0, rel_loc1.y(), rel_loc1.z()).Length2()) +
+			m2 * (gyr2.x() + ChVector<>(0, rel_loc2.y(), rel_loc2.z()).Length2()) +
+			m3 * (gyr3.x() + ChVector<>(0, rel_loc3.y(), rel_loc3.z()).Length2()) ;
 
-	mInertia.y =
-			m1 * (gyr1.y + ChVector<>(rel_loc1.x, 0, rel_loc1.z).Length2()) +
-			m2 * (gyr2.y + ChVector<>(rel_loc2.x, 0, rel_loc2.z).Length2()) +
-			m3 * (gyr3.y + ChVector<>(rel_loc3.x, 0, rel_loc3.z).Length2()) ;
+	mInertia.y() =
+			m1 * (gyr1.y() + ChVector<>(rel_loc1.x(), 0, rel_loc1.z()).Length2()) +
+			m2 * (gyr2.y() + ChVector<>(rel_loc2.x(), 0, rel_loc2.z()).Length2()) +
+			m3 * (gyr3.y() + ChVector<>(rel_loc3.x(), 0, rel_loc3.z()).Length2()) ;
 
-	mInertia.z =
-			m1 * (gyr1.z + ChVector<>(rel_loc1.x, rel_loc1.y, 0).Length2()) +
-			m2 * (gyr2.z + ChVector<>(rel_loc2.x, rel_loc2.y, 0).Length2()) +
-			m3 * (gyr3.z + ChVector<>(rel_loc3.x, rel_loc3.y, 0).Length2()) ;
+	mInertia.z() =
+			m1 * (gyr1.z() + ChVector<>(rel_loc1.x(), rel_loc1.y(), 0).Length2()) +
+			m2 * (gyr2.z() + ChVector<>(rel_loc2.x(), rel_loc2.y(), 0).Length2()) +
+			m3 * (gyr3.z() + ChVector<>(rel_loc3.x(), rel_loc3.y(), 0).Length2()) ;
 			
 	// create body, set initPos and rotation, add surface property, and clear/make collision model
 
