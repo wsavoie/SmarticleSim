@@ -123,9 +123,8 @@ bool Controller::Step(double dt) {
 
 	}
 	//GetLog() << "\n";
-	result = successfulMove_.at(0) || successfulMove_.at(1);
-
-
+	//result = successfulMove_.at(0) || successfulMove_.at(1);
+	result = true;
 	return result;
 }
 
@@ -166,8 +165,10 @@ double Controller::GetActuatorOmega(size_t index, double t)
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
 	//static double errLim = dT*omegaLimit;
-	//static double errLim = (smarticle_->global.at(1).first - smarticle_->global.at(2).first)*dT*omegaLimit;
-	double errLim = 1.05*D2R; // 
+	static double errLim = (smarticle_->global.at(1).first - smarticle_->global.at(2).first)/dT/omegaLimit*D2R;
+	//GetLog() << "errLim " << errLim << nl;
+	//double errLim = 1.05*D2R; // 
+	//double errLim = 1*D2R; // 
 	double err = (des - curr);
 	err = SaturateValue(err, errLim);
 

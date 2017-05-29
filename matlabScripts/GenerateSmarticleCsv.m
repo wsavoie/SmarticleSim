@@ -26,13 +26,13 @@
 stapleSize = false;
 % dt=.0001; %.00025
 dt=.001; %.00025
-alen=0.3; %smc= 0.1 %nsc=0.3
+alen=.26; %smc= 0.1 %nsc=0.3
 sizeScale=1;
 % omega = 4.9244e-5;
 %%limit speed in sim (5.3 for 90 deg, 6.3 for 180 deg, takes time to slow so probably 7
 %does nothing on torque limit
-omegaLim = 7; %if you want to change the speed you must change linear interpolate method
-omega = 6.3; %distance between points in move list
+omegaLim =9; %if you want to change the speed you must change linear interpolate method
+omega = 12; %distance between points in move list
 % omega = 10;
 rho = 7850.0;%/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
@@ -63,7 +63,7 @@ else
     mass = volume*rho;
     %     torqueThresh=.0325; %.008 previously cd
 %     torqueLimit=.015; %..0325 previously cd
- torqueLimit=.01; %..0325 previously cd
+ torqueLimit=.0588; %..0325 previously cd
 end
 
 
