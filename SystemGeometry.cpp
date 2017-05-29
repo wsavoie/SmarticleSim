@@ -418,8 +418,8 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 		}
 		else
 		{
-			pPos = pos + ChVector<>(sin(ang * i) * (-wallt + ax*r),
-				cos(ang*i)*(-wallt + by*r),
+			pPos = pos + ChVector<>(sin(ang * i) * (-4*wallt + ax*r),
+				cos(ang*i)*(-4*wallt + by*r),
 				0 - 1.8*t);
 
 			//TODO ######take into account angle of box!!
@@ -454,9 +454,9 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	cyl_container->GetCollisionModel()->BuildModel();
 	//https://en.wikipedia.org/wiki/List_of_moments_of_inertia
-	double Ixx = m / 12.0*(3 * (r*r + (r + 2 * t)*(r + 2 * t)) + (h * 2)*(h + o_lap * 2));
-	double Iyy = m / 12.0*(3 * (r*r + (r + 2 * t)*(r + 2 * t)) + (h * 2)*(h * 2));
-	double Izz = m / 2 * (r*r + (r + 2 * t)*(r + 2 * t));
+	double Ixx = m / 12.0*(3 * (r*r + (r - 2 * wallt)*(r - 2 * wallt)) + (h * 2)*(h + o_lap * 2));
+	double Iyy = m / 12.0*(3 * (r*r + (r - 2 * wallt)*(r - 2 * wallt)) + (h * 2)*(h * 2));
+	double Izz = m / 2 * (r*r + (r - 2 * wallt)*(r - 2 * wallt));
 	ChMatrix33<double> iner(Ixx, 0.0, 0.0, 0.0, Iyy, 0.0, 0.0, 0.0, Izz);
 	cyl_container->SetInertia(iner);
 	if (createVector)

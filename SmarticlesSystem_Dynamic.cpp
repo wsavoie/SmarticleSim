@@ -129,7 +129,7 @@ int inactiveLoc = 0; //location of dead particle in ring +x +y -x -y
 double gravity = -9.81;
 
 double vibrateStart=0.9;
-double smart_fric = .2;//.3814; //keyboard box friction = .3814
+double smart_fric = .4;//.3814; //keyboard box friction = .3814
 double vibration_freq = 30;
 double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
 double mGamma = 2.0 * gravity;
@@ -1071,7 +1071,7 @@ void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<
 		smarticle0->activateStress = 0.3;//percentToChangeStressState; //#########################################
 		
 		//FUTNOTE uncomment if we want them to start at different phases
-		//smarticle0->moveTypeIdxs.at(MoveType::GLOBAL) = genRandInt(0,smarticle0->global.size()-1);
+		smarticle0->moveTypeIdxs.at(MoveType::GLOBAL) = genRandInt(0,smarticle0->global.size()-1);
 		
 		
 		//smarticle0->ss.emplace_back(angle1, angle2);
@@ -1149,6 +1149,7 @@ void CreateMbdPhysicalSystemObjects(std::shared_ptr<CH_SYSTEM> mphysicalSystem, 
 	//mat_wall->SetFriction(wall_fric); //steel- plexiglass   (plexiglass was outer cylinder material) // .6 for wall to staple using tan (theta) tested on 7/20
 	smart_fric = percentToChangeStressState;//###############
 	mat_smarts->SetFriction(smart_fric);
+	sys->mat_wall->SetFriction(smart_fric);
 }
 // =============================================================================
 
