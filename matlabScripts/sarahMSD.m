@@ -116,6 +116,7 @@ end
 xx=5;
 if(showFigs(showFigs==xx))
     figure(xx)
+    hold on;
     subplot(1,3,1)
     ma.plotMeanMSD(gca,1);
     ma.plotMSD(gca);
@@ -144,16 +145,30 @@ if(showFigs(showFigs==xx))
     hold on;
 %     ma.plotMSD(gca,1);
 %     MOP=zeros(length(ma),1);
+%     for i=1:length(ma.tracks)
+%         msdRun=ma.msd{i}(1:tendIdx,1:2);
+%         msdRun(1,:)=[];
+%         [f2,gof2]=fit(log(msdRun(:,1)),log(msdRun(:,2)),'poly1');
+%         h1=plot(msdRun(:,1),msdRun(:,2),'.');
+%         plot(msdRun(:,1),msdRun(:,1).^f2.p1*exp(f2.p2),'color',h1.Color,'linewidth',1.5);
+%         gof2
+% %         pause
+%         MOP(i)=f2.p1;
+%     end
+    ma=ma.fitLogLogMSD;
+    llfit=ma.loglogfit;
     for i=1:length(ma.tracks)
-        msdRun=ma.msd{i}(1:tendIdx,1:2);
+       msdRun=ma.msd{i}(1:tendIdx,1:2);
         msdRun(1,:)=[];
-        [f2,gof2]=fit(log(msdRun(:,1)),log(msdRun(:,2)),'poly1');
         h1=plot(msdRun(:,1),msdRun(:,2),'.');
-        plot(msdRun(:,1),msdRun(:,1).^f2.p1*exp(f2.p2),'color',h1.Color,'linewidth',1.5);
-        gof2
-%         pause
-        MOP(i)=f2.p1;
+        plot(msdRun(:,1),msdRun(:,1).^(llfit.alpha(i)).*(llfit.gamma(i)),'color',h1.Color,'linewidth',1.5);
+%        plot(msdRun(:,1),msdRun(:,1).^f2.p1*exp(f2.p2),'color',h1.Color,'linewidth',1.5);
     end
+  set(gca,'yscale','log','xscale','log')
+    figText(gcf,20);
+    ma.fitMeanMSD;
+    MOP=llfit.alpha;
+    
     text(.2,.8,['MOP=',num2str(mean(MOP),3),'\pm',num2str(std(MOP),3)],'units','normalized','fontsize',20);
     set(gca,'yscale','log','xscale','log')
     figText(gcf,20);

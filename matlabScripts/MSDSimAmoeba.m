@@ -28,7 +28,7 @@ close all
 %*18. /19 fluctuation theorem based plot must also use 17!!
 %*20. plot vectors at each position relating position of deadparticle
 %*21. v crosscorr with deadpos
-%*22. for each msd traj get linear fit of log
+%*22. for each msd traj get linear fit of log MOP AND POM
 %*23. histogram of probability(theta_R-theta_r) make vid
 %*24. track length plotting
 %*25. rotational track length
@@ -48,9 +48,9 @@ SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1 2 3 27];
+showFigs=[1 22];
 useCOM=0;
-f=[]; rob=[]; v=[];dirs=[];
+f=[]; rob=[]; v=[];dirs=[0];
 
 props={f rob v dirs};
 for i=1:length(simAm)
@@ -124,7 +124,7 @@ if(showFigs(showFigs==xx))
     %plot red grid lines
     plot([-c c],[0,0],'r');
     plot([0,0],[-c c],'r');
-    legend(legT);
+%     legend(legT);
     r=simAm(1).r;
     t = linspace(0,2*pi);plot(r*cos(t),r*sin(t),'-k','linewidth',2);
     figText(gcf,14)
@@ -723,43 +723,59 @@ xx=22;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
-    
+   
     if(isempty(ma.msd))
         ma = ma.computeMSD;
     end
-    p=ma.getMeanMSD([]);
-    x=p(:,1);
-    y=p(:,2);
-    y=y(x>1.2&x<15);
-    x=x(x>1.2&x<15);
-    lx=log(x);
-    ly=log(y);
-    pom=fit(lx,ly,'poly1');
-    %mean of powers
-    clear x y lx ly
-    fs=zeros(length(ma.msd),1);
-    for i=1:length(ma.msd)
-        a=ma.msd{i}(:,1:2);
-        x=a(:,1);
-        y=a(:,2);
-        y=y(x>1.2&x<15);
-        x=x(x>1.2&x<15);
-        [lx]=log(x);
-        [ly]=log(y);
-        [f,gof]=fit(lx,ly,'poly1');
-        fs(i)=f.p1;
-    end
-    plot(fs);
     
-    msd=ma.getMeanMSD;
-    msd=msd(msd(:,1)<15&msd(:,1)>0.1,:);
-    [lx]=log(msd(:,1));
-    [ly]=log(msd(:,2));
-    [f2]=polyfit(lx,ly,1);
-    meanPow=f2(1);
+    mmsd=ma.getMeanMSD;
+    tend=ma.msd{1}(end,1)*.25;
+    tendIdx=find(mmsd(:,1)<tend,1,'last');
     
-    pts('(*)mean of powers=',mean(fs),'  power of mean=',pom.p1,' meanpow=',meanPow);
-    % std(fs);
+    
+    %first plot with all data
+    subplot(1,3,1)
+    ma.plotMeanMSD(gca,1);
+    ma.plotMSD(gca);
+    
+    %POM
+    subplot(1,3,2)
+    hold on;
+     ma.plotMeanMSD(gca);
+    mmsd=mmsd(1:tendIdx,:);
+    mmsd(1,:)=[];
+    [POM,gof1]=fit(log(mmsd(:,1)),log(mmsd(:,2)),'poly1');
+    plot(mmsd(:,1),mmsd(:,1).^(POM.p1)*exp(POM.p2),'linewidth',2);
+    text(.2,.8,['POM=',num2str(mean(POM.p1),3)],'units','normalized','fontsize',20);
+    set(gca,'yscale','log','xscale','log')
+    
+    %MOP
+    subplot(1,3,3)
+    hold on;
+  ma=ma.fitLogLogMSD;
+  llfit=ma.loglogfit;
+  for i=1:length(ma.tracks)
+       msdRun=ma.msd{i}(1:tendIdx,1:2);
+        msdRun(1,:)=[];
+        h1=plot(msdRun(:,1),msdRun(:,2),'.');
+        plot(msdRun(:,1),msdRun(:,1).^(llfit.alpha(i)).*(llfit.gamma(i)),'color',h1.Color,'linewidth',1.5);
+  end
+%     for i=1:length(ma.tracks)
+%         msdRun=ma.msd{i}(1:tendIdx,1:2);
+%         msdRun(1,:)=[];
+%         [f2,gof2]=fit(log(msdRun(:,1)),log(msdRun(:,2)),'poly1');
+%         h1=plot(msdRun(:,1),msdRun(:,2),'.');
+%         plot(msdRun(:,1),msdRun(:,1).^f2.p1*exp(f2.p2),'color',h1.Color,'linewidth',1.5);
+% %         pause
+%         MOP(i)=f2.p1;
+%     end
+    MOP=llfit.alpha;
+    text(.2,.8,['MOP=',num2str(mean(MOP),3),'\pm',num2str(std(MOP),3)],'units','normalized','fontsize',20);
+    set(gca,'yscale','log','xscale','log')
+    figText(gcf,20);
+    ma.fitMeanMSD;
+
+    
 end
 %% 23 histogram of probability(theta_R-theta_r) make vid
 xx=23;

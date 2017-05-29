@@ -920,9 +920,9 @@ void Smarticle::Create() {
 		double armt = r*.96;
 		double armt2 = .0032 / 2 * sizeScale; //8.06 mm with solar 3.2 without
 
-		CreateArm2(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angles[0])*l / 2), 0, -(l / 2.0)*sin(-angles[0]) - offPlaneoffset), quat0);
-		CreateArm2(1, w, r, r2, ChVector<>(0, 0, 0));
-		CreateArm2(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angles[1])*l / 2), 0, -(l / 2.0)*sin(-angles[1]) - offPlaneoffset), quat2);
+		CreateArm3(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angles[0])*l / 2), 0, -(l / 2.0)*sin(-angles[0]) - offPlaneoffset), quat0);
+		CreateArm3(1, w, r, r2, ChVector<>(0, 0, 0));
+		CreateArm3(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angles[1])*l / 2), 0, -(l / 2.0)*sin(-angles[1]) - offPlaneoffset), quat2);
 	}
 
 	//need this here
@@ -1267,7 +1267,6 @@ std::pair<double, double> Smarticle::populateMoveVector()
 				break;
 		}
 	}
-
 	if (gui1.size() < 1)
 	{
 		//GUI1
@@ -1368,6 +1367,7 @@ std::pair<double, double> Smarticle::populateMoveVector()
 		//ot.push_back(angPair);
 	//exit(-1);
 	smarticleMoves.close();
+
 	return firstAngPair;
 
 }
