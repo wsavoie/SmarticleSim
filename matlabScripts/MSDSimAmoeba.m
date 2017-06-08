@@ -40,7 +40,9 @@ close all
 %*31 v dot rhat heatmap dt sampling
 %*32 v dot rhat heatmap collision event sampling
 %*33 log(pdf) vs |vel|
-%*34 %% 34 log(pdf) vs |vel| fit line
+%*34 log(pdf) vs |vel| fit line
+%*35 plot beginning and ending sim
+%*36 determine step length probability
 %*45. test
 %************************************************************
 %%
@@ -48,10 +50,10 @@ SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1 22];
+showFigs=[1 36];
 useCOM=0;
-f=[]; rob=[]; v=[];dirs=[0];
-
+f=[]; rob=[]; v=[];dirs=[];
+% Switched 0->2 % 1->3 % 2->1 % 3->0
 props={f rob v dirs};
 for i=1:length(simAm)
     cond=true;
@@ -114,7 +116,7 @@ if(showFigs(showFigs==xx))
     if c<=.25
         c=.25;
     elseif c<=.35
-    c=.35;            
+        c=.35;
     else
         c=.45;
     end
@@ -124,7 +126,7 @@ if(showFigs(showFigs==xx))
     %plot red grid lines
     plot([-c c],[0,0],'r');
     plot([0,0],[-c c],'r');
-%     legend(legT);
+    %     legend(legT);
     r=simAm(1).r;
     t = linspace(0,2*pi);plot(r*cos(t),r*sin(t),'-k','linewidth',2);
     figText(gcf,14)
@@ -723,7 +725,7 @@ xx=22;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
-   
+    
     if(isempty(ma.msd))
         ma = ma.computeMSD;
     end
@@ -741,7 +743,7 @@ if(showFigs(showFigs==xx))
     %POM
     subplot(1,3,2)
     hold on;
-     ma.plotMeanMSD(gca);
+    ma.plotMeanMSD(gca);
     mmsd=mmsd(1:tendIdx,:);
     mmsd(1,:)=[];
     [POM,gof1]=fit(log(mmsd(:,1)),log(mmsd(:,2)),'poly1');
@@ -752,29 +754,29 @@ if(showFigs(showFigs==xx))
     %MOP
     subplot(1,3,3)
     hold on;
-  ma=ma.fitLogLogMSD;
-  llfit=ma.loglogfit;
-  for i=1:length(ma.tracks)
-       msdRun=ma.msd{i}(1:tendIdx,1:2);
+    ma=ma.fitLogLogMSD;
+    llfit=ma.loglogfit;
+    for i=1:length(ma.tracks)
+        msdRun=ma.msd{i}(1:tendIdx,1:2);
         msdRun(1,:)=[];
         h1=plot(msdRun(:,1),msdRun(:,2),'.');
         plot(msdRun(:,1),msdRun(:,1).^(llfit.alpha(i)).*(llfit.gamma(i)),'color',h1.Color,'linewidth',1.5);
-  end
-%     for i=1:length(ma.tracks)
-%         msdRun=ma.msd{i}(1:tendIdx,1:2);
-%         msdRun(1,:)=[];
-%         [f2,gof2]=fit(log(msdRun(:,1)),log(msdRun(:,2)),'poly1');
-%         h1=plot(msdRun(:,1),msdRun(:,2),'.');
-%         plot(msdRun(:,1),msdRun(:,1).^f2.p1*exp(f2.p2),'color',h1.Color,'linewidth',1.5);
-% %         pause
-%         MOP(i)=f2.p1;
-%     end
+    end
+    %     for i=1:length(ma.tracks)
+    %         msdRun=ma.msd{i}(1:tendIdx,1:2);
+    %         msdRun(1,:)=[];
+    %         [f2,gof2]=fit(log(msdRun(:,1)),log(msdRun(:,2)),'poly1');
+    %         h1=plot(msdRun(:,1),msdRun(:,2),'.');
+    %         plot(msdRun(:,1),msdRun(:,1).^f2.p1*exp(f2.p2),'color',h1.Color,'linewidth',1.5);
+    % %         pause
+    %         MOP(i)=f2.p1;
+    %     end
     MOP=llfit.alpha;
     text(.2,.8,['MOP=',num2str(mean(MOP),3),'\pm',num2str(std(MOP),3)],'units','normalized','fontsize',20);
     set(gca,'yscale','log','xscale','log')
     figText(gcf,20);
     ma.fitMeanMSD;
-
+    
     
 end
 %% 23 histogram of probability(theta_R-theta_r) make vid
@@ -1053,13 +1055,13 @@ if(showFigs(showFigs==xx))
         %get velocity
         vRing=diff(ringPos)./dt;
         vRing2=sqrt(sum(vRing.^2,2));
-%         %         %%%%
-%         vRing=vRing(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
-%         deadPos=deadPos(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
-%         m=mean(sqrt(sum(vRing.^2,2))); %%%****
-%         vRing=vRing(sqrt(sum(vRing.^2,2))>m,:);%%%********
-%         deadPos=deadPos(sqrt(sum(vRing.^2,2))>m,:);%%%********
-%         %         %%%%
+        %         %         %%%%
+        %         vRing=vRing(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
+        %         deadPos=deadPos(sqrt(sum(deadPos.^2,2))>usedSimAm(i).r/3,:);
+        %         m=mean(sqrt(sum(vRing.^2,2))); %%%****
+        %         vRing=vRing(sqrt(sum(vRing.^2,2))>m,:);%%%********
+        %         deadPos=deadPos(sqrt(sum(vRing.^2,2))>m,:);%%%********
+        %         %         %%%%
         
         %get vhat and deadposhat
         vHat=vRing./sqrt(sum(vRing.^2,2));
@@ -1081,7 +1083,7 @@ if(showFigs(showFigs==xx))
     figText(gcf,18)
     
     
-%     bins=201;
+    %     bins=201;
     x=linspace(-1,1,bins);
     disc=discretize(dotProd,bins);
     y=zeros(1,bins);
@@ -1091,9 +1093,9 @@ if(showFigs(showFigs==xx))
     figure(40);
     bb=bar(x,y);
     
-%     xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
-%     ylabel('counts');
-        xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    %     xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
+    %     ylabel('counts');
+    xlabel('$\hat{v}_{ring} \cdot\hat{r}_{inactive}$','interpreter', 'latex');
     zlabel('counts scaled by velocity')
     title('dt sampling');
     axis tight
@@ -1456,6 +1458,92 @@ if(showFigs(showFigs==xx))
     figText(gcf,18);
     
     
+end
+
+%% 35 plot beginning and ending sim
+xx=35;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    dotVal=zeros(1,L);
+    for(i=1:L)
+        endPt=usedSimAm(i).fullRingPos(end,:);
+        d=usedSimAm(i).pars(4);
+        switch(d)
+            case 0
+                dirVec=[1,0];
+            case 1
+                dirVec=[0,1];
+            case 2
+                dirVec=[-1,0];
+            case 3
+                dirVec=[0,-1];
+        end
+        dotVal(i)=dot(endPt/norm(endPt),dirVec);
+         plot([0,usedSimAm(i).fullRingPos(end,1)],... %x
+        [0,usedSimAm(i).fullRingPos(end,2)],...%y
+        '-ko','markersize',4,'MarkerFaceColor','r');
+    end
+  
+    text(.1,.2,{['proper direction: ',num2str(length(nonzeros(dotVal>0)),2),...
+        '/',num2str(L),'=',num2str(length(nonzeros(dotVal>0))/L,2)],...
+        ['$\hat{r}_{end}\cdot\hat{D}=',num2str(mean(dotVal),2),'\pm',...
+        num2str(std(dotVal)/sqrt(L),2),'$']},'units','normalized','Interpreter','latex');
+    
+    axis tight
+    x=get(gca,'xlim');y=get(gca,'ylim');
+    c=max(abs(x));
+    if c<=.25
+        c=.25;
+    elseif c<=.35
+        c=.35;
+    else
+        c=.45;
+    end
+    axis([-c c -c c]);
+    set(gca,'xtick',-c-.05:.1:c-.05,'ytick',-c-.05:.1:c-.05);
+    
+    %plot red grid lines
+    plot([-c c],[0,0],'r');
+    plot([0,0],[-c c],'r');
+    %     legend(legT);
+    r=simAm(1).r;
+    t = linspace(0,2*pi);plot(r*cos(t),r*sin(t),'-k','linewidth',2);
+    figText(gcf,14)
+    axis square
+end
+
+%% 36 plot beginning and ending sim
+xx=36;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+%     endPts=zeros(L,2);
+    winds=2;
+    endPts=zeros(winds*L,1);
+    for(i=1:L)
+        end1=round(length(usedSimAm(i).fullRingPos(:,1))/2);
+        end2=length(usedSimAm(i).fullRingPos(:,1));
+        beg1=1;
+        beg2=end1+1;
+        
+        
+%         usedSimAm(i).fullRingPos(end,:)
+%         initial=[0,0];
+        
+        endPts(2*i-1)=norm(usedSimAm(i).fullRingPos(beg1:end1,:));
+        endPts(2*i)=norm(usedSimAm(i).fullRingPos(beg2:end2,:));
+       
+    end
+    x=histogram(endPts,15);
+    hold on;
+    x2=histogram(endPts,20);
+   figure(21312);
+   hold on;
+%     plot(x.Values/sum(x.Values))
+        plot(log(1:length(x2.Values)),log(x2.Values/sum(x2.Values)))
+%     figText(gcf,14)
+    axis square
 end
 %% 45 test
 xx=45;
