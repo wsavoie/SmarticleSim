@@ -12,17 +12,17 @@
 
 
 
-//#include "physics/ChSystem.h"  // Arman: take care of this later
-//#include "chrono_parallel/physics/ChSystemParallel.h"
-//#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
+ //#include "physics/ChSystem.h"  // Arman: take care of this later
+ //#include "chrono_parallel/physics/ChSystemParallel.h"
+ //#include "chrono_parallel/lcp/ChLcpSystemDescriptorParallel.h"
 
 
 using namespace chrono;
 
-	double armt2 = .0032 / 2 * sizeScale; //8.06 mm with solar 3.2 without
+double armt2 = .0032 / 2 * sizeScale; //8.06 mm with solar 3.2 without
 Smarticle::Smarticle(
-		  std::shared_ptr<CH_SYSTEM> otherSystem
-		  ) : m_system(otherSystem) {
+	std::shared_ptr<CH_SYSTEM> otherSystem
+) : m_system(otherSystem) {
 	smarticleID = -1;
 	arm_density = 7800;
 	l = 1;
@@ -33,7 +33,7 @@ Smarticle::Smarticle(
 	rotation = QUNIT;
 	jointClearance = 0;
 	volume = GetVolume();
-	
+
 }
 
 std::vector<std::pair<double, double>> Smarticle::global;
@@ -66,25 +66,25 @@ Smarticle::~Smarticle()
 	m_system->RemoveBody(this->arm2);
 	if (armsController)
 		armsController->~Controller();
-	
+
 	GetLog() << "Deleting Smarticle\n";
 }
 
 
 
 void Smarticle::Properties(
-		int sID,
-		double other_density,
-		std::shared_ptr<ChMaterialSurface> surfaceMaterial,
-		double other_envelope,
-		double other_l,
-		double other_w,
-		double other_r,
-		double other_r2,
-		ChVector<> pos,
-		ChQuaternion<> rot,
-		double other_angle,
-		double other_angle2){
+	int sID,
+	double other_density,
+	std::shared_ptr<ChMaterialSurface> surfaceMaterial,
+	double other_envelope,
+	double other_l,
+	double other_w,
+	double other_r,
+	double other_r2,
+	ChVector<> pos,
+	ChQuaternion<> rot,
+	double other_angle,
+	double other_angle2) {
 
 	smarticleID = sID;
 	density = other_density;
@@ -108,19 +108,19 @@ void Smarticle::Properties(
 }
 
 void Smarticle::Properties(
-		int sID,
-		double other_density,
-		std::shared_ptr<ChMaterialSurface> surfaceMaterial,
-		double other_envelope,
-		double other_l,
-		double other_w,
-		double other_r,
-		double other_r2,
-		double other_omega,
-		ChVector<> pos,
-		ChQuaternion<> rot,
-		double other_angle,
-		double other_angle2){
+	int sID,
+	double other_density,
+	std::shared_ptr<ChMaterialSurface> surfaceMaterial,
+	double other_envelope,
+	double other_l,
+	double other_w,
+	double other_r,
+	double other_r2,
+	double other_omega,
+	ChVector<> pos,
+	ChQuaternion<> rot,
+	double other_angle,
+	double other_angle2) {
 
 	Properties(sID, other_density, surfaceMaterial, other_envelope, other_l, other_w, other_r, other_r2, pos, rot, other_angle, other_angle2);
 	SetDefaultOmega(other_omega);
@@ -146,7 +146,7 @@ void Smarticle::Properties(
 	double other_angle2,
 	double other_torThresh2,
 	double other_angLow,
-	double other_angHigh){
+	double other_angHigh) {
 
 	Properties(sID, otherArm_density, surfaceMaterial, other_envelope, other_l, other_w, other_r, other_r2, pos, rot, other_angle, other_angle2);
 	SetDefaultOmega(other_omega);
@@ -154,9 +154,9 @@ void Smarticle::Properties(
 	//SetOmega2(other_omega);
 	SetOmega(other_omega);
 	moveType = (MoveType)global_GUI_value;
-	prevMoveType = (MoveType) global_GUI_value;
+	prevMoveType = (MoveType)global_GUI_value;
 	//moveTypeIdxs.resize(MoveType::OT, 0);
-	moveTypeIdxs.resize(MoveType::OT+1, 0);
+	moveTypeIdxs.resize(MoveType::OT + 1, 0);
 	arm0OT = false;
 	arm2OT = false;
 	torqueLimit = other_torThresh2;
@@ -166,20 +166,20 @@ void Smarticle::Properties(
 	armBroken = false;
 	arm_density = otherArm_density;
 	mid_density = otherMid_density;
-	std::tuple<double, double,double,double> a (0.0, 0.0,0.0,0.0);
+	std::tuple<double, double, double, double> a(0.0, 0.0, 0.0, 0.0);
 	//torques = { a, a, a, a, a, a, a }; //probably a better way to do this....
 	torques = { a }; //probably a better way to do this....
 	nextOmega = { 0, 0 };
-	nextAngle = { 0,0};
+	nextAngle = { 0,0 };
 	currTorque = { 0, 0 };
 	torqueAvg = std::make_tuple(0, 0, 0, 0);
 	initialAngs[0] = other_angle;
 	initialAngs[1] = other_angle2;
 
 	activateStress = .05; //.05 //reassign during constructor
-	
+
 	OTThresh = 1.01;//for single arm 
-	MTThresh = OTThresh/3.0;//for both arms?
+	MTThresh = OTThresh / 3.0;//for both arms?
 	LTThresh = .01;//for both arms?
 
 	//initialize OT timer params
@@ -212,12 +212,12 @@ void Smarticle::updateTorqueDeque()
 	torques.pop_back();
 	torques.emplace_front(getLinkActuator(0)->Get_mot_torque(), getLinkActuator(1)->Get_mot_torque(), getLinkActuator(0)->Get_mot_rot_dt(), getLinkActuator(1)->Get_mot_rot_dt());
 	updateTorqueAvg(oldT);
-	
+
 
 }
-void Smarticle::updateTorqueAvg(std::tuple <double,double,double,double > oldT)
+void Smarticle::updateTorqueAvg(std::tuple <double, double, double, double > oldT)
 { //already assuming it is an avg:
-	size_t len =torques.size();
+	size_t len = torques.size();
 	//if statement fills up torque list if not enough frames have passed
 	if (steps < torques.size()) //since first frame this method runs on = 1 use <=
 	{
@@ -265,19 +265,19 @@ double Smarticle::GetOmega(int id, bool angularFreq)
 }
 double Smarticle::GetActuatorOmega(int id)
 {
-	return getLinkActuator(id)->Get_mot_rot_dt();	
+	return getLinkActuator(id)->Get_mot_rot_dt();
 }
 double Smarticle::GetNextOmega(int id)
 {
-	nextOmega.at(id)= this->ChooseOmegaAmount(GetOmega(id), GetCurrAngle(id), GetNextAngle(id));
+	nextOmega.at(id) = this->ChooseOmegaAmount(GetOmega(id), GetCurrAngle(id), GetNextAngle(id));
 	return nextOmega.at(id);
 }
 void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
 
-	vol = utils::CalcBoxVolume(ChVector<>(len/2.0, r, r2));
-	gyr = utils::CalcBoxGyration(ChVector<>(len/2.0, r, r2)).Get_Diag();
+	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, r, r2));
+	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, r, r2)).Get_Diag();
 	// create body, set position and rotation, add surface property, and clear/make collision model
 	auto arm = std::make_shared<ChBody>();
 
@@ -288,23 +288,23 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	arm->SetName("smarticle_arm");
 	arm->SetPos(posArm);
 	arm->SetRot(rotation*armRelativeRot);
-    arm->SetCollide(true);
-    arm->SetBodyFixed(false);
-    arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
-		double m = 0;
-		if (armID == 1) //this was old code from when I was fixing them to fit
-		{
-			arm->SetBodyFixed(false);
-			m = vol*mid_density;
-			arm->SetDensity(mid_density);
-		}
-		else
-		{
-			arm->SetBodyFixed(false);
-			m= vol*arm_density;
-			arm->SetDensity(arm_density);
-		}
-		arm->SetMaterialSurface(mat_smarts);
+	arm->SetCollide(true);
+	arm->SetBodyFixed(false);
+	arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
+	double m = 0;
+	if (armID == 1) //this was old code from when I was fixing them to fit
+	{
+		arm->SetBodyFixed(false);
+		m = vol*mid_density;
+		arm->SetDensity(mid_density);
+	}
+	else
+	{
+		arm->SetBodyFixed(false);
+		m = vol*arm_density;
+		arm->SetDensity(arm_density);
+	}
+	arm->SetMaterialSurface(mat_smarts);
 
 
 	//	double mass = density * vol;
@@ -314,7 +314,7 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	//arm->SetMaxSpeed(PI * 2 * 5);
 	//arm->SetMaxWvel(PI * 2 * 5);
 	//arm->ClampSpeed();
-	
+
 	if (visualize)
 	{
 		switch (armID) {
@@ -340,18 +340,18 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	}
 
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0),QUNIT,visualize);
+	utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0), QUNIT, visualize);
 
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 
-    arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
+	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
 
-    // change mass and inertia property
-    arm->SetMass(m);
-    arm->SetInertiaXX(m * gyr);
-    //arm->SetDensity(density);
+	// change mass and inertia property
+	arm->SetMass(m);
+	arm->SetInertiaXX(m * gyr);
+	//arm->SetDensity(density);
 
-    m_system->AddBody(arm);
+	m_system->AddBody(arm);
 
 
 
@@ -398,7 +398,7 @@ void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVecto
 		m = vol*arm_density;
 		arm->SetDensity(arm_density);
 		arm->SetBodyFixed(false);
-		}
+	}
 	//mat_g->SetFriction(.05);
 	arm->SetMaterialSurface(mat_smarts);
 	//double mass = .005;//.043/3.0; //robot weight 43 grams
@@ -516,9 +516,9 @@ void Smarticle::CreateArm3(int armID, double len, double mr, double mr2, ChVecto
 			arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 			utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
 			//radius,h,pos,rot,vis
-			auto a = Angle_to_Quat(ANGLE, ChVector<>(0, PI / 2, PI/2));
-			utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .01131,-mr+.0085, mr2), a, true);
-			utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0+.03406, -mr+.0055, -mr2), a, true);
+			auto a = Angle_to_Quat(ANGLE, ChVector<>(0, PI / 2, PI / 2));
+			utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .01131, -mr + .0085, mr2), a, true);
+			utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .03406, -mr + .0055, -mr2), a, true);
 
 			break;
 		}
@@ -539,7 +539,7 @@ void Smarticle::CreateArm3(int armID, double len, double mr, double mr2, ChVecto
 		}
 		}
 	}
-	
+
 
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
@@ -633,7 +633,7 @@ void Smarticle::SetEdges()
 	//CreateArm2(0, l, armt, armt2, ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset), quat0);
 	//CreateArm2(1, w, r, r2, ChVector<>(0, 0, 0));
 	//CreateArm2(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angle2)*l / 2), 0, -(l / 2.0)*sin(-angle2) - offPlaneoffset), quat2);
-	
+
 
 	double armt = r;
 	//double armt2 = .0032 / 2 * sizeScale; //8.06 mm with solar 3.2 without
@@ -654,7 +654,7 @@ void Smarticle::SetEdges()
 		//armVerts[0][2] = GetArm(0)->TransformPointLocalToParent(ChVector<>(l / 2.0 + jointClearance, 0, -r2));
 		//armVerts[0][3] = GetArm(0)->TransformPointLocalToParent(ChVector<>(l / 2.0 + jointClearance, 0, r2));
 
-		
+
 
 		//armVerts[2][0] = GetArm(2)->TransformPointLocalToParent(ChVector<>(-l / 2.0 + jointClearance, 0, r2));//armt2
 		//armVerts[2][1] = GetArm(2)->TransformPointLocalToParent(ChVector<>(-l / 2.0 + jointClearance, 0, -r2));
@@ -666,10 +666,10 @@ void Smarticle::SetEdges()
 		//going clockwise a->b = b-a
 
 		//arm0
-		arm0Front =			(armVerts[0][0]) - (armVerts[0][3]);
-		arm0OuterEdge=	(armVerts[0][1]) - (armVerts[0][0]);
-		arm0Back =			(armVerts[0][2]) - (armVerts[0][1]);
-		arm0Edge =			(armVerts[0][3]) - (armVerts[0][2]);
+		arm0Front = (armVerts[0][0]) - (armVerts[0][3]);
+		arm0OuterEdge = (armVerts[0][1]) - (armVerts[0][0]);
+		arm0Back = (armVerts[0][2]) - (armVerts[0][1]);
+		arm0Edge = (armVerts[0][3]) - (armVerts[0][2]);
 
 		arm0Front = ChVector<>(-arm0Front.y(), arm0Front.x(), arm0Front.z());
 		arm0OuterEdge = ChVector<>(-arm0OuterEdge.y(), arm0OuterEdge.x(), arm0OuterEdge.z());
@@ -677,10 +677,10 @@ void Smarticle::SetEdges()
 		arm0Edge = ChVector<>(-arm0Edge.y(), arm0Edge.x(), arm0Edge.z());
 
 		//arm1
-		arm1Front =			(armVerts[1][0]) - (armVerts[1][3]);
-		arm10Shared =		(armVerts[1][1]) - (armVerts[1][0]);
-		arm1Back =			(armVerts[1][2]) - (armVerts[1][1]);
-		arm12Shared =		(armVerts[1][3]) - (armVerts[1][2]);
+		arm1Front = (armVerts[1][0]) - (armVerts[1][3]);
+		arm10Shared = (armVerts[1][1]) - (armVerts[1][0]);
+		arm1Back = (armVerts[1][2]) - (armVerts[1][1]);
+		arm12Shared = (armVerts[1][3]) - (armVerts[1][2]);
 
 		arm1Front = ChVector<>(-arm1Front.y(), arm1Front.x(), arm1Front.z());
 		arm10Shared = ChVector<>(-arm10Shared.y(), arm10Shared.x(), arm10Shared.z());
@@ -690,9 +690,9 @@ void Smarticle::SetEdges()
 
 
 		//arm2
-		arm2Front =			(armVerts[2][0]) - (armVerts[2][3]);
-		arm2Edge =			(armVerts[2][1]) - (armVerts[2][0]);
-		arm2Back=				(armVerts[2][2]) - (armVerts[2][1]);
+		arm2Front = (armVerts[2][0]) - (armVerts[2][3]);
+		arm2Edge = (armVerts[2][1]) - (armVerts[2][0]);
+		arm2Back = (armVerts[2][2]) - (armVerts[2][1]);
 		arm2OuterEdge = (armVerts[2][3]) - (armVerts[2][2]);
 
 		arm2Front = ChVector<>(-arm2Front.y(), arm2Front.x(), arm2Front.z());
@@ -731,7 +731,7 @@ void Smarticle::RotateSmarticleBy(ChQuaternion<> newAng)
 	auto c = arm1->GetCoord();
 	c.pos.z() = c.pos.z() + 1;
 	//ChTransform<>::TransformLocalToParent()
-	
+
 	auto ca = arm1->GetRotAxis();
 	rotation = rotation*newAng;
 	arm1->SetRot(rotation);
@@ -745,7 +745,7 @@ void Smarticle::RotateSmarticleBy(ChQuaternion<> newAng)
 	arm0->GetCollisionModel()->SyncPosition();
 
 
-	
+
 	//rotation = newAng;
 	//ChVector<>posRel = ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset);
 	//ChQuaternion<> armRelativeRot = quat0;
@@ -799,8 +799,8 @@ void Smarticle::CreateJoints() {
 	link_revolute12 = std::make_shared<ChLinkLockRevolute>();
 	// ChVector<> pR01(-w / 2.0+r2, 0, 0);
 	// ChVector<> pR12(w / 2.0-r2, 0, 0);
-	ChVector<> pR01(-w / 2.0-r2, 0, 0);
-	ChVector<> pR12(w / 2.0+r2, 0, 0);
+	ChVector<> pR01(-w / 2.0 - r2, 0, 0);
+	ChVector<> pR12(w / 2.0 + r2, 0, 0);
 	ChQuaternion<> qx = Q_from_AngAxis(PI_2, VECT_X);
 
 	// link 1
@@ -840,47 +840,47 @@ void Smarticle::CreateActuators() {
 
 	//if (active)
 	//{
-		link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-		link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
-		//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-		//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-		//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-		//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-		link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
-		link_actuator01->GetLimit_Rz()->Set_min(D2R*angLow);
-		link_actuator01->GetLimit_Rz()->Set_max(D2R*angHigh);
-		link_actuator01->GetLimit_Rz()->Set_active(true);
+	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
+	link_actuator01->GetLimit_Rz()->Set_min(D2R*angLow);
+	link_actuator01->GetLimit_Rz()->Set_max(D2R*angHigh);
+	link_actuator01->GetLimit_Rz()->Set_active(true);
 
-		/*link_actuator01->GetForce_D()->Set_active(true);
-		auto modK = (ChFunction_Const*)(link_actuator01->GetForce_D()->Get_modul_K());
-		link_actuator01->GetForce_D()->Set_K(1);
-		modK->Set_yconst(100);*/
+	/*link_actuator01->GetForce_D()->Set_active(true);
+	auto modK = (ChFunction_Const*)(link_actuator01->GetForce_D()->Get_modul_K());
+	link_actuator01->GetForce_D()->Set_K(1);
+	modK->Set_yconst(100);*/
 
 
-		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-		link_actuator12->GetLimit_Rz()->Set_min(D2R*angLow);
-		link_actuator12->GetLimit_Rz()->Set_max(D2R*angHigh);
-		link_actuator12->GetLimit_Rz()->Set_active(true);
-		//link_actuator12->Set_mot_inertia(1);
+	link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+	link_actuator12->GetLimit_Rz()->Set_min(D2R*angLow);
+	link_actuator12->GetLimit_Rz()->Set_max(D2R*angHigh);
+	link_actuator12->GetLimit_Rz()->Set_active(true);
+	//link_actuator12->Set_mot_inertia(1);
 
-		if (!active)
-		{
-			link_actuator01->GetLimit_Rz()->Set_min(D2R * GetInitialAngle(0));
-			link_actuator01->GetLimit_Rz()->Set_max(D2R * GetInitialAngle(0));
-			link_actuator12->GetLimit_Rz()->Set_min(D2R * GetInitialAngle(1));
-			link_actuator12->GetLimit_Rz()->Set_max(D2R * GetInitialAngle(1));
-		}
+	if (!active)
+	{
+		link_actuator01->GetLimit_Rz()->Set_min(D2R * GetInitialAngle(0));
+		link_actuator01->GetLimit_Rz()->Set_max(D2R * GetInitialAngle(0));
+		link_actuator12->GetLimit_Rz()->Set_min(D2R * GetInitialAngle(1));
+		link_actuator12->GetLimit_Rz()->Set_max(D2R * GetInitialAngle(1));
+	}
 	//}
 	//else
 	//{
 	/*	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-	*/	
+	*/
 	//}
 
 	m_system->AddLink(link_actuator01);
-	m_system->AddLink(link_actuator12);	
+	m_system->AddLink(link_actuator12);
 
 	//////////
 	//actuator 1
@@ -946,18 +946,18 @@ void Smarticle::Create() {
 	armsController->omegaLimit = omegaLim;
 	if (!active)
 	{
-			arm0->SetName("D_smarticle_arm");
-			arm1->SetName("D_smarticle_cent");
-			arm2->SetName("D_smarticle_arm");
+		arm0->SetName("D_smarticle_arm");
+		arm1->SetName("D_smarticle_cent");
+		arm2->SetName("D_smarticle_arm");
 
-			//armsController = NULL;
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-			
-			//link_actuators[0]->SetBroken(true);
-			//link_actuators[0]->SetDisabled(1);
-			//link_actuators[1]->SetDisabled(1);
+		//armsController = NULL;
+		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+
+		//link_actuators[0]->SetBroken(true);
+		//link_actuators[0]->SetDisabled(1);
+		//link_actuators[1]->SetDisabled(1);
 	}
 	//if (active)
 	//{
@@ -997,7 +997,7 @@ void Smarticle::ChangeActive(bool m_active)
 			getLinkActuator(1)->GetLimit_Rz()->Set_min(D2R * angLow);
 			getLinkActuator(1)->GetLimit_Rz()->Set_max(D2R * angHigh);
 		}
-		else 
+		else
 		{
 			arm0->SetName("D_smarticle_arm");
 			arm1->SetName("D_smarticle_cent");
@@ -1006,7 +1006,7 @@ void Smarticle::ChangeActive(bool m_active)
 			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
 			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
 			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-			
+
 
 			//link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
 			getLinkActuator(0)->GetLimit_Rz()->Set_min(D2R * 0);
@@ -1036,8 +1036,8 @@ std::shared_ptr<ChFunction> Smarticle::GetActuatorFunction(int id) {
 }
 void Smarticle::SetActuatorFunction(int id, std::shared_ptr<ChFunction> actuatorFunction) {
 
-		GetActuatorFunction(id) = actuatorFunction;
-		getLinkActuator(id)->Set_rot_funct(GetActuatorFunction(id));
+	GetActuatorFunction(id) = actuatorFunction;
+	getLinkActuator(id)->Set_rot_funct(GetActuatorFunction(id));
 }
 
 std::shared_ptr<ChLinkEngine> Smarticle::getLinkActuator(int id)
@@ -1046,15 +1046,15 @@ std::shared_ptr<ChLinkEngine> Smarticle::getLinkActuator(int id)
 	{
 		return link_actuators[id];
 	}
-	else 
+	else
 	{
-		std::cout << "Error!"<< __FUNCTION__ << " smarticle can only have actuators with ids from {0, 1}" << std::endl;
+		std::cout << "Error!" << __FUNCTION__ << " smarticle can only have actuators with ids from {0, 1}" << std::endl;
 		exit(-1);
 	}
 }
 double Smarticle::GetVolume() {
-//	return r * r2 * (w + 2 * (l + jointClearance));
-	return (2 * r) * (2 * r2 )* (w + 2 * (l+2*r2));
+	//	return r * r2 * (w + 2 * (l + jointClearance));
+	return (2 * r) * (2 * r2)* (w + 2 * (l + 2 * r2));
 }
 double Smarticle::GetMass() {
 	//	return r * r2 * (w + 2 * (l + jointClearance));
@@ -1089,11 +1089,11 @@ void Smarticle::SetInitialAngles()
 	{
 		initialAngs[i] = this->GetAngle(i);
 	}
-	
+
 }
 double Smarticle::GetInitialAngle(int id)
 {
-		return initialAngs[id];
+	return initialAngs[id];
 }
 void Smarticle::SetAngles(double mangle0, double mangle1, bool degrees)
 {
@@ -1109,18 +1109,18 @@ void Smarticle::SetAngles(double mangle0, double mangle1, bool degrees)
 		angles[1] = mangle1;
 	}
 }
-void Smarticle::SetAngle(int id, double mangle,bool degrees)
+void Smarticle::SetAngle(int id, double mangle, bool degrees)
 {
-	
+
 	if (degrees) { angles[id] = mangle*D2R; }
-	else{ angles[id] = mangle; }
+	else { angles[id] = mangle; }
 }
 void Smarticle::SetAngle(double mangle, bool degrees)
 {
 	for (int i = 0; i < numEngs; i++)
 	{
-		if (degrees){angles[i] = mangle*D2R;}
-		else{angles[i] = mangle;}
+		if (degrees) { angles[i] = mangle*D2R; }
+		else { angles[i] = mangle; }
 	}
 }
 
@@ -1134,8 +1134,8 @@ double Smarticle::GetAngle(int id, bool degrees)
 
 void Smarticle::addInterpolatedPathToVector(double a0i, double a1i, double a0f, double a1f)
 {
-	double dist0 = omegas[0]*dT;
-	double dist1 = omegas[1]*dT;
+	double dist0 = omegas[0] * dT;
+	double dist1 = omegas[1] * dT;
 	int n = std::max(abs((a0f - a0i) / dist0), abs((a1f - a1i) / dist1));
 	std::vector<double> a0 = linspace(a0i, a0f, n);
 	std::vector<double> a1 = linspace(a1i, a1f, n);
@@ -1150,14 +1150,14 @@ std::vector<double> Smarticle::linspace(double a, double b, int n) {
 	std::vector<double> vec;
 	double step = (b - a) / (n - 1);
 
-	for(int i = 0; i < n; ++i)
+	for (int i = 0; i < n; ++i)
 	{
 		vec.push_back(a);
 		a += step;           // could recode to better handle rounding errors
 	}
 	return vec;
 }
-bool Smarticle::NotAtDesiredPos(int id, double ang,double exp)//bad method name
+bool Smarticle::NotAtDesiredPos(int id, double ang, double exp)//bad method name
 {
 	//GetLog() << "expAng" << id << ":" << GetExpAngle(id) << "\n    ";
 	//returns true if anything else but 0 is returned from here
@@ -1176,11 +1176,11 @@ double Smarticle::GetCurrAngle(int id)
 }
 double Smarticle::GetNextAngle(int id)
 {
-	if (id==0)
+	if (id == 0)
 		nextAngle.at(id) = mv->at((moveTypeIdxs.at(moveType) + 1) % mv->size()).first;
 	else
 		nextAngle.at(id) = mv->at((moveTypeIdxs.at(moveType) + 1) % mv->size()).second;
-	
+
 	return nextAngle.at(id);
 
 	//if (id ==0)
@@ -1190,20 +1190,20 @@ double Smarticle::GetNextAngle(int id)
 }
 void Smarticle::SetNextAngle(int id, double ang)
 {
-		nextAngle.at(id) = ang;
+	nextAngle.at(id) = ang;
 }
 std::pair<double, double> Smarticle::populateMoveVector()
 {
 
 	std::ifstream smarticleMoves;
 	smarticleMoves.open("smarticleMoves.csv");
-	double mdt, momega, mtorqueLimit, mangLow, mangHigh,mOmegaLim;
+	double mdt, momega, mtorqueLimit, mangLow, mangHigh, mOmegaLim;
 	smarticleMoves >>
 		mdt >>
 		momega >>
 		mtorqueLimit >>
 		mangLow >>
-		mangHigh>>
+		mangHigh >>
 		mOmegaLim;
 	//printf("dt %f omega %f torqueThresh2 %f angLow %f angHigh %f", mdt, momega, mtorqueThresh2, mangLow, mangHigh);
 	SetDefaultOmega(momega);
@@ -1251,9 +1251,9 @@ std::pair<double, double> Smarticle::populateMoveVector()
 		ang2 = angPair.second;
 		global.push_back(angPair);
 
-	//SetAngle(ang1, ang2);
-	//SetAngles(ang1, ang2);
-	//Global
+		//SetAngle(ang1, ang2);
+		//SetAngles(ang1, ang2);
+		//Global
 
 
 		while (smarticleMoves.good()) {
@@ -1386,7 +1386,7 @@ double Smarticle::ChooseOmegaAmount(double momega, double currAng, double destAn
 	//destAng = destAng + PI;
 
 	double deltaAng = destAng - currAng;
-	if (abs(deltaAng) > 2*distThresh)
+	if (abs(deltaAng) > 2 * distThresh)
 	{		//if destAng is larger, move with positive momega
 		return sgn(deltaAng)*momega;
 	}
@@ -1413,7 +1413,7 @@ bool Smarticle::MoveMidStress(double tor0, double tor1)
 	double t0 = abs(tor0);
 	double t1 = abs(tor1);
 
-	if (t0+t1 > MTThresh)
+	if (t0 + t1 > MTThresh)
 	{// MT<t0<OT //TODO perhaps make this function if(t0+t1>2*MT) since servo can only sense stress from both
 		if (genRand() < activateStress)
 		{
@@ -1429,14 +1429,14 @@ bool Smarticle::MoveOverStress(double tor0, double tor1)
 	double t0 = abs(tor0);
 	double t1 = abs(tor1);
 
-	
+
 	if (OTRunning)
 	{
 		//specialState = OT;
 		specialState = OTVal.at(OTValIdx);
 		return true;
 	}
-	
+
 	specialState = -1;
 	return false;
 }
@@ -1454,14 +1454,14 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 		//mv = &ot;
 		if (!arm0OT && OA)//if not previously OT
 		{
-				arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 
-				this->ot.clear();
-				//this->ot.emplace_back(angles[0] + sign(torque01)*moveAmt, angles[1] + sign(torque12)*moveAmt);
-				//this->ot.emplace_back(angles[0] + moveAmt, angles[1] + moveAmt);
-				this->ot.emplace_back(angles[0], angles[1]);
-				//this->ot.emplace_back(angles[0] - moveAmt, angles[1] - moveAmt);
-				this->armsController->resetCumError = true;
+			this->ot.clear();
+			//this->ot.emplace_back(angles[0] + sign(torque01)*moveAmt, angles[1] + sign(torque12)*moveAmt);
+			//this->ot.emplace_back(angles[0] + moveAmt, angles[1] + moveAmt);
+			this->ot.emplace_back(angles[0], angles[1]);
+			//this->ot.emplace_back(angles[0] - moveAmt, angles[1] - moveAmt);
+			this->armsController->resetCumError = true;
 		}
 		//nothing needs to be done if prev OT
 		arm0OT = true;
@@ -1486,12 +1486,12 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 		//mv = &ot;
 		if (!arm2OT && OA)//if not previously OT
 		{
-				arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
-				this->ot.clear();
-				//this->ot.emplace_back(angles[0] + moveAmt, angles[1] + moveAmt);
-				this->ot.emplace_back(angles[0], angles[1]);
-				//this->ot.emplace_back(angles[0] - moveAmt, angles[1] - moveAmt);
-				this->armsController->resetCumError = true;
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
+			this->ot.clear();
+			//this->ot.emplace_back(angles[0] + moveAmt, angles[1] + moveAmt);
+			this->ot.emplace_back(angles[0], angles[1]);
+			//this->ot.emplace_back(angles[0] - moveAmt, angles[1] - moveAmt);
+			this->armsController->resetCumError = true;
 		}
 		arm2OT = true;
 		//specialState = OT;
@@ -1506,24 +1506,24 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 		}
 		// nothing needs to be done if not prev OT
 	}
-	
-		if (MA)
+
+	if (MA)
+	{
+		if (abs(torque01) + abs(torque12) > MTThresh && !arm2OT && !arm0OT)
 		{
-			if (abs(torque01) + abs(torque12) > MTThresh && !arm2OT && !arm0OT)
-			{
-				arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
-				arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
-			}
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
 		}
-		if (LA)
+	}
+	if (LA)
+	{
+		if (abs(torque01) + abs(torque12) < LTThresh)
 		{
-			if (abs(torque01) + abs(torque12) < LTThresh)
-			{
-				arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
-				arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
-			}
+			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
+			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
 		}
-		return false;
+	}
+	return false;
 
 }
 
@@ -1589,7 +1589,7 @@ void Smarticle::CheckLTTimer(double t1, double t2)
 {
 	//time between switchs = 2*LTMaxTime
 	static double switchTime = 2 * LTMaxTime;
-	if ((abs(t1)+abs(t2))<LTThresh)
+	if ((abs(t1) + abs(t2)) < LTThresh)
 	{
 		if (genRand() < activateStress)
 		{
@@ -1611,9 +1611,9 @@ void Smarticle::CheckLTTimer(double t1, double t2)
 
 	//if (LTRunning)
 	//{
-		LTTimer += dT;
+	LTTimer += dT;
 	//}
-	
+
 }
 void Smarticle::CheckOTTimer()
 {
@@ -1624,7 +1624,7 @@ void Smarticle::CheckOTTimer()
 
 			OTRunning = true;
 		}
-		
+
 	}
 	if (OTTimer > OTMaxTime) //|| previousSuccessful
 	{
@@ -1664,7 +1664,7 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 	///double t2 = abs(torque12);
 
 	//assigns OT and specialState to OT
-	ChangeArmColor(torque01, torque12,LowStressActive,MidStressActive,OverStressActive);
+	ChangeArmColor(torque01, torque12, LowStressActive, MidStressActive, OverStressActive);
 	if (OverStressActive)
 	{
 		CheckOTTimer();
@@ -1675,25 +1675,25 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 		if (!arm0OT || !arm2OT || !OverStressActive)
 			specialState = -1;
 	}
-	
 
-	if (MidStressActive  && !moveDecided)
+
+	if (MidStressActive && !moveDecided)
 	{
 		moveDecided = MoveMidStress(torque01, torque12);
 	}
 
 
-	if (LowStressActive  && !moveDecided)
+	if (LowStressActive && !moveDecided)
 	{
-		CheckLTTimer(torque01,torque12);
+		CheckLTTimer(torque01, torque12);
 		moveDecided = MoveLowStress(torque01, torque12, LTTimer);
 	}
-	
+
 
 	if (specialState != -1)
 	{
 		AssignState(specialState);
-		this->moveType = (MoveType) specialState;
+		this->moveType = (MoveType)specialState;
 	}
 	else
 	{
@@ -1701,13 +1701,13 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 		this->moveType = (MoveType)guiState;
 	}
 	//!(moveType^prevMoveType)
-	sameMoveType = (moveType==prevMoveType); // !(xor) gives true if values are equal, false if not
+	sameMoveType = (moveType == prevMoveType); // !(xor) gives true if values are equal, false if not
 	if (!sameMoveType)
 	{
 		//GetLog() << "\n&&&&&&&&&&&RESET ERRORRR!&&&&&&&&&&&\n";
-			this->armsController->resetCumError = true;	
+		this->armsController->resetCumError = true;
 	}
-	
+
 	successfulMotion = armsController->Step(m_system->GetChTime());
 	//if (this->moveType == OT); //if OT stop moving!
 	//{
@@ -1762,7 +1762,7 @@ double Smarticle::GetMotTorque(int id)
 	return getLinkActuator(id)->Get_mot_torque(); //gets same value as one passed into motor from controller
 }
 
-void Smarticle::SetBodyFixed(bool mev){
+void Smarticle::SetBodyFixed(bool mev) {
 	arm0->SetBodyFixed(mev);
 	arm1->SetBodyFixed(mev);
 	arm2->SetBodyFixed(mev);

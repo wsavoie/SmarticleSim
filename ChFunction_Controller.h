@@ -13,7 +13,7 @@ namespace chrono {
 	public:
 		ChFunctionController(size_t index, Controller* controller)
 			: index_(index), controller_(controller) {}
-		virtual ~ChFunctionController(){};
+		virtual ~ChFunctionController() {};
 		virtual ChFunction *new_Duplicate() {
 			return 0;
 			//new ChFunctionController(index_, controller_);
@@ -24,7 +24,7 @@ namespace chrono {
 		void ResetCumulative(double t);
 		int Get_Type() { return 9527; }
 		double Get_y(double curr_t);
-		double Get_y_dx(double new_t) { return 0;};
+		double Get_y_dx(double new_t) { return 0; };
 		void CheckReset();
 		double derivAvg(double newD);
 	protected:

@@ -16,8 +16,8 @@
 #include "chrono/core/ChFileutils.h"
 #include "SystemGeometry.h"
 #include <memory>
-namespace chrono{
-	namespace irrlicht{
+namespace chrono {
+	namespace irrlicht {
 		//namespace irr{
 		//	namespace gui{
 

@@ -8,7 +8,7 @@
 #ifndef SMARTICLE_H_
 #define SMARTICLE_H_
 
-//#include "core/ChVector.h"
+ //#include "core/ChVector.h"
 #include <iostream>
 #include "assets/ChTexture.h"
 #include "chrono_irrlicht/ChIrrApp.h"//changed path from unit to chrono to reflect changes in updated chrono
@@ -30,7 +30,7 @@ namespace chrono {
 	// structs to attach motion to smarticles
 	class Smarticle {
 	public:
-		int steps=0; //number of steps this smarticle has existed, updated in smarticleUpdate
+		int steps = 0; //number of steps this smarticle has existed, updated in smarticleUpdate
 		static const size_t numEngs = 2;
 		static const size_t numSegs = 3;
 
@@ -46,41 +46,41 @@ namespace chrono {
 		double timeSinceLastGait = 0;
 		// Construct a smarticle and add it to ChSystem.
 		Smarticle(
-				std::shared_ptr<CH_SYSTEM> otherSystem
-				//			CH_SYSTEMParallelDVI* otherSystem
-				);
+			std::shared_ptr<CH_SYSTEM> otherSystem
+			//			CH_SYSTEMParallelDVI* otherSystem
+		);
 
 		// Destructor. Nothing happens
 		~Smarticle();
 
 		virtual void Properties(
-				int sID,
-				double other_density,
-				std::shared_ptr<ChMaterialSurface> surfaceMaterial,
-				double other_envelop,
-				double other_l,
-				double other_w,
-				double other_r,
-				double other_r2,
-				ChVector<> pos = ChVector<>(0, 0, 0),
-				ChQuaternion<> rot = QUNIT,
-				double angle1 = PI_2,
-				double angle2 = PI_2);
+			int sID,
+			double other_density,
+			std::shared_ptr<ChMaterialSurface> surfaceMaterial,
+			double other_envelop,
+			double other_l,
+			double other_w,
+			double other_r,
+			double other_r2,
+			ChVector<> pos = ChVector<>(0, 0, 0),
+			ChQuaternion<> rot = QUNIT,
+			double angle1 = PI_2,
+			double angle2 = PI_2);
 
 		virtual void Properties(
-				int sID,
-				double other_density,
-				std::shared_ptr<ChMaterialSurface> surfaceMaterial,
-				double other_envelop,
-				double other_l,
-				double other_w,
-				double other_r,
-				double other_r2,
-				double other_omega=0,
-				ChVector<> pos = ChVector<>(0, 0, 0),
-				ChQuaternion<> rot = QUNIT,
-				double angle1 = PI_2,
-				double angle2 = PI_2);
+			int sID,
+			double other_density,
+			std::shared_ptr<ChMaterialSurface> surfaceMaterial,
+			double other_envelop,
+			double other_l,
+			double other_w,
+			double other_r,
+			double other_r2,
+			double other_omega = 0,
+			ChVector<> pos = ChVector<>(0, 0, 0),
+			ChQuaternion<> rot = QUNIT,
+			double angle1 = PI_2,
+			double angle2 = PI_2);
 
 		virtual void Properties(
 			int sID,
@@ -99,26 +99,26 @@ namespace chrono {
 			ChQuaternion<> rot = QUNIT,
 			double angle1 = PI_2,
 			double angle2 = PI_2,
-			double other_torThresh2=1,
-			double other_angLow=0,
-			double other_angHigh=120);
+			double other_torThresh2 = 1,
+			double other_angLow = 0,
+			double other_angHigh = 120);
 
 
 		//Controller armsControl (new Controller());
 
 		virtual ChVector<> GetReactTorqueVector(int id);
 
-		virtual double GetArmTorque(int index); 
+		virtual double GetArmTorque(int index);
 		virtual double GetTotalTorque();
 		void ChangeActive(bool m_active);
 		virtual bool ChangeArmColor(double torque01, double torque12, bool LA, bool MA, bool OA);
 		bool MoveOverStress(double torque01, double torque12);
 		bool MoveMidStress(double torque01, double torque12);
-		bool MoveLowStress(double torque01, double torque12,double timeSinceChanged);
+		bool MoveLowStress(double torque01, double torque12, double timeSinceChanged);
 
 		virtual void SetDefaultOmega(double omega);
-		
-		virtual void SetOmega(int idx, double momega, bool angularFreq=true);
+
+		virtual void SetOmega(int idx, double momega, bool angularFreq = true);
 		virtual void SetOmega(double momega, bool angularFreq = true);
 		double GetActuatorOmega(int id);
 		virtual double GetOmega(int index, bool angularFreq = true);
@@ -161,18 +161,18 @@ namespace chrono {
 
 
 		//smarticle arm angle
-		 void SetInitialAngles();
-		 double GetInitialAngle(int id);
-		 void SetAngles(double mangle1, double mangle2, bool degrees = false);
-		 void SetAngle(std::pair<double, double> mangles, bool degrees = false);
-		 void SetAngle(double mangle, bool degrees = false);
-		 void SetAngle(int id, double mangle, bool degrees = false);
+		void SetInitialAngles();
+		double GetInitialAngle(int id);
+		void SetAngles(double mangle1, double mangle2, bool degrees = false);
+		void SetAngle(std::pair<double, double> mangles, bool degrees = false);
+		void SetAngle(double mangle, bool degrees = false);
+		void SetAngle(int id, double mangle, bool degrees = false);
 
 		std::vector<ChBody*> body_list;
 
-		
+
 		virtual int GetID();
-		 double GetAngle(int id, bool degrees = false);
+		double GetAngle(int id, bool degrees = false);
 
 		//body fixing
 		virtual void SetBodyFixed(bool mev);
@@ -190,13 +190,13 @@ namespace chrono {
 		static std::vector<std::pair<double, double>> midTorque;//midtorque1
 		static std::vector<std::pair<double, double>> extra1; //extraGait1
 		static std::vector<std::pair<double, double>> extra2; //extraGait1
-		bool visualize=false;
+		bool visualize = false;
 		bool successfulMotion = false;
 		bool prevSuccessful = false;
 		std::vector<std::pair<double, double>> ot; //over torque
 
 		std::vector<std::pair<double, double>> vib; //vibrate this HAS to be particle specific so cannot be static?
-		
+
 		std::vector<int> moveTypeIdxs;//this vector keeps the current values of the move types
 		MoveType moveType;
 		MoveType prevMoveType;
@@ -204,7 +204,7 @@ namespace chrono {
 		double angLow;
 		int specialState = -1;
 		bool lowStressChange = true;
-		double gaitLengthChangeTime=.25;
+		double gaitLengthChangeTime = .25;
 
 		double angHigh;
 		static double distThresh;
@@ -248,12 +248,12 @@ namespace chrono {
 		////////////////
 
 		std::vector<std::pair<double, double>> *mv;
-		std::deque<std::tuple<double,double,double,double>> torques;
+		std::deque<std::tuple<double, double, double, double>> torques;
 		std::deque<double> torque1;
 		std::deque<double> torque2;
-		std::tuple<double,double,double,double> torqueAvg;
-		void updateTorqueDeque(); 
-		void updateTorqueAvg(std::tuple <double, double,double,double > oldT);
+		std::tuple<double, double, double, double> torqueAvg;
+		void updateTorqueDeque();
+		void updateTorqueAvg(std::tuple <double, double, double, double > oldT);
 		///////////////////////////////////////////////////////////
 
 		void SetNextAngle(int id, double ang);
@@ -262,11 +262,11 @@ namespace chrono {
 		double GetCurrAngle(int id);
 		double GetExpAngle(int id);
 		bool NotAtDesiredPos(int id, double ang, double exp);
-		void addInterpolatedPathToVector(double arm0i, double arm2i, double arm0f,double arm2f);
+		void addInterpolatedPathToVector(double arm0i, double arm2i, double arm0f, double arm2f);
 		std::vector<double> linspace(double a, double b, int n);
 		std::pair<double, double> populateMoveVector();
 		//populateMoveVector(std::vector<std::pair<double, double>> &mglobal, std::vector<std::pair<double, double>> &mOT, std::vector<std::pair<double, double>> &mGUI1);
-		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1,double momega2, MoveType mtype);
+		bool MoveToAngle2(std::vector<std::pair<double, double>> *v, double momega1, double momega2, MoveType mtype);
 
 		double ChooseOmegaAmount(double momega, double currAng, double destAng);
 		virtual void setCurrentMoveType(MoveType newMoveType);
@@ -279,12 +279,12 @@ namespace chrono {
 		// create smarticle arm, set collision, surface, and mass property.
 		// armID = 0 (left arm), 1 (middle arm), 2 (right arm)
 		void CreateArm(
-				int armID, 			// 0: left arm, 1: middle arm, 2: right arm
-				double len, 			// arm length
-				ChVector<> posRel, 	// relative initPosition of the arm wrt the smarticle initPos, which is the center of the center arm
-									// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
-				ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
-				);
+			int armID, 			// 0: left arm, 1: middle arm, 2: right arm
+			double len, 			// arm length
+			ChVector<> posRel, 	// relative initPosition of the arm wrt the smarticle initPos, which is the center of the center arm
+								// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
+			ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
+		);
 
 		void CreateArm2(
 			int armID, 			// 0: left arm, 1: middle arm, 2: right arm
@@ -294,7 +294,7 @@ namespace chrono {
 			ChVector<> posRel, 	// relative initPosition of the arm wrt the smarticle initPos, which is the center of the center arm
 			// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
 			ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
-			);
+		);
 		void CreateArm3(
 			int armID, 			// 0: left arm, 1: middle arm, 2: right arm
 			double len, 			// arm length
@@ -309,9 +309,9 @@ namespace chrono {
 		//void CreateJoints1(ChQuaternion<>, ChQuaternion<>);
 		void CreateActuators();
 		//void CreateActuators1(ChQuaternion<>, ChQuaternion<>);
-		
 
-		
+
+
 
 
 	public:
@@ -343,16 +343,16 @@ namespace chrono {
 
 
 
-		
+
 		///< pointer to the Chrono system
 		std::shared_ptr<CH_SYSTEM> m_system;  // Arman : take care of this later
 
-	 private:
+	private:
 		double OTTimer;//timer which keeps current value of time in the OT phase
 		double OTMaxTime; //time for smarticle to be in the OT phase
 		bool OTRunning; //if OT is running
 
-	
+
 		std::vector<int> OTVal;//vector containing OT moves to switch between
 		int OTValIdx;					//current index of OTVal
 
@@ -370,10 +370,10 @@ namespace chrono {
 		std::vector <double> nextAngle;
 		std::vector <double> currTorque;
 		// bodies
-	 std::shared_ptr<ChBody> arm0;	// left arm
-	 std::shared_ptr<ChBody> arm1;	// middle arm
-	 std::shared_ptr<ChBody> arm2;	// right arm
-	 std::shared_ptr<ChBody> smarticle;
+		std::shared_ptr<ChBody> arm0;	// left arm
+		std::shared_ptr<ChBody> arm1;	// middle arm
+		std::shared_ptr<ChBody> arm2;	// right arm
+		std::shared_ptr<ChBody> smarticle;
 		// joints
 		std::shared_ptr<ChLinkLockRevolute> link_revolute01; 	// revolute joint between arms 0 and 1
 		std::shared_ptr<ChLinkLockRevolute> link_revolute12; 	// revolute joint between arms 0 and 1

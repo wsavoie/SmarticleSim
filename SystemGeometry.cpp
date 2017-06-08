@@ -31,18 +31,18 @@ using namespace chrono;
 ////##TODO in empty thing, difference between wall container and cyl_container
 //}
 
-class ChFunctionCustom : public ChFunction{
+class ChFunctionCustom : public ChFunction {
 public:
-	ChFunctionCustom(){ y = 0; y_dx = 0; y_dxdx = 0; }
+	ChFunctionCustom() { y = 0; y_dx = 0; y_dxdx = 0; }
 	ChFunctionCustom(double m_x, double m_x_dx, double m_x_dxdx)
-		: y(m_x), y_dx(m_x_dx), y_dxdx(m_x_dxdx){};
-	~ChFunctionCustom(){};
+		: y(m_x), y_dx(m_x_dx), y_dxdx(m_x_dxdx) {};
+	~ChFunctionCustom() {};
 
 	/// "Virtual" copy constructor (covariant return type).
 	//virtual ChFunction_Sine* Clone() const override { return new ChFunction_Sine(*this); }
 
 	virtual FunctionType Get_Type() const override { return FUNCT_SINE; }
-		virtual ChFunctionCustom* Clone() const override { return new ChFunctionCustom(*this); };
+	virtual ChFunctionCustom* Clone() const override { return new ChFunctionCustom(*this); };
 
 	void Copy(ChFunction* source) {
 		Set_y(source->Get_y(0));
@@ -50,16 +50,16 @@ public:
 		Set_y_dxdx(source->Get_y_dxdx(0));
 	}
 	virtual ChFunction* new_Duplicate() {
-		ChFunctionCustom* m_func=new ChFunctionCustom();
+		ChFunctionCustom* m_func = new ChFunctionCustom();
 		/*	m_func = new ChFunctionCustom;
 		m_func->Copy(this);*/
 		return (m_func);
 	}
 
 	virtual int Get_Type() { return 1; }
-	void Set_y(double x){ y = x; }
-	void Set_y_dx(double x){ y_dx = x; }
-	void Set_y_dxdx(double x){ y_dxdx = x; }
+	void Set_y(double x) { y = x; }
+	void Set_y_dx(double x) { y_dx = x; }
+	void Set_y_dxdx(double x) { y_dxdx = x; }
 	virtual double Get_y(double x) const override { return y; }
 	virtual double Get_y_dx(double x) const override { return y_dx; }
 	virtual double Get_y_dxdx(double x) const override { return y_dxdx; }
@@ -74,9 +74,9 @@ private:
 };
 
 
-SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysType, double collisionEnv,double l_smart, double w_smart, double t_smart, double t2_smart)
+SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysType, double collisionEnv, double l_smart, double w_smart, double t_smart, double t2_smart)
 {
-	
+
 	mat_wall = std::make_shared<MATSURF>();
 
 
@@ -91,7 +91,7 @@ SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysTy
 
 
 	sys = msys;
-	sType = sysType; 
+	sType = sysType;
 	collisionEnvelope = collisionEnv;
 	l_smarticle = l_smart;
 	w_smarticle = w_smart;
@@ -100,15 +100,15 @@ SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysTy
 
 
 #if stapleSize
-	bucket_rad = sizeScale*w_smarticle*2;
+	bucket_rad = sizeScale*w_smarticle * 2;
 	bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
 	boxdim = ChVector<>(.28 / 1.5 / 2, .55245 / 2, 2 * bucket_rad / 8);
 	bucket_half_thick = sizeScale * .0005; //maybe too big!
 #else
 	bucket_rad = sizeScale*w_smarticle * 2; //3
 	bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
-	 boxdim = ChVector<>(.28 / 1.5 *2.5, .55245, 2 * bucket_rad / 8);
-	 bucket_half_thick = sizeScale * .005;
+	boxdim = ChVector<>(.28 / 1.5 *2.5, .55245, 2 * bucket_rad / 8);
+	bucket_half_thick = sizeScale * .005;
 #endif
 	hole_size = 1 * w_smarticle;
 	rho_cylinder = 1180.0;
@@ -117,7 +117,7 @@ SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysTy
 	mat_wall->SetFriction(wall_fric);
 	envFamily = 1;
 	bucketID = 1;
-	rad = 1; 
+	rad = 1;
 }
 std::shared_ptr<ChTexture> SystemGeometry::bucketTexture = std::make_shared<ChTexture>();
 std::shared_ptr<ChTexture> SystemGeometry::sphereTexture = std::make_shared<ChTexture>();
@@ -150,13 +150,13 @@ std::shared_ptr<ChBody> SystemGeometry::create_Maze()
 	//top first lane
 	cc->GetCollisionModel()->ClearModel();
 	sz = ChVector<>(lFL, h, h);
-	pos = ip + (ChVector<>(-lFL/2+h, LW /2, h*1.5));
+	pos = ip + (ChVector<>(-lFL / 2 + h, LW / 2, h*1.5));
 	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
-	
+
 	//bott first lane
-	sz = ChVector<>(lFL+LW/2+h, h, h);
-	pos = ip + (ChVector<>(-lFL/2-LW/2, -LW / 2, h*1.5));
+	sz = ChVector<>(lFL + LW / 2 + h, h, h);
+	pos = ip + (ChVector<>(-lFL / 2 - LW / 2, -LW / 2, h*1.5));
 	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
 
@@ -166,20 +166,20 @@ std::shared_ptr<ChBody> SystemGeometry::create_Maze()
 	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
 
-	
-	ChVector<> L2P = ip + ChVector<>(-lFL - LW / 2+h, LW+3*h, 0);
+
+	ChVector<> L2P = ip + ChVector<>(-lFL - LW / 2 + h, LW + 3 * h, 0);
 
 	lFL = .8;
 
 	//left second lane
-	sz = ChVector<>(h, lFL/2, h);
+	sz = ChVector<>(h, lFL / 2, h);
 	pos = L2P + (ChVector<>(0, 0, h*1.5));
 	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
 
 	//right second lane
-	sz = ChVector<>(h, lFL / 2+LW, h);
-	pos = L2P + (ChVector<>( -LW-2*h, 0, h*1.5));
+	sz = ChVector<>(h, lFL / 2 + LW, h);
+	pos = L2P + (ChVector<>(-LW - 2 * h, 0, h*1.5));
 	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
 
@@ -188,13 +188,13 @@ std::shared_ptr<ChBody> SystemGeometry::create_Maze()
 	//bott third lane
 
 	sz = ChVector<>(lFL, h, h);
-	pos = ip + (ChVector<>(-lFL/2 +LW/2, 2 * lFL-LW+2*h, h*1.5));
+	pos = ip + (ChVector<>(-lFL / 2 + LW / 2, 2 * lFL - LW + 2 * h, h*1.5));
 	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
 
 	//top third lane
-	sz = ChVector<>(lFL + LW / 2+h, h, h);
-	pos = ip + (ChVector<>(-lFL / 2-h, 2 * lFL + 4 * h, h*1.5));
+	sz = ChVector<>(lFL + LW / 2 + h, h, h);
+	pos = ip + (ChVector<>(-lFL / 2 - h, 2 * lFL + 4 * h, h*1.5));
 	cc->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(cc.get(), sz, pos, QUNIT, true);
 
@@ -214,7 +214,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_BoxBig()
 	//mmaterial->SetComplianceT(0.0000005f);
 	//mmaterial->SetDampingF(0.2f);
 
-	boxdim = ChVector<>(.28 / 1.5 *10, .55245*4, 2 * bucket_rad / 8);
+	boxdim = ChVector<>(.28 / 1.5 * 10, .55245 * 4, 2 * bucket_rad / 8);
 	bucket = utils::CreateBoxContainer(sys.get(), bucketID, mat_wall,
 		boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLE, ChVector<>(box_ang, 0, 0)), true, false, true, false);
 
@@ -260,15 +260,15 @@ std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool o
 	double r = bucket_rad;
 	double h = bucket_interior_halfDim.z();
 	double o_lap = 0;
-	if (overlap){ o_lap = t * 2; }
-	double th = h +o_lap;//for use in cyl volume;
+	if (overlap) { o_lap = t * 2; }
+	double th = h + o_lap;//for use in cyl volume;
 	double cyl_volume = PPI*(2 * th - 2 * t)*(2 * th - 2 * t)*((2 * r + 2 * t)*(2 * r + 2 * t) - r*r) + (PPI)*(r + 2 * t)*(r + 2 * t) * 2 * t;
 	double m = rho_cylinder*cyl_volume;
 
-	return create_EmptyCylinder(num_boxes, overlap, true, h, t, r, bucket_ctr, true, bucketTexture,m);
+	return create_EmptyCylinder(num_boxes, overlap, true, h, t, r, bucket_ctr, true, bucketTexture, m);
 }
 
-std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double half_h, double t, double r,double sagitta, ChVector<> pos, std::shared_ptr<ChTexture> texture, double m)
+std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double half_h, double t, double r, double sagitta, ChVector<> pos, std::shared_ptr<ChTexture> texture, double m)
 {
 
 
@@ -291,14 +291,14 @@ std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double h
 	double o_lap = t * 2;
 	ChVector<> pPos = (0, 0, 0);  //position of each plate
 	double centAngle = 2 * acos(1 - sagitta / r);
-	int roundPart=(2*PPI-centAngle)/ang;
+	int roundPart = (2 * PPI - centAngle) / ang;
 	ChVector<> box_size = ChVector<>((box_side + wallt) / 2.0, //size of plates
 		wallt,
 		half_h + o_lap);
-	ChVector<> gyr(0,0,0);
-	ChVector<> xxIner(0,0,0);
-	ChVector<> cmRel(0,0,0);
-	ChVector<> rel_loc(0,0,0);
+	ChVector<> gyr(0, 0, 0);
+	ChVector<> xxIner(0, 0, 0);
+	ChVector<> cmRel(0, 0, 0);
+	ChVector<> rel_loc(0, 0, 0);
 	double mEach = m / (num_boxes);
 
 
@@ -316,15 +316,15 @@ std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double h
 	double rho = mEach / vSmall;
 	double vLarge = bigside_size.x()*bigside_size.y()*bigside_size.z();
 
-	
+
 	//#################################################################################
 	//TODO change this to non-magic number!!!
 	//#################################################################################
 	double mExtra = 0;
-	double mBig = m-mEach*(roundPart + 1)+mExtra;
+	double mBig = m - mEach*(roundPart + 1) + mExtra;
 	double mTot = m + mExtra;
 
-	ChVector<>bigWallPos= pos + ChVector<>(sin(boxChordAng)*(d + box_side/2),
+	ChVector<>bigWallPos = pos + ChVector<>(sin(boxChordAng)*(d + box_side / 2),
 		cos(boxChordAng)*(d + box_side / 2),
 		0 - 1.8*t);
 
@@ -334,17 +334,17 @@ std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double h
 		pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
 			cos(ang*i)*(wallt + r),
 			0 - 1.8*t);
-		cmRel=cmRel+(mEach*pPos);
+		cmRel = cmRel + (mEach*pPos);
 	}
 	cmRel = cmRel + mBig*bigside_size;
 	cmRel = cmRel / mTot;
 
-	for (int i = 0; i < roundPart+1; i++)
+	for (int i = 0; i < roundPart + 1; i++)
 	{
-		
-			pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
-				cos(ang*i)*(wallt + r),
-				0 - 1.8*t);
+
+		pPos = pos + ChVector<>(sin(ang * i) * (wallt + r),
+			cos(ang*i)*(wallt + r),
+			0 - 1.8*t);
 
 		quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, ang*i));
 		rel_loc = pPos - cmRel;
@@ -375,12 +375,12 @@ std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double h
 
 	chrdCirc->SetMass(mTot);
 	//chrdCirc->SetInertiaXX(xxIner);
-	quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, 2*PPI-boxChordAng-PPI/2));
+	quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, 2 * PPI - boxChordAng - PPI / 2));
 	//auto ro= chrdCirc->GetRot().Rotate(ChVector<>(0, 0, boxChordAng));
 	chrdCirc->SetRot(quat);
 	return chrdCirc;
 }
-std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture, double m,double ax, double by)
+std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture, double m, double ax, double by)
 {
 	auto cyl_container = std::make_shared<ChBody>();
 	cyl_container->SetIdentifier(bucketID);
@@ -393,9 +393,9 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 	//double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
 	double wallt = t / 5; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
 	//double half_height = bucket_interior_halfDim.z();
-	double box_side = r * 2.0 * by*sin(PPI / num_boxes)/ax*(cos(PPI/num_boxes));//side length of cyl
+	double box_side = r * 2.0 * by*sin(PPI / num_boxes) / ax*(cos(PPI / num_boxes));//side length of cyl
 	double o_lap = 0;
-	if (overlap){ o_lap = t * 2; }
+	if (overlap) { o_lap = t * 2; }
 	double ang = 2.0 * PPI / num_boxes;
 	ChVector<> pPos = (0, 0, 0);  //position of each plate
 	ChQuaternion<> quat = QUNIT; //rotation of each plate
@@ -418,8 +418,8 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 		}
 		else
 		{
-			pPos = pos + ChVector<>(sin(ang * i) * (-4*wallt + ax*r),
-				cos(ang*i)*(-4*wallt + by*r),
+			pPos = pos + ChVector<>(sin(ang * i) * (-4 * wallt + ax*r),
+				cos(ang*i)*(-4 * wallt + by*r),
 				0 - 1.8*t);
 
 			//TODO ######take into account angle of box!!
@@ -502,10 +502,10 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 
 		}
 	}
-	GetLog() <<cyl_container->GetMass();
+	GetLog() << cyl_container->GetMass();
 	return cyl_container;
 }
-std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture,double m)
+std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture, double m)
 {
 	return create_EmptyEllipse(num_boxes, overlap, createVector, half_h, t, r, pos, halfVis, texture, m, 1, 1);
 }
@@ -616,7 +616,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_Hopper(double theta, bool overlap
 
 
 	double o_lap = 0;
-	if (overlap){ o_lap = 2 * t; }
+	if (overlap) { o_lap = 2 * t; }
 
 	hopper->GetCollisionModel()->ClearModel();
 
@@ -676,94 +676,94 @@ std::shared_ptr<ChBody> SystemGeometry::create_Bucket_Bott()
 
 std::shared_ptr<ChBody> SystemGeometry::create_Drum(int num_boxes, bool overlap, int ridges)
 {
-//essentially the same as create cyl container except made it bigger and added ridges
+	//essentially the same as create cyl container except made it bigger and added ridges
 
-auto drum = std::make_shared<ChBody>();
+	auto drum = std::make_shared<ChBody>();
 
-double radMult = 1.5;
-drum->SetIdentifier(bucketID);
-drum->SetPos(bucket_ctr);
-drum->SetRot(QUNIT);
-drum->SetBodyFixed(false);
-drum->SetCollide(true);
-double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
-double wallt = t / 5.0; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
-double half_height = bucket_interior_halfDim.z() / (radMult * 2);
-double box_side = bucket_rad * radMult * 2 * tan(PPI / num_boxes);//side length of cyl
-double o_lap = 0;
-if (overlap){ o_lap = t * 2; }
-double ang = 2.0 * PPI / num_boxes;
-ChVector<> box_size = (0, 0, 0); //size of plates
-ChVector<> ridge_size = (0, 0, 0); //size of plates
-ChVector<> pPos = (0, 0, 0);  //position of each plate
-ChQuaternion<> quat = QUNIT; //rotation of each plate
-drum->GetCollisionModel()->ClearModel();
+	double radMult = 1.5;
+	drum->SetIdentifier(bucketID);
+	drum->SetPos(bucket_ctr);
+	drum->SetRot(QUNIT);
+	drum->SetBodyFixed(false);
+	drum->SetCollide(true);
+	double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
+	double wallt = t / 5.0; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
+	double half_height = bucket_interior_halfDim.z() / (radMult * 2);
+	double box_side = bucket_rad * radMult * 2 * tan(PPI / num_boxes);//side length of cyl
+	double o_lap = 0;
+	if (overlap) { o_lap = t * 2; }
+	double ang = 2.0 * PPI / num_boxes;
+	ChVector<> box_size = (0, 0, 0); //size of plates
+	ChVector<> ridge_size = (0, 0, 0); //size of plates
+	ChVector<> pPos = (0, 0, 0);  //position of each plate
+	ChQuaternion<> quat = QUNIT; //rotation of each plate
+	drum->GetCollisionModel()->ClearModel();
 
-int ridgeNum = num_boxes / ridges;
-for (int i = 0; i < num_boxes; i++)
-{
-
-	box_size = ChVector<>((box_side + wallt) / 2.0,
-		wallt,
-		half_height + o_lap);
-	pPos = bucket_ctr + ChVector<>(sin(ang * i) * (wallt + bucket_rad*radMult),
-		cos(ang*i)*(wallt + bucket_rad*radMult),
-		0);
-
-	quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, ang*i));
-
-	drum->AddAsset(bucketTexture);
-
-	drum->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	utils::AddBoxGeometry(drum.get(), box_size, pPos, quat);
-
-
-
-	if (i%ridgeNum == 0)
+	int ridgeNum = num_boxes / ridges;
+	for (int i = 0; i < num_boxes; i++)
 	{
-		ridge_size = ChVector<>((box_side) / 4.0,
-			w_smarticle / 8.0,
+
+		box_size = ChVector<>((box_side + wallt) / 2.0,
+			wallt,
 			half_height + o_lap);
-		pPos = bucket_ctr + ChVector<>(sin(ang * i) * (-wallt + bucket_rad*radMult),
-			cos(ang*i)*(-wallt + bucket_rad*radMult),
+		pPos = bucket_ctr + ChVector<>(sin(ang * i) * (wallt + bucket_rad*radMult),
+			cos(ang*i)*(wallt + bucket_rad*radMult),
 			0);
 
+		quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, ang*i));
+
+		drum->AddAsset(bucketTexture);
+
 		drum->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-		//utils::AddBoxGeometry(drum.get(), ridge_size, pPos, quat);
+		utils::AddBoxGeometry(drum.get(), box_size, pPos, quat);
+
+
+
+		if (i%ridgeNum == 0)
+		{
+			ridge_size = ChVector<>((box_side) / 4.0,
+				w_smarticle / 8.0,
+				half_height + o_lap);
+			pPos = bucket_ctr + ChVector<>(sin(ang * i) * (-wallt + bucket_rad*radMult),
+				cos(ang*i)*(-wallt + bucket_rad*radMult),
+				0);
+
+			drum->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+			//utils::AddBoxGeometry(drum.get(), ridge_size, pPos, quat);
+		}
+		drum->SetRot(Q_from_AngAxis(PI_2, VECT_X));
+
+
 	}
-	drum->SetRot(Q_from_AngAxis(PI_2, VECT_X));
+	//TODO add bucketVolume as global variable and set it in each function to calculate for each shape volumefraction seamlessly
+	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+
+	drum->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	//front wall made invisible so we can see inside
+	utils::AddBoxGeometry(drum.get(), ChVector<>(wallt + bucket_rad*radMult, wallt + bucket_rad*radMult, wallt), bucket_ctr + VECT_Z*(half_height + 2 * o_lap - 2 * t), QUNIT, false);
+	drum->GetCollisionModel()->BuildModel();
+	drum->GetCollisionModel()->SetFamily(envFamily);
+	drum->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	sys->AddBody(drum);
 
 
-}
-//TODO add bucketVolume as global variable and set it in each function to calculate for each shape volumefraction seamlessly
-//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
-
-drum->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-//front wall made invisible so we can see inside
-utils::AddBoxGeometry(drum.get(), ChVector<>(wallt + bucket_rad*radMult, wallt + bucket_rad*radMult, wallt), bucket_ctr + VECT_Z*(half_height + 2 * o_lap - 2 * t), QUNIT, false);
-drum->GetCollisionModel()->BuildModel();
-drum->GetCollisionModel()->SetFamily(envFamily);
-drum->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-sys->AddBody(drum);
+	bucket_bott->SetBodyFixed(true);
+	bucket_bott->SetCollide(true);
+	bucket_bott->GetCollisionModel()->ClearModel();
+	bucket_bott->SetPos(bucket_ctr);
+	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));//custom file
+	bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	bucket_bott->AddAsset(bucketTexture);
+	utils::AddBoxGeometry(bucket_bott.get(), ChVector<>(wallt + bucket_rad*radMult, wallt + bucket_rad*radMult, wallt), bucket_ctr - VECT_Z*(half_height + 2 * o_lap - 2 * t), QUNIT);
 
 
-bucket_bott->SetBodyFixed(true);
-bucket_bott->SetCollide(true);
-bucket_bott->GetCollisionModel()->ClearModel();
-bucket_bott->SetPos(bucket_ctr);
-floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_borders.png"));//custom file
-bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-bucket_bott->AddAsset(bucketTexture);
-utils::AddBoxGeometry(bucket_bott.get(), ChVector<>(wallt + bucket_rad*radMult, wallt + bucket_rad*radMult, wallt), bucket_ctr - VECT_Z*(half_height + 2 * o_lap - 2 * t), QUNIT);
+	bucket_bott->GetCollisionModel()->BuildModel();
+	sys->AddBody(bucket_bott);
+	bucket_bott->SetRot(Q_from_AngAxis(PI_2, VECT_X));
+	bucket_bott->GetCollisionModel()->SetFamily(envFamily);
+	bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
 
-
-bucket_bott->GetCollisionModel()->BuildModel();
-sys->AddBody(bucket_bott);
-bucket_bott->SetRot(Q_from_AngAxis(PI_2, VECT_X));
-bucket_bott->GetCollisionModel()->SetFamily(envFamily);
-bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
-
-return drum;
+	return drum;
 }
 
 std::shared_ptr<ChBody> SystemGeometry::create_Hull(double numBoxes)
@@ -777,7 +777,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_Hull(double numBoxes)
 	convexShape->SetRot(QUNIT);
 	convexShape->SetBodyFixed(false);
 	convexShape->SetCollide(true);
- 
+
 	std::vector<ChVector<>> points;
 
 	convexShape->GetCollisionModel()->ClearModel();
@@ -788,7 +788,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_Hull(double numBoxes)
 		convexShape->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	}
 
-	
+
 
 	ChVector<> rampSize(w_smarticle * 5, w_smarticle * 5, t);
 
@@ -809,57 +809,57 @@ void SystemGeometry::create_Container()
 	bucket->SetIdentifier(bucketID);
 	switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 	{
-		case BOX:
-		{
-			//FUTNOTE uncomment for old box
-			bucket = create_Box();
-			
-			//Maze
-			//bucket = create_BoxBig();
-			//std::shared_ptr<ChBody> maze = create_Maze();
-			bucket_bott = create_Bucket_Bott();
-			bucket_bott->SetCollide(false);
-			bucket_bott->SetPos(ChVector<>(5, 5, 5));
-			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
-	;
-			break;
-		}
+	case BOX:
+	{
+		//FUTNOTE uncomment for old box
+		bucket = create_Box();
 
-		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
-		{
-			create_Bucket_Bott();
-			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
-			bucket = create_bucketShell(25, true);
-			break;
-		}
+		//Maze
+		//bucket = create_BoxBig();
+		//std::shared_ptr<ChBody> maze = create_Maze();
+		bucket_bott = create_Bucket_Bott();
+		bucket_bott->SetCollide(false);
+		bucket_bott->SetPos(ChVector<>(5, 5, 5));
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
+		;
+		break;
+	}
+
+	case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
+	{
+		create_Bucket_Bott();
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
+		bucket = create_bucketShell(25, true);
+		break;
+	}
 
 
-		case FLATHOPPER:
-		{
-			bucket = create_FlatHopper(boxdim);
-			floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
-			GetLog() << "\n\nfriction: " << bucket->GetMaterialSurfaceNSC()->GetKfriction() << " " << bucket->GetMaterialSurfaceNSC()->GetSfriction() << "\n";
-			break;
-		}
-		case HOPPER:
-		{
-			bucket = create_Hopper(box_ang, true);
-			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_black_bordersBlack.png"));
-			create_Bucket_Bott();
-			break;
-		}
-		case HULL:
-		{
-			bucket = create_Hull(5);
-			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
-			break;
-		}
-		case DRUM:
-		{
-			bucket = create_Drum(25, true);
-			bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
-			break;
-		}
+	case FLATHOPPER:
+	{
+		bucket = create_FlatHopper(boxdim);
+		floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+		GetLog() << "\n\nfriction: " << bucket->GetMaterialSurfaceNSC()->GetKfriction() << " " << bucket->GetMaterialSurfaceNSC()->GetSfriction() << "\n";
+		break;
+	}
+	case HOPPER:
+	{
+		bucket = create_Hopper(box_ang, true);
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_black_bordersBlack.png"));
+		create_Bucket_Bott();
+		break;
+	}
+	case HULL:
+	{
+		bucket = create_Hull(5);
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+		break;
+	}
+	case DRUM:
+	{
+		bucket = create_Drum(25, true);
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+		break;
+	}
 	}
 	bucket->SetMaterialSurface(mat_wall);
 	bucket_bott->SetMaterialSurface(mat_wall);
@@ -902,12 +902,12 @@ BucketType SystemGeometry::getGeom()
 }
 void SystemGeometry::create_VibrateLink(double w, double A, double t_0, std::shared_ptr<ChBody> body)
 {
-	vibrate_link=std::make_shared<ChLinkLockLock>();
+	vibrate_link = std::make_shared<ChLinkLockLock>();
 	vibrate_link->Initialize(truss, body, ChCoordsys<>(ChVector<>(0, 0, 0)));
 	double phase = -w*t_0;
 	//auto vibMotion = std::make_shared<ChFunction_Sine>();
-	
-	
+
+
 	//ChFunction_Sine* vibMotion = new ChFunction_Sine();  // phase freq ampl
 	auto vibMotion = std::make_shared<ChFunction_Sine>();  // phase freq ampl
 
@@ -924,34 +924,34 @@ void SystemGeometry::create_Prismatic(std::shared_ptr<ChBody> body)
 	////
 	//ChFunctionCustom* pris_motion = new ChFunctionCustom(0, 1.5, 0);  // phase freq ampl
 
-	auto pris_motion = std::make_shared<ChFunctionCustom>(0,1.5,0);  // phase freq ampl
+	auto pris_motion = std::make_shared<ChFunctionCustom>(0, 1.5, 0);  // phase freq ampl
 	//pris_motion->Set_y(.1);
 	//pris_motion->Set_y_dx(.1);
 	//pris_motion->Set_y_dxdx(.1);
 	////
-	
+
 	auto func = std::make_shared<ChFunctionCustom>();
 	pris_link = std::make_shared<ChLinkLockLock>();
-	
+
 
 	//link_prismatic = std::make_shared<ChLinkLockPointLine>();
 	pris_engine = std::make_shared<ChLinkLinActuator>();
 	auto sinefunc = std::make_shared<ChFunction_Sine>();
 	switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 	{
-		case STRESSSTICK: case HOOKRAISE:
-		{
+	case STRESSSTICK: case HOOKRAISE:
+	{
 
-			pris_link->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
-			pris_link->SetMotion_Z(pris_motion);
+		pris_link->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
+		pris_link->SetMotion_Z(pris_motion);
 
-			//link_prismatic->Initialize(body, truss, true, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
-			//pris_engine->Initialize(body, truss, true, ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
-			//func->Set_y(0);
-			//func->Set_y_dx(2.5 - .5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
-			//pris_engine->Set_dist_funct(func);
-			break;
-		}
+		//link_prismatic->Initialize(body, truss, true, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
+		//pris_engine->Initialize(body, truss, true, ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
+		//func->Set_y(0);
+		//func->Set_y_dx(2.5 - .5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
+		//pris_engine->Set_dist_funct(func);
+		break;
+	}
 
 	}
 	//pris_engine->SetDisabled(true);
@@ -976,7 +976,7 @@ void SystemGeometry::create_Truss()
 	sys->AddBody(truss);
 }
 
-void SystemGeometry::create_Knobs(double kpr,double rows, double length)
+void SystemGeometry::create_Knobs(double kpr, double rows, double length)
 {
 	//utils should be -PI_2?
 	//utils::AddCylinderGeometry(truss.get(), t2_smarticle / 2, bucket_interior_halfDim.z() * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z()), Angle_to_Quat(ANGLE, ChVector<>(PI_2, 0, 0)), true);
@@ -1036,7 +1036,7 @@ void SystemGeometry::create_CentralColumnEngine(double t_0)  //$$$$$$$$$$$$$$$$$
 	//knobcylinderfunc->Set_w(knobW);
 	//knobcylinderfunc->Set_phase(knobPhase);
 
-	columnEngine=std::make_shared<ChLinkEngine>();
+	columnEngine = std::make_shared<ChLinkEngine>();
 	//ChQuaternion<double> qx= Q_from_AngAxis(PI_2, VECT_Z);
 	ChQuaternion<double> qx = stick->GetRot();
 	columnEngine->Initialize(stick, truss, ChCoordsys<>(ChVector<>(0, 0, 0), qx));
@@ -1127,7 +1127,7 @@ void SystemGeometry::create_CentralColumn(double length)
 	sys->AddBody(stick);
 	create_Truss();
 }
-void SystemGeometry::vibrate_body(double t,double w, double A, double t_0, std::shared_ptr<ChBody> body)  //!!!!!!!!!!!USE CREATE_VIBRATELINK INSTEAD!!!!!!!!!!!!!!
+void SystemGeometry::vibrate_body(double t, double w, double A, double t_0, std::shared_ptr<ChBody> body)  //!!!!!!!!!!!USE CREATE_VIBRATELINK INSTEAD!!!!!!!!!!!!!!
 {
 	//A=amplitude
 	//w=omega
@@ -1135,9 +1135,9 @@ void SystemGeometry::vibrate_body(double t,double w, double A, double t_0, std::
 	double phase = -w*t_0;
 	double x_bucket = A*sin(w * t + phase);
 	double xDot_bucket = A*w*cos(w * t + phase);
-	double xDDot_bucket = -1*A*w*w*sin(w * t + phase);
-	
-	body->SetPos(body->GetPos()+ChVector<>(0, 0, x_bucket));
+	double xDDot_bucket = -1 * A*w*w*sin(w * t + phase);
+
+	body->SetPos(body->GetPos() + ChVector<>(0, 0, x_bucket));
 	body->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
 	body->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));
 	body->SetRot(QUNIT);
@@ -1163,7 +1163,7 @@ void SystemGeometry::setUpBucketActuator()
 		mfun2->Set_yconst(0);
 		//mfun2->Set_yconst(drum_omega);
 		break;
-	
+
 	case KNOBCYLINDER:
 
 		qx = bucket->GetRot();
@@ -1258,10 +1258,10 @@ void SystemGeometry::rotate_body_rot(double t, std::shared_ptr<ChBody> body, std
 }
 void SystemGeometry::rotate_body_sp(double t, std::shared_ptr<ChBody> body, std::shared_ptr<ChLinkEngine> actuator, double w)//method is called on each iteration to rotate drum at an angular velocity of drum_omega
 {
-		//static std::shared_ptr<ChFunction_Const> mfun2;
-		//double w = f * 2 * PPI;
-		std::shared_ptr<ChFunction_Const> mfun2;
-		body->SetBodyFixed(false);
-		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(actuator->Get_spe_funct());
-		mfun2->Set_yconst(w);
+	//static std::shared_ptr<ChFunction_Const> mfun2;
+	//double w = f * 2 * PPI;
+	std::shared_ptr<ChFunction_Const> mfun2;
+	body->SetBodyFixed(false);
+	mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(actuator->Get_spe_funct());
+	mfun2->Set_yconst(w);
 }

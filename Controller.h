@@ -17,7 +17,7 @@ namespace chrono {
 
 	class Controller {
 	public:
-		Controller(std::shared_ptr<CH_SYSTEM> ch_system,Smarticle* smarticle);
+		Controller(std::shared_ptr<CH_SYSTEM> ch_system, Smarticle* smarticle);
 		~Controller();
 		// Step the controller
 		bool Step(double dt);
@@ -43,7 +43,7 @@ namespace chrono {
 		void UseForceControl(size_t i);
 		void UseSpeedControl(size_t i);
 		void UsePositionControl(size_t i);
-		
+
 		double torOld[2];
 		double torCur[2];
 
@@ -61,7 +61,7 @@ namespace chrono {
 		double yold[2];
 		double ycurr[2];
 
-	
+
 		double omegaLimit = 5;
 		double outputLimit = 0;
 		std::shared_ptr<Smarticle> smarticle_;

@@ -25,7 +25,7 @@ Controller::Controller(std::shared_ptr<CH_SYSTEM> ch_system, Smarticle* smarticl
 	successfulMove_.assign(len, false);
 	prevAngle_.assign(len, 0);
 	double t = ch_system->GetChTime();
-	mLastError.assign(len,0);
+	mLastError.assign(len, 0);
 	// accumulated input
 
 	// last time the function is called
@@ -71,8 +71,8 @@ Controller::Controller(std::shared_ptr<CH_SYSTEM> ch_system, Smarticle* smarticl
 	for (size_t i = 0; i < amplitudes_.rows(); ++i) {
 		amplitudes_(i) = default_amplitude_;
 	}*/
-	
-	
+
+
 }
 Controller::~Controller()
 {
@@ -101,7 +101,7 @@ bool Controller::Step(double dt) {
 		ang = smarticle_->GetCurrAngle(i);
 		double exp = smarticle_->GetExpAngle(i);
 		smarticle_->SetAngle(i, ang);
-		bool desiredPositionStatus = smarticle_->NotAtDesiredPos(i, ang,exp); //true if not at current position being directed to 
+		bool desiredPositionStatus = smarticle_->NotAtDesiredPos(i, ang, exp); //true if not at current position being directed to 
 		successfulMove_.at(i) = !desiredPositionStatus;
 		switch (smarticle_->getLinkActuator(i)->Get_eng_mode())
 		{
@@ -113,11 +113,11 @@ bool Controller::Step(double dt) {
 			break;
 		case ChLinkEngine::ENG_MODE_TORQUE:
 			UseForceControl(i);
-			
+
 			break;
 		default:
 			UseForceControl(i);
-			
+
 		}
 		//GetLog() << "w"<<smarticle_->GetActuatorOmega(i) << "\t" <<smarticle_->GetMotTorque(i) << "\t";
 
@@ -129,11 +129,11 @@ bool Controller::Step(double dt) {
 }
 
 std::shared_ptr<ChLinkEngine> Controller::GetEngine(size_t index)
-{ 
-	return smarticle_->getLinkActuator(index); 
+{
+	return smarticle_->getLinkActuator(index);
 }
 
-double Controller::GetCurrReactTorque(size_t index, double t=0)
+double Controller::GetCurrReactTorque(size_t index, double t = 0)
 {
 	//return smarticle_->GetZReactTorque(index);
 	return smarticle_->GetReactTorqueVector(index).z();
@@ -145,7 +145,7 @@ double Controller::GetCurrTorque(size_t index, double t)
 }
 double Controller::GetDesiredAngle(size_t index, double t)
 {
-		return 	smarticle_->GetNextAngle(index);
+	return 	smarticle_->GetNextAngle(index);
 }
 double Controller::GetExpAngle(size_t idx, double t)
 {
@@ -165,7 +165,7 @@ double Controller::GetActuatorOmega(size_t index, double t)
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
 	//static double errLim = dT*omegaLimit;
-	static double errLim = (smarticle_->global.at(1).first - smarticle_->global.at(2).first)/dT/omegaLimit*D2R;
+	static double errLim = (smarticle_->global.at(1).first - smarticle_->global.at(2).first) / dT / omegaLimit*D2R;
 	//GetLog() << "errLim " << errLim << nl;
 	//double errLim = 1.05*D2R; // 
 	//double errLim = 1*D2R; // 
@@ -177,7 +177,7 @@ double Controller::LinearInterpolate(size_t idx, double curr, double des)
 
 double Controller::OmegaLimiter(size_t idx, double omega)
 {
-	return SaturateValue(omega, omegaLimit);	
+	return SaturateValue(omega, omegaLimit);
 }
 
 
@@ -197,17 +197,17 @@ void Controller::UsePositionControl(size_t id) {
 	//GetLog() << y;
 }
 void Controller::UseSpeedControl(size_t id) {
-		//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-		auto ef = std::make_shared<ChFunctionController>(id, this);
-		auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_spe_funct());
-		double y = ef->Get_y(ch_system_->GetChTime());
-		mfun->Set_yconst(y);
-		//GetLog() << y;
+	//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+	auto ef = std::make_shared<ChFunctionController>(id, this);
+	auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_spe_funct());
+	double y = ef->Get_y(ch_system_->GetChTime());
+	mfun->Set_yconst(y);
+	//GetLog() << y;
 }
 void Controller::UseForceControl(size_t id) {
-		//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-		auto ef = std::make_shared<ChFunctionController>(id, this);
-		auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_tor_funct());
-		double y = ef->Get_y(ch_system_->GetChTime());
-		mfun->Set_yconst(y);	
+	//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	auto ef = std::make_shared<ChFunctionController>(id, this);
+	auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_tor_funct());
+	double y = ef->Get_y(ch_system_->GetChTime());
+	mfun->Set_yconst(y);
 }

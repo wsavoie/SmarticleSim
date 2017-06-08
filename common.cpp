@@ -6,7 +6,7 @@ using namespace chrono;
 
 double SaturateValue(double val, double low, double high)
 {
-		return std::max(std::min(high, val), low);
+	return std::max(std::min(high, val), low);
 }
 //for single input centered around 0
 double SaturateValue(double val, double zeroCenteredVal)

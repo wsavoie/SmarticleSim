@@ -13,22 +13,22 @@ double ChFunctionController::Get_y(double t) {
 	double output = 0;
 	switch (this->controller_->smarticle_->getLinkActuator(index_)->Get_eng_mode())
 	{
-		case ChLinkEngine::ENG_MODE_ROTATION:
-			output = ComputeOutputPosition(t);
-			output = SaturateValue(output, controller_->outputLimit);
-			break;
-		case ChLinkEngine::ENG_MODE_SPEED:
-			output = ComputeOutputSpeed(t);
-			output = SaturateValue(output, controller_->omegaLimit);
-			break;
-		case ChLinkEngine::ENG_MODE_TORQUE:
-			output = ComputeOutputTorque(t);
-			//output = SaturateValue(output, controller_->outputLimit);
-			break;
-		default:
-			output = ComputeOutputTorque(t);
-			output = SaturateValue(output, controller_->outputLimit);
-				break;
+	case ChLinkEngine::ENG_MODE_ROTATION:
+		output = ComputeOutputPosition(t);
+		output = SaturateValue(output, controller_->outputLimit);
+		break;
+	case ChLinkEngine::ENG_MODE_SPEED:
+		output = ComputeOutputSpeed(t);
+		output = SaturateValue(output, controller_->omegaLimit);
+		break;
+	case ChLinkEngine::ENG_MODE_TORQUE:
+		output = ComputeOutputTorque(t);
+		//output = SaturateValue(output, controller_->outputLimit);
+		break;
+	default:
+		output = ComputeOutputTorque(t);
+		output = SaturateValue(output, controller_->outputLimit);
+		break;
 	}
 	return output;
 }
@@ -53,7 +53,7 @@ double ChFunctionController::ComputeOutputTorque(double curr_t)//http://robotics
 	// we will use the internal information of the mEngine to compute the error;
 	// then we can use the error to compute the torque needed
 	double desiredRotation = controller_->GetDesiredAngle(index_, curr_t); ///get the next angle
-	
+
 	desiredRotation = controller_->LinearInterpolate(index_, controller_->posCur[index_], desiredRotation); //linear interpolate for situations where gui changes so there isn't a major speed increase
 	double currError = desiredRotation - controller_->posCur[index_];
 
@@ -70,10 +70,10 @@ double ChFunctionController::ComputeOutputTorque(double curr_t)//http://robotics
 	double p = p_gain*currError;
 	double i = controller_->mAccuError[index_] += i_gain*.5*(currError + prevError)*dT;
 	double dd = d_gain*(currError - prevError) / dT; //smooth out instabilities moving average of
-	double d= derivAvg(dd);
-	controller_->mAccuError[index_] += i_gain*.5*(currError+prevError)*dT;
+	double d = derivAvg(dd);
+	controller_->mAccuError[index_] += i_gain*.5*(currError + prevError)*dT;
 	//double Out = p_gain * currError + i_gain * controller_->mAccuError[index_] + d_gain*(currError-prevError)/dT;
-	
+
 
 
 	double kt = .03; //motor's torque constant
@@ -82,7 +82,7 @@ double ChFunctionController::ComputeOutputTorque(double curr_t)//http://robotics
 	double out = (p + i + d);
 	//double b = 5.5e-4;
 	double b = 1e-9;
-	out = SaturateValue(out, controller_->outputLimit) - controller_->velCur[index_]*b;
+	out = SaturateValue(out, controller_->outputLimit) - controller_->velCur[index_] * b;
 	controller_->mLastError[index_] = currError;
 	controller_->mLastCalled[index_] = curr_t;
 	controller_->mLastValue[index_] = out;
@@ -116,7 +116,7 @@ double ChFunctionController::ComputeOutputPosition(double curr_t)//%%%%%%%%%%%%%
 
 	double desiredRotation_dt_dt = curr_react_torque;
 	double currError_dt_dt = desiredRotation_dt_dt - controller_->torCur[index_];
-	
+
 	double prevError = controller_->mLastError[index_];
 
 
@@ -215,7 +215,7 @@ double ChFunctionController::OmegaToTorque(double t, double out)
 }
 void ChFunctionController::ResetCumulative(double t = 0)
 {
-	
+
 	static int bothArmsReset = 0;
 	controller_->cumError_.at(index_) = 0;
 	controller_->cumOmegError_.at(index_) = 0;
@@ -224,14 +224,14 @@ void ChFunctionController::ResetCumulative(double t = 0)
 	bothArmsReset++; //add one to value, if value>1, both arms have been reset thus value can be set to false
 	controller_->II[index_] = 0;
 	controller_->mAccuError[index_] = 0;
-	
+
 
 	if (index_ == 0)
 		controller_->dAvg0_.clear();
 	else
 		controller_->dAvg1_.clear();
 
-	if (bothArmsReset >1)
+	if (bothArmsReset > 1)
 	{
 		controller_->resetCumError = false;
 		bothArmsReset = 0;
@@ -245,11 +245,11 @@ void ChFunctionController::CheckReset()
 	{
 		//GetLog() << "reset after gait change\n";
 		ResetCumulative();
-		controller_->prevAngle[index_] = nextAng; 
+		controller_->prevAngle[index_] = nextAng;
 		return;
 	}
 	//if current directed position is different than previous one reset cumulative error as endpoint is now different
-	
+
 	if (abs(controller_->velCur[index_]) > controller_->omegaLimit)
 	{
 		ResetCumulative();
@@ -263,11 +263,11 @@ void ChFunctionController::CheckReset()
 		ResetCumulative();
 	}
 	controller_->prevAngle[index_] = nextAng;
-	
+
 }
 
 double ChFunctionController::derivAvg(double newD)
-{	
+{
 	double derivAvg = 0;
 	int steps = controller_->smarticle_->steps;
 	std::deque<double> *b;

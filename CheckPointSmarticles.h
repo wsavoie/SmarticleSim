@@ -8,8 +8,8 @@
 #ifndef CHECKPOINTSMARTICLES_H_
 #define CHECKPOINTSMARTICLES_H_
 
-//#include "chrono_parallel/physics/ChSystemParallel.h"
-//#include "physics/ChSystem.h"
+ //#include "chrono_parallel/physics/ChSystemParallel.h"
+ //#include "physics/ChSystem.h"
 #include "Smarticle.h" //do we need this if smarticleU imports smarticle?
 //#include "SmarticleU.h"
 using namespace chrono::irrlicht;
@@ -20,8 +20,8 @@ using namespace irr::video;
 namespace chrono {
 
 
-void CheckPointSmarticles_Write(
-	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
+	void CheckPointSmarticles_Write(
+		std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
 		int tStep,
 		std::shared_ptr<MATSURF> mat_g,
 		double l_smarticle,
@@ -33,26 +33,26 @@ void CheckPointSmarticles_Write(
 		double angle1,
 		double angle2);
 
-void CheckPointSmarticlesDynamic_Write(
-	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
-	int tStep,
-	std::shared_ptr<MATSURF> mat_g,
-	double l_smarticle,
-	double w_smarticle,
-	double t_smarticle,
-	double t2_smarticle,
-	double collisionEnvelop,
-	double rho_smarticleArm,
-	double rho_smarticleMid);
-void CheckPointSmarticles_Read(
-	std::shared_ptr<CH_SYSTEM> mphysicalSystem,
-	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec);
-void CheckPointSmarticlesDynamic_Read(
-	std::shared_ptr<CH_SYSTEM> mphysicalSystem,
-	std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application);
-//void CheckPointSmarticles_Read(
-//		#include "SmarticleU.h",
-//		std::vector<Smarticle*> & mySmarticlesVec);
+	void CheckPointSmarticlesDynamic_Write(
+		std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec,
+		int tStep,
+		std::shared_ptr<MATSURF> mat_g,
+		double l_smarticle,
+		double w_smarticle,
+		double t_smarticle,
+		double t2_smarticle,
+		double collisionEnvelop,
+		double rho_smarticleArm,
+		double rho_smarticleMid);
+	void CheckPointSmarticles_Read(
+		std::shared_ptr<CH_SYSTEM> mphysicalSystem,
+		std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec);
+	void CheckPointSmarticlesDynamic_Read(
+		std::shared_ptr<CH_SYSTEM> mphysicalSystem,
+		std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application);
+	//void CheckPointSmarticles_Read(
+	//		#include "SmarticleU.h",
+	//		std::vector<Smarticle*> & mySmarticlesVec);
 
 }
 #endif /* CHECKPOINTSMARTICLES_H_ */
