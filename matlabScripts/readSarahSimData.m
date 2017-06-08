@@ -1,6 +1,7 @@
 tracks=9;
+N=127;
 for(j=1:tracks)
-[filez fold]=uigetfile('*.txt','simData','A:\SmarticleRun\SarahAmeobotData');
+[filez fold]=uigetfile('*.txt','simData','A:\SmarticleRun\SarahAmeobotData\127');
 pathz=fullfile(fold,filez);
 simD=importdata(pathz);
 % remove first line
@@ -20,5 +21,7 @@ simD=downsample(dat,100);
 % blah=simD;
 simD={bsxfun(@minus, simD,simD(1,:))};
 simTracks(j)=simD;
+
 end
-save(fullfile(fold,'sarahDat2.mat'),'simTracks');
+save(fullfile(fold,['sarahDat',num2str(N),'.mat']),'simTracks','N');
+clear all;
