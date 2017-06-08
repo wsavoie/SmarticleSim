@@ -43,6 +43,7 @@ close all
 %*34 log(pdf) vs |vel| fit line
 %*35 plot beginning and ending sim
 %*36 determine step length probability
+%*37 only mop plot
 %*45. test
 %************************************************************
 %%
@@ -50,7 +51,7 @@ SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1 36];
+showFigs=[1 22 37 36];
 useCOM=0;
 f=[]; rob=[]; v=[];dirs=[];
 % Switched 0->2 % 1->3 % 2->1 % 3->0
@@ -1480,11 +1481,11 @@ if(showFigs(showFigs==xx))
                 dirVec=[0,-1];
         end
         dotVal(i)=dot(endPt/norm(endPt),dirVec);
-         plot([0,usedSimAm(i).fullRingPos(end,1)],... %x
-        [0,usedSimAm(i).fullRingPos(end,2)],...%y
-        '-ko','markersize',4,'MarkerFaceColor','r');
+        plot([0,usedSimAm(i).fullRingPos(end,1)],... %x
+            [0,usedSimAm(i).fullRingPos(end,2)],...%y
+            '-ko','markersize',4,'MarkerFaceColor','r');
     end
-  
+    
     text(.1,.2,{['proper direction: ',num2str(length(nonzeros(dotVal>0)),2),...
         '/',num2str(L),'=',num2str(length(nonzeros(dotVal>0))/L,2)],...
         ['$\hat{r}_{end}\cdot\hat{D}=',num2str(mean(dotVal),2),'\pm',...
@@ -1518,7 +1519,7 @@ xx=36;
 if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
-%     endPts=zeros(L,2);
+    %     endPts=zeros(L,2);
     winds=2;
     endPts=zeros(winds*L,1);
     for(i=1:L)
@@ -1528,22 +1529,60 @@ if(showFigs(showFigs==xx))
         beg2=end1+1;
         
         
-%         usedSimAm(i).fullRingPos(end,:)
-%         initial=[0,0];
+        %         usedSimAm(i).fullRingPos(end,:)
+        %         initial=[0,0];
         
         endPts(2*i-1)=norm(usedSimAm(i).fullRingPos(beg1:end1,:));
         endPts(2*i)=norm(usedSimAm(i).fullRingPos(beg2:end2,:));
-       
+        
     end
-    x=histogram(endPts,15);
+    %     x=histogram(endPts,15);
     hold on;
     x2=histogram(endPts,20);
-   figure(21312);
-   hold on;
-%     plot(x.Values/sum(x.Values))
-        plot(log(1:length(x2.Values)),log(x2.Values/sum(x2.Values)))
-%     figText(gcf,14)
-    axis square
+    xlabel('trajectory length(arb)')
+    ylabel('P(|r|)');
+    vals=x2.Values;
+    figText(gcf,16);
+    %     clf;
+    figure(21312);
+    hold on;
+    plot(log(1:length(vals)),log(vals/sum(vals)),'o-','markerfacecolor','w','linewidth',2)
+    xlabel('log(trajectory length(arb))')
+    ylabel('log(P(|r|))');
+    figText(gcf,16);
+end
+%% 37 only mop plot
+xx=37;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    if(isempty(ma.msd))
+        ma = ma.computeMSD;
+    end
+    %     endPts=zeros(L,2);
+    ma=ma.fitLogLogMSD(.25);
+    llfit=ma.loglogfit;
+    tend=ma.msd{1}(end,1)*.25;
+    msd=ma.getMeanMSD;
+    tendIdx=find(msd(:,1)<tend,1,'last');
+    
+    for i=1:length(ma.tracks)
+        msdRun=ma.msd{i}(1:tendIdx,1:2);
+        msdRun(1,:)=[];
+        h1=plot(msdRun(:,1),msdRun(:,2),'.');
+        plot(msdRun(:,1),msdRun(:,1).^(llfit.alpha(i)).*(llfit.gamma(i)),'color',h1.Color,'linewidth',1.5);
+        %        plot(msdRun(:,1),msdRun(:,1).^f2.p1*exp(f2.p2),'color',h1.Color,'linewidth',1.5);
+    end
+    set(gca,'yscale','log','xscale','log')
+    figText(gcf,20);
+    ma.fitMeanMSD;
+    MOP=llfit.alpha;
+    
+    text(.2,.8,['MOP=',num2str(mean(MOP),3),'\pm',num2str(std(MOP),3)],'units','normalized','fontsize',20);
+    set(gca,'yscale','log','xscale','log')
+    xlabel('Delay (s)');
+    ylabel('MSD (m^2)');
+    figText(gcf,20);
 end
 %% 45 test
 xx=45;
