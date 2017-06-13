@@ -53,7 +53,7 @@ TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
 % showFigs=[1 22 35 36 37];
-showFigs=[1 38];
+showFigs=[1 35 38];
 useCOM=0;
 f=[]; rob=[]; v=[];dirs=[];
 % Switched 0->2 % 1->3 % 2->1 % 3->0
@@ -1482,13 +1482,13 @@ if(showFigs(showFigs==xx))
             case 3
                 dirVec=[0,-1];
         end
-        dotVal(i)=dot(endPt/norm(endPt),dirVec);
+        dotVal(i)=endPt/norm(endPt)*dirVec';
         plot([0,usedSimAm(i).fullRingPos(end,1)],... %x
             [0,usedSimAm(i).fullRingPos(end,2)],...%y
             '-ko','markersize',4,'MarkerFaceColor','r');
     end
     
-    text(.1,.2,{['proper direction: ',num2str(length(nonzeros(dotVal>0)),2),...
+    text(.1,.2,{['towards inactive''s initial position: ',num2str(length(nonzeros(dotVal>0)),2),...
         '/',num2str(L),'=',num2str(length(nonzeros(dotVal>0))/L,2)],...
         ['$\hat{r}_{end}\cdot\hat{D}=',num2str(mean(dotVal),2),'\pm',...
         num2str(std(dotVal)/sqrt(L),2),'$']},'units','normalized','Interpreter','latex');
@@ -1606,9 +1606,9 @@ if(showFigs(showFigs==xx))
     c=max(abs(y)); ylim([-c,c]);
     axis equal
     
-    axis([-.5 .5 -.5 .5]);
+    axis([-.25 .25 -.25 .25]);
     deltax=xlim; y=ylim;
-    set(gca,'xtick',[-.5:.25:.5],'ytick',[-.5:.25:.5]);
+    set(gca,'xtick',[-.2:.1:.2],'ytick',[-.2:.1:.2]);
     y=get(gca,'ylim'); deltax=get(gca,'xlim');
     plot(deltax,[0,0],'r');
     plot([0,0],y,'r');
@@ -1648,7 +1648,7 @@ if(showFigs(showFigs==xx))
         end
         plot(newpos(:,1),newpos(:,2));
         plot(newpos(end,1),newpos(end,2),'ko','markersize',4,'MarkerFaceColor','r');
-        figText(gcf,14)
+
         
         
     end
@@ -1656,10 +1656,10 @@ if(showFigs(showFigs==xx))
     
     text(.1,.2,{['towards inactive: ',num2str(correctDir,2),'/',num2str(L),...
         '=',num2str(correctDir/L,2)]},'units','normalized','Interpreter','latex');
-
-    xlabel('Perpendicular to Inactive Smarticle')
-    ylabel('Along Axis of Inactive Smarticle')
     
+    xlabel('Perpendicular to Inactive Smarticle (m)')
+    ylabel('Along Axis of Inactive Smarticle (m)')
+            figText(gcf,18)
 end
 %% 45 test
 xx=45;
