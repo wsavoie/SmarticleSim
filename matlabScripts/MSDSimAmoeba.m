@@ -33,17 +33,18 @@ close all
 %*24. track length plotting
 %*25. rotational track length
 %*26. smarticle rotation
-%*27 v dot rhat dt sampling histogram
-%*28 v dot rhat collision event sampling histogram
-%*29 v dot rhat dt sampling scatter
-%*30 v dot rhat scatter collision event sampling
-%*31 v dot rhat heatmap dt sampling
-%*32 v dot rhat heatmap collision event sampling
-%*33 log(pdf) vs |vel|
-%*34 log(pdf) vs |vel| fit line
-%*35 plot beginning and ending sim
-%*36 determine step length probability
-%*37 only mop plot
+%*27. v dot rhat dt sampling histogram
+%*28. v dot rhat collision event sampling histogram
+%*29. v dot rhat dt sampling scatter
+%*30. v dot rhat scatter collision event sampling
+%*31. v dot rhat heatmap dt sampling
+%*32. v dot rhat heatmap collision event sampling
+%*33. log(pdf) vs |vel|
+%*34. log(pdf) vs |vel| fit line
+%*35. plot beginning and ending sim
+%*36. determine step length probability
+%*37. only mop plot
+%*38. rotate each each track by the rotation of inactive smarticle
 %*45. test
 %************************************************************
 %%
@@ -51,7 +52,8 @@ SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1 22 35 36 37];
+% showFigs=[1 22 35 36 37];
+showFigs=[1 38];
 useCOM=0;
 f=[]; rob=[]; v=[];dirs=[];
 % Switched 0->2 % 1->3 % 2->1 % 3->0
@@ -1585,6 +1587,79 @@ if(showFigs(showFigs==xx))
     xlabel('Delay (s)');
     ylabel('MSD (m^2)');
     figText(gcf,20);
+end
+
+%% 38 rotate each each track by the rotation of inactive smarticle
+xx=38;
+dir=0;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    hax1=gca;
+    %     ma.plotTracks
+    ma.labelPlotTracks
+    %     text(0,0+.01,'start')
+    plot(0,0,'ro','markersize',8,'MarkerFaceColor','k');
+    y=get(gca,'ylim');
+    deltax=get(gca,'xlim');
+    c=max(abs(deltax)); xlim([-c,c]);
+    c=max(abs(y)); ylim([-c,c]);
+    axis equal
+    
+    axis([-.5 .5 -.5 .5]);
+    deltax=xlim; y=ylim;
+    set(gca,'xtick',[-.5:.25:.5],'ytick',[-.5:.25:.5]);
+    y=get(gca,'ylim'); deltax=get(gca,'xlim');
+    plot(deltax,[0,0],'r');
+    plot([0,0],y,'r');
+    correctDir=0;
+    for i=1:L
+        % dpos=diff(pos);
+        % R = [cosd(theta(2:end)) -sind(theta(2:end)); sind(theta(2:end)) cosd(theta(2:end))];
+        
+        % Ring position
+        pos = [usedSimAm(i).fullRingPos(:,1), usedSimAm(i).fullRingPos(:,2)];
+        rpos = bsxfun(@minus, pos, pos(1,:));
+        
+        % Subtract initial position
+        % Inactive particle position
+        iapos = [usedSimAm(i).fullDeadSmartPos(:,1), usedSimAm(i).fullDeadSmartPos(:,2)];
+        iapos = bsxfun(@minus, iapos, pos(1,:));
+        
+        
+        
+        newpos=zeros(size(rpos));
+        for j=2:size(newpos,1)
+            % Get the change in the ring position in the world frame
+            deltaR = rpos(j, :) - rpos(j-1, :);
+            
+            % Get the vector from the ring COG to the inactive smarticle
+            rs = iapos(j-1, :) - rpos(j-1, :);
+            
+            % Project deltaR onto rs(t-1)
+%             deltay = (dot(rs, deltaR)/norm(rs)^2)*rs;
+            deltay = ((rs*deltaR')/norm(rs)^2)*rs;
+            deltax = deltaR - deltay;
+%             newpos(j, :) = [newpos(j-1,1) + sign(dot(rs, deltax))*norm(deltax), newpos(j-1,2) + sign(dot(rs, deltay))*norm(deltay)];
+             newpos(j, :) = [newpos(j-1,1) + sign(rs*deltax')*norm(deltax), newpos(j-1,2) + sign(rs*deltay')*norm(deltay)];
+            if newpos(end,2)>0
+                correctDir=correctDir+1;
+            end
+        end
+        plot(newpos(:,1),newpos(:,2));
+        plot(newpos(end,1),newpos(end,2),'ko','markersize',4,'MarkerFaceColor','r');
+        figText(gcf,14)
+        
+        
+    end
+    
+    
+    text(.1,.2,{['towards inactive: ',num2str(correctDir,2),'/',num2str(L),...
+        '=',num2str(correctDir/L,2)]},'units','normalized','Interpreter','latex');
+
+    xlabel('Perpendicular to Inactive Smarticle')
+    ylabel('Along Axis of Inactive Smarticle')
+    
 end
 %% 45 test
 xx=45;

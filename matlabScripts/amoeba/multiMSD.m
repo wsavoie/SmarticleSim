@@ -806,9 +806,9 @@ if(showFigs(showFigs==xx))
             rs = iapos(j-1, :) - rpos(j-1, :);
             
             % Project deltaR onto rs(t-1)
-            deltay = (dot(rs, deltaR)/norm(rs)^2)*rs;
+            deltay = ((rs*deltaR')/norm(rs)^2)*rs;
             deltax = deltaR - deltay;
-            newpos(j, :) = [newpos(j-1,1) + sign(dot(rs, deltax))*norm(deltax), newpos(j-1,2) + sign(dot(rs, deltay))*norm(deltay)];
+            newpos(j, :) = [newpos(j-1,1) + sign(rs*deltax')*norm(deltax), newpos(j-1,2) + sign(rs*deltay')*norm(deltay)];
             if newpos(end,2)>0
             correctDir=correctDir+1;
             end
