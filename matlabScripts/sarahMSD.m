@@ -12,19 +12,20 @@ load(fullfile(fold,filez));
 %* 5. fit log of mean MSD
 %* 6. just do mop plot of MSD
 %* 7. gamma vs. N
+% 8. A vs. P, showing sqrt relationship
 %************************************************************
 
 
-showFigs=[1 2 5 6 7];
+showFigs=[1 2 5 6 7 8];
 
+showFigs=[6];
 
-
-
-SPACE_UNITS='unit';
-TIME_UNITS='frames';
-ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
-
-ma = ma.addAll(simTracks);
+if(exist('ma')==0)
+    SPACE_UNITS='unit';
+    TIME_UNITS='frames';
+    ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
+    ma = ma.addAll(simTracks);
+end
 
 
 %% 1 plot displacement yvsx
@@ -191,7 +192,7 @@ if(showFigs(showFigs==xx))
     if(isempty(ma.msd))
         ma = ma.computeMSD;
     end
-    scale=1/sqrt(N);
+    scale=1/(sqrt(N));
     ma.plotMeanMSD(gca,1);
     ma.plotMSD(gca);
     msd=ma.getMeanMSD;
@@ -213,7 +214,7 @@ if(showFigs(showFigs==xx))
     ma.fitMeanMSD;
     MOP=llfit.alpha;
     
-    text(.2,.8,['MOP=',num2str(mean(MOP),3),'\pm',num2str(std(MOP),3)],'units','normalized','fontsize',20);
+    text(.2,.8,['MOP=',num2str(mean(MOP),3),'\pm',num2str(std(MOP,1),3)],'units','normalized','fontsize',20);
     set(gca,'yscale','log','xscale','log')
     figText(gcf,20);
 end
@@ -223,11 +224,55 @@ if(showFigs(showFigs==xx))
     figure(xx)
     hold on;
     
-    x=[19 37 61 91 127 169 217];
-    y=[.981, .978,.919,.933,.947,.924,.921];
-    err=[.0739*sqrt(9),.0634*sqrt(10),.0477*sqrt(10),.0255*sqrt(10),.0387*sqrt(9),.0295*sqrt(8),.0257*sqrt(9)];
-    errorbar(x,y,err);
+    x=        [19   37   61   91   127   169   217];
+    runs=sqrt([9    10   10   10   9     8     9]);
+    
+    %with just 1/N
+    y=[.981,0,0,0,0,0,0];
+    err=[0.0697,0,0,0,0,0,0];
+
+    
+    %3.47/(sqrt(N))
+%     y=[.967, 1.02,.898,.927,.944,.934,.919];
+%     err=[.0967,.134,.0964,.0608,.0447,0.054,.0559];
+    %     err=[,.0634,.047,.0255,.0387,.0295,.0257];
+    
+    %1/(sqrt(N)*3.47)
+    y=[.971,.953,.931,.938,.947,.934,.943];
+    err=[.0359,.0261,0.0247,.0198,0.0174,0.0168,.0203];
+    
+    errorbar(x,y,err./sqrt(runs));
     figText(gcf,20);
     xlabel('N');
     ylabel('\gamma');
 end
+%% 8. A vs. P, showing sqrt relationship
+xx=8;
+if(showFigs(showFigs==xx))
+    figure(xx)
+    hold on;
+    warning('off','curvefit:fit:noStartPoint')
+    R=[1:40];
+    A= 3.*R.*(R+1)+1;
+    P=6*R;
+    
+    %     plot(A,P);
+    ft= fittype('a*x.^(0.5)+b',...
+        'dependent',{'y'},'independent',{'x'},...
+        'coefficients',{'a','b'});
+    f = fit(A',P',ft);
+    %     plot(f,'k-','linewidth','2');
+    %plot fitted data
+    plot(A,f.a*A.^(1/2)+f.b,'k-','linewidth',2);
+    plot(A,P,'o','linewidth',2,'markerfacecolor','w');
+    plot(A,3.47*sqrt(A));
+    
+    legend({'fit with 2 free vars','data','fit with 1 free var'},'location','NW')
+    text(.2,.2,{['$P(N)=a\sqrt{N}+b$'],...
+        ['$a\approx',num2str(f.a,3),'\quad b\approx',num2str(f.b,3),'$']},...
+        'units','normalized','Interpreter','latex'); 
+    ylabel('Perimeter (N)');
+    xlabel('Area (N)');
+    figText(gcf,16);
+end
+%#ok<*NBRAK>

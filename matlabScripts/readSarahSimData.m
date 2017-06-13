@@ -1,3 +1,4 @@
+clear all
 tracks=9;
 N=127;
 for(j=1:tracks)
@@ -22,6 +23,13 @@ simD=downsample(dat,100);
 simD={bsxfun(@minus, simD,simD(1,:))};
 simTracks(j)=simD;
 
+
+    
 end
-save(fullfile(fold,['sarahDat',num2str(N),'.mat']),'simTracks','N');
-clear all;
+SPACE_UNITS='unit';
+    TIME_UNITS='frames';
+    ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
+    ma = ma.addAll(simTracks);
+    ma = ma.computeMSD;
+save(fullfile(fold,['sarahDat',num2str(N),'.mat']),'simTracks','N','ma');
+% clear all;
