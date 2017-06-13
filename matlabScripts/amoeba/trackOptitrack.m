@@ -1,4 +1,4 @@
-function [t,x,y,tracks, varargout]=trackOptitrack(file,dec)
+function [t,x,y,tracks, varargout]=trackOptitrack(file,dec,rigidBodyName)
 
 % figure(1);clf;
 
@@ -14,44 +14,75 @@ data = importdata(file);
 %z->y
 %y->z
 
+%Get data for the ring specifically (rigid body MUST be named with "ring")
+rigidBodyHeaders = lower(data.textdata{4,1}); %single line of text with csv
+ind = strfind(rigidBodyHeaders,rigidBodyName);
 
-%QUATERNION X DATA MIGHT NEED TO BE FLIPPED!!
-if (data.textdata{6,6}=='W') %system has a rigid body
-q=[data.data(:,6) data.data(:,3) data.data(:,5) data.data(:,4)];
-q=quaternion(q'); %I need to transpose it before setting to quat for matrix
-angles = EulerAngles(q,'123');
-ang=reshape(angles(3,1,:),[size(angles,3),1]);
+%TEMPORARY (if inactive particle wasn't labeled 'inactive' in optitrack,  
+%assume first rigid body is inactive)
+if isempty(ind)
+    rigidBodyName = 'rigid body 1';
+    ind = strfind(rigidBodyHeaders,rigidBodyName);
+end
 
-%decimate by dec
-t = data.data(:,2); 
-x = -data.data(:,7);
-y = data.data(:,9);
-z = data.data(:,8);
+if ~isempty(ind) || data.textdata{7,6}=='W' %has ring rigid body
+    if isempty(ind)  %one rigid body without 'ring' in name
+        ringInd = 3;
+    else
+        count = 1;
+        for k = 1:ind
+            if rigidBodyHeaders(k) == ','
+                count = count + 1;
+            end
+        end
+        ringInd = count;
+    end
+    q = [data.data(:,ringInd+3) data.data(:,ringInd) data.data(:,ringInd+2) data.data(:,ringInd+1)];
+
+    %QUATERNION X DATA MIGHT NEED TO BE FLIPPED!!
+    %Old hard-coded way to get ring data
+    %if (data.textdata{7,6}=='W') %system has a rigid body
+    %q=[data.data(:,6) data.data(:,3) data.data(:,5) data.data(:,4)]; %wxzy
+
+    q=quaternion(q'); %I need to transpose it before setting to quat for matrix
+    angles = EulerAngles(q,'123');
+    ang=reshape(angles(3,1,:),[size(angles,3),1]);
+
+    %decimate by dec
+    t = data.data(:,2); 
+    x = -data.data(:,ringInd+4); %was 7
+    y = data.data(:,ringInd+6); %was 9
+    z = data.data(:,ringInd+5); %was 8
 
 
-t=t(1:dec:end,:);
-comx=x(1:dec:end,:);
-comy=y(1:dec:end,:);
-% comz=z(1:dec:end,:);
-ang=ang(1:dec:end,:);
-% pts('rigid body sys');
-varargout{1}=ang;
-else
-% -repmat(data.data(1,3:3:end),[size(data.data(:,3:3:end),1),1])
+    t=t(1:dec:end,:);
+    comx=x(1:dec:end,:);
+    comy=y(1:dec:end,:);
+    % comz=z(1:dec:end,:);
+    ang=ang(1:dec:end,:);
+    % pts('rigid body sys');
+    varargout{1}=ang;
+    nanIndsx=find(isnan(x));
+    nanIndsy=find(isnan(y));
     
-t = data.data(:,2);
-x = -data.data(:,3:3:end);
-y = data.data(:,5:3:end);
-z = data.data(:,4:3:end);
+    x(nanIndsx)=x(nanIndsx-1);
+    y(nanIndsy)=y(nanIndsy-1);
+else
+    % -repmat(data.data(1,3:3:end),[size(data.data(:,3:3:end),1),1])
 
-%decimate by dec
-t=t(1:dec:end,:);
-x=x(1:dec:end,:);
-y=y(1:dec:end,:);
-z=z(1:dec:end,:);
+    t = data.data(:,2);
+    x = -data.data(:,ringInd:ringInd:end); %was 3:3:end
+    y = data.data(:,ringInd+2:ringInd:end); %was 5:3:end
+    z = data.data(:,ringInd+1:ringInd:end); %was 4:3:end
 
-comx=mean(x,2);
-comy=mean(y,2);
+    %decimate by dec
+    t=t(1:dec:end,:);
+    x=x(1:dec:end,:);
+    y=y(1:dec:end,:);
+    z=z(1:dec:end,:);
+
+    comx=mean(x,2);
+    comy=mean(y,2);
 end
 
 

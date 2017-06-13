@@ -1,11 +1,17 @@
-clear all
-fold=uigetdir('D:\ChronoCode\chronoPkgs\Smarticles\matlabScripts\amoeba\smarticleExpVids\optinew\circle\1 inactive');
+%clear all
+fold=uigetdir('A:\2DSmartData\sound');
 f=dir2(fullfile(fold,'*.csv'));
+rigidBodyName = ' ring';
+activeName= ' active';
+inactiveName=' inactive';
+% r=.9525;
+%^N.B. put a space in front of keywords that could occur within other keywords
+
 %     clf;
 movs=struct;
 nMovs=length(f);
 movs(nMovs).fname='';
-r=.192/2;%radius of boundary in meters
+r=.09525;%radius of boundary in meters
 dec=12; %decimate amount
 %HANDEDNESS IN QUATERNIONS ISNT CHANGED?
 conv=zeros(nMovs,1);
@@ -18,9 +24,11 @@ for i=1:nMovs
 
 % for i =1:length(f)
     waitbar(i/steps,h,{['Processing: ',num2str(i),'/',num2str(length(f))],f(i).name})
-    pts(i,'/',nMovs);
+%     pts(i,'/',nMovs);
 %     [t,x,y,tracks]
-    [movs(i).t,movs(i).x,movs(i).y,movs(i).data,movs(i).rot]= trackOptitrack(fullfile(fold,f(i).name),dec);
+    [movs(i).t,movs(i).x,movs(i).y,movs(i).data,movs(i).rot]= trackOptitrack(fullfile(fold,f(i).name),dec,rigidBodyName);
+    %[~,movs(i).Ax,movs(i).Ay,movs(i).Adata,movs(i).Arot]= trackOptitrack(fullfile(fold,f(i).name),dec,activeName);
+    [movs(i).t,movs(i).Ix,movs(i).Iy,movs(i).Idata,movs(i).Irot]= trackOptitrack(fullfile(fold,f(i).name),dec,inactiveName);
     movs(i).fname=f(i).name;
     movs(i).fps=120/dec;
     movs(i).conv=1;
@@ -36,4 +44,4 @@ for i=1:nMovs
 
 end
 closeWaitbar;
-save(fullfile(fold,'movieInfo.mat'),'movs','fold','nMovs')
+save(fullfile(fold,'movieInfo.mat'),'movs','fold','nMovs','r')

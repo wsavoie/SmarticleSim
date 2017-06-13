@@ -51,7 +51,7 @@ SPACE_UNITS='m';
 TIME_UNITS='s';
 ma = msdanalyzer(2, SPACE_UNITS, TIME_UNITS);
 inds=1;
-showFigs=[1 22 37 36];
+showFigs=[1 22 35 36 37];
 useCOM=0;
 f=[]; rob=[]; v=[];dirs=[];
 % Switched 0->2 % 1->3 % 2->1 % 3->0
@@ -1510,11 +1510,13 @@ if(showFigs(showFigs==xx))
     %     legend(legT);
     r=simAm(1).r;
     t = linspace(0,2*pi);plot(r*cos(t),r*sin(t),'-k','linewidth',2);
-    figText(gcf,14)
+    xlabel('X (m)')
+    ylabel('Y (m)');
+    figText(gcf,16)
     axis square
 end
 
-%% 36 plot beginning and ending sim
+%% 36 determine step length probability
 xx=36;
 if(showFigs(showFigs==xx))
     figure(xx)
