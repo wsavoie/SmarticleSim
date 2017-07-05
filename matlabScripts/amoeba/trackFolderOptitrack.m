@@ -1,12 +1,19 @@
 %clear all
-fold=uigetdir('A:\2DSmartData\sound');
+fold=uigetdir('A:\2DSmartData\soundMat');
 f=dir2(fullfile(fold,'*.csv'));
-rigidBodyName = ' ring';
-activeName= ' active';
-inactiveName=' inactive';
+
+RIGIDBODYNAMES = true; %make true if tracking multiple things (i.e. inactive smarticles)
+
+if RIGIDBODYNAMES
+    rigidBodyName = ' ring';
+    activeName= ' active';
+    inactiveName=' inactive';
+else
+    rigidBodyName = 'rigid body 1';
+end
+
 % r=.9525;
 %^N.B. put a space in front of keywords that could occur within other keywords
-
 %     clf;
 movs=struct;
 nMovs=length(f);
@@ -26,9 +33,12 @@ for i=1:nMovs
     waitbar(i/steps,h,{['Processing: ',num2str(i),'/',num2str(length(f))],f(i).name})
 %     pts(i,'/',nMovs);
 %     [t,x,y,tracks]
+    
     [movs(i).t,movs(i).x,movs(i).y,movs(i).data,movs(i).rot]= trackOptitrack(fullfile(fold,f(i).name),dec,rigidBodyName);
-    %[~,movs(i).Ax,movs(i).Ay,movs(i).Adata,movs(i).Arot]= trackOptitrack(fullfile(fold,f(i).name),dec,activeName);
-    [movs(i).t,movs(i).Ix,movs(i).Iy,movs(i).Idata,movs(i).Irot]= trackOptitrack(fullfile(fold,f(i).name),dec,inactiveName);
+    if RIGIDBODYNAMES
+        [~,movs(i).Ax,movs(i).Ay,movs(i).Adata,movs(i).Arot]= trackOptitrack(fullfile(fold,f(i).name),dec,activeName);
+        [movs(i).t,movs(i).Ix,movs(i).Iy,movs(i).Idata,movs(i).Irot]= trackOptitrack(fullfile(fold,f(i).name),dec,inactiveName);
+    end
     movs(i).fname=f(i).name;
     movs(i).fps=120/dec;
     movs(i).conv=1;
@@ -39,9 +49,6 @@ for i=1:nMovs
     %%
     movs(i).pars=vals;
     
-    
-%     pause(1);
-
 end
 closeWaitbar;
 save(fullfile(fold,'movieInfo.mat'),'movs','fold','nMovs','r')

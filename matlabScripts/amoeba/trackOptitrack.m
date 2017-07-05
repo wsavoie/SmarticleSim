@@ -50,15 +50,16 @@ if ~isempty(ind) || data.textdata{7,6}=='W' %has ring rigid body
 
     %decimate by dec
     t = data.data(:,2); 
-    x = -data.data(:,ringInd+4); %was 7
-    y = data.data(:,ringInd+6); %was 9
-    z = data.data(:,ringInd+5); %was 8
-
-
     t=t(1:dec:end,:);
-    comx=x(1:dec:end,:);
-    comy=y(1:dec:end,:);
-    % comz=z(1:dec:end,:);
+    x = -data.data(1:dec:end,ringInd+4); %was 7
+    y = data.data(1:dec:end,ringInd+6); %was 9
+    z = data.data(1:dec:end,ringInd+5); %was 8
+
+
+    
+    comx=x;
+    comy=y;
+    comz=z;
     ang=ang(1:dec:end,:);
     % pts('rigid body sys');
     varargout{1}=ang;
