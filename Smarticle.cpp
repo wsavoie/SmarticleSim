@@ -517,8 +517,8 @@ void Smarticle::CreateArm3(int armID, double len, double mr, double mr2, ChVecto
 			utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
 			//radius,h,pos,rot,vis
 			auto a = Angle_to_Quat(ANGLE, ChVector<>(0, PI / 2, PI / 2));
-			utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .01131, -mr + .0085, mr2), a, true);
-			utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .03406, -mr + .0055, -mr2), a, true);
+			//utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .01131, -mr + .0085, mr2), a, true);
+			//utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .03406, -mr + .0055, -mr2), a, true);
 
 			break;
 		}

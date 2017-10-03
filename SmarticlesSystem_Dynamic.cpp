@@ -144,7 +144,7 @@ double tFinal = 60 * 20;
 
 double ringRad = 0.192 / 2.0;
 
-bool ringActive = true;
+bool ringActive = false;
 ChVector<> ringInitPos(0, 0, 0);
 
 bool oneInactive = false;
@@ -233,8 +233,8 @@ bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surf
 
 std::vector<std::shared_ptr<ChBody>> bucket_bod_vec;
 
-bool writejson = false;
-bool readjson = true;
+bool writejson = true;
+bool readjson = false;
 json ReadJson(std::string fname);
 json ReadCertainSystem(json& j, int robotNum);
 
@@ -2154,7 +2154,7 @@ bool SetGait(double time)
 		Smarticle::global_GUI_value = 0;
 	else if (time > .05)
 		Smarticle::global_GUI_value = 0;
-	if (time > 60)
+	if (time > 5)
 		return true;
 	/*else
 		Smarticle::global_GUI_value = 1;
@@ -2837,12 +2837,14 @@ int main(int argc, char* argv[]) {
 			{
 				WriteJson(mphysicalSystem, tStep, mySmarticlesVec);
 			}
+			
+			//RINGLOCATION
+			setInactiveFromRingLocation(mphysicalSystem, mySmarticlesVec, ring);
 		}
 
 
-		//RINGLOCATION
 
-		setInactiveFromRingLocation(mphysicalSystem, mySmarticlesVec, ring);
+		
 
 	}
 	//simParams.open(simulationParams.c_str(), std::ios::app);
