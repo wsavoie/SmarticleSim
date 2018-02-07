@@ -10,7 +10,6 @@ using namespace irr::video;
 using namespace irr::io;
 using namespace irr::gui;
 
-
 IrrGui::IrrGui(ChIrrApp* myapp, std::vector<std::shared_ptr<Smarticle>> *mySmarticlesVec, std::shared_ptr<SystemGeometry>  msys) {
 
 	sv = mySmarticlesVec;
@@ -526,9 +525,38 @@ void IrrGui::screenshot(int stepsPerFrame)
 #if defined(_WIN64)
 			HWND winhandle = reinterpret_cast<HWND>(app->GetVideoDriver()->getExposedVideoData().OpenGLWin32.HWnd);
 			//MoveWindow(winhandle, 700, 200, appWidth,appHeight, true);
-			SetWindowPos(winhandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-#endif
+			RECT rect = { NULL };
+			LONG xx, yy;
+
+			//static int nx = 0;
+			//static int ny = 0;
+			//nx = nx + 30;
+			//ny = ny + 30;
+			//MoveWindow(winhandle, (int)nx,(int)0, appWidth, appHeight, true);
+
+			if (GetWindowRect(winhandle, &rect)) {
+				xx = rect.left;
+				yy = rect.top;
+			}
+
+			//SetWindowPos(winhandle, HWND_TOPMOST, xx, yy, appWidth, appHeight,0);
+			//GetLog() << "xx:"<<(int)xx << " " << "yy:"<<(int)yy;
+			//MoveWindow(winhandle, (int)nx,(int)ny, appWidth, appHeight, true);
+
+			//can move window and it won't cause video distorting in screenshot as long as you do not move it across monitors!!
+			SetWindowPos(winhandle, HWND_TOPMOST, (int)xx, (int)yy, appWidth, appHeight, SWP_NOSIZE);
 			irr::video::IImage* image = app->GetVideoDriver()->createScreenShot();
+#else
+			irr::video::IImage* image = app->GetVideoDriver()->createScreenShot();
+#endif
+
+			//app->GetVideoDriver()->setViewPort(rect<s32>(0, 0, 50, 456));
+
+
+
+				
+			
+		
 			char filename[100];
 			sprintf(filename, "video_capture/screenshot%05d.png", (frameNum + 1) / stepsPerFrame);
 			if (image)

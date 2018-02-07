@@ -2345,6 +2345,7 @@ int main(int argc, char* argv[]) {
 #if defined(_WIN64)
 	HWND winhandle = reinterpret_cast<HWND>(application.GetVideoDriver()->getExposedVideoData().OpenGLWin32.HWnd);
 #endif
+
 	//MoveWindow(winhandle, windPosx, windPosy, appWidth, appHeight, true);
 
 	////////////!@#$%^
