@@ -23,7 +23,7 @@
 %running curr- 100mA
 %Kt = T/I, .008/.27 = .0296 Nm/A
 %T=0.0588399
-stapleSize = false;
+stapleSize = true;
 % dt=.0001; %.00025
 dt=.001; %.00025
 alen=.26; %smc= 0.1 %nsc=0.3

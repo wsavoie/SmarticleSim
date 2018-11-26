@@ -26,7 +26,7 @@
 
 #define USE_PARALLEL false
 #define irrlichtVisualization true
-#define stapleSize false
+#define stapleSize true
 #define dnl "\n\n"
 #define nl "\n"
 #if USE_PARALLEL

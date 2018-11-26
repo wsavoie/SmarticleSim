@@ -100,7 +100,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM,FLATHOPPER};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = BOX;
+BucketType bucketType = STRESSSTICK;
 //std::vector<std::shared_ptr<ChBody>> /*sphereStick*/;
 //std::shared_ptr<ChBody> bucket;
 //std::shared_ptr<ChBody> bucket_bott;
@@ -174,9 +174,9 @@ double t2_smarticle = sizeScale * .0005;
 double rho_smarticle = 7850.0;
 double rho_smarticleArm = 7850.0;
 double rho_smarticleMid = 7850.0;
-double p_gain = 0.025;   //.1//.2         //0.133
-double i_gain = 10;// 0.03;	 //.5//.225						//0.05
-double d_gain = 0.1; //.0025 //.01       //0.0033
+//double p_gain = 0.025;   //.1//.2         //0.133
+//double i_gain = 10;// 0.03;	 //.5//.225						//0.05
+//double d_gain = 0.1; //.0025 //.01       //0.0033
 
 #else
 
@@ -197,9 +197,14 @@ double d_gain = .01;//.01;
 
 #elif SOLVERTYPE==1||SOLVERTYPE==3
 
-double p_gain = 1;// 2;
-double i_gain = 1;//30;
-double d_gain = 1;//.01; 
+//double p_gain = 1;// 2;
+//double i_gain = 1;//30;
+//double d_gain = 1;//.01; 
+
+double p_gain = 0.00025;   //.1//.2         //0.133
+double i_gain = .01;// 0.03;	 //.5//.225						//0.05
+double d_gain = 0.01; //.0025 //.01       //0.0033
+
 #endif
 
 
@@ -302,7 +307,7 @@ namespace ns { 	// struct to add smarticles to json file
 			//std::cout << "\n\n\n" << "to_json_smartInfo:" << "\n\n\n";
 			j = json{ { "posX", p.posX },{ "posY", p.posY},{ "posZ", p.posZ},
 			{ "quatE0", p.quatE0 },{ "quatE1", p.quatE1},{ "quatE2", p.quatE2},{ "quatE3", p.quatE3},
-			{ "ang0", p.ang0 },{ "ang1", p.ang1},{ "alive", p.alive } };
+			{ "ang0", p.ang0 },{ "ang1", p.ang1},{ "alive", p.alive }};
 		}
 		void to_json(json& j, const std::shared_ptr<Smarticle>& s) {
 			//std::cout << "\n\n\n" << "to_json_smartInfo:" << "\n\n\n";
@@ -355,7 +360,7 @@ namespace ns { 	// struct to add smarticles to json file
 			{
 				jt += { std::to_string(i), { { "posX", p.smarts.at(i).posX },{ "posY", p.smarts.at(i).posY },{ "posZ",  p.smarts.at(i).posZ },
 				{ "quatE0",  p.smarts.at(i).quatE0 },{ "quatE1",  p.smarts.at(i).quatE1 },{ "quatE2",  p.smarts.at(i).quatE2 },{ "quatE3",  p.smarts.at(i).quatE3 },
-				{ "ang0", p.smarts.at(i).ang0 },{ "ang1",  p.smarts.at(i).ang1 },{ "alive",  p.smarts.at(i).alive } } };
+				{ "ang0", p.smarts.at(i).ang0 },{ "ang1",  p.smarts.at(i).ang1 },{ "alive",  p.smarts.at(i).alive },{ "alive",  p.smarts.at(i).alive } } };
 
 			}
 			j.emplace_back(jt);
@@ -1600,7 +1605,7 @@ void WriteJson(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, std::vecto
 	{
 		ns::System p(mySmarticlesVec);
 		p.to_json(j, p);
-		std::ofstream o("pretty.json");
+		std::ofstream o("PostProcess//pretty.json");
 		o << std::setw(4) << j << std::endl;
 
 	}
@@ -2829,6 +2834,10 @@ int main(int argc, char* argv[]) {
 				rho_smarticleArm,
 				rho_smarticleMid);
 		}
+		//if (writejson)
+		//{
+		//	WriteJson(mphysicalSystem, tStep, mySmarticlesVec);
+		//}
 		if (ringActive)
 		{
 			PrintRingPos(mphysicalSystem, tStep, ring, mySmarticlesVec);

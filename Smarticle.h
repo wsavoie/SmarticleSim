@@ -247,11 +247,16 @@ namespace chrono {
 		//{ VNULL, VNULL, VNULL, VNULL } };
 		////////////////
 
+
 		std::vector<std::pair<double, double>> *mv;
 		std::deque<std::tuple<double, double, double, double>> torques;
 		std::deque<double> torque1;
 		std::deque<double> torque2;
 		std::tuple<double, double, double, double> torqueAvg;
+
+
+		void setTextures();
+
 		void updateTorqueDeque();
 		void updateTorqueAvg(std::tuple <double, double, double, double > oldT);
 		///////////////////////////////////////////////////////////
@@ -283,6 +288,13 @@ namespace chrono {
 			double len, 			// arm length
 			ChVector<> posRel, 	// relative initPosition of the arm wrt the smarticle initPos, which is the center of the center arm
 								// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
+			ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
+		);
+		void CreateArms(
+			int armID, 			// 0: left arm, 1: middle arm, 2: right arm
+			double len, 			// arm length
+			ChVector<> posRel, 	// relative initPosition of the arm wrt the smarticle initPos, which is the center of the center arm
+													// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
 			ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
 		);
 
@@ -369,14 +381,14 @@ namespace chrono {
 		std::vector <double> nextOmega;
 		std::vector <double> nextAngle;
 		std::vector <double> currTorque;
+		
 		// bodies
-		std::shared_ptr<ChBody> arm0;	// left arm
-		std::shared_ptr<ChBody> arm1;	// middle arm
-		std::shared_ptr<ChBody> arm2;	// right arm
+		std::shared_ptr<ChBody> arms[numSegs];
+
 		std::shared_ptr<ChBody> smarticle;
+		
 		// joints
-		std::shared_ptr<ChLinkLockRevolute> link_revolute01; 	// revolute joint between arms 0 and 1
-		std::shared_ptr<ChLinkLockRevolute> link_revolute12; 	// revolute joint between arms 0 and 1
+		std::shared_ptr<ChLinkLockRevolute> link_revolutes[numEngs];
 
 		// Actuators
 		std::shared_ptr<ChLinkEngine> link_actuators[numEngs];
@@ -385,9 +397,7 @@ namespace chrono {
 		std::shared_ptr<ChFunction> EngFunctions[numEngs];
 
 		// assets
-		std::shared_ptr<ChTexture> arm0_textureAsset;
-		std::shared_ptr<ChTexture> arm1_textureAsset;
-		std::shared_ptr<ChTexture> arm2_textureAsset;
+		std::shared_ptr<ChTexture> textureAssets[numSegs];
 
 	};
 

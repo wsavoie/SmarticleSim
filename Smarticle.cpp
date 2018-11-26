@@ -55,15 +55,12 @@ Smarticle::~Smarticle()
 {
 	for (size_t i = 0; i < numEngs; i++)
 	{
-		m_system->RemoveLink(link_actuators[i]);
+		m_system->RemoveLink(this->link_actuators[i]);
 	}
-
-	//m_system->RemoveLink(link_revolute01);
-	//m_system->RemoveLink(link_revolute12);
-
-	m_system->RemoveBody(this->arm0);
-	m_system->RemoveBody(this->arm1);
-	m_system->RemoveBody(this->arm2);
+	for (size_t i = 0; i < numSegs; i++)
+	{
+		m_system->RemoveBody(this->arms[i]);
+	}
 	if (armsController)
 		armsController->~Controller();
 
@@ -202,10 +199,47 @@ void Smarticle::Properties(
 	this->LTVal.emplace_back(GUI2);
 	//this->LTVal.emplace_back(GUI3);
 	this->LTValIdx = genRandInt(0, LTVal.size() - 1);
-
+	for (int i = 0; i < numSegs; i++)
+	{
+		textureAssets[i] = std::make_shared<ChTexture>();
+		//if (i == 1)
+		//{
+		//	if (stapleSize) { textureAssets[i]->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOrientedARROWS.png")); }
+		//	else { textureAssets[i]->SetTextureFilename(GetChronoDataFile("cubetexture_SmarticlePicture.png")); }
+		//}
+		//else
+		//{
+		//	if (stapleSize) { textureAssets[i]->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png")); }
+		//	else { textureAssets[i]->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png")); }
+		//}
+	}
+	setTextures();
+	//create texture loop
 }
 
-
+void Smarticle::setTextures()
+{
+	
+	for (int i = 0; i < numSegs; i++)
+	{
+		if (active)
+		{
+			if (i == 1)
+			{
+				if (stapleSize) { textureAssets[i]->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOrientedARROWS.png")); }
+				else { textureAssets[i]->SetTextureFilename(GetChronoDataFile("cubetexture_SmarticlePicture.png")); }
+			}
+			else
+			{
+				if (stapleSize) { textureAssets[i]->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png")); }
+				else { textureAssets[i]->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png")); }
+			}
+		}
+		else
+		{	textureAssets[i]->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));}
+	}
+	
+}
 void Smarticle::updateTorqueDeque()
 {
 	std::tuple < double, double, double, double > oldT = torques.back();
@@ -272,6 +306,74 @@ double Smarticle::GetNextOmega(int id)
 	nextOmega.at(id) = this->ChooseOmegaAmount(GetOmega(id), GetCurrAngle(id), GetNextAngle(id));
 	return nextOmega.at(id);
 }
+void Smarticle::CreateArms(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
+	ChVector<> gyr;  	// components gyration
+	double vol;			// components volume
+
+	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, r, r2));
+	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, r, r2)).Get_Diag();
+	// create body, set position and rotation, add surface property, and clear/make collision model
+	auto arm = std::make_shared<ChBody>();
+
+	//$$$$$$$$$$$
+	//$$$$$$$$$$$
+
+	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
+	arm->SetPos(posArm);
+	arm->SetRot(rotation*armRelativeRot);
+	arm->SetCollide(true);
+	arm->SetBodyFixed(false);
+	arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
+	double m = 0;
+	if (armID == 1) //this was old code from when I was fixing them to fit
+	{
+		arm->SetBodyFixed(false);
+		m = vol*mid_density;
+		arm->SetDensity(mid_density);
+	}
+	else
+	{
+		arm->SetBodyFixed(false);
+		m = vol*arm_density;
+		arm->SetDensity(arm_density);
+	}
+	arm->SetMaterialSurface(mat_smarts);
+
+
+	//	double mass = density * vol;
+	//double mass = .005;//.043/3.0; //robot weight 43 grams
+	arm->GetCollisionModel()->ClearModel();
+	//arm->SetLimitSpeed(true);
+	//arm->SetMaxSpeed(PI * 2 * 5);
+	//arm->SetMaxWvel(PI * 2 * 5);
+	//arm->ClampSpeed();
+
+	if (visualize)
+	{
+		arm->AddAsset(textureAssets[armID]);
+		if(armID==1)
+			arm->SetName("smarticle_cent");
+		else
+			arm->SetName("smarticle_arm");
+	}
+
+	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0), QUNIT, visualize);
+
+	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+
+	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
+
+	// change mass and inertia property
+	arm->SetMass(m);
+	arm->SetInertiaXX(m * gyr);
+	//arm->SetDensity(density);
+
+	m_system->AddBody(arm);
+
+
+	arms[armID] = arm;
+}
 void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
@@ -315,28 +417,15 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	//arm->SetMaxWvel(PI * 2 * 5);
 	//arm->ClampSpeed();
 
+
 	if (visualize)
 	{
-		switch (armID) {
-		case 0:
-			arm0_textureAsset = std::make_shared<ChTexture>();
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
-			arm->AddAsset(arm0_textureAsset);
-			break;
-		case 1:
-			arm1_textureAsset = std::make_shared<ChTexture>();
-			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_blue_bordersBlueOrientedARROWS.png"));
-			arm->AddAsset(arm1_textureAsset);
-			break;
-		case 2:
-			arm2_textureAsset = std::make_shared<ChTexture>();
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
-			arm->AddAsset(arm2_textureAsset);
-			break;
-		default:
-			std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
-			break;
+		arm->AddAsset(textureAssets[armID]);
+		if (armID == 1)
+		{
+			arm->SetName("smarticle_cent");
 		}
+		else { arm->SetName("smarticle_arm"); }
 	}
 
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
@@ -346,29 +435,13 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 
 	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
 
-	// change mass and inertia property
+																					// change mass and inertia property
 	arm->SetMass(m);
 	arm->SetInertiaXX(m * gyr);
 	//arm->SetDensity(density);
 
 	m_system->AddBody(arm);
-
-
-
-	switch (armID) {
-	case 0: {
-		arm0 = arm;
-	} break;
-	case 1: {
-		arm1 = arm;
-	} break;
-	case 2: {
-		arm2 = arm;
-	} break;
-	default:
-		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
-		break;
-	}
+	arms[armID] = arm;
 }
 void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
@@ -406,29 +479,12 @@ void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVecto
 
 	if (visualize)
 	{
-		switch (armID) {
-		case 0:
-			arm->SetName("smarticle_arm");
-			arm0_textureAsset = std::make_shared<ChTexture>();
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
-			arm->AddAsset(arm0_textureAsset);
-			break;
-		case 1:
+		setTextures();
+		arm->AddAsset(textureAssets[armID]);
+		if(armID==1)
 			arm->SetName("smarticle_cent");
-			arm1_textureAsset = std::make_shared<ChTexture>();
-			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_SmarticlePicture.png"));
-			arm->AddAsset(arm1_textureAsset);
-			break;
-		case 2:
+		else
 			arm->SetName("smarticle_arm");
-			arm2_textureAsset = std::make_shared<ChTexture>();
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
-			arm->AddAsset(arm2_textureAsset);
-			break;
-		default:
-			std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
-			break;
-		}
 	}
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 	utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
@@ -444,21 +500,7 @@ void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVecto
 	m_system->AddBody(arm);
 
 
-
-	switch (armID) {
-	case 0: {
-		arm0 = arm;
-	} break;
-	case 1: {
-		arm1 = arm;
-	} break;
-	case 2: {
-		arm2 = arm;
-	} break;
-	default:
-		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
-		break;
-	}
+	arms[armID] = arm;
 }
 void Smarticle::CreateArm3(int armID, double len, double mr, double mr2, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
@@ -496,39 +538,31 @@ void Smarticle::CreateArm3(int armID, double len, double mr, double mr2, ChVecto
 
 	if (visualize)
 	{
+		setTextures();
+		arm->AddAsset(textureAssets[armID]);
+		if (armID == 1)
+			arm->SetName("smarticle_cent");
+		else
+			arm->SetName("smarticle_arm");
+		arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+
 		switch (armID) {
 		case 0:
 		{
-			arm->SetName("smarticle_arm");
-			arm0_textureAsset = std::make_shared<ChTexture>();
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
-			arm->AddAsset(arm0_textureAsset);
-			arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 			utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
 			break;
 		}
 		case 1:
 		{
-			arm->SetName("smarticle_cent");
-			arm1_textureAsset = std::make_shared<ChTexture>();
-			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_SmarticlePicture.png"));
-			arm->AddAsset(arm1_textureAsset);
-			arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 			utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
 			//radius,h,pos,rot,vis
 			auto a = Angle_to_Quat(ANGLE, ChVector<>(0, PI / 2, PI / 2));
 			//utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .01131, -mr + .0085, mr2), a, true);
 			//utils::AddCylinderGeometry(arm.get(), .004, 0.005, ChVector<>(-len / 2.0 + .03406, -mr + .0055, -mr2), a, true);
-
 			break;
 		}
 		case 2:
 		{
-			arm->SetName("smarticle_arm");
-			arm2_textureAsset = std::make_shared<ChTexture>();
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
-			arm->AddAsset(arm2_textureAsset);
-			arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 			utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
 			break;
 		}
@@ -552,71 +586,51 @@ void Smarticle::CreateArm3(int armID, double len, double mr, double mr2, ChVecto
 	m_system->AddBody(arm);
 
 
-
-	switch (armID) {
-	case 0: {
-		arm0 = arm;
-	} break;
-	case 1: {
-		arm1 = arm;
-	} break;
-	case 2: {
-		arm2 = arm;
-	} break;
-	default:
-		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
-		break;
-	}
+	arms[armID] = arm;
+	
 }
 std::shared_ptr<ChBody> Smarticle::GetArm(int armID) {
-	switch (armID) {
-	case 0:
-		return arm0;
-	case 1:
-		return arm1;
-	case 2:
-		return arm2;
-	default:
-		std::cerr << "Error! smarticle can only have 3 arms with ids from {0, 1, 2}" << std::endl;
-		break;
-	}
-	return std::make_shared<ChBody>();
+	return arms[armID];
 }
 
 std::shared_ptr<ChLinkLockRevolute> Smarticle::GetRevoluteJoint(int jointID) {
-
-	switch (jointID) {
-	case 0:
-		return link_revolute01;
-	case 1:
-		return link_revolute12;
-	default:
-		std::cerr << "Error! smarticle can only have joints with ids from {0, 1}" << std::endl;
-		break;
-	}
-	return std::shared_ptr<ChLinkLockRevolute>();
+	return link_revolutes[jointID];
 }
 void Smarticle::SetSpeed(ChVector<> newSpeed)
 {
-	arm0->SetPos_dt(newSpeed);
-	arm1->SetPos_dt(newSpeed);
-	arm2->SetPos_dt(newSpeed);
+	for (size_t i = 0; i < numSegs; i++)
+	{
+		arms[i]->SetPos_dt(newSpeed);
+	}
+	//arm0->SetPos_dt(newSpeed);
+	//arm1->SetPos_dt(newSpeed);
+	//arm2->SetPos_dt(newSpeed);
 }
 
 void Smarticle::RotateSmarticle(ChQuaternion<> newRotation)
 {
-	GetLog() << arm1->GetRotAxis();
-	auto arm1Frame = arm1->GetCoord();
-	arm0->SetRot(newRotation);
-	arm1->SetRot(newRotation);
-	arm2->SetRot(newRotation);
+	GetLog() << arms[1]->GetRotAxis();
+	for (size_t i = 0; i < numSegs; i++)
+	{
+		arms[i]->SetRot(newRotation);
+	}
+
+	//GetLog() << arm1->GetRotAxis();
+	//auto arm1Frame = arm1->GetCoord();
+	//arm0->SetRot(newRotation);
+	//arm1->SetRot(newRotation);
+	//arm2->SetRot(newRotation);
 }
 
 void Smarticle::UpdateState()
 {
-	GetArm(0)->Update();
-	GetArm(1)->Update();
-	GetArm(2)->Update();
+	for (size_t i = 0; i < numSegs; i++)
+	{
+		GetArm(i)->Update();
+	}
+	//GetArm(0)->Update();
+	//GetArm(1)->Update();
+	//GetArm(2)->Update();
 }
 void Smarticle::SetEdges()
 {
@@ -728,23 +742,25 @@ void Smarticle::RotateSmarticleBy(ChQuaternion<> newAng)
 	quat2.Normalize();
 	newAng.Normalize();
 
-	auto c = arm1->GetCoord();
+	auto c = arms[1]->GetCoord();
 	c.pos.z() = c.pos.z() + 1;
 	//ChTransform<>::TransformLocalToParent()
 
-	auto ca = arm1->GetRotAxis();
+	auto ca = arms[1]->GetRotAxis();
 	rotation = rotation*newAng;
-	arm1->SetRot(rotation);
+	arms[1]->SetRot(rotation);
 	UpdateState();
-	arm1->GetCollisionModel()->SyncPosition();
+	arms[1]->GetCollisionModel()->SyncPosition();
 
-	auto a = arm0->GetCoord();
-	a.ConcatenatePreTransformation(arm1->GetCoord());
-	arm0->SetCoord(a);
+	auto a = arms[0]->GetCoord();
+	a.ConcatenatePreTransformation(arms[1]->GetCoord());
+	arms[0]->SetCoord(a);
+	arms[2]->SetCoord(a);
+
 	UpdateState();
-	arm0->GetCollisionModel()->SyncPosition();
 
-
+	arms[0]->GetCollisionModel()->SyncPosition();
+	arms[2]->GetCollisionModel()->SyncPosition();
 
 	//rotation = newAng;
 	//ChVector<>posRel = ChVector<>((-w / 2.0 + (jointClearance)-cos(-angle1)*l / 2), 0, -(l / 2.0)*sin(-angle1) - offPlaneoffset);
@@ -785,18 +801,25 @@ void Smarticle::RotateSmarticleBy(ChQuaternion<> newAng)
 }
 void Smarticle::TransportSmarticle(ChVector<> newPosition)
 {
-	arm0->SetPos(arm0->GetPos() - arm1->GetPos() + newPosition);
-	arm2->SetPos(arm2->GetPos() - arm1->GetPos() + newPosition);
-	arm1->SetPos(newPosition);
+	arms[0]->SetPos(arms[0]->GetPos() - arms[1]->GetPos() + newPosition);
+	arms[2]->SetPos(arms[2]->GetPos() - arms[1]->GetPos() + newPosition);
+	arms[1]->SetPos(newPosition);
+	
+	for (size_t i = 0; i < numSegs; i++)
+	{arms[i]->GetCollisionModel()->SyncPosition();}
+	
+	//arm0->SetPos(arm0->GetPos() - arm1->GetPos() + newPosition);
+	//arm2->SetPos(arm2->GetPos() - arm1->GetPos() + newPosition);
+	//arm1->SetPos(newPosition);
 
-	arm0->GetCollisionModel()->SyncPosition();
-	arm1->GetCollisionModel()->SyncPosition();
-	arm2->GetCollisionModel()->SyncPosition();
+	//arm0->GetCollisionModel()->SyncPosition();
+	//arm1->GetCollisionModel()->SyncPosition();
+	//arm2->GetCollisionModel()->SyncPosition();
 }
 void Smarticle::CreateJoints() {
 	// link 1
-	link_revolute01 = std::make_shared<ChLinkLockRevolute>();
-	link_revolute12 = std::make_shared<ChLinkLockRevolute>();
+	std::shared_ptr<ChLinkLockRevolute> link_revolute01 = std::make_shared<ChLinkLockRevolute>();
+	std::shared_ptr<ChLinkLockRevolute> link_revolute12 = std::make_shared<ChLinkLockRevolute>();
 	// ChVector<> pR01(-w / 2.0+r2, 0, 0);
 	// ChVector<> pR12(w / 2.0-r2, 0, 0);
 	ChVector<> pR01(-w / 2.0 - r2, 0, 0);
@@ -804,15 +827,18 @@ void Smarticle::CreateJoints() {
 	ChQuaternion<> qx = Q_from_AngAxis(PI_2, VECT_X);
 
 	// link 1
-	link_revolute01->Initialize(arm0, arm1, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx));
+	link_revolute01->Initialize(arms[0], arms[1], ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx));
 	link_revolute01->SetMotion_axis(ChVector<>(0, 0, 1));
 	m_system->AddLink(link_revolute01);
 
 
 	// link 2
-	link_revolute12->Initialize(arm1, arm2, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx));
+	link_revolute12->Initialize(arms[1], arms[2], ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx));
 	link_revolute12->SetMotion_axis(ChVector<>(0, 0, 1));
 	m_system->AddLink(link_revolute12);
+
+	link_revolutes[0] = link_revolute01;
+	link_revolutes[1] = link_revolute12;
 }
 
 void Smarticle::CreateActuators() {
@@ -847,7 +873,7 @@ void Smarticle::CreateActuators() {
 	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
 	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
+	link_actuator01->Initialize(arms[0], arms[1], false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
 	link_actuator01->GetLimit_Rz()->Set_min(D2R*angLow);
 	link_actuator01->GetLimit_Rz()->Set_max(D2R*angHigh);
 	link_actuator01->GetLimit_Rz()->Set_active(true);
@@ -858,7 +884,7 @@ void Smarticle::CreateActuators() {
 	modK->Set_yconst(100);*/
 
 
-	link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+	link_actuator12->Initialize(arms[2], arms[1], false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
 	link_actuator12->GetLimit_Rz()->Set_min(D2R*angLow);
 	link_actuator12->GetLimit_Rz()->Set_max(D2R*angHigh);
 	link_actuator12->GetLimit_Rz()->Set_active(true);
@@ -909,9 +935,12 @@ void Smarticle::Create() {
 		CreateArm(1, w, ChVector<>(0, 0, 0));
 		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(angles[1]), 0, -(l_mod / 2.0 - r2)*sin(angles[1])), quat2);*/
 
-		CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0 - r2)*sin(-angles[0])), quat0);
-		CreateArm(1, w, ChVector<>(0, 0, 0));
-		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r2)*sin(-angles[1])), quat2);
+		//arms[0]=CreateArms(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0 - r2)*sin(-angles[0])), quat0);
+		//arms[1]=CreateArms(1, w, ChVector<>(0, 0, 0));
+		//arms[2]=CreateArms(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r2)*sin(-angles[1])), quat2);
+		CreateArms(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0 - r2)*sin(-angles[0])), quat0);
+		CreateArms(1, w, ChVector<>(0, 0, 0));
+		CreateArms(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r2)*sin(-angles[1])), quat2);
 	}
 	else
 	{
@@ -939,21 +968,21 @@ void Smarticle::Create() {
 	CreateActuators();
 
 	// mass property
-	mass = arm0->GetMass() + arm1->GetMass() + arm2->GetMass();
-
+	mass = 0;
+	for (size_t i = 0; i < numSegs; i++)
+	{mass = mass + arms[i]->GetMass();}
+	
 	armsController = (new Controller(m_system, this));
 	armsController->outputLimit = torqueLimit;
 	armsController->omegaLimit = omegaLim;
 	if (!active)
 	{
-		arm0->SetName("D_smarticle_arm");
-		arm1->SetName("D_smarticle_cent");
-		arm2->SetName("D_smarticle_arm");
+		arms[0]->SetName("D_smarticle_arm");
+		arms[1]->SetName("D_smarticle_cent");
+		arms[2]->SetName("D_smarticle_arm");
 
 		//armsController = NULL;
-		arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-		arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-		arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
+		setTextures();
 
 		//link_actuators[0]->SetBroken(true);
 		//link_actuators[0]->SetDisabled(1);
@@ -985,43 +1014,37 @@ void Smarticle::ChangeActive(bool m_active)
 	{
 		if (m_active)
 		{
-			arm0->SetName("smarticle_arm");
-			arm1->SetName("smarticle_cent");
-			arm2->SetName("smarticle_arm");
+			arms[0]->SetName("smarticle_arm");
+			arms[1]->SetName("smarticle_cent");
+			arms[2]->SetName("smarticle_arm");
 
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
-			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_SmarticlePicture.png"));
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
-			getLinkActuator(0)->GetLimit_Rz()->Set_min(D2R * angLow);
-			getLinkActuator(0)->GetLimit_Rz()->Set_max(D2R * angHigh);
-			getLinkActuator(1)->GetLimit_Rz()->Set_min(D2R * angLow);
-			getLinkActuator(1)->GetLimit_Rz()->Set_max(D2R * angHigh);
+			for (size_t i = 0; i < numEngs; i++)
+			{
+				getLinkActuator(i)->GetLimit_Rz()->Set_min(D2R * angLow);
+				getLinkActuator(i)->GetLimit_Rz()->Set_max(D2R * angHigh);
+			}
+
+			
 		}
 		else
 		{
-			arm0->SetName("D_smarticle_arm");
-			arm1->SetName("D_smarticle_cent");
-			arm2->SetName("D_smarticle_arm");
-
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-			arm1_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_white_bordersBlack.png"));
-
+			arms[0]->SetName("D_smarticle_arm");
+			arms[1]->SetName("D_smarticle_cent");
+			arms[2]->SetName("D_smarticle_arm");
 
 			//link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-			getLinkActuator(0)->GetLimit_Rz()->Set_min(D2R * 0);
-			getLinkActuator(0)->GetLimit_Rz()->Set_max(D2R * 0);
-			getLinkActuator(1)->GetLimit_Rz()->Set_min(D2R * 0);
-			getLinkActuator(1)->GetLimit_Rz()->Set_max(D2R * 0);
-			//this->armsController->resetCumError = true;
-
-			//link_actuators[0]->SetDisabled(1);
-			//link_actuators[1]->SetDisabled(1);
+			for (size_t i = 0; i < numEngs; i++)
+			{
+				getLinkActuator(i)->GetLimit_Rz()->Set_min(getLinkActuator(i)->GetRelAngle());
+				getLinkActuator(i)->GetLimit_Rz()->Set_max(getLinkActuator(i)->GetRelAngle());
+			}
+			this->armsController->resetCumError = true;
 		}
+
 	}
 
 	this->active = m_active;
-
+	setTextures();
 }
 std::shared_ptr<ChFunction> Smarticle::GetActuatorFunction(int id) {
 	if (id <= numEngs - 1)
@@ -1068,11 +1091,19 @@ double Smarticle::GetDensity(int id)
 		return arm_density;
 }
 ChVector<> Smarticle::Get_cm() {
-	return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos()) / mass;
+	ChVector<> cm = ChVector<>(0);
+	for (size_t i = 0; i < numSegs; i++)
+	{	cm = cm + arms[i]->GetMass()*arms[i]->GetPos();}
+	return cm / mass;
+	//return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos()) / mass;
 
 }
 ChVector<> Smarticle::Get_COG() {
-	return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos());
+	ChVector<> cg = ChVector<>(0);
+	for (size_t i = 0; i < numSegs; i++)
+	{cg = cg + arms[i]->GetMass()*arms[i]->GetPos();}
+	return cg;
+	//return (arm0->GetMass() * arm0->GetPos() + arm1->GetMass() * arm1->GetPos() + arm2->GetMass() * arm2->GetPos());
 
 }
 
@@ -1454,7 +1485,7 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 		//mv = &ot;
 		if (!arm0OT && OA)//if not previously OT
 		{
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
+			textureAssets[0]->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 
 			this->ot.clear();
 			//this->ot.emplace_back(angles[0] + sign(torque01)*moveAmt, angles[1] + sign(torque12)*moveAmt);
@@ -1474,7 +1505,7 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 		{
 			arm0OT = false;
 			if (OA)
-				arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
+				textureAssets[0]->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 		}
 		// nothing needs to be done if not prev OT
 	}
@@ -1486,7 +1517,7 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 		//mv = &ot;
 		if (!arm2OT && OA)//if not previously OT
 		{
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
+			textureAssets[2]->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
 			this->ot.clear();
 			//this->ot.emplace_back(angles[0] + moveAmt, angles[1] + moveAmt);
 			this->ot.emplace_back(angles[0], angles[1]);
@@ -1502,7 +1533,7 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 		{
 			arm2OT = false;
 			if (OA)
-				arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
+				textureAssets[2]->SetTextureFilename(GetChronoDataFile("cubetexture_Smart_bordersBlack.png"));
 		}
 		// nothing needs to be done if not prev OT
 	}
@@ -1511,16 +1542,16 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 	{
 		if (abs(torque01) + abs(torque12) > MTThresh && !arm2OT && !arm0OT)
 		{
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
+			textureAssets[0]->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
+			textureAssets[2]->SetTextureFilename(GetChronoDataFile("cubetexture_orange_borderOrange.png"));
 		}
 	}
 	if (LA)
 	{
 		if (abs(torque01) + abs(torque12) < LTThresh)
 		{
-			arm0_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
-			arm2_textureAsset->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
+			textureAssets[0]->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
+			textureAssets[2]->SetTextureFilename(GetChronoDataFile("cubetexture_green_borderGreen.png"));
 		}
 	}
 	return false;
@@ -1722,11 +1753,11 @@ void Smarticle::ControllerMove(int guiState, double torque01, double torque12)
 
 std::shared_ptr<ChBody> Smarticle::GetSmarticleBodyPointer()
 {
-	return arm1;
+	return arms[1];
 }
 int	Smarticle::GetID()
 {
-	return arm0->GetPhysicsItem()->GetIdentifier();
+	return arms[0]->GetPhysicsItem()->GetIdentifier();
 }
 void Smarticle::setCurrentMoveType(MoveType newMoveType)
 {
@@ -1763,7 +1794,8 @@ double Smarticle::GetMotTorque(int id)
 }
 
 void Smarticle::SetBodyFixed(bool mev) {
-	arm0->SetBodyFixed(mev);
-	arm1->SetBodyFixed(mev);
-	arm2->SetBodyFixed(mev);
+	for (size_t i = 0; i < numSegs; i++)
+	{
+		arms[i]->SetBodyFixed(mev);
+	}
 }

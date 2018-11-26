@@ -828,7 +828,7 @@ void SystemGeometry::create_Container()
 	case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
 	{
 		create_Bucket_Bott();
-		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_pinkwhite.png"));
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 		bucket = create_bucketShell(25, true);
 		break;
 	}

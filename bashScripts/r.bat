@@ -15,4 +15,4 @@ set RINGPART=0
 set WINDX=0 
 set WINDY=0 
 set SMARTINACTIVE=1 
-start "SmarticlesSystem_Dynamic.exe" /high "D:\ChronoCode\chronoPkgs\SmarticlesBuild\Release\SmarticlesSystem_Dynamic.exe" %LW% %DT% %NUMLAYER% %READFILE% %ACTIVEPCT% %ANGLE1% %ANGLE2% %BOXANG% %NUMPERLAYER% %STRESSACTIVATE% %SCREENSHOT% %RINGPART% %WINDX% %WINDY% %SMARTINACTIVE%
+start "SmarticlesSystem_Dynamic.exe" /high "..\..\SmarticlesBuild\Release\SmarticlesSystem_Dynamic.exe" %LW% %DT% %NUMLAYER% %READFILE% %ACTIVEPCT% %ANGLE1% %ANGLE2% %BOXANG% %NUMPERLAYER% %STRESSACTIVATE% %SCREENSHOT% %RINGPART% %WINDX% %WINDY% %SMARTINACTIVE%
