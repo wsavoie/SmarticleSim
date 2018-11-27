@@ -19,11 +19,16 @@ double ChFunctionController::Get_y(double t) {
 		break;
 	case ChLinkEngine::ENG_MODE_SPEED:
 		output = ComputeOutputSpeed(t);
-		output = SaturateValue(output, controller_->omegaLimit);
+
+		//output = OmegaToTorque(t, controller_->GetDesiredAngle(index_, t));
+		
+		
+		//output = SaturateValue(output, controller_->omegaLimit);
+		//GetLog() << this->controller_->smarticle_->getLinkActuator(index_)->Get_react_torque() << nl;
 		break;
 	case ChLinkEngine::ENG_MODE_TORQUE:
 		output = ComputeOutputTorque(t);
-		//output = SaturateValue(output, controller_->outputLimit);
+		output = SaturateValue(output, controller_->outputLimit);
 		break;
 	default:
 		output = ComputeOutputTorque(t);
@@ -74,14 +79,15 @@ double ChFunctionController::ComputeOutputTorque(double curr_t)//http://robotics
 	controller_->mAccuError[index_] += i_gain*.5*(currError + prevError)*dT;
 	//double Out = p_gain * currError + i_gain * controller_->mAccuError[index_] + d_gain*(currError-prevError)/dT;
 
-
-
 	double kt = .03; //motor's torque constant
 	double J = 6e-6;//inertia of unloaded arm
 	double gs = 1;
+	double b = 1e-9;	
+	
+
 	double out = (p + i + d);
 	//double b = 5.5e-4;
-	double b = 1e-9;
+
 	out = SaturateValue(out, controller_->outputLimit) - controller_->velCur[index_] * b;
 	controller_->mLastError[index_] = currError;
 	controller_->mLastCalled[index_] = curr_t;
@@ -143,6 +149,64 @@ double ChFunctionController::ComputeOutputPosition(double curr_t)//%%%%%%%%%%%%%
 	// std::cout << mAccuError << std::endl;
 	return Out;
 }
+//double ChFunctionController::ComputeOutputSpeed(double t)
+//{
+//	double curr_ang = controller_->GetAngle(index_, t);
+//	double exp_ang = controller_->GetExpAngle(index_, t);
+//	double des_ang = controller_->GetDesiredAngle(index_, t); ///get the next angle
+//	des_ang = controller_->LinearInterpolate(index_, curr_ang, des_ang); //linear interpolate for situations where gui changes so there isn't a major speed increase
+//	double error = des_ang - curr_ang;
+//
+//
+//
+//	double prevError = controller_->prevError_.at(index_);
+//
+//	double K = p_gain;
+//	double Ti = i_gain;
+//	double Td = d_gain;
+//	double Tt = 1 * dT;//read about tt
+//	double N = 10; //N=[8-20] http://www.cds.caltech.edu/~murray/courses/cds101/fa02/caltech/astrom-ch6.pdf
+//	double b = 1;
+//
+//	double ulimLow = this->controller_->smarticle_->angLow;
+//	double ulimHigh = this->controller_->smarticle_->angHigh;
+//	double vlim = controller_->omegaLimit;
+//
+//	double bi = K*dT / Ti;//integral gain
+//	double ad = (2 * Td - N*dT) / (2 * Td + N*dT);
+//	double bd = 2 * K*N*Td / (2 * Td + N*dT); //deriv gain
+//	double ao = dT / Tt;
+//	double ysp = des_ang;
+//	double y = curr_ang;
+//
+//	//initializes yold to current value for first iteration
+//	if (controller_->smarticle_->steps == 0)
+//		controller_->yold[index_] = y;
+//
+//	double pp = K*(b*ysp - y);
+//	controller_->DD[index_] = ad*controller_->DD[index_] - bd*(y - controller_->yold[index_]);
+//	double v = pp + controller_->II[index_] + controller_->DD[index_];
+//	double u = SaturateValue(v, vlim);
+//
+//	controller_->II[index_] = controller_->II[index_] + bi*(ysp - y) + ao*(u - v);
+//	controller_->yold[index_] = y;
+//
+//
+//	//double vel = (controller_->yold[index_] - y) / dT;
+//	//vel = SaturateValue(vel, vlim);
+//	//double tor = (controller_->velOld[index_] - vel) / dT;
+//	//tor = SaturateValue(tor, tlim);
+//	//controller_->velOld[index_] = vel;
+//
+//	//GetLog() << u<<nl;
+//
+//	double out = y;
+//
+//	CheckReset();
+//
+//	return out;
+//
+//}
 double ChFunctionController::ComputeOutputSpeed(double t)
 {
 	double curr_ang = controller_->GetAngle(index_, t);
@@ -150,54 +214,7 @@ double ChFunctionController::ComputeOutputSpeed(double t)
 	double des_ang = controller_->GetDesiredAngle(index_, t); ///get the next angle
 	des_ang = controller_->LinearInterpolate(index_, curr_ang, des_ang); //linear interpolate for situations where gui changes so there isn't a major speed increase
 	double error = des_ang - curr_ang;
-
-
-
-	double prevError = controller_->prevError_.at(index_);
-
-	double K = p_gain;
-	double Ti = i_gain;
-	double Td = d_gain;
-	double Tt = 1 * dT;//read about tt
-	double N = 10; //N=[8-20] http://www.cds.caltech.edu/~murray/courses/cds101/fa02/caltech/astrom-ch6.pdf
-	double b = 1;
-
-	double ulimLow = this->controller_->smarticle_->angLow;
-	double ulimHigh = this->controller_->smarticle_->angHigh;
-	double tlim = controller_->outputLimit;
-
-	double bi = K*dT / Ti;//integral gain
-	double ad = (2 * Td - N*dT) / (2 * Td + N*dT);
-	double bd = 2 * K*N*Td / (2 * Td + N*dT); //deriv gain
-	double ao = dT / Tt;
-	double ysp = des_ang;
-	double y = curr_ang;
-
-	//initializes yold to current value for first iteration
-	if (controller_->smarticle_->steps == 0)
-		controller_->yold[index_] = y;
-
-	double pp = K*(b*ysp - y);
-	controller_->DD[index_] = ad*controller_->DD[index_] - bd*(y - controller_->yold[index_]);
-	double v = pp + controller_->II[index_] + controller_->DD[index_];
-	double u = SaturateValue(v, tlim);
-	controller_->II[index_] = controller_->II[index_] + bi*(ysp - y) + ao*(u - v);
-	controller_->yold[index_] = y;
-
-
-	//double vel = (controller_->yold[index_] - y) / dT;
-	//vel = SaturateValue(vel, vlim);
-	//double tor = (controller_->velOld[index_] - vel) / dT;
-	//tor = SaturateValue(tor, tlim);
-	//controller_->velOld[index_] = vel;
-
-
-
-	double out = u;
-
-	CheckReset();
-
-	return out;
+	return error/dT;
 }
 
 double ChFunctionController::OutputToOmega(double t, double out) {

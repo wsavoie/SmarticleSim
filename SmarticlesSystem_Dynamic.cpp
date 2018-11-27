@@ -100,7 +100,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM,FLATHOPPER};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = STRESSSTICK;
+BucketType bucketType = CYLINDER;
 //std::vector<std::shared_ptr<ChBody>> /*sphereStick*/;
 //std::shared_ptr<ChBody> bucket;
 //std::shared_ptr<ChBody> bucket_bott;
@@ -128,7 +128,7 @@ int inactiveLoc = 0; //location of dead particle in ring +x +y -x -y
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 
-double vibrateStart = 0.9;
+double vibrateStart = 10;
 double smart_fric = .4;//.3814; //keyboard box friction = .3814
 double vibration_freq = 30;
 double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
@@ -201,10 +201,13 @@ double d_gain = .01;//.01;
 //double i_gain = 1;//30;
 //double d_gain = 1;//.01; 
 
-double p_gain = 0.00025;   //.1//.2         //0.133
-double i_gain = .01;// 0.03;	 //.5//.225						//0.05
-double d_gain = 0.01; //.0025 //.01       //0.0033
+//double p_gain = 0.0025;   //.1//.2         //0.133
+//double i_gain = .01;// 0.03;	 //.5//.225						//0.05
+//double d_gain = 0.01; //.0025 //.01       //0.0033
 
+double p_gain = 1;   //.1//.2         //0.133
+double i_gain = 1;// 0.03;	 //.5//.225						//0.05
+double d_gain = 1; //.0025 //.01       //0.0033
 #endif
 
 
@@ -224,7 +227,7 @@ bool bucket_exist = true;
 
 int read_from_file = 0; //-1 write 0 do nothing 1 read 2 read and write 
 bool povray_output = false;
-int out_fps = 30;
+int out_fps = 60;
 const std::string out_dir = "PostProcess";
 const std::string pov_dir_mbd = out_dir + "/povFilesSmarticles";
 int numPerLayer = 5;
@@ -238,7 +241,7 @@ bool placeInMiddle = false;	/// if I want make a single smarticle on bottom surf
 
 std::vector<std::shared_ptr<ChBody>> bucket_bod_vec;
 
-bool writejson = true;
+bool writejson = false;
 bool readjson = false;
 json ReadJson(std::string fname);
 json ReadCertainSystem(json& j, int robotNum);
@@ -836,17 +839,20 @@ void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<
 	json jsonF;
 	bool isActive = true;
 
-	if (ringActive)
-	{
+
 		if (readjson)
 		{
 			std::string jsonFileLoc;
 			std::string jsonFold;
+
 #if defined(_WIN64)
-			jsonFold = "A:\\SmarticleRun\\";
+			//jsonFold = "A:\\SmarticleRun\\";
+			jsonFold = "B:\\SmartSimResults\\11_26\\checkPointFiles\\";
 #else
 			jsonFold = "/home/ws/SmartSim/Results/";
 #endif
+			if (ringActive)
+			{
 			switch (inactiveLoc)
 			{
 
@@ -872,10 +878,16 @@ void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<
 			}
 
 			}
+
+		}
+			else 
+			{
+				jsonFileLoc = jsonFold + "pretty500.json";
+			}
 			GetLog() << jsonFileLoc;
 			jsonF = ReadJson(jsonFileLoc);
 		}
-	}
+	
 	ChVector<> dropSpeed = VNULL;
 	ChQuaternion<> myRot = QUNIT;
 	double z;
@@ -1599,13 +1611,16 @@ void WriteJson(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, std::vecto
 
 
 	static json j;
-
-	static const int stepPerOut = 40;
-	if (tstep > 500 && tstep%stepPerOut == 0)
+	static const int msPerOut = 500;
+	int ms = tstep*dT * 1000;
+	if (ms >=  500 && ms%msPerOut == 0)
 	{
+		
+		char nameCheckPoint[255];
+		sprintf(nameCheckPoint, "checkPointFiles/pretty%d.json",ms);
 		ns::System p(mySmarticlesVec);
 		p.to_json(j, p);
-		std::ofstream o("PostProcess//pretty.json");
+		std::ofstream o(nameCheckPoint);
 		o << std::setw(4) << j << std::endl;
 
 	}
@@ -2008,7 +2023,7 @@ void UpdateSmarticles(
 		}
 		int moveType = 0;
 		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
-		if (genRand() > .99)
+		if (genRand() > 0)
 		{
 			moveType = Smarticle::global_GUI_value;
 		}
@@ -2156,11 +2171,13 @@ bool SetGait(double time)
 
 
 	if (time <= .05)
-		Smarticle::global_GUI_value = 0;
-	else if (time > .05)
-		Smarticle::global_GUI_value = 0;
-	if (time > 5)
+		Smarticle::global_GUI_value = 1;
+	//else if (time > .05)
+	//	Smarticle::global_GUI_value = 0;
+	if (time > 1.75)
 		return true;
+	
+	
 	/*else
 		Smarticle::global_GUI_value = 1;
 */
@@ -2834,10 +2851,10 @@ int main(int argc, char* argv[]) {
 				rho_smarticleArm,
 				rho_smarticleMid);
 		}
-		//if (writejson)
-		//{
-		//	WriteJson(mphysicalSystem, tStep, mySmarticlesVec);
-		//}
+		if (writejson)
+		{
+			WriteJson(mphysicalSystem, tStep, mySmarticlesVec);
+		}
 		if (ringActive)
 		{
 			PrintRingPos(mphysicalSystem, tStep, ring, mySmarticlesVec);

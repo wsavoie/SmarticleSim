@@ -25,14 +25,14 @@
 %T=0.0588399
 stapleSize = true;
 % dt=.0001; %.00025
-dt=.001; %.00025
+dt=.0002; %.00025
 alen=.26; %smc= 0.1 %nsc=0.3
 sizeScale=1;
 % omega = 4.9244e-5;
 %%limit speed in sim (5.3 for 90 deg, 6.3 for 180 deg, takes time to slow so probably 7
 %does nothing on torque limit
-omegaLim =9; %if you want to change the speed you must change linear interpolate method
-omega = 12; %distance between points in move list
+omegaLim =7; %if you want to change the speed you must change linear interpolate method
+omega =12; %distance between points in move list
 % omega = 10;
 rho = 7850.0;%/(sizeScale^3);
 %(t2_smarticle) * (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
@@ -45,7 +45,7 @@ if stapleSize
     volume =  t2 * t* (w_s + 2 * (l_s));
     mass = volume*rho;
     torqueLimit=.00003;%.00005;  4.6657e-04
-    %     torqueLimit=2*9.8*mass*w_s;%.00005;  4.6657e-04
+    torqueLimit=100*9.8*mass*w_s*dt;%.00005;  4.6657e-04
 else
     
     t= .029982; %t = height of solar panels
@@ -85,7 +85,7 @@ PON= 1;
 
 user=getenv('username');
 if strcmp(user,'root')
-    directory_name = uigetdir('D:\SimResults\Chrono\SmarticleU\tests');
+    directory_name = uigetdir('B:\SmartSimResults\11_26');
 else
     directory_name = uigetdir('/home/ws/SmartSim/Results');
 end

@@ -164,9 +164,8 @@ double Controller::GetActuatorOmega(size_t index, double t)
 
 double Controller::LinearInterpolate(size_t idx, double curr, double des)
 {
-	//static double errLim = dT*omegaLimit;
-	static double errLim = (smarticle_->global.at(1).first - smarticle_->global.at(2).first) / dT / omegaLimit*D2R;
-	//GetLog() << "errLim " << errLim << nl;
+	static double errLim = dT*omegaLimit;
+	//static double errLim = (smarticle_->global.at(1).first - smarticle_->global.at(2).first) / dT / omegaLimit*D2R/10;
 	//double errLim = 1.05*D2R; // 
 	//double errLim = 1*D2R; // 
 	double err = (des - curr);
@@ -189,7 +188,7 @@ bool Controller::OT()
 		return false;
 }
 void Controller::UsePositionControl(size_t id) {
-	//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+	GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
 	auto ef = std::make_shared<ChFunctionController>(id, this);
 	auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_rot_funct());
 	double y = ef->Get_y(ch_system_->GetChTime());
@@ -197,7 +196,7 @@ void Controller::UsePositionControl(size_t id) {
 	//GetLog() << y;
 }
 void Controller::UseSpeedControl(size_t id) {
-	//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+	GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 	auto ef = std::make_shared<ChFunctionController>(id, this);
 	auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_spe_funct());
 	double y = ef->Get_y(ch_system_->GetChTime());
@@ -205,7 +204,7 @@ void Controller::UseSpeedControl(size_t id) {
 	//GetLog() << y;
 }
 void Controller::UseForceControl(size_t id) {
-	//GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	GetEngine(id)->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 	auto ef = std::make_shared<ChFunctionController>(id, this);
 	auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(GetEngine(id)->Get_tor_funct());
 	double y = ef->Get_y(ch_system_->GetChTime());

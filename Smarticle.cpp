@@ -866,11 +866,11 @@ void Smarticle::CreateActuators() {
 
 	//if (active)
 	//{
-	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
-	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
 	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
 	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
 	link_actuator01->Initialize(arms[0], arms[1], false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
