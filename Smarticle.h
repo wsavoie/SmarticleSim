@@ -44,6 +44,7 @@ namespace chrono {
 		static double pctActive;
 		bool armBroken;
 		double timeSinceLastGait = 0;
+
 		// Construct a smarticle and add it to ChSystem.
 		Smarticle(
 			std::shared_ptr<CH_SYSTEM> otherSystem
@@ -316,6 +317,22 @@ namespace chrono {
 													// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
 			ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
 		);
+
+		void CreateArmsPill(
+			int armID, 			// 0: left arm, 1: middle arm, 2: right arm
+			double len, 			// arm length
+			ChVector<> posRel, 	// relative initPosition of the arm wrt the smarticle initPos, which is the center of the center arm
+													// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
+			ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
+		);
+		void CreateArmsSphere(
+			int armID, 			// 0: left arm, 1: middle arm, 2: right arm
+			double len, 			// arm length
+			ChVector<> posRel, 	// relative initPosition of the arm wrt the smarticle initPos, which is the center of the center arm
+													// Y-axis is parallel to the arms. Z-axis is perpendicular to smarticle plane.
+			ChQuaternion<> armRelativeRot = QUNIT	// relative rotation of the arm wrt smarticle
+		);
+
 		//void CreateArm1(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot=QUNIT);
 		void CreateJoints();
 		//void CreateJoints1(ChQuaternion<>, ChQuaternion<>);

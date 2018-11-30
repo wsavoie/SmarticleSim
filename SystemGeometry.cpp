@@ -102,8 +102,8 @@ SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysTy
 #if stapleSize
 	bucket_rad = sizeScale*w_smarticle * 2;
 	bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
-	boxdim = ChVector<>(.28 / 1.5 / 2, .55245 / 2, 2 * bucket_rad / 8);
-	bucket_half_thick = sizeScale * .0005; //maybe too big!
+	boxdim = ChVector<>(.18 / 1.5 / 2, .25245 / 2, 2 * bucket_rad / 8);
+	bucket_half_thick = sizeScale * .005; //maybe too big!
 #else
 	bucket_rad = sizeScale*w_smarticle * 2; //3
 	bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);

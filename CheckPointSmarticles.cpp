@@ -19,7 +19,7 @@ namespace chrono {
 		double w_smarticle,
 		double t_smarticle,
 		double t2_smarticle,
-		double collisionEnvelop,
+		double collisionEnvelope,
 		double rho_smarticle,
 		double angle1,
 		double angle2) {
@@ -61,7 +61,7 @@ namespace chrono {
 			w_smarticle << std::endl <<
 			t_smarticle << std::endl <<
 			t2_smarticle << std::endl <<
-			collisionEnvelop << std::endl <<
+			collisionEnvelope << std::endl <<
 			rho_smarticle << std::endl <<
 			mat_g->GetKfriction() << std::endl <<
 			angle1 << std::endl <<
@@ -94,11 +94,11 @@ namespace chrono {
 		double w_smarticle,
 		double t_smarticle,
 		double t2_smarticle,
-		double collisionEnvelop,
+		double collisionEnvelope,
 		double rho_smarticleArm,
 		double rho_smarticleMid) {
 		//*******************************************************************
-		int tStepsCheckPoint = 1000;
+		int tStepsCheckPoint = 500;
 
 		if (tStep % tStepsCheckPoint != 0) {
 			return;
@@ -133,7 +133,7 @@ namespace chrono {
 			w_smarticle << std::endl <<
 			t_smarticle << std::endl <<
 			t2_smarticle << std::endl <<
-			collisionEnvelop << std::endl <<
+			collisionEnvelope << std::endl <<
 			rho_smarticleArm << std::endl <<
 			rho_smarticleMid << std::endl <<
 			mat_g->GetKfriction() << std::endl <<
@@ -194,7 +194,7 @@ namespace chrono {
 		std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec) {
 		std::ifstream inSmarticles;
 		inSmarticles.open("smarticles.csv");
-		double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction, angle1, angle2;
+		double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelope, friction, angle1, angle2;
 		double rho_smarticle;
 		auto mat_g = std::make_shared<MATSURF>();
 		char ddCh;
@@ -203,14 +203,14 @@ namespace chrono {
 			w_smarticle >>
 			t_smarticle >>
 			t2_smarticle >>
-			collisionEnvelop >>
+			collisionEnvelope >>
 			rho_smarticle >>
 			friction >>
 			angle1 >>
 			angle2;
 
-		printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f angle1 %f angle2 %f",
-			l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticle, friction, angle1, angle2);
+		printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelope %f rho_smarticle %f friction %f angle1 %f angle2 %f CheckPointSmarticles_Read",
+			l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelope, rho_smarticle, friction, angle1, angle2);
 		mat_g->SetFriction(friction);
 
 		ddCh = '!';
@@ -228,7 +228,7 @@ namespace chrono {
 			SmarticleU * smarticle0 = new SmarticleU(mphysicalSystem);
 			smarticle0->Properties(mySmarticlesVec.size(),
 				rho_smarticle, mat_g,
-				collisionEnvelop,
+				collisionEnvelope,
 				l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 				p3,
 				q4);
@@ -243,14 +243,13 @@ namespace chrono {
 		printf("num smarticles: %d\n", mySmarticlesVec.size());
 
 	}
-
 	void CheckPointSmarticlesDynamic_Read(
 		std::shared_ptr<CH_SYSTEM> mphysicalSystem,
 		std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application) {
 		std::ifstream inSmarticles;
 		std::pair<double, double> angPair;
 		inSmarticles.open("smarticles.csv");
-		double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, friction, angle1, angle2, yold0, yold1;
+		double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelope, friction, angle1, angle2, yold0, yold1;
 		int globalidx, gui1idx, gui2idx, gui3idx, dumId, vibidx, extra1idx, extra2idx, midtidx, otidx;
 		bool activeSmart;
 		unsigned int currMoveType, prevMoveType, gui_value;
@@ -264,16 +263,16 @@ namespace chrono {
 			w_smarticle >>
 			t_smarticle >>
 			t2_smarticle >>
-			collisionEnvelop >>
+			collisionEnvelope >>
 			rho_smarticleArm >>
 			rho_smarticleMid >>
 			friction >>
 			gui_value;
 		angle1 = 0;
 		angle2 = 0;
-		printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_smarticle %f friction %f angle1 %f angle2 %f",
-			l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelop, rho_smarticleArm, rho_smarticleMid, friction, angle1, angle2);
-		mat_g->SetFriction((float)friction);
+		printf("l_smarticle %f w_smarticle %f t_smarticle %f t2_smarticle %f collisionEnvelop %f rho_arm %f rho_mid %f friction %f angle1 %f angle2 %f \n CheckPointSmarticlesDynamic_Read",
+			l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelope, rho_smarticleArm, rho_smarticleMid, friction, angle1, angle2);
+		mat_g->SetFriction((float)friction); 
 		Smarticle::global_GUI_value = gui_value;
 
 		ddCh = '!';
@@ -298,7 +297,7 @@ namespace chrono {
 			smarticle0->active = activeSmart;
 			smarticle0->Properties(mySmarticlesVec.size(), dumId,
 				rho_smarticleArm, rho_smarticleMid, mat_g,
-				collisionEnvelop,
+				collisionEnvelope,
 				l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 				omega, true, p3,
 				q4, angle1*D2R, angle2*D2R);

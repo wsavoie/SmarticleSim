@@ -51,9 +51,17 @@ double ChFunctionController::ComputeOutputTorque(double curr_t)//http://robotics
 	controller_->torCur[index_] = controller_->GetCurrTorque(index_, curr_t);
 	double curr_react_torque = controller_->GetCurrReactTorque(index_, curr_t);
 	double l = controller_->smarticle_->l*controller_->smarticle_->GetArm(index_ * 2)->GetMass();
-	double curr_react_torque1 = controller_->smarticle_->getLinkActuator(index_)->Get_mot_rerot_dtdt()*l;
+	//double curr_react_torque1 = controller_->smarticle_->getLinkActuator(index_)->Get_mot_retorque()*l;
+	
+	//chlinkengine
+	// double Get_mot_retorque() const { return mot_retorque; }
+	// double Get_mot_torque() const { return mot_torque; }
 
-
+	//linkmarkers
+	//const ChVector<>& GetC_torque() const { return C_torque; }
+	
+	//linkmasked
+	//ChLinkForce* GetForce_Rz() { return force_Rz; }
 
 	// we will use the internal information of the mEngine to compute the error;
 	// then we can use the error to compute the torque needed

@@ -33,6 +33,7 @@ namespace chrono {
 			void addSuccessful(Smarticle &sPtr);
 			void resetSuccessfulCount();
 			void GenerateVibrateGait(Smarticle& sPtr);
+			void switchAllSmarticleStates();
 			void SaveToMovie();
 			void DeleteImgs();
 			void screenshot(int stepsPerFrame);

@@ -105,7 +105,10 @@ bool IrrGui::OnEvent(const SEvent& event) {
 			sv->at(4)->ChangeActive(!sv->at(4)->active);
 			return true;
 			break;
-
+		case irr::KEY_F6:
+			switchAllSmarticleStates();
+			return true;
+			break;
 		case irr::KEY_KEY_Q:
 			if (Smarticle::global_GUI_value != MoveType::GUI1)
 				Smarticle::global_GUI_value = MoveType::GUI1;
@@ -615,6 +618,11 @@ void IrrGui::addSuccessful(Smarticle &sPtr)
 	if (sPtr.successfulMotion)
 		successfulCount++;
 
+}
+void IrrGui::switchAllSmarticleStates()
+{
+	for (size_t i = 0; i < sv->size(); i++) //switch all particles
+		sv->at(i)->ChangeActive(!sv->at(i)->active);
 }
 void IrrGui::GenerateVibrateGait(Smarticle& sPtr)
 {

@@ -46,6 +46,8 @@
 #include "SmarticleU.h"
 #include "CheckPointSmarticles.h"
 #include "SystemGeometry.h"
+#include "physics/ChSystem.h"
+#include "collision/ChCCollisionSystemBullet.h"
 //#include <vld.h> //TODO used to find memory leaks
 #include <memory>
 
@@ -139,6 +141,7 @@ unsigned int smartIdCounter = 4; //start at non-zero value to not collide
 //double dT = std::min(0.001, 1.0 / vibration_freq / 200);;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double dT = 0.0005;//std::min(0.0005, 1.0 / vibration_freq / 200);
 double contact_recovery_speed = .5* sizeScale;
+
 double tFinal = 60 * 20;
 //double ringRad = 0.192 / 2.0;
 
@@ -174,6 +177,8 @@ double t2_smarticle = sizeScale * .0005;
 double rho_smarticle = 7850.0;
 double rho_smarticleArm = 7850.0;
 double rho_smarticleMid = 7850.0;
+
+
 //double p_gain = 0.025;   //.1//.2         //0.133
 //double i_gain = 10;// 0.03;	 //.5//.225						//0.05
 //double d_gain = 0.1; //.0025 //.01       //0.0033
@@ -804,20 +809,27 @@ void InitializeMbdPhysicalSystem_NonParallel(std::shared_ptr<CH_SYSTEM> mphysica
 	// Modify some setting of the physical system for the simulation, if you want
 
 	//mphysicalSystem.SetSolverType(ChSystem::SOLVER_DEM);
-	//mphysicalSystem->SetSolverType(ChSolver::Type::SOLVER_SMC);
 	mphysicalSystem->SetSolverType(SOLVETYPE);
 
 	//mphysicalSystem.SetIntegrationType(ChSystem::INT_EULER_IMPLICIT_PROJECTED);
-	mphysicalSystem->SetMaxItersSolverSpeed(50 + .3*numPerLayer*numLayers);
-	mphysicalSystem->SetMaxItersSolverStab(0);   // unuseful for Anitescu, only Tasora uses this
+	mphysicalSystem->SetMaxItersSolverSpeed(50 + 1.2*numPerLayer*numLayers);
+	mphysicalSystem->SetMaxItersSolverStab(50 + 1.2*numPerLayer*numLayers);   // unuseful for Anitescu, only Tasora uses this
+	if (stapleSize)
+	{
+		contact_recovery_speed = 0.1;
+	}
 	mphysicalSystem->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
-	mphysicalSystem->SetSolverWarmStarting(true);
-	mphysicalSystem->SetUseSleeping(false);
+	mphysicalSystem->SetMinBounceSpeed(contact_recovery_speed);
+	//mphysicalSystem->SetSolverWarmStarting(true);
+	//mphysicalSystem->SetUseSleeping(true);
+	
+	//mphysicalSystem->SetSolverSharpnessParam(2); //lambda 1
+	//mphysicalSystem->SetSolverOverrelaxationParam(.4); //omega .2
+
 	mphysicalSystem->Set_G_acc(ChVector<>(0, 0, gravity));
 	vol = (t2_smarticle)* (t_smarticle)* (w_smarticle + 2 * (l_smarticle));
-	//mphysicalSystem.SetTolForce(.0005);
-	//mphysicalSystem.SetTol(.0001);
-	//mphysicalSystem.SetMinBounceSpeed(.3);
+	//mphysicalSystem->SetTolForce(.000005);
+	//mphysicalSystem->SetTol(100);
 	simParams.close();
 }
 // =============================================================================
@@ -2174,10 +2186,9 @@ bool SetGait(double time)
 		Smarticle::global_GUI_value = 1;
 	//else if (time > .05)
 	//	Smarticle::global_GUI_value = 0;
-	if (time > 1.75)
+	if (time > 10)
 		return true;
-	
-	
+		
 	/*else
 		Smarticle::global_GUI_value = 1;
 */
@@ -2296,7 +2307,11 @@ int main(int argc, char* argv[]) {
 
 	//CH_SYSTEM mphysicalSystem;
 	std::shared_ptr<CH_SYSTEM> mphysicalSystem = std::make_shared<CH_SYSTEM>();
-
+	unsigned int max_objects = 16000;
+	double scene_size = 500;
+	std::shared_ptr<collision::ChCollisionSystem> collision_system;  ///< collision engine
+	collision_system = std::make_shared<collision::ChCollisionSystemBullet>(max_objects, scene_size);
+	mphysicalSystem->SetCollisionSystem(collision_system);
 	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	simParams.open(simulationParams.c_str());
 
@@ -2796,7 +2811,7 @@ int main(int argc, char* argv[]) {
 
 		//	//////////////////////////////////////////////////////////////////////
 		application.DrawAll();
-		ChIrrTools::drawGrid(application.GetVideoDriver(), 0.1, 0.1, 40, 40);
+		//ChIrrTools::drawGrid(application.GetVideoDriver(), 0.1, 0.1, 40, 40);
 		if (ringActive)
 		{
 			PrintRingContact(mphysicalSystem, tStep, ring, mySmarticlesVec, &application);

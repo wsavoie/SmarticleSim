@@ -188,7 +188,7 @@ void Smarticle::Properties(
 	this->OTVal.emplace_back(GUI1);
 	this->OTVal.emplace_back(EXTRA1);
 	this->OTVal.emplace_back(EXTRA2);
-	this->OTValIdx = genRandInt(0, OTVal.size() - 1);
+	this->OTValIdx = genRandInt(0, (int)OTVal.size() - 1);
 	//GetLog() << "smartRandidx:" << this->OTValIdx << "\n";
 
 	//initialize LT timer params
@@ -198,7 +198,7 @@ void Smarticle::Properties(
 	this->LTRunning = false;
 	this->LTVal.emplace_back(GUI2);
 	//this->LTVal.emplace_back(GUI3);
-	this->LTValIdx = genRandInt(0, LTVal.size() - 1);
+	this->LTValIdx = genRandInt(0, (int)LTVal.size() - 1);
 	for (int i = 0; i < numSegs; i++)
 	{
 		textureAssets[i] = std::make_shared<ChTexture>();
@@ -307,11 +307,15 @@ double Smarticle::GetNextOmega(int id)
 	return nextOmega.at(id);
 }
 void Smarticle::CreateArms(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
-	ChVector<> gyr;  	// components gyration
-	double vol;			// components volume
+	ChMatrix33<> gyr;  	// components gyration
+	double vol = 0;			// components volume
+	double dens = 0;
+	double m = 0;
 
-	vol = utils::CalcBoxVolume(ChVector<>(len / 2.0, r, r2));
-	gyr = utils::CalcBoxGyration(ChVector<>(len / 2.0, r, r2)).Get_Diag();
+	ChVector<> armDims = ChVector<>(len / 2.0, r, r2); //all funcs take half lengths
+	vol = utils::CalcBoxVolume(armDims);
+	gyr = utils::CalcBoxGyration(armDims);
+	
 	// create body, set position and rotation, add surface property, and clear/make collision model
 	auto arm = std::make_shared<ChBody>();
 
@@ -324,19 +328,19 @@ void Smarticle::CreateArms(int armID, double len, ChVector<> posRel, ChQuaternio
 	arm->SetCollide(true);
 	arm->SetBodyFixed(false);
 	arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
-	double m = 0;
-	if (armID == 1) //this was old code from when I was fixing them to fit
+	if (armID == 1)
 	{
 		arm->SetBodyFixed(false);
-		m = vol*mid_density;
-		arm->SetDensity(mid_density);
+		dens = mid_density;
 	}
 	else
 	{
 		arm->SetBodyFixed(false);
-		m = vol*arm_density;
-		arm->SetDensity(arm_density);
+		dens = arm_density;
 	}
+	m = dens*vol;
+	arm->SetMass(m);
+	arm->SetDensity((float)dens);
 	arm->SetMaterialSurface(mat_smarts);
 
 
@@ -358,15 +362,15 @@ void Smarticle::CreateArms(int armID, double len, ChVector<> posRel, ChQuaternio
 	}
 
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, r, r2), ChVector<>(0, 0, 0), QUNIT, visualize);
+	utils::AddBoxGeometry(arm.get(), armDims, ChVector<>(0, 0, 0), QUNIT, visualize);
 
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 
 	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
 
 	// change mass and inertia property
-	arm->SetMass(m);
-	arm->SetInertiaXX(m * gyr);
+
+	arm->SetInertia(gyr*m);
 	//arm->SetDensity(density);
 
 	m_system->AddBody(arm);
@@ -398,13 +402,13 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	{
 		arm->SetBodyFixed(false);
 		m = vol*mid_density;
-		arm->SetDensity(mid_density);
+		arm->SetDensity((float)mid_density);
 	}
 	else
 	{
 		arm->SetBodyFixed(false);
 		m = vol*arm_density;
-		arm->SetDensity(arm_density);
+		arm->SetDensity((float)arm_density);
 	}
 	arm->SetMaterialSurface(mat_smarts);
 
@@ -443,6 +447,170 @@ void Smarticle::CreateArm(int armID, double len, ChVector<> posRel, ChQuaternion
 	m_system->AddBody(arm);
 	arms[armID] = arm;
 }
+
+void Smarticle::CreateArmsPill(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
+	ChMatrix33<> gyr;  	// components gyration
+	double vol=0;			// components volume
+	double dens=0;
+	double m = 0;
+
+	//gyr = utils::CalcCapsuleGyration(r, len / 2.0,ChVector<>(0),Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)));
+	//gyr = utils::CalcCapsuleGyration(r, len / 2.0, ChVector<>(0) );
+
+	ChVector<> armDims = ChVector<>(len / 2.0, r, r2); //all funcs take half lengths
+	
+	vol = utils::CalcCylinderVolume(r, len / 2.0);
+	gyr = utils::CalcCylinderGyration(r,len/2.0, ChVector<>(0),Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)));
+
+	// create body, set position and rotation, add surface property, and clear/make collision model
+	auto arm = std::make_shared<ChBody>();
+	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
+
+	arm->SetCollide(true);
+	arm->SetBodyFixed(false);
+	arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
+	if (armID == 1)
+	{
+		arm->SetBodyFixed(false);
+		dens = mid_density;
+	}
+	else
+	{
+		arm->SetBodyFixed(false);
+		dens = arm_density;
+	}
+	m = dens*vol;
+	arm->SetMass(m);
+	arm->SetDensity((float)dens);
+	arm->SetMaterialSurface(mat_smarts);
+
+
+	ChVector<> endPts = ChVector<>(len / 2.0,0,0 );
+	arm->GetCollisionModel()->ClearModel();
+	if (visualize)
+	{
+		//auto vshape = std::make_shared<ChCylinderShape>();
+		//vshape->GetCylinderGeometry().rad = r;
+		//vshape->GetCylinderGeometry().p1 = endPts;
+		//vshape->GetCylinderGeometry().p2 = endPts*-1;
+		//auto vshape1 = std::make_shared<ChSphereShape>();
+		//auto vshape2 = std::make_shared<ChSphereShape>();
+		//vshape1->GetSphereGeometry().center = endPts;
+		//vshape2->GetSphereGeometry().center = endPts*-1;
+		//vshape1->GetSphereGeometry().rad = r;
+		//vshape2->GetSphereGeometry().rad = r;
+		//arm->AddAsset(vshape);
+		//arm->AddAsset(textureAssets[armID]);
+		//arm->AddAsset(vshape1);
+		//arm->AddAsset(textureAssets[armID]);
+		//arm->AddAsset(vshape2);
+		//arm->AddAsset(textureAssets[armID]);
+
+		if (armID == 1)
+			arm->SetName("smarticle_cent");
+		else
+			arm->SetName("smarticle_arm");
+	}
+	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+
+	//arm->GetCollisionModel()->AddCylinder(r, r, len / 2.0,ChVector<>(0), Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)));  // radius x, radius z, height on y
+	utils::AddCylinderGeometry(arm.get(), r, len / 2.0, ChVector<>(0), Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)), true);
+	//arm->GetCollisionModel()->AddSphere(r, endPts);
+	//arm->GetCollisionModel()->AddSphere(r, endPts*-1);
+
+
+	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
+	
+	arm->SetInertia(gyr*m);
+	m_system->AddBody(arm);
+	arm->SetPos(posArm);
+	arm->SetRot(rotation*armRelativeRot);
+
+	arms[armID] = arm;
+}
+void Smarticle::CreateArmsSphere(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
+	ChMatrix33<> gyr;  	// components gyration
+	double vol = 0;			// components volume
+	double dens = 0;
+	double m = 0;
+
+	//gyr = utils::CalcCapsuleGyration(r, len / 2.0,ChVector<>(0),Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)));
+	//gyr = utils::CalcCapsuleGyration(r, len / 2.0, ChVector<>(0) );
+
+	ChVector<> armDims = ChVector<>(len / 2.0, r, r2); //all funcs take half lengths
+
+	vol = utils::CalcCylinderVolume(r, len / 2.0);
+	gyr = utils::CalcCylinderGyration(r, len / 2.0, ChVector<>(0), Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)));
+
+	// create body, set position and rotation, add surface property, and clear/make collision model
+	auto arm = std::make_shared<ChBody>();
+	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
+
+	arm->SetCollide(true);
+	arm->SetBodyFixed(false);
+	arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
+	if (armID == 1)
+	{
+		arm->SetBodyFixed(false);
+		dens = mid_density;
+	}
+	else
+	{
+		arm->SetBodyFixed(false);
+		dens = arm_density;
+	}
+	m = dens*vol;
+	arm->SetMass(m);
+	arm->SetDensity((float)dens);
+	arm->SetMaterialSurface(mat_smarts);
+
+
+	ChVector<> endPts = ChVector<>(len / 2.0, 0, 0);
+	arm->GetCollisionModel()->ClearModel();
+	if (visualize)
+	{
+		//auto vshape = std::make_shared<ChCylinderShape>();
+		//vshape->GetCylinderGeometry().rad = r;
+		//vshape->GetCylinderGeometry().p1 = endPts;
+		//vshape->GetCylinderGeometry().p2 = endPts*-1;
+		//auto vshape1 = std::make_shared<ChSphereShape>();
+		//auto vshape2 = std::make_shared<ChSphereShape>();
+		//vshape1->GetSphereGeometry().center = endPts;
+		//vshape2->GetSphereGeometry().center = endPts*-1;
+		//vshape1->GetSphereGeometry().rad = r;
+		//vshape2->GetSphereGeometry().rad = r;
+		//arm->AddAsset(vshape);
+		//arm->AddAsset(textureAssets[armID]);
+		//arm->AddAsset(vshape1);
+		//arm->AddAsset(textureAssets[armID]);
+		//arm->AddAsset(vshape2);
+		//arm->AddAsset(textureAssets[armID]);
+
+		if (armID == 1)
+			arm->SetName("smarticle_cent");
+		else
+			arm->SetName("smarticle_arm");
+	}
+	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+
+	//arm->GetCollisionModel()->AddCylinder(r, r, len / 2.0,ChVector<>(0), Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)));  // radius x, radius z, height on y
+	utils::AddCylinderGeometry(arm.get(), r, len / 2.0, ChVector<>(0), Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)), true);
+	//arm->GetCollisionModel()->AddSphere(r, endPts);
+	//arm->GetCollisionModel()->AddSphere(r, endPts*-1);
+
+
+	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
+	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
+
+	arm->SetInertia(gyr*m);
+	m_system->AddBody(arm);
+	arm->SetPos(posArm);
+	arm->SetRot(rotation*armRelativeRot);
+
+	arms[armID] = arm;
+}
+
 void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
 	ChVector<> gyr;  	// components gyration
 	double vol;			// components volume
@@ -463,13 +631,13 @@ void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVecto
 	if (armID == 1) //this was old code from when I was fixing them to fit
 	{
 		m = vol*mid_density;
-		arm->SetDensity(mid_density);
+		arm->SetDensity((float)mid_density);
 		arm->SetBodyFixed(false);
 	}
 	else
 	{
 		m = vol*arm_density;
-		arm->SetDensity(arm_density);
+		arm->SetDensity((float)arm_density);
 		arm->SetBodyFixed(false);
 	}
 	//mat_g->SetFriction(.05);
@@ -487,7 +655,7 @@ void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVecto
 			arm->SetName("smarticle_arm");
 	}
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr, mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
+	utils::AddBoxGeometry(arm.get(), ChVector<>(len / 2.0, mr,  mr2), ChVector<>(0, 0, 0), QUNIT, visualize);
 
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
@@ -522,13 +690,13 @@ void Smarticle::CreateArm3(int armID, double len, double mr, double mr2, ChVecto
 	if (armID == 1) //this was old code from when I was fixing them to fit
 	{
 		m = vol*mid_density;
-		arm->SetDensity(mid_density);
+		arm->SetDensity((float)mid_density);
 		arm->SetBodyFixed(false);
 	}
 	else
 	{
 		m = vol*arm_density;
-		arm->SetDensity(arm_density);
+		arm->SetDensity((float)arm_density);
 		arm->SetBodyFixed(false);
 	}
 	//mat_g->SetFriction(.05);
@@ -614,23 +782,14 @@ void Smarticle::RotateSmarticle(ChQuaternion<> newRotation)
 	{
 		arms[i]->SetRot(newRotation);
 	}
-
-	//GetLog() << arm1->GetRotAxis();
-	//auto arm1Frame = arm1->GetCoord();
-	//arm0->SetRot(newRotation);
-	//arm1->SetRot(newRotation);
-	//arm2->SetRot(newRotation);
 }
 
 void Smarticle::UpdateState()
 {
-	for (size_t i = 0; i < numSegs; i++)
+	for (int i = 0; i < numSegs; i++)
 	{
 		GetArm(i)->Update();
 	}
-	//GetArm(0)->Update();
-	//GetArm(1)->Update();
-	//GetArm(2)->Update();
 }
 void Smarticle::SetEdges()
 {
@@ -919,28 +1078,31 @@ void Smarticle::Create() {
 	double l_mod;
 	//double l_mod = l + 2 * r2 - jointClearance;
 
-	//ChQuaternion<> quat0 = Q_from_AngAxis(angle1, VECT_Y);
-	//ChQuaternion<> quat2 = Q_from_AngAxis(-angle2, VECT_Y);
-	ChQuaternion<> quat0 = Angle_to_Quat(ANGLE, ChVector<>(0, -angles[0], 0));
-	ChQuaternion<> quat2 = Angle_to_Quat(ANGLE, ChVector<>(0, angles[1], 0));
+	ChQuaternion<> quat0 = Q_from_AngAxis(angles[0], VECT_Y);
+	ChQuaternion<> quat1 = Q_from_AngAxis(angles[0], VECT_Z);
+	ChQuaternion<> quat2 = Q_from_AngAxis(-angles[1], VECT_Y);
+
+	//works with box
+	//ChQuaternion<> quat0 = Angle_to_Quat(ANGLE, ChVector<>(0, -angles[0], 0));
+	//ChQuaternion<> quat2 = Angle_to_Quat(ANGLE, ChVector<>(0, angles[1], 0));
 	quat0.Normalize();
+	quat1.Normalize();
 	quat2.Normalize();
 
 
 	if (stapleSize)
 	{
 		offPlaneoffset = 0;
-		l_mod = l + 2 * r2 - jointClearance;
-		/*CreateArm(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(angles[0]), 0, -(l_mod / 2.0 - r2)*sin(angles[0])), quat0);
-		CreateArm(1, w, ChVector<>(0, 0, 0));
-		CreateArm(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(angles[1]), 0, -(l_mod / 2.0 - r2)*sin(angles[1])), quat2);*/
 
-		//arms[0]=CreateArms(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0 - r2)*sin(-angles[0])), quat0);
-		//arms[1]=CreateArms(1, w, ChVector<>(0, 0, 0));
-		//arms[2]=CreateArms(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r2)*sin(-angles[1])), quat2);
+		l_mod = l + 2 * r2 - jointClearance;
 		CreateArms(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0 - r2)*sin(-angles[0])), quat0);
 		CreateArms(1, w, ChVector<>(0, 0, 0));
 		CreateArms(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r2)*sin(-angles[1])), quat2);
+
+		//l_mod = l + 2*r2 - jointClearance;
+		//CreateArmsPill(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0-r2)*sin(-angles[0])), quat0);
+		//CreateArmsPill(1, w, ChVector<>(0, 0, 0));
+		//CreateArmsPill(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 -r2)*sin(-angles[1])), quat2);
 	}
 	else
 	{
@@ -1018,7 +1180,7 @@ void Smarticle::ChangeActive(bool m_active)
 			arms[1]->SetName("smarticle_cent");
 			arms[2]->SetName("smarticle_arm");
 
-			for (size_t i = 0; i < numEngs; i++)
+			for (int i = 0; i < numEngs; i++)
 			{
 				getLinkActuator(i)->GetLimit_Rz()->Set_min(D2R * angLow);
 				getLinkActuator(i)->GetLimit_Rz()->Set_max(D2R * angHigh);
@@ -1033,7 +1195,7 @@ void Smarticle::ChangeActive(bool m_active)
 			arms[2]->SetName("D_smarticle_arm");
 
 			//link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-			for (size_t i = 0; i < numEngs; i++)
+			for (int i = 0; i < numEngs; i++)
 			{
 				getLinkActuator(i)->GetLimit_Rz()->Set_min(getLinkActuator(i)->GetRelAngle());
 				getLinkActuator(i)->GetLimit_Rz()->Set_max(getLinkActuator(i)->GetRelAngle());
@@ -1167,7 +1329,7 @@ void Smarticle::addInterpolatedPathToVector(double a0i, double a1i, double a0f, 
 {
 	double dist0 = omegas[0] * dT;
 	double dist1 = omegas[1] * dT;
-	int n = std::max(abs((a0f - a0i) / dist0), abs((a1f - a1i) / dist1));
+	int n = int(std::max(abs((a0f - a0i) / dist0), abs((a1f - a1i) / dist1)));
 	std::vector<double> a0 = linspace(a0i, a0f, n);
 	std::vector<double> a1 = linspace(a1i, a1f, n);
 
