@@ -103,7 +103,7 @@ SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysTy
 	bucket_rad = sizeScale*w_smarticle * 2;
 	bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
 	boxdim = ChVector<>(.18 / 1.5 / 2, .25245 / 2, 2 * bucket_rad / 8);
-	bucket_half_thick = sizeScale * .005; //maybe too big!
+	bucket_half_thick = sizeScale * .005/2; //maybe too big!
 #else
 	bucket_rad = sizeScale*w_smarticle * 2; //3
 	bucket_interior_halfDim = sizeScale * ChVector<>(bucket_rad, bucket_rad, 2 * bucket_rad / sizeScale);
@@ -254,6 +254,47 @@ std::shared_ptr<ChBody> SystemGeometry::create_Box()
 
 	return bucket;
 }
+std::shared_ptr<ChBody> SystemGeometry::create_Box2()
+{
+	//blahblah
+	//auto mmaterial = std::make_shared<ChMaterialSurface>();
+	//mmaterial->SetFriction(0.4f);
+	//mmaterial->SetCompliance(0.0000005f);
+	//mmaterial->SetComplianceT(0.0000005f);
+	//mmaterial->SetDampingF(0.2f);
+
+	ChVector<> box_size = (0, 0, 0); //size of plates
+
+
+	boxdim= ChVector<>(bucket_rad, bucket_rad, bucket_interior_halfDim.x());
+	double o_lap = bucket_half_thick * 2;
+	double boxBott = boxdim.y() - bucket_half_thick;
+	bucket->GetCollisionModel()->ClearModel();
+	bucket->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+
+	//utils::AddBoxGeometry(bucket.get(), ChVector<>(boxdim.x() + o_lap, boxdim.y() + o_lap, bucket_half_thick), ChVector<>(0, 0, -bucket_half_thick),QUNIT,false); //bottom
+	utils::AddBoxGeometry(bucket.get(), ChVector<>(bucket_half_thick, boxdim.y() + o_lap, boxdim.z() + o_lap), ChVector<>(-boxdim.x() - bucket_half_thick, 0, boxdim.z()));//right wall
+	utils::AddBoxGeometry(bucket.get(), ChVector<>(bucket_half_thick, boxdim.y() + o_lap, boxdim.z() + o_lap), ChVector<>(boxdim.x() + bucket_half_thick, 0, boxdim.z())); //left wall
+	utils::AddBoxGeometry(bucket.get(), ChVector<>(boxdim.x() + o_lap, bucket_half_thick, boxdim.z() + o_lap), ChVector<>(0, -boxdim.y() - bucket_half_thick, boxdim.z()), QUNIT, false); //front wall
+	utils::AddBoxGeometry(bucket.get(), ChVector<>(boxdim.x() + o_lap, bucket_half_thick, boxdim.z() + o_lap), ChVector<>(0, boxdim.y() + bucket_half_thick, boxdim.z()));//back wall
+
+	//utils::AddBoxGeometry(bucket.get(), ChVector<>(boxdim.x() + o_lap, boxdim.z() + o_lap, bucket_half_thick), ChVector<>(0, boxdim.z(), boxdim.y() + bucket_half_thick+ boxBott));
+	bucket->GetCollisionModel()->BuildModel();
+	//id,mat,hdim,hthick,pos,rot,collide,y_up,overlap,closed)
+	//bucket = utils::CreateBoxContainer(sys.get(), bucketID, mat_wall,
+	//	boxdim, bucket_half_thick, bucket_ctr, Angle_to_Quat(ANGLE, ChVector<>(box_ang, 0, 0)), true, false, true, false);
+
+
+	bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+
+	bucket->SetCollide(true);
+	//bucket->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+	bucket_bott->GetCollisionModel()->SetFamily(envFamily);
+	bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	sys->AddBody(bucket);
+
+	return bucket;
+}
 std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool overlap)
 {
 	double t = bucket_half_thick;
@@ -380,7 +421,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double h
 	chrdCirc->SetRot(quat);
 	return chrdCirc;
 }
-std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture, double m, double ax, double by)
+std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipsev1(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture, double m, double ax, double by)
 {
 	auto cyl_container = std::make_shared<ChBody>();
 	cyl_container->SetIdentifier(bucketID);
@@ -399,7 +440,21 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 	double ang = 2.0 * PPI / num_boxes;
 	ChVector<> pPos = (0, 0, 0);  //position of each plate
 	ChQuaternion<> quat = QUNIT; //rotation of each plate
+
+
+	double h = half_h + o_lap;
+	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+	//cyl_container->GetCollisionModel()->BuildModel();
 	cyl_container->GetCollisionModel()->ClearModel();
+	//https://en.wikipedia.org/wiki/List_of_moments_of_inertia
+	double Ixx = m / 12.0*(3 * (r*r + (r - 2 * wallt)*(r - 2 * wallt)) + (h * 2)*(h + o_lap * 2));
+	double Iyy = m / 12.0*(3 * (r*r + (r - 2 * wallt)*(r - 2 * wallt)) + (h * 2)*(h * 2));
+	double Izz = m / 2 * (r*r + (r - 2 * wallt)*(r - 2 * wallt));
+	ChMatrix33<double> iner(Ixx, 0.0, 0.0, 0.0, Iyy, 0.0, 0.0, 0.0, Izz);
+	cyl_container->SetInertia(iner);
+
+
+
 	cyl_container->SetMaterialSurface(mat_wall);
 	cyl_container->SetName("ring");
 	for (int i = 0; i < num_boxes; i++)
@@ -441,24 +496,15 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 			m_visualization = true;
 			cyl_container->AddAsset(texture);
 		}
-		cyl_container->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+		
 		utils::AddBoxGeometry(cyl_container.get(), box_size, pPos, quat, m_visualization);
 	}
-
+	cyl_container->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 
 	cyl_container->SetMass(m);
 
-
-
-	double h = half_h + o_lap;
-	//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
 	cyl_container->GetCollisionModel()->BuildModel();
-	//https://en.wikipedia.org/wiki/List_of_moments_of_inertia
-	double Ixx = m / 12.0*(3 * (r*r + (r - 2 * wallt)*(r - 2 * wallt)) + (h * 2)*(h + o_lap * 2));
-	double Iyy = m / 12.0*(3 * (r*r + (r - 2 * wallt)*(r - 2 * wallt)) + (h * 2)*(h * 2));
-	double Izz = m / 2 * (r*r + (r - 2 * wallt)*(r - 2 * wallt));
-	ChMatrix33<double> iner(Ixx, 0.0, 0.0, 0.0, Iyy, 0.0, 0.0, 0.0, Izz);
-	cyl_container->SetInertia(iner);
+
 	if (createVector)
 	{
 		for (int i = 0; i < num_boxes; i++)
@@ -505,6 +551,97 @@ std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool 
 	GetLog() << cyl_container->GetMass();
 	return cyl_container;
 }
+
+std::shared_ptr<ChBody> SystemGeometry::create_EmptyEllipse(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture, double m, double ax, double by)
+{
+	auto cyl_container = std::make_shared<ChBody>();
+	cyl_container->SetIdentifier(bucketID);
+	//cyl_container->SetMass(mass);
+	//cyl_container->SetPos(pos);
+	//cyl_container->SetRot(QUNIT);
+	cyl_container->SetBodyFixed(false);
+	cyl_container->SetCollide(true);
+	ChVector<> box_size = (0, 0, 0); //size of plates
+																	 //double t = bucket_half_thick; //bucket thickness redefined here for easier to read code
+	double wallt = t / 5; //made this to disallow particles from sitting on thickness part of container, but keep same thickness for rest of system
+												//double half_height = bucket_interior_halfDim.z(); (t/5= .0005)
+
+	//if all other vars remain the same
+	//abs(cos(pi)*(-wallt + r) * 2) - 2 * wallt represents inner diameter of the cylinder
+	//if wallt was .0007 (currently .0005), inner diameter would be equal to 0.044 which is nicks exp.
+
+
+	double box_side = r * 4.0 * by*sin(PPI / num_boxes) / ax*(cos(PPI / num_boxes));//side length of cyl
+	double o_lap = 0;
+	if (overlap) { o_lap = t * 2; }
+	double ang = 2.0 * PPI / num_boxes;
+	ChVector<> pPos = (0, 0, 0);  //position of each plate
+	ChQuaternion<> quat = QUNIT; //rotation of each plate
+
+
+	double h = half_h + o_lap;
+	cyl_container->SetMaterialSurface(mat_wall);
+	cyl_container->SetName("ring");
+	cyl_container->GetCollisionModel()->ClearModel();
+	cyl_container->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	cyl_container->SetMass(m);
+
+	for (int i = 0; i < num_boxes; i++)
+	{
+		auto wallPiece = std::make_shared<ChBody>();
+		box_size = ChVector<>((box_side + wallt) / 2.0,
+			wallt,
+			half_h + o_lap);
+
+		pPos = ChVector<>(ax*sin(ang * i) * (-wallt + r),
+			by*cos(ang*i)*(-wallt + r),
+			half_h);
+
+		quat = Angle_to_Quat(ANGLE, ChVector<>(0, 0, ang*i));
+
+		//this is here to make half the cylinder invisible.
+
+		//wallPiece->SetPos(pPos);
+		wallPiece->SetRot(QUNIT);
+		wallPiece->GetCollisionModel()->ClearModel();
+		
+		//wallPiece->GetCollisionModel()->AddBox(box_size.x(), box_size.y(), box_size.z(), pPos, ChMatrix33<>(quat));
+
+		wallPiece->GetCollisionModel()->SetEnvelope(wallt);
+		wallPiece->GetCollisionModel()->SetSafeMargin(wallt / 2);
+		bool m_visualization = false;
+		if (ang*i < 3 * PPI / 4 || ang*i > 5 * PPI / 4)
+		{
+			m_visualization = true;
+			//auto box = std::make_shared<ChBoxShape>();
+			//box->GetBoxGeometry().Size = box_size;
+			//box->Pos = pPos;
+			//box->Rot = ChMatrix33<>(quat);
+			//wallPiece->GetAssets().push_back(box);
+			//wallPiece->AddAsset(texture);
+			
+		}
+		utils::AddBoxGeometry(cyl_container.get(), box_size, pPos, quat, m_visualization);
+		wallPiece->SetMass(m);
+		//wallPiece->SetPos(ChVector<>(0,0,0));
+
+
+		//cyl_container->GetCollisionModel()->SetDefaultSuggestedEnvelope(collisionEnvelope);
+		//wallPiece->GetCollisionModel()->BuildModel();
+		wallPiece->GetCollisionModel()->SetFamily(envFamily); ////#############
+		wallPiece->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	
+		wallPiece->SetMaterialSurface(mat_wall);
+		wallPiece->SetBodyFixed(true);
+		wallPiece->SetCollide(true);
+		bucket_bod_vec.emplace_back(wallPiece);
+	}
+	cyl_container->GetCollisionModel()->BuildModel();
+	GetLog() << cyl_container->GetMass();
+	sys->AddBody(cyl_container);
+	return cyl_container;
+}
+
 std::shared_ptr<ChBody> SystemGeometry::create_EmptyCylinder(int num_boxes, bool overlap, bool createVector, double half_h, double t, double r, ChVector<> pos, bool halfVis, std::shared_ptr<ChTexture> texture, double m)
 {
 	return create_EmptyEllipse(num_boxes, overlap, createVector, half_h, t, r, pos, halfVis, texture, m, 1, 1);
@@ -812,7 +949,7 @@ void SystemGeometry::create_Container()
 	case BOX:
 	{
 		//FUTNOTE uncomment for old box
-		bucket = create_Box();
+		bucket = create_Box2();
 
 		//Maze
 		//bucket = create_BoxBig();
