@@ -221,7 +221,42 @@ double ChFunctionController::ComputeOutputSpeed(double t)
 	double exp_ang = controller_->GetExpAngle(index_, t);
 	double des_ang = controller_->GetDesiredAngle(index_, t); ///get the next angle
 	des_ang = controller_->LinearInterpolate(index_, curr_ang, des_ang); //linear interpolate for situations where gui changes so there isn't a major speed increase
+
+
+	double str = 10; //strength in num of smarts
+	double maxTor = str * this->controller_->smarticle_->GetMass()*this->controller_->smarticle_->w;
+	double currT=abs(this->controller_->smarticle_->getLinkActuator(index_)->Get_mot_torque());
 	double error = des_ang - curr_ang;
+	int countMax = 20;
+
+	if (currT > maxTor)
+	{
+
+		this->controller_->smarticle_->countOT++;
+		if (this->controller_->smarticle_->countOT< countMax)
+		{
+			error = error / 2;
+		}
+		if (this->controller_->smarticle_->countOT >= countMax)
+		{
+			error = 0;
+			//GetLog() << "Full counter OT!" << nl;
+			controller_->smarticle_->textureAssets[index_ * 2]->SetTextureFilename(controller_->smarticle_->mtextureOT->GetTextureFilename());
+			controller_->smarticle_->ChangeToOT(true,index_);
+		}
+	}
+	else
+	{
+		this->controller_->smarticle_->countOT--;
+		if (this->controller_->smarticle_->countOT >= countMax || controller_->smarticle_->arm0OT || controller_->smarticle_->arm2OT)
+		{
+
+			controller_->smarticle_->textureAssets[index_ * 2]->SetTextureFilename(controller_->smarticle_->mtextureArm->GetTextureFilename());
+			controller_->smarticle_->ChangeToOT(false,index_);
+		}
+		this->controller_->smarticle_->countOT = 0;
+	}
+
 	return error/dT;
 }
 
