@@ -8,7 +8,7 @@
 #include "Smarticle.h"
 #include "utils/ChUtilsGeometry.h"
 #include "utils/ChUtilsCreators.h"
-
+#include <math.h>       /* round, floor, ceil, trunc */
 
 
 
@@ -214,6 +214,11 @@ void Smarticle::Properties(
 		//}
 	}
 	setTextures();
+
+	for (int i = 0; i < numEngs; i++)
+	{
+		armOT[i] = false;
+	}
 	//create texture loop
 }
 
@@ -325,7 +330,7 @@ void Smarticle::CreateArms(int armID, double len, ChVector<> posRel, ChQuaternio
 	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
 	arm->SetPos(posArm);
 	arm->SetRot(rotation*armRelativeRot);
-	arm->SetCollide(true);
+
 	arm->SetBodyFixed(false);
 	arm->GetPhysicsItem()->SetIdentifier(dumID + armID);
 	if (armID == 1)
@@ -361,13 +366,14 @@ void Smarticle::CreateArms(int armID, double len, ChVector<> posRel, ChQuaternio
 			arm->SetName("smarticle_arm");
 	}
 
-	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope*.1);
+	arm->GetCollisionModel()->SetSafeMargin(arm->GetCollisionModel()->GetEnvelope()/2.0);
 	utils::AddBoxGeometry(arm.get(), armDims, ChVector<>(0, 0, 0), QUNIT, visualize);
 
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 
 	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
-
+	arm->SetCollide(true);
 	// change mass and inertia property
 
 	arm->SetInertia(gyr*m);
@@ -489,23 +495,6 @@ void Smarticle::CreateArmsPill(int armID, double len, ChVector<> posRel, ChQuate
 	arm->GetCollisionModel()->ClearModel();
 	if (visualize)
 	{
-		//auto vshape = std::make_shared<ChCylinderShape>();
-		//vshape->GetCylinderGeometry().rad = r;
-		//vshape->GetCylinderGeometry().p1 = endPts;
-		//vshape->GetCylinderGeometry().p2 = endPts*-1;
-		//auto vshape1 = std::make_shared<ChSphereShape>();
-		//auto vshape2 = std::make_shared<ChSphereShape>();
-		//vshape1->GetSphereGeometry().center = endPts;
-		//vshape2->GetSphereGeometry().center = endPts*-1;
-		//vshape1->GetSphereGeometry().rad = r;
-		//vshape2->GetSphereGeometry().rad = r;
-		//arm->AddAsset(vshape);
-		//arm->AddAsset(textureAssets[armID]);
-		//arm->AddAsset(vshape1);
-		//arm->AddAsset(textureAssets[armID]);
-		//arm->AddAsset(vshape2);
-		//arm->AddAsset(textureAssets[armID]);
-
 		if (armID == 1)
 			arm->SetName("smarticle_cent");
 		else
@@ -529,20 +518,37 @@ void Smarticle::CreateArmsPill(int armID, double len, ChVector<> posRel, ChQuate
 
 	arms[armID] = arm;
 }
+double Smarticle::calcOverlapSphereVol(int N)//assuming overlap is equal to radius
+{
+		double v = 5.0 / 12.0 * PI*(r*r*r); //overlap volume of 2 sphere
+		double V = 4.0 / 3.0 * PI*(r*r*r) - v; //non - overlap volume of 2 spheres
+		double VV = V - v; //non overlap volume for a double overlapped volume
+		return (2.0 * V + (N - 1.0)*v + (N - 2.0)*VV);
+}
+ChMatrix33<> Smarticle::calcOverlapSphereGyr(int N)//gyration of N spheres glued with overlap equal to radius origin is in center of sphere link length 
+{
+	double l = N*r+r;
+	double pos = 0;
+	double el = (2.0 / 5.0) * r*r; //gyr for single sphere at origin
+	ChMatrix33<> posMat = ChMatrix33<>(0);
+	ChMatrix33<> gyr = ChMatrix33<>(el*N);
+	for (int i = 1; i <= N; i++)
+	{
+		pos = i*r - l / 2.0; //origin is at center of link length 
+		posMat.Set33Element(0, 0, pos*pos);
+		gyr = gyr + posMat;
+	}
+
+	return gyr;
+}
 void Smarticle::CreateArmsSphere(int armID, double len, ChVector<> posRel, ChQuaternion<> armRelativeRot) {
-	ChMatrix33<> gyr;  	// components gyration
+	ChMatrix33<> gyr= ChMatrix33<>(0);  	// components gyration
 	double vol = 0;			// components volume
 	double dens = 0;
 	double m = 0;
-
-	//gyr = utils::CalcCapsuleGyration(r, len / 2.0,ChVector<>(0),Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)));
-	//gyr = utils::CalcCapsuleGyration(r, len / 2.0, ChVector<>(0) );
-
-	ChVector<> armDims = ChVector<>(len / 2.0, r, r2); //all funcs take half lengths
-
-	vol = utils::CalcCylinderVolume(r, len / 2.0);
-	gyr = utils::CalcCylinderGyration(r, len / 2.0, ChVector<>(0), Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)));
-
+	int N = round(len / r);
+	vol = calcOverlapSphereVol(N);
+	gyr = calcOverlapSphereGyr(N);
 	// create body, set position and rotation, add surface property, and clear/make collision model
 	auto arm = std::make_shared<ChBody>();
 	ChVector<> posArm = rotation.Rotate(posRel) + initPos;
@@ -562,44 +568,28 @@ void Smarticle::CreateArmsSphere(int armID, double len, ChVector<> posRel, ChQua
 	}
 	m = dens*vol;
 	arm->SetMass(m);
+
+
 	arm->SetDensity((float)dens);
 	arm->SetMaterialSurface(mat_smarts);
 
-
-	ChVector<> endPts = ChVector<>(len / 2.0, 0, 0);
 	arm->GetCollisionModel()->ClearModel();
 	if (visualize)
 	{
-		//auto vshape = std::make_shared<ChCylinderShape>();
-		//vshape->GetCylinderGeometry().rad = r;
-		//vshape->GetCylinderGeometry().p1 = endPts;
-		//vshape->GetCylinderGeometry().p2 = endPts*-1;
-		//auto vshape1 = std::make_shared<ChSphereShape>();
-		//auto vshape2 = std::make_shared<ChSphereShape>();
-		//vshape1->GetSphereGeometry().center = endPts;
-		//vshape2->GetSphereGeometry().center = endPts*-1;
-		//vshape1->GetSphereGeometry().rad = r;
-		//vshape2->GetSphereGeometry().rad = r;
-		//arm->AddAsset(vshape);
-		//arm->AddAsset(textureAssets[armID]);
-		//arm->AddAsset(vshape1);
-		//arm->AddAsset(textureAssets[armID]);
-		//arm->AddAsset(vshape2);
-		//arm->AddAsset(textureAssets[armID]);
-
+		
 		if (armID == 1)
 			arm->SetName("smarticle_cent");
 		else
 			arm->SetName("smarticle_arm");
 	}
 	arm->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-
-	//arm->GetCollisionModel()->AddCylinder(r, r, len / 2.0,ChVector<>(0), Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)));  // radius x, radius z, height on y
-	utils::AddCylinderGeometry(arm.get(), r, len / 2.0, ChVector<>(0), Angle_to_Quat(ANGLE, ChVector<>(0, 0, PI_2)), true);
-	//arm->GetCollisionModel()->AddSphere(r, endPts);
-	//arm->GetCollisionModel()->AddSphere(r, endPts*-1);
-
-
+	double pos=0;
+	for (int i = 1; i <= N; i++)
+	{
+		pos = i*r - len / 2.0; //origin is at center of link length 
+		utils::AddSphereGeometry(arm.get(), r, ChVector<>(pos, 0, 0),QUNIT, visualize);
+	}
+	arm->AddAsset(textureAssets[armID]);
 	arm->GetCollisionModel()->SetFamily(2); // just decided that smarticle family is going to be 2
 	arm->GetCollisionModel()->BuildModel(); // this function overwrites the intertia
 
@@ -647,7 +637,6 @@ void Smarticle::CreateArm2(int armID, double len, double mr, double mr2, ChVecto
 
 	if (visualize)
 	{
-		setTextures();
 		arm->AddAsset(textureAssets[armID]);
 		if(armID==1)
 			arm->SetName("smarticle_cent");
@@ -774,7 +763,21 @@ void Smarticle::SetSpeed(ChVector<> newSpeed)
 	//arm1->SetPos_dt(newSpeed);
 	//arm2->SetPos_dt(newSpeed);
 }
-
+void Smarticle::SetAcc(ChVector<> newAcc)
+{
+	for (size_t i = 0; i < numSegs; i++)
+	{
+		arms[i]->SetPos_dtdt(newAcc);
+	}
+}
+void Smarticle::SetRotSpeed(ChQuaternion<> newSpeed)
+{
+	for (size_t i = 0; i < numSegs; i++)
+	{
+		arms[i]->SetRot_dt(newSpeed);
+	}
+	//arms[1]->SetRot_dt(newSpeed);
+}
 void Smarticle::RotateSmarticle(ChQuaternion<> newRotation)
 {
 	GetLog() << arms[1]->GetRotAxis();
@@ -985,15 +988,18 @@ void Smarticle::CreateJoints() {
 	ChVector<> pR12(w / 2.0 + r2, 0, 0);
 	ChQuaternion<> qx = Q_from_AngAxis(PI_2, VECT_X);
 
-	// link 1
-	link_revolute01->Initialize(arms[0], arms[1], ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx));
-	link_revolute01->SetMotion_axis(ChVector<>(0, 0, 1));
+
+		// link 1
+		link_revolute01->Initialize(arms[0], arms[1], ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx));
+		link_revolute01->SetMotion_axis(ChVector<>(0, 0, 1));
+
+
+		// link 2
+		link_revolute12->Initialize(arms[1], arms[2], ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx));
+		link_revolute12->SetMotion_axis(ChVector<>(0, 0, 1));
+
+
 	m_system->AddLink(link_revolute01);
-
-
-	// link 2
-	link_revolute12->Initialize(arms[1], arms[2], ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx));
-	link_revolute12->SetMotion_axis(ChVector<>(0, 0, 1));
 	m_system->AddLink(link_revolute12);
 
 	link_revolutes[0] = link_revolute01;
@@ -1001,6 +1007,7 @@ void Smarticle::CreateJoints() {
 }
 
 void Smarticle::CreateActuators() {
+	std::shared_ptr<ChLinkEngine> link_actuator = std::make_shared<ChLinkEngine>();
 
 	std::shared_ptr<ChLinkEngine> link_actuator01 = std::make_shared<ChLinkEngine>();
 	std::shared_ptr<ChLinkEngine> link_actuator12 = std::make_shared<ChLinkEngine>();
@@ -1022,55 +1029,75 @@ void Smarticle::CreateActuators() {
 	qy1.Normalize();
 	qy2.Normalize();
 
-
-	//if (active)
-	//{
-	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
-
-	link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-	link_actuator01->Initialize(arms[0], arms[1], false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
-	link_actuator01->GetLimit_Rz()->Set_min(D2R*angLow);
-	link_actuator01->GetLimit_Rz()->Set_max(D2R*angHigh);
-	link_actuator01->GetLimit_Rz()->Set_active(true);
-
-	/*link_actuator01->GetForce_D()->Set_active(true);
-	auto modK = (ChFunction_Const*)(link_actuator01->GetForce_D()->Get_modul_K());
-	link_actuator01->GetForce_D()->Set_K(1);
-	modK->Set_yconst(100);*/
-
-
-	link_actuator12->Initialize(arms[2], arms[1], false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-	link_actuator12->GetLimit_Rz()->Set_min(D2R*angLow);
-	link_actuator12->GetLimit_Rz()->Set_max(D2R*angHigh);
-	link_actuator12->GetLimit_Rz()->Set_active(true);
-	//link_actuator12->Set_mot_inertia(1);
-
-	if (!active)
+	for (int i = 0; i < numEngs; i++)
 	{
-		link_actuator01->GetLimit_Rz()->Set_min(D2R * GetInitialAngle(0));
-		link_actuator01->GetLimit_Rz()->Set_max(D2R * GetInitialAngle(0));
-		link_actuator12->GetLimit_Rz()->Set_min(D2R * GetInitialAngle(1));
-		link_actuator12->GetLimit_Rz()->Set_max(D2R * GetInitialAngle(1));
+		std::shared_ptr<ChLinkEngine> link_actuator = std::make_shared<ChLinkEngine>();
+		link_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+		if (i == 0)
+		{
+			link_actuator->Initialize(arms[0], arms[1], false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
+		}
+		else
+		{
+			link_actuator->Initialize(arms[2], arms[1], false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+		}
+		link_actuator->GetLimit_Rz()->Set_min(D2R*angLow);
+		link_actuator->GetLimit_Rz()->Set_max(D2R*angHigh);
+		link_actuator->GetLimit_Rz()->Set_active(true);
+		link_actuator->SetMotion_axis(ChVector<>(0, 0, 1));
+		link_actuator->Set_mot_inertia(arms[0]->GetInertiaXX().z());
+		link_actuators[i] = link_actuator;
+		m_system->AddLink(link_actuators[i]);
+
 	}
-	//}
-	//else
-	//{
-	/*	link_actuator01->Initialize(arm0, arm1, false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
-		link_actuator12->Initialize(arm2, arm1, false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
-	*/
-	//}
 
-	m_system->AddLink(link_actuator01);
-	m_system->AddLink(link_actuator12);
+	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+	//	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
+	//	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_TORQUE);
 
-	//////////
-	//actuator 1
-	link_actuators[0] = link_actuator01;
-	link_actuators[1] = link_actuator12;
+	//	
+
+	//	//link_actuator01->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+	//	//link_actuator12->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+	//	link_actuator01->Initialize(arms[0], arms[1], false, ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1*qy1), ChCoordsys<>(rotation.Rotate(pR01) + initPos, rotation*qx1));
+	//	link_actuator01->GetLimit_Rz()->Set_min(D2R*angLow);
+	//	link_actuator01->GetLimit_Rz()->Set_max(D2R*angHigh);
+	//	link_actuator01->GetLimit_Rz()->Set_active(true);
+	//	link_actuator01->SetMotion_axis(ChVector<>(0, 0, 1));
+
+	//	/*link_actuator01->GetForce_D()->Set_active(true);
+	//	auto modK = (ChFunction_Const*)(link_actuator01->GetForce_D()->Get_modul_K());
+	//	link_actuator01->GetForce_D()->Set_K(1);
+	//	modK->Set_yconst(100);*/
+
+	//		
+	//	link_actuator12->Initialize(arms[2], arms[1], false, ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2*qy2), ChCoordsys<>(rotation.Rotate(pR12) + initPos, rotation*qx2));
+	//	link_actuator12->GetLimit_Rz()->Set_min(D2R*angLow);
+	//	link_actuator12->GetLimit_Rz()->Set_max(D2R*angHigh);
+	//	link_actuator12->GetLimit_Rz()->Set_active(true);
+	//	link_actuator12->SetMotion_axis(ChVector<>(0, 0, 1));
+	//	//link_actuator12->Set_mot_inertia(1);
+
+	////if (!active)
+	////{
+	////	link_actuator01->GetLimit_Rz()->Set_min(D2R * GetInitialAngle(0));
+	////	link_actuator01->GetLimit_Rz()->Set_max(D2R * GetInitialAngle(0));
+	////	link_actuator12->GetLimit_Rz()->Set_min(D2R * GetInitialAngle(1));
+	////	link_actuator12->GetLimit_Rz()->Set_max(D2R * GetInitialAngle(1));
+	////}
+
+	//link_actuator01->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_LOCK);
+	//link_actuator12->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_LOCK);
+	//
+	//m_system->AddLink(link_actuator01);
+	//m_system->AddLink(link_actuator12);
+	//
+	////////////
+	////actuator 1
+	//link_actuators[0] = link_actuator01;
+	//link_actuators[1] = link_actuator12;
+
 }
 
 void Smarticle::Create() {
@@ -1092,17 +1119,26 @@ void Smarticle::Create() {
 
 	if (stapleSize)
 	{
-		offPlaneoffset = 0;
-
-		l_mod = l + 2 * r2 - jointClearance;
-		CreateArms(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0 - r2)*sin(-angles[0])), quat0);
-		CreateArms(1, w, ChVector<>(0, 0, 0));
-		CreateArms(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r2)*sin(-angles[1])), quat2);
-
-		//l_mod = l + 2*r2 - jointClearance;
-		//CreateArmsPill(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0-r2)*sin(-angles[0])), quat0);
+		if (!sphereVersion)
+		{
+			offPlaneoffset = 0;
+			l_mod = l + 2 * r2 - jointClearance;
+			CreateArms(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0 - r2)*sin(-angles[0])), quat0);
+			CreateArms(1, w, ChVector<>(0, 0, 0));
+			CreateArms(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r2)*sin(-angles[1])), quat2);
+		}
+		//l_mod = l + 2*r - jointClearance;
+		//CreateArmsPill(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0-r)*sin(-angles[0])), quat0);
 		//CreateArmsPill(1, w, ChVector<>(0, 0, 0));
-		//CreateArmsPill(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 -r2)*sin(-angles[1])), quat2);
+		//CreateArmsPill(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 -r)*sin(-angles[1])), quat2);
+
+		if (sphereVersion)
+		{
+			l_mod = l;
+			CreateArmsSphere(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0)*sin(-angles[0])), quat0);
+			CreateArmsSphere(1, w, ChVector<>(0, 0, 0));
+			CreateArmsSphere(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r)*sin(-angles[1])), quat2);
+		}
 	}
 	else
 	{
@@ -1719,10 +1755,64 @@ bool Smarticle::ChangeArmColor(double torque01, double torque12, bool LA, bool M
 	return false;
 
 }
+///////////////////////////////////////////////////////////////////////////
+bool Smarticle::ChangeToOT(bool setOT, int index)
+{
+	bool LTMTcolor = false;
+	//for vibration upon OT, change degreesToVibrate to amount you wish to vibrate
+	double degreesToVibrate = 3;
+	double moveAmt = degreesToVibrate*D2R;
+
+	//determine if any are OT
+	bool anyOT = false;
+	for (int i = 0; i < numEngs; i++)
+	{
+		if (armOT[i])
+			anyOT = true;
+	}
 
 
+	if (setOT && !anyOT)
+	{
+		this->setCurrentMoveType(OT);
+		mv = &ot;
+
+		this->ot.clear();
+		this->ot.emplace_back(angles[0] + moveAmt, angles[1] + moveAmt);
+		//this->ot.emplace_back(angles[0] + moveAmt, angles[1] + moveAmt);
+		//this->ot.emplace_back(angles[0], angles[1]);
+		//this->ot.emplace_back(angles[0] - moveAmt, angles[1] - moveAmt);
+		this->armsController->resetCumError = true;
+		
+	}
+	//do nothing if setOT and OT already exists
+	if (!setOT)
+	{
+		anyOT = false;
+		armOT[index] = setOT;
+		for (int i = 0; i < numEngs; i++)
+		{
+			if (armOT[i])
+				anyOT = true;
+		}
+		if (!anyOT)
+		{
+			this->setCurrentMoveType((MoveType)global_GUI_value);
+		}
+	}
+	return false;
 
 
+}
+///////////////////////////////////////////////////////////////////////////
+bool Smarticle::GetArmOT(int id)
+{
+	return armOT[id];
+}
+void Smarticle::SetArmOT(int id,bool isOT)
+{
+	armOT[id]=isOT;
+}
 void Smarticle::GenerateVib(double ang1, double ang2)
 {
 	this->addInterpolatedPathToVector(ang1, ang2, ang1 + vibAmp, ang2 + vibAmp);//curr				->		curr+vib

@@ -113,6 +113,7 @@ namespace chrono {
 		virtual double GetTotalTorque();
 		void ChangeActive(bool m_active);
 		virtual bool ChangeArmColor(double torque01, double torque12, bool LA, bool MA, bool OA);
+		virtual bool ChangeToOT(bool setOT,int index);
 		bool MoveOverStress(double torque01, double torque12);
 		bool MoveMidStress(double torque01, double torque12);
 		bool MoveLowStress(double torque01, double torque12, double timeSinceChanged);
@@ -158,7 +159,8 @@ namespace chrono {
 		virtual void RotateSmarticleBy(ChQuaternion<>);
 		virtual void SetEdges();
 		virtual void SetSpeed(ChVector<> newSpeed);
-
+		virtual void SetAcc(ChVector<> newAcc);
+		virtual void SetRotSpeed(ChQuaternion<> newSpeed);
 
 
 		//smarticle arm angle
@@ -181,6 +183,9 @@ namespace chrono {
 		void MoveToAngle(double, double);
 		virtual bool GetArm0OT();
 		virtual bool GetArm2OT();
+		virtual bool GetArmOT(int id);
+		virtual void SetArmOT(int id, bool isOT);
+		int countOT = 0;
 		void MoveLoop();
 		////////////Will smarticle implementation////////////
 		void AssignState(int guiState);
@@ -338,8 +343,9 @@ namespace chrono {
 		//void CreateJoints1(ChQuaternion<>, ChQuaternion<>);
 		void CreateActuators();
 		//void CreateActuators1(ChQuaternion<>, ChQuaternion<>);
-
-
+		void alterActuator(std::shared_ptr<ChLinkEngine>);
+		double Smarticle::calcOverlapSphereVol(int N);
+		ChMatrix33<> Smarticle::calcOverlapSphereGyr(int N);//gyration of N spheres glued with overlap equal to radius 
 
 
 
@@ -368,7 +374,7 @@ namespace chrono {
 
 		double density;
 		std::shared_ptr<ChMaterialSurface> mat_smarts;
-
+		std::shared_ptr<ChTexture> textureAssets[numSegs];
 
 
 
@@ -412,9 +418,10 @@ namespace chrono {
 
 		// joints functions
 		std::shared_ptr<ChFunction> EngFunctions[numEngs];
-
+		bool armOT[numEngs];
 		// assets
-		std::shared_ptr<ChTexture> textureAssets[numSegs];
+
+		
 
 	};
 

@@ -174,6 +174,12 @@ double w_smarticle = sizeScale * 0.0117; // sizeScale * 0.0117
 double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
 double t_smarticle = sizeScale * .00127;
 double t2_smarticle = sizeScale * .0005;
+
+//double w_smarticle = sizeScale * 0.0117; // sizeScale * 0.0117
+//double l_smarticle = 1 * w_smarticle; // [0.02, 1.125] * w_smarticle;
+//double t_smarticle = w_smarticle/28; // W=14D=28R
+//double t2_smarticle = sizeScale * t_smarticle*0.0005/0.00127;
+
 double rho_smarticle = 7850.0;
 double rho_smarticleArm = 7850.0;
 double rho_smarticleMid = 7850.0;
@@ -671,6 +677,10 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[1];
 		double mult_l = atof(text);
 		l_smarticle = mult_l * w_smarticle;
+		if (stapleSize && sphereVersion)
+		{
+			l_smarticle = t_smarticle*mult_l+t_smarticle/2.0;
+		}
 	}
 	if (argc > 2) {
 		const char* text = argv[2];
@@ -737,6 +747,12 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[15];
 		//percentToMoveToGlobal = atof(text);
 		oneInactive = atoi(text);
+	}
+
+	if (argc > 16) {
+		const char* text = argv[16];
+		//percentToMoveToGlobal = atof(text);
+		vibAmp = atoi(text);
 	}
 	/// if parallel, get solver setting
 	//if (USE_PARALLEL) {
@@ -1059,6 +1075,7 @@ void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<
 			collisionEnvelope,
 			//l_smarticle+t2_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
 			l_smarticle, w_smarticle, 0.5 * t_smarticle, 0.5 * t2_smarticle,
+			//l_smarticle, w_smarticle, t_smarticle, t2_smarticle,
 			sOmega,
 			true,
 			myPos,
@@ -1754,7 +1771,7 @@ void PrintStress2(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, double 
 			currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
 			stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl;
 			break;
-		case BOX:
+		case BOX: case BOXDROP:
 			//stress_of << mphysicalSystem->GetChTime() << ", " << angle1 << ", " << Smarticle::global_GUI_value << ", " << box_ang << ", " << angle2 << std::endl;
 
 			//box with ring data
@@ -1833,6 +1850,20 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 	switch (bucketType)
 	{
 	case BOX:
+		zMax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
+		zMax = std::min(zMax, bucketMin.z() + 2 * sys->bucket_interior_halfDim.z());
+		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
+			std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
+			if (IsIn(sPtr->Get_cm(), bucketCtr - sys->bucket_interior_halfDim, bucketCtr + sys->bucket_interior_halfDim + ChVector<>(0, 0, 2.0 * sys->bucket_half_thick))) {
+				countInside2++;
+				totalVolume2 += sPtr->GetVolume();
+			}
+		}
+
+		volumeFraction = totalVolume2 / (4.0 * sys->bucket_interior_halfDim.x() * sys->bucket_interior_halfDim.y() * (zMax - bucketMin.z()));
+		break;
+
+	case BOXDROP:
 		zMax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
 		zMax = std::min(zMax, bucketMin.z() + 2 * sys->bucket_interior_halfDim.z());
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
@@ -2032,7 +2063,7 @@ void UpdateSmarticles(
 			//tor1 = mySmarticlesVec[i]->GetMotTorque(0);
 			//tor2 = mySmarticlesVec[i]->GetMotTorque(1);
 			//GetLog() << "\nm0torque:" << tor1 << "\tm0v" << mySmarticlesVec[i]->getLinkActuator(0)->Get_mot_rot_dt() << "\tm1v" << mySmarticlesVec[i]->getLinkActuator(1)->Get_mot_rot_dt();
-		}
+
 		int moveType = 0;
 		///////////////////random chance at current timestep for smarticle to not move to globalValue, models real life delay for smarticles to start motion to current state
 		if (genRand() > 0)
@@ -2044,7 +2075,8 @@ void UpdateSmarticles(
 		{
 			moveType = mySmarticlesVec[i]->prevMoveType;
 		}
-		mySmarticlesVec[i]->ControllerMove(moveType, tor1, tor2);
+		mySmarticlesVec[i]->ControllerMove(moveType, tor1, tor2);\
+		}
 		mySmarticlesVec[i]->steps = mySmarticlesVec[i]->steps + 1;
 
 	}
@@ -2169,7 +2201,7 @@ void create_spring(std::shared_ptr<CH_SYSTEM> mphysicalSystem)
 // =============================================================================
 bool SetGait(double time)
 {
-	//double tm = 3;
+	//double tm = 1;
 	//if (time <= tm*1)
 	//	Smarticle::global_GUI_value = 1;
 	//else if (time > tm*1 && time <= tm*2)
@@ -2182,16 +2214,22 @@ bool SetGait(double time)
 	//	return true;
 
 
-	if (time <= .05)
-		Smarticle::global_GUI_value = 1;
-	//else if (time > .05)
-	//	Smarticle::global_GUI_value = 0;
-	if (time > 10)
-		return true;
+	//if (time < .01)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 1.5 && time < 2.5)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time >= 2.5 && time < 3.5)
+	//	Smarticle::global_GUI_value = 1;
+	//else if(time>3.5)
+	//	return true;
 		
-	/*else
+	double tm = 1.0;
+	if (time < 1)
 		Smarticle::global_GUI_value = 1;
-*/
+	else if (time >= 1 && time < 3.5)
+		Smarticle::global_GUI_value = 4;
+	else if (time>3.5)
+		return true;
 
 //else if (time > 30 && time <= 33)
 //	Smarticle::global_GUI_value = 3;
@@ -2309,9 +2347,9 @@ int main(int argc, char* argv[]) {
 	std::shared_ptr<CH_SYSTEM> mphysicalSystem = std::make_shared<CH_SYSTEM>();
 	unsigned int max_objects = 16000;
 	double scene_size = 500;
-	std::shared_ptr<collision::ChCollisionSystem> collision_system;  ///< collision engine
-	collision_system = std::make_shared<collision::ChCollisionSystemBullet>(max_objects, scene_size);
-	mphysicalSystem->SetCollisionSystem(collision_system);
+	//std::shared_ptr<collision::ChCollisionSystem> collision_system;  ///< collision engine
+	//collision_system = std::make_shared<collision::ChCollisionSystem>(max_objects, scene_size);
+	//mphysicalSystem->SetCollisionSystem(collision_system);
 	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	simParams.open(simulationParams.c_str());
 
@@ -2420,7 +2458,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	break;
-	case BOX:
+	case BOX: case BOXDROP:
 		if (stapleSize)
 		{
 			camera->setPosition(core::vector3df(0.0139f, -0.255f, .045f));
@@ -2583,6 +2621,13 @@ int main(int argc, char* argv[]) {
 
 		break;
 	}
+	case BOXDROP:
+	{
+		sys->create_Truss();
+		sys->create_VibrateLink(omega_bucket, vibration_amp, vibrateStart, sys->bucket_bott);
+		break;
+	}
+
 	case KNOBCYLINDER:
 	{
 		unsigned int kpr = 4;//knobs per row
@@ -2777,8 +2822,8 @@ int main(int argc, char* argv[]) {
 
 		application.DoStep();
 		//mphysicalSystem.DoStepDynamics(dT);
-		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 
+		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
 
 
 		receiver.drawSmarticleAmt(numGeneratedLayers);
