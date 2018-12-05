@@ -164,6 +164,16 @@ namespace chrono {
 				mSmart->GetSmarticleBodyPointer()->GetRot().e1() << ", " <<
 				mSmart->GetSmarticleBodyPointer()->GetRot().e2() << ", " <<
 				mSmart->GetSmarticleBodyPointer()->GetRot().e3() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetPos_dt().x() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetPos_dt().y() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetPos_dt().z() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetRot_dt().e0() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetRot_dt().e1() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetRot_dt().e2() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetRot_dt().e3() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetPos_dtdt().x() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetPos_dtdt().y() << ", " <<
+				mSmart->GetSmarticleBodyPointer()->GetPos_dtdt().z() << ", " <<
 				mSmart->GetAngle(0) << ", " <<
 				mSmart->GetAngle(1) << ", " <<
 				mSmart->GetID() << ", " <<
@@ -282,9 +292,15 @@ namespace chrono {
 		std::string ddSt;
 		getline(inSmarticles, ddSt);
 		ChVector<> p3;
+		ChVector<> p3dt;
+		ChVector<> p3dtdt;
 		ChQuaternion<> q4;
+		ChQuaternion<> q4dt;
 		inSmarticles >> p3.x() >> ddCh >> p3.y() >> ddCh >> p3.z() >> ddCh >>
 			q4.e0() >> ddCh >> q4.e1() >> ddCh >> q4.e2() >> ddCh >> q4.e3() >> ddCh >>
+			p3dt.x() >> ddCh >> p3dt.y() >> ddCh >> p3dt.z() >> ddCh >>
+			q4dt.e0() >> ddCh >> q4dt.e1() >> ddCh >> q4dt.e2() >> ddCh >> q4dt.e3() >> ddCh >>
+			p3dtdt.x() >> ddCh >> p3dtdt.y() >> ddCh >> p3dtdt.z() >> ddCh >>
 			angle1 >> ddCh >> angle2 >> ddCh >> dumId >> ddCh >>
 			globalidx >> ddCh >> gui1idx >> ddCh >> gui2idx >> ddCh >>
 			gui3idx >> ddCh >> vibidx >> ddCh >> extra1idx >> ddCh >>
@@ -324,6 +340,9 @@ namespace chrono {
 			}
 			smarticle0->setCurrentMoveType(VIB);
 			smarticle0->activateStress = percentToChangeStressState;
+			smarticle0->SetSpeed(p3dt);
+			smarticle0->SetAcc(p3dtdt);
+			//smarticle0->SetRotSpeed(q4dt);
 
 			mySmarticlesVec.emplace_back(smarticle0);
 			application.DrawAll();
@@ -339,9 +358,12 @@ namespace chrono {
 			//application.AssetUpdate(smarticle0->GetArm(2));
 
 #endif
-
+			
 			inSmarticles >> p3.x() >> ddCh >> p3.y() >> ddCh >> p3.z() >> ddCh >>
 				q4.e0() >> ddCh >> q4.e1() >> ddCh >> q4.e2() >> ddCh >> q4.e3() >> ddCh >>
+				p3dt.x() >> ddCh >> p3dt.y() >> ddCh >> p3dt.z() >> ddCh >>
+				q4dt.e0() >> ddCh >> q4dt.e1() >> ddCh >> q4dt.e2() >> ddCh >> q4dt.e3() >> ddCh >>
+				p3dtdt.x() >> ddCh >> p3dtdt.y() >> ddCh >> p3dtdt.z() >> ddCh >>
 				angle1 >> ddCh >> angle2 >> ddCh >> dumId >> ddCh >>
 				globalidx >> ddCh >> gui1idx >> ddCh >> gui2idx >> ddCh >>
 				gui3idx >> ddCh >> vibidx >> ddCh >> extra1idx >> ddCh >>
