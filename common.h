@@ -16,6 +16,7 @@
 #ifndef false
 #define false 0
 #endif
+#define sphereVersion false
 #define PI CH_C_PI
 #define PPI CH_C_PI 
 #define D2R CH_C_PI/180.0    //deg to rad
@@ -72,7 +73,7 @@ extern bool bucket_exist;
 
 enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM, FLATHOPPER };
-enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, FLATHOPPER, HOPPER, DRUM };
+enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, FLATHOPPER, HOPPER, DRUM, BOXDROP};
 extern SmarticleType smarticleType;
 extern BucketType bucketType;
 ////////////

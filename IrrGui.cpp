@@ -114,6 +114,7 @@ bool IrrGui::OnEvent(const SEvent& event) {
 				Smarticle::global_GUI_value = MoveType::GUI1;
 			else
 				Smarticle::global_GUI_value = MoveType::GLOBAL;
+
 			return true;
 			break;
 
@@ -513,11 +514,11 @@ void IrrGui::SaveToMovie()
 }
 void IrrGui::DeleteImgs()
 {
-#if defined(_WIN64)
-	system("del video_capture\\*.png");
-#else
-	system("rm -f video_capture/*.png");
-#endif
+//#if defined(_WIN64)
+//	system("del video_capture\\*.png");
+//#else
+//	system("rm -f video_capture/*.png");
+//#endif
 }
 void IrrGui::screenshot(int stepsPerFrame)
 {

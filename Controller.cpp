@@ -115,12 +115,18 @@ bool Controller::Step(double dt) {
 			UseForceControl(i);
 
 			break;
+			
+
 		default:
 			UseForceControl(i);
 
 		}
-		//GetLog() << "w"<<smarticle_->GetActuatorOmega(i) << "\t" <<smarticle_->GetMotTorque(i) << "\t";
 
+		//GetLog() << "w"<<smarticle_->GetActuatorOmega(i) << "\t" <<smarticle_->GetMotTorque(i) << "\t";
+		/*if (abs(smarticle_->getLinkActuator(i)->Get_mot_torque()) > )
+			GetLog() <<
+		GetLog() << "torque:" << smarticle_->getLinkActuator(i)->Get_mot_torque() << " react torque:" << smarticle_->getLinkActuator(1)->Get_react_torque() << nl;*/
+	
 	}
 	//GetLog() << "\n";
 	//result = successfulMove_.at(0) || successfulMove_.at(1);

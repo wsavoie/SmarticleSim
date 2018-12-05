@@ -31,7 +31,7 @@ sizeScale=1;
 % omega = 4.9244e-5;
 %%limit speed in sim (5.3 for 90 deg, 6.3 for 180 deg, takes time to slow so probably 7
 %does nothing on torque limit
-omegaLim =7; %if you want to change the speed you must change linear interpolate method
+omegaLim =6; %if you want to change the speed you must change linear interpolate method
 omega =12; %distance between points in move list
 % omega = 10;
 rho = 7850.0;%/(sizeScale^3);
