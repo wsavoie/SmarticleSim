@@ -116,10 +116,9 @@ namespace chrono {
 			std::system("rm checkPointFiles/*.csv");
 #endif
 		}
-
 		char fileCounter[5];
-		int dumNumChar = sprintf(fileCounter, "%d", int(tStep / tStepsCheckPoint));
-
+		//int dumNumChar = sprintf(fileCounter, "%d", int(tStep / tStepsCheckPoint));
+		int dumNumChar = sprintf(fileCounter, "%d", int(tStep*dT * 1000));
 		char nameCheckPoint[255];
 		sprintf(nameCheckPoint, "checkPointFiles/smarticles");
 		strcat(nameCheckPoint, fileCounter);

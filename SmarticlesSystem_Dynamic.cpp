@@ -270,7 +270,7 @@ double pctActive = 1.0;
 double inc = 0.00001;
 double angle1 = 90;
 double angle2 = 90;
-double vibAmp = 5 * D2R; //vibrate by some amount of degrees back and forth
+double vibAmp = 1 * D2R; //vibrate by some amount of degrees back and forth
 int videoFrameInterval = 1 / (out_fps*dT); //dt = [sec/step], fps=[frames/sec] --> 1/(dt*fps)=[(sec*steps)/(sec*frames)]=[steps/frame]
 
 
@@ -694,6 +694,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 	if (argc > 4) {
 		const char* text = argv[4];
 		readFile = atoi(text);
+		GetLog() << "read from file" << readFile;
 	}
 	if (argc > 5) {
 		const char* text = argv[5];
@@ -752,7 +753,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 	if (argc > 16) {
 		const char* text = argv[16];
 		//percentToMoveToGlobal = atof(text);
-		vibAmp = atoi(text);
+		vibAmp = atof(text)*D2R;
 	}
 	/// if parallel, get solver setting
 	//if (USE_PARALLEL) {
@@ -2213,23 +2214,32 @@ bool SetGait(double time)
 	//else
 	//	return true;
 
-
-	//if (time < .01)
-	//	Smarticle::global_GUI_value = 1;
-	//else if (time >= 1.5 && time < 2.5)
-	//	Smarticle::global_GUI_value = 2;
-	//else if (time >= 2.5 && time < 3.5)
-	//	Smarticle::global_GUI_value = 1;
-	//else if(time>3.5)
-	//	return true;
-		
+	/////VIBRATION STUFF
 	double tm = 1.0;
 	if (time < 1)
 		Smarticle::global_GUI_value = 1;
-	else if (time >= 1 && time < 3.5)
+	else if (time >= 1 && time < 6)
 		Smarticle::global_GUI_value = 4;
-	else if (time>3.5)
+	else if (time>=6)
 		return true;
+
+
+	/////////BALLUP STUFF
+	//double tm = 1.0;
+	//if (time < 1)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 1 && time < 2.5)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time >= 2.5 && time < 4.5)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 4.5 && time < 6)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time >= 6 && time < 8)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 8)
+	//	return true;
+
+
 
 //else if (time > 30 && time <= 33)
 //	Smarticle::global_GUI_value = 3;
@@ -2948,9 +2958,7 @@ int main(int argc, char* argv[]) {
 	if (saveFrame)
 	{
 		receiver.SaveToMovie();
-		receiver.DeleteImgs();
-
-
+		//receiver.DeleteImgs();
 	}
 	//mySmarticlesVec.clear();
 
