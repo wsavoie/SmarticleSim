@@ -9,9 +9,13 @@ function [] = readSimData(fold)
 vibFolds=dir2(fold,'folders');
 c=1;
 dat=struct;
+rho=7850;
+t1=.00127;
+t2=.0005;
+w=0.0117;
 for(i=1:length(vibFolds))
     [parNames,vals]=parseFileNames(vibFolds(i).name);
-    versionFolds=dir2(fullfile(fold,vibFolds(i).name));
+    versionFolds=dir2(fullfile(fold,vibFolds(i).name),'folders');
     parNames{end+1}='N';
     parNames{end+1}='v';
     vals(end+2)=1;
@@ -30,13 +34,14 @@ for(i=1:length(vibFolds))
         %%%%%%%%%read volume fractiond data%%%%%%%%%%%%%%
         datafilePath=fullfile(dat(c).fold,'PostProcess','volumeFraction.txt');
         fdat=importdata(datafilePath);
-        
+        l=dat(c).lw*w;
+        smartSize=[rho,t1,t2,l,w];
         %vol fraction file format:
         %time,smartcount,phi,zmax,zcomz,totTorque,guiVal
         dat(c).t=fdat(:,1);
         dat(c).phi=fdat(:,3);
         dat(c).gui=fdat(:,7);
-     
+        dat(c).smartSize=smartSize;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         
@@ -48,6 +53,6 @@ for(i=1:length(vibFolds))
     
 end
 
-save(fullfile(fold,'simData.mat'),'dat','pars');
+save(fullfile(fold,'vibData.mat'),'dat');
 end
 

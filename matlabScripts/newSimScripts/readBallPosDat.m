@@ -1,7 +1,11 @@
 function [] = readBallPosDat(fold,startT)
-%t,x y z, id, gui
+%t,x y z, id, gui, totTorque
 
 ballFiles=dir2(fold,'folders');
+rho=7850;
+t1=.00127;
+t2=.0005;
+w=0.0117;
 
 dat=struct;
 d=[];
@@ -23,8 +27,10 @@ for(i=1:length(ballFiles))
             eval(['dat(c).',parNames{k},'=',num2str(vals(k)),';']);
         end
         pars(c,:)=vals;
-        
+        l=dat(c).lw*w;
+        smartSize=[rho,t1,t2,l,w];
         dat(c).fold=fullfile(versionFolds(j).folder,versionFolds(j).name);
+        pts(dat(c).fold);
         dat(c).pars=pars(c,:);
         %%%%%%%%%read volume fractiond data%%%%%%%%%%%%%%
         ballChecks=dir2(fullfile(dat(c).fold,'checkPointFiles'));
@@ -42,14 +48,20 @@ for(i=1:length(ballFiles))
             M = importdata(fullfile(ballChecks(rr).folder,ballChecks(rr).name), ',',10);
             gui(rr)=str2double(M.textdata{9});
             M=M.data;
-            %ballOut=[x,y,z,ID,moveType,active]
-            ballOut(:,:,rr)=horzcat(M(:,[1,2,3,20,31,35]));
+            %ballOut=[x,y,z,ID,moveType,active,motTorque1,motTorque2]
+            
+            totTorque(rr)=sum(sum(abs(M(:,36:37))));
+            ballOut(:,:,rr)=horzcat(M(:,[1,2,3,20,31,35,36,37]));
             t(rr)=tz;
+            smartInfo(:,:,rr)=M(:,[1:7,18,19]); %[x,y,z,e0,e1,e2,e3,ang1,ang2]
         end
         dat(c).ballOut=ballOut;
+        dat(c).smartInfo=smartInfo;
         dat(c).t=t;
         dat(c).gui=gui;
-%         
+        dat(c).totTorque=totTorque;
+        dat(c).smartVol=readSimParams(fullfile(dat(c).fold,'PostProcess','simulation_specific_parameters.txt'));
+        dat(c).smartSize=smartSize;
 %         datafilePath=fullfile(dat(j).fold,'PostProcess','volumeFraction.txt');
 %         fdat=importdata(datafilePath);
 %         dat(c).gui=M.
@@ -59,11 +71,12 @@ for(i=1:length(ballFiles))
         
         %open files
         c=c+1;
+        clear ballOut smartInfo t gui totTorque
     end
     %create a struct for params with nice names
     
 startTime=(startT)/1000;
-save(fullfile(versionFolds(1).folder,'ballDat.mat'),'dat','startTime');
+save(fullfile(versionFolds(1).folder,'ballDat.mat'),'dat','startTime','smartSize');
 c=1;
 ballOut=[];
 dat=[];

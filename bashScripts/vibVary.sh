@@ -45,10 +45,10 @@ foldName=vibVary
 # npl=(15 14 13 12 11 10 9 8 8)
 # re=-1
 # reArr=(0 0 0 0 0 0 0 0 0 0 0 0);
-lwArr=0.9;
+lwArr=(0.8 0.9 1.0)
 dtVal=0.0002
-nl=20
-npl=10
+nl=(20 20 20)
+npl=(10 9 8)
 vibAmp=(5 10 20 30)
 re=-1
 pa=1
@@ -59,14 +59,23 @@ windx=0
 windy=0
 ss=0
 mkdir $foldName
-for i in `seq 0 3`; do
-  echo $i
-  mkdir ./$foldName/lw_${lwArr}_nl_${nl}_npl_${npl}_vib_${vibAmp[$i]}
-  a=$foldName/lw_${lwArr}_nl_${nl}_npl_${npl}_vib_${vibAmp[$i]}/v${vers}
-  mkdir $a
-  cp smarticleMoves.csv $a
-  cd $a
-  $smartRunFile ${lwArr} ${dtVal} ${nl} ${re} ${pa} ${ang1} ${ang2} 0 ${npl} 0.2 ${ss} 0 ${windx} ${windy} 1 ${vibAmp[$i]};
-  cd $mf
-  # cp -r ./PostProcess $a
+for j in `seq 0 2`; do
+	for i in `seq 0 3`; do
+	  echo $i
+	  # mkdir ./$foldName/lw_${lwArr}_nl_${nl}_npl_${npl}_vib_${vibAmp[$i]}
+	  #mkdir ./$foldName/lw_${lwArr[$j]}_nl_${nl[$j]}_npl_${npl}_vib_${vibAmp[$i]}
+	  mkdir ./$foldName/lw_${lwArr[$j]}_nl_${nl[$j]}_npl_${npl[$j]}_vib_${vibAmp[$i]}
+	  # a=$foldName/lw_${lwArr}_nl_${nl}_npl_${npl}_vib_${vibAmp[$i]}/v${vers}
+	  a=$foldName/lw_${lwArr[$j]}_nl_${nl[$j]}_npl_${npl[$j]}_vib_${vibAmp[$i]}/v${vers}
+	  mkdir $a
+	  cp smarticleMoves.csv $a
+	  cd $a
+	  # $smartRunFile ${lwArr} ${dtVal} ${nl} ${re} ${pa} ${ang1} ${ang2} 0 ${npl} 0.2 ${ss} 0 ${windx} ${windy} 1 ${vibAmp[$i]};
+	  #$smartRunFile ${lwArr[$j]} ${dtVal} ${nl[$j]} ${re} ${pa} ${ang1} ${ang2} 0 ${npl} 0.2 ${ss} 0 ${windx} ${windy} 1 ${vibAmp[$i]};
+	  $smartRunFile ${lwArr[$j]} ${dtVal} ${nl[$j]} ${re} ${pa} ${ang1} ${ang2} 0 ${npl[$j]} 0.2 ${ss} 0 ${windx} ${windy} 1 ${vibAmp[$i]};
+	  cd $mf
+	  # cp -r ./PostProcess $a
+	done;
 done;
+
+powershell.exe -File "sendemail.ps1"
