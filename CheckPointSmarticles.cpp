@@ -191,6 +191,8 @@ namespace chrono {
 				yold0 << ", " <<
 				yold1 << ", " <<
 				mSmart->active << ", " <<
+				mSmart->GetMotTorque(0) << ", " <<
+				mSmart->GetMotTorque(1) << ", " <<
 				std::endl;
 		}
 		outSmarticles.close();
@@ -260,6 +262,7 @@ namespace chrono {
 		inSmarticles.open("smarticles.csv");
 		double l_smarticle, w_smarticle, t_smarticle, t2_smarticle, collisionEnvelope, friction, angle1, angle2, yold0, yold1;
 		int globalidx, gui1idx, gui2idx, gui3idx, dumId, vibidx, extra1idx, extra2idx, midtidx, otidx;
+		double motT1, motT2;
 		bool activeSmart;
 		unsigned int currMoveType, prevMoveType, gui_value;
 		double rho_smarticleArm;
@@ -305,7 +308,8 @@ namespace chrono {
 			gui3idx >> ddCh >> vibidx >> ddCh >> extra1idx >> ddCh >>
 			extra2idx >> ddCh >> midtidx >> ddCh >> otidx >> ddCh >>
 			prevMoveType >> ddCh >> currMoveType >> ddCh >> omega >>
-			ddCh >> yold0 >> ddCh >> yold1 >> ddCh >> activeSmart >> ddCh;
+			ddCh >> yold0 >> ddCh >> yold1 >> ddCh >> activeSmart >> ddCh >>
+			motT1>> ddCh >> motT2 >> ddCh;
 		while (inSmarticles.good()) {
 
 			std::shared_ptr<Smarticle> smarticle0(new Smarticle(mphysicalSystem));
@@ -368,7 +372,8 @@ namespace chrono {
 				gui3idx >> ddCh >> vibidx >> ddCh >> extra1idx >> ddCh >>
 				extra2idx >> ddCh >> midtidx >> ddCh >> otidx >> ddCh >>
 				prevMoveType >> ddCh >> currMoveType >> ddCh >> omega >>
-				ddCh >> yold0 >> ddCh >> yold1 >> ddCh >> activeSmart >> ddCh;
+				ddCh >> yold0 >> ddCh >> yold1 >> ddCh >> activeSmart >> ddCh >>
+				motT1 >> ddCh >> motT2 >> ddCh;
 		}
 
 		GetLog() << "num smarticles:" << mySmarticlesVec.size();
