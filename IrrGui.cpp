@@ -232,6 +232,10 @@ bool IrrGui::OnEvent(const SEvent& event) {
 				switch (bucketType)
 				{
 				case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
+					sys->bucket->SetPos(ChVector<>(
+						sys->bucket->GetPos().x(),
+						sys->bucket->GetPos().y()+1,
+						sys->bucket->GetPos().z()));
 					for (size_t i = 0; i < bucket_bod_vec.size(); i++)
 					{
 						bucket_bod_vec.at(i)->SetBodyFixed(false);
