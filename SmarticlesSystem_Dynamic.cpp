@@ -1905,6 +1905,32 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 		zComz = zComz / countInside2;
 		totalTorque = totalTorque / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
 		break;
+
+	case CYLINDER:
+		countInside2 = mySmarticlesVec.size();
+		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
+			std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
+			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
+		
+				com = sPtr->Get_cm() - ChVector<>(0, 0, bucketMin.z());
+				zComz += com.z();
+				max2 = std::max(max2, com.z());
+				if (max2 > zMax)
+				{
+					double temp = zMax;
+					zMax = max2;
+					max2 = temp;
+				}
+				totalTorque += abs(sPtr->GetMotTorque(0)) + abs(sPtr->GetMotTorque(1));
+				//totalTorque += abs(sPtr->GetReactTorqueVector(0).z()) + abs(sPtr->GetReactTorqueVector(1).z());
+				//zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z()- bucketMin.z());
+		}
+		volumeFraction = countInside2*vol / (max2*PI*sys->bucket_rad*sys->bucket_rad);
+		//GetLog() << vol << " " << countInside2 << " " << sys->bucket_rad << " " << zMax << " " << volumeFraction << "\n";
+		//GetLog() << "phi=" << volumeFraction << "\n";
+		zComz = zComz / countInside2;
+		totalTorque = totalTorque / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
+		break;
 	case FLATHOPPER:
 	{
 		zComz = 0;
@@ -2200,8 +2226,15 @@ void create_spring(std::shared_ptr<CH_SYSTEM> mphysicalSystem)
 	b1->Accumulate_force(ChVector<>(0, .5, 0), VNULL, true);
 	mphysicalSystem->Add(spring);
 }
+void removeBucket()
+{
+	sys->bucket->SetPos(ChVector<>(
+		sys->bucket->GetPos().x(),
+		1,
+		sys->bucket->GetPos().z()));
+}
 // =============================================================================
-bool SetGait(double time)
+bool SetGait(double time, std::shared_ptr<CH_SYSTEM>m_sys)
 {
 	//double tm = 1;
 	//if (time <= tm*1)
@@ -2215,17 +2248,76 @@ bool SetGait(double time)
 	//else
 	//	return true;
 
-	/////VIBRATION STUFF
-	double tm = 1.0;
-	if (time < 1)
-		Smarticle::global_GUI_value = 1;
-	else if (time >= 1 && time < 6)
-		Smarticle::global_GUI_value = 4;
-	else if (time>=6)
-		return true;
+	//////Regular VIBRATION STUFF
+	//double tm = 1.0;
+	//if (time < 1)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 1 && time < 6)
+	//	Smarticle::global_GUI_value = 4;
+	//else if (time>=6)
+	//	return true;
 
 
-	/////////BALLUP STUFF
+	///////BALLUP STUFF u-shape remove walls straight
+	//double tm = 1.0;
+	//if (time < 1)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 1 && time < 2.5)
+	//{
+	//	m_sys->Set_G_acc(ChVector<>(0, 0, 0));
+	//	removeBucket();
+	//	Smarticle::global_GUI_value = 2;
+	//}
+	//else if (time >= 2.5)
+	//	return true;
+
+	/////BALLUP STUFF u-shape->straight->ushape remove walls ushape
+	//double tm = 1.0;
+	//if (time < 1)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 1 && time < 2.5)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time >= 2.5 && time < 4.5)
+	//{
+	//	m_sys->Set_G_acc(ChVector<>(0, 0, 0));
+	//	removeBucket();
+	//	Smarticle::global_GUI_value = 1;
+	//}
+	//else if (time >= 4.5)
+	//	return true;
+
+
+	///////BALLUP STUFF RemoveBucketAt1s
+	//if (time < 1)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 1 && time < 2.5)
+	//	removeBucket();
+	//else if (time >= 2.5)
+	//	return true;
+
+	/////BALLUP STUFF RemoveBucket after straight-shape
+	//if (time < 1)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 1 && time < 2.5)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time >= 2.5 && time< 4.0)
+	//	removeBucket();
+	//else if (time >= 4.0)
+	//	return true;
+
+	/////BALLUP STUFF RemoveBucket after u-shape
+	//if (time < 1)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 1 && time < 2.5)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time >= 2.5 && time< 4.5)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 4.5 && time< 6.0)
+	//	removeBucket();
+	//else if (time >= 6.0)
+	//	return true;
+
+	///////BALLUP STUFF regular
 	//double tm = 1.0;
 	//if (time < 1)
 	//	Smarticle::global_GUI_value = 1;
@@ -2241,56 +2333,35 @@ bool SetGait(double time)
 	//	return true;
 
 
+	///////BALLUP STUFF once
+	//double tm = 1.0;
+	//if (time < 1)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 1 && time < 2.5)
+	//	Smarticle::global_GUI_value = 2;
+	//else if (time >= 2.5 && time < 4.5)
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 4.5 && time < 6.0)
+	//	removeBucket();
+	//else if(time>6.0)
+	//	return true;
+	
 
-//else if (time > 30 && time <= 33)
-//	Smarticle::global_GUI_value = 3;
-//else if (time > 33 && time <= 36)
-//	Smarticle::global_GUI_value = 2;
-//else if (time > 36 && time <= 39)
-//	Smarticle::global_GUI_value = 3;
-//else if (time > 39 && time <= 42)
-//	Smarticle::global_GUI_value = 2;
-//else if (time > 42 && time <= 45)
-//	Smarticle::global_GUI_value = 3;
-//else if (time > 45 && time <= 48)
-//	Smarticle::global_GUI_value = 2;
-//else if (time > 48 && time <= 51)
-//	Smarticle::global_GUI_value = 3;
-//else if (time > 51 && time <= 54)
-//	Smarticle::global_GUI_value = 2;
-//else if (time > 54 && time <= 57)
-//	Smarticle::global_GUI_value = 3;
-//else if (time > 57 && time <= 60)
-//	Smarticle::global_GUI_value = 2;
-//else if (time > 60 && time <= 63)
-//	Smarticle::global_GUI_value = 3;
-//else	
-//	return true;
+	/////BALLUP STUFF and vibrate in ball
+	double tm = 1.0;
+	if (time < 1)
+		Smarticle::global_GUI_value = 1;
+	else if (time >= 1 && time < 2.5)
+		Smarticle::global_GUI_value = 2;
+	else if (time >= 2.5 && time < 4.5)
+		Smarticle::global_GUI_value = 1;
+	else if (time >= 4.5 && time < 6)
+		Smarticle::global_GUI_value = 4;
+	else if (time >= 6 && time < 8)
+		removeBucket();
+	else if (time >= 8)
+		return true;
 
-//if (time <= 5)
-//	Smarticle::global_GUI_value = 2;
-//else if (time > 5 && time <= 10)
-//	Smarticle::global_GUI_value = 3;
-//else if (time > 10 && time <= 15)
-//	Smarticle::global_GUI_value = 2;
-//else if (time > 15 && time <= 20)
-//	Smarticle::global_GUI_value = 3;
-//else if (time > 20 && time <= 25)
-//	Smarticle::global_GUI_value = 2;
-//else if (time > 25 && time <= 30)
-//	Smarticle::global_GUI_value = 3;
-//else if (time > 30 && time <= 35)
-//	Smarticle::global_GUI_value = 2;
-//else if (time > 35 && time <= 40)
-//	Smarticle::global_GUI_value = 3;
-//else if (time > 40 && time <= 45)
-//	Smarticle::global_GUI_value = 2;
-//else if (time > 45 && time <= 50)
-//	Smarticle::global_GUI_value = 3;
-//else if (time > 50 && time <= 55)
-//	Smarticle::global_GUI_value = 2;
-//else	
-//	return true;
 
 	return false;
 
@@ -2884,7 +2955,7 @@ int main(int argc, char* argv[]) {
 #endif
 #endif
 
-		if (SetGait(t) == true)
+		if (SetGait(t, mphysicalSystem) == true)
 			break;
 
 
