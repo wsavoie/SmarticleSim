@@ -800,7 +800,9 @@ std::shared_ptr<ChBody> SystemGeometry::create_Bucket_Bott()
 	bucket_bott->GetCollisionModel()->ClearModel();
 	bucket_bott->SetPos(bucket_ctr);
 	bucket_bott->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	utils::AddBoxGeometry(bucket_bott.get(), Vector(bucket_rad + 2 * bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
+	//original size
+	//utils::AddBoxGeometry(bucket_bott.get(), Vector(bucket_rad + 2 * bucket_half_thick, bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
+	utils::AddBoxGeometry(bucket_bott.get(), Vector(3*bucket_rad + 2 * bucket_half_thick, 3*bucket_rad + 2 * bucket_half_thick, bucket_half_thick), Vector(0, 0, -bucket_half_thick), QUNIT, true);
 	bucket_bott->AddAsset(floorTexture);
 
 	bucket_bott->GetCollisionModel()->SetFamily(envFamily);
