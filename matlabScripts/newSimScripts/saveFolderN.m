@@ -5,7 +5,7 @@ if(~exist('createPlane','file'))
     setupGeom3d
 end
 c=dir2(fold,'folders');
-
+nonEnt=0;
 for(q=1:length(c))
     ff=fullfile(fold,c(q).name,'Nout.mat');
     wid='MATLAB:inpolygon:ModelingWorldLower';
@@ -13,11 +13,12 @@ for(q=1:length(c))
     load(fullfile(fold,c(q).name,'ballDat.mat'));
     for(i=1:length(dat))
         tic
-        Nout(:,:,i)=generatePackingFromSimDatPLANE_mex(dat(i),1);
+        Nout(:,:,i)=generatePackingFromSimDatPLANE_mex(dat(i),nonEnt);
         toc
     end
-    save(ff,'Nout','dat');
-    clear Nout
+    usedNdat=dat;
+    save(ff,'Nout','usedNdat','nonEnt');
+    clear Nout usedNdat dat
 end
 
 end
