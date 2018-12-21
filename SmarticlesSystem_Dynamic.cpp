@@ -1415,12 +1415,12 @@ void FixSmarticles(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::
 		switch (bucketType)
 		{
 		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
-			if (!IsInRadial(sPtr->Get_cm(), sys->bucket_bott->GetPos() + ChVector<>(0, 0, sys->bucket_interior_halfDim.z()), ChVector<>(sys->bucket_rad * 3, sys->bucket_bott->GetPos().z(), sys->bucket_bott->GetPos().z() + 4 * sys->bucket_interior_halfDim.z())))
-			{
-				EraseSmarticle(mphysicalSystem, myIter, sPtr, mySmarticlesVec);
-				GetLog() << "\nRemoving smarticle outside system \n";
-				continue;
-			}
+			//if (!IsInRadial(sPtr->Get_cm(), sys->bucket_bott->GetPos() + ChVector<>(0, 0, sys->bucket_interior_halfDim.z()), ChVector<>(sys->bucket_rad * 3, sys->bucket_bott->GetPos().z(), sys->bucket_bott->GetPos().z() + 4 * sys->bucket_interior_halfDim.z())))
+			//{
+			//	EraseSmarticle(mphysicalSystem, myIter, sPtr, mySmarticlesVec);
+			//	GetLog() << "\nRemoving smarticle outside system \n";
+			//	continue;
+			//}
 			++myIter;
 			break;
 
@@ -1877,7 +1877,7 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 
 		volumeFraction = totalVolume2 / (4.0 * sys->bucket_interior_halfDim.x() * sys->bucket_interior_halfDim.y() * (zMax - bucketMin.z()));
 		break;
-	case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
+	case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 			std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
@@ -1893,7 +1893,8 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 					zMax = max2;
 					max2 = temp;
 				}
-				totalTorque += sPtr->GetReactTorqueVector(0).z() + sPtr->GetReactTorqueVector(1).z();
+				totalTorque += abs(sPtr->GetMotTorque(0)) + abs(sPtr->GetMotTorque(1));
+				//totalTorque += abs(sPtr->GetReactTorqueVector(0).z()) + abs(sPtr->GetReactTorqueVector(1).z());
 				//zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z()- bucketMin.z());
 
 			}
