@@ -24,10 +24,10 @@ load(fullfile(fold,fname));
 %* 7. plot <N> vs time
 %* 8. plot <N> vs lw
 %************************************************************
-showFigs=[7];
+showFigs=[3];
 
 
-I=3;%dat index
+I=1;%dat index
 %% 1. plot position of every staple at each checkpoint
 xx=1;
 if(showFigs(showFigs==xx))

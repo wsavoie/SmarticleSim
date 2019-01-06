@@ -4,19 +4,20 @@ if ~exist(fullfile(fold,fname),'file')
     readSimData(fold);
 end
 load(fullfile(fold,'vibData.mat'));
-Dat=dat;
+
 %************************************************************
 %* Fig numbers:
 %* 1. plot phi evo vs time for single trial
 %* 2. plot phi evo with gui vs time
 %* 3. plot phi change vs vibration amp
 %* 4. plot phif vs vibration amp
-%* 5. plot phif vs vibration amp
-%* 6. plot phi evo vs vibration amp
+%* 5. plot phi_i, phi_f for nicks data and for vib data
+%* 6. plot phi evolution vs vibration amp for many runs
 %* 7. plot <N> vs lw
+%* 8. plot pdf of motor torque vs <N>
 %************************************************************
 set(0, 'DefaultLineLineWidth', 2);
-showFigs=[7];
+showFigs=[8];
 
 lw=[]; nl=[]; npl=[]; vib=[]; N=[]; v=[];
 props={lw nl npl vib N v};
@@ -277,7 +278,7 @@ if(showFigs(showFigs==xx))
     %     vibs=[1,2,4,1,4];
     %     unLW=[0.1];
     unVib=unique([vibs]);
-    unLW=[0.2 0.3 0.4 0.5 0.6 0.7 0.8];
+    unLW=[0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9];
     
     clear out legz phiValsE phiValsM fs;
     fs=struct;
@@ -347,7 +348,7 @@ if(showFigs(showFigs==xx))
             %             vals=length(cond(cond==1));
             idz=find(cond);
             for k=1:length(idz)
-                c=fileparts(Dat(idz(k)).fold);
+                c=fileparts(usedD(idz(k)).fold);
                 load(fullfile(c,'Nout.mat'));
                 nM=mean(mean(Nout,2),3);
                 nE=std(mean(Nout,2),0,3);
@@ -365,3 +366,60 @@ if(showFigs(showFigs==xx))
     figText(gcf,18);
     
 end
+%% 8. plot pdf of motor torque vs <N>
+xx=8;
+if(showFigs(showFigs==xx))
+    clear allnM allnE
+    figure(xx);
+    hold on;
+    %     unVib=unique([vibs]);
+    %     unLW=unique([usedD.lw]);
+    unLW=[0.6];
+    
+    for(i = 1:length(unLW))
+        % unVib=unique(vibs(lws==unLW(i)));
+        unVib=[5];
+        phiVals={};
+        for(j=1:length(unVib))
+            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
+            idz=find(cond);
+            if(idz)
+                c=fileparts(usedD(idz(k)).fold);
+                load(fullfile(c,'Nout.mat'));
+                %                 ballOut=[x,y,z,ID,moveType,active,motTorque1,motTorque2]
+                load(fullfile(c,'ballDat.mat'));
+                TT=[];
+                NN=[];
+                for q=1:length(dat)
+                    tors=sum(abs(dat(q).ballOut(:,7:8,:)),2);
+                    %%%
+                    tors=tors(:);
+                    TT=[TT; tors];
+                    nn=Nout(:,:,q)';
+                    NN=[NN; nn(:)];
+                    
+                    %%%
+                end
+            else
+                error('condition not found');
+            end
+            tval=1e-4;
+            NN=NN(TT<tval);
+            TT=TT(TT<tval);
+            [nZ,XE,YE]=histcounts2(TT,NN,[100,18],'Normalization','pdf');
+            XE=cumsum(diff(XE))-diff(XE)/2;
+            YE=cumsum(diff(YE))-diff(YE)/2;
+            [xx,yy]=meshgrid(XE,YE);
+            
+            [TY,TE]=discretize(TT,100);
+            [NY,NE]=discretize(NN,[max(NN)-min(NN)]); 
+            contour(xx,yy,nZ')
+        end
+        
+    end
+end
+xlabel('Torque')
+ylabel('<N>');
+zlabel('count')
+figText(gcf,18);
+
