@@ -129,6 +129,7 @@ for i=1:size(c,3)
                                     %                                 scatter3(iPt(r,1),iPt(r,2),iPt(r,3),60*ones(size(ptArr,1),1),'filled')
                                     %                             end
                                     count=count+length(r);
+%                                     count=count+1;
                                 end
                             end
                         end
