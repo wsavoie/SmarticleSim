@@ -100,9 +100,9 @@ using namespace irr::gui;
 //***********************************
 // Use the namespace of Chrono
 //enum SmarticleType { SMART_ARMS, SMART_U };
-//enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM,FLATHOPPER};
+//enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM,FLATHOPPER,HOOKRAISE2};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = CYLINDER;
+BucketType bucketType = HOOKRAISE2;
 //std::vector<std::shared_ptr<ChBody>> /*sphereStick*/;
 //std::shared_ptr<ChBody> bucket;
 //std::shared_ptr<ChBody> bucket_bott;
@@ -118,6 +118,7 @@ std::ofstream ringPos_of;
 std::ofstream ringContact_of;
 std::ofstream ringDeadSmart_of;
 std::ofstream inactive_of;
+std::ofstream stressHook_of;
 //std::ofstream smartPos_of;
 double sizeScale = 1;
 int appWidth = 1280;
@@ -130,7 +131,7 @@ int inactiveLoc = 0; //location of dead particle in ring +x +y -x -y
 //double gravity = -9.81 * sizeScale;
 double gravity = -9.81;
 
-double vibrateStart = 10;
+double actuationStart = .1;
 double smart_fric = .4;//.3814; //keyboard box friction = .3814
 double vibration_freq = 30;
 double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
@@ -802,7 +803,7 @@ void InitializeMbdPhysicalSystem_NonParallel(std::shared_ptr<CH_SYSTEM> mphysica
 		"read from file: " << read_from_file << std::endl <<
 		"dT: " << dT << std::endl << std::endl <<
 		"tFinal: " << tFinal << std::endl <<
-		"vibrate start: " << vibrateStart << std::endl <<
+		"vibrate start: " << actuationStart << std::endl <<
 		"Active Percent: " << pctActive << std::endl <<
 		"Start Angles: " << angle1 << " " << angle2 << std::endl;
 
@@ -942,7 +943,7 @@ void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<
 				genRand(sys->bucket_interior_halfDim.z() / 2.5),
 				zpos);
 			break;
-		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
+		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER: case HOOKRAISE2:
 			if (!placeInMiddle)
 			{
 				myPos = sys->bucket_ctr + ChVector<>(sin(ang * i + phase) *(sys->bucket_rad / 2.2),
@@ -1186,9 +1187,18 @@ void CreateMbdPhysicalSystemObjects(std::shared_ptr<CH_SYSTEM> mphysicalSystem, 
 	sys->create_Ground();
 	sys->ground->GetCollisionModel()->SetFamily(sys->envFamily);
 	sys->ground->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+	
+	//setup vars first
+	sys->actuationStart = actuationStart;
+	sys->actuation_amp = vibration_amp;
+	sys->omega_bucket = omega_bucket;
+
 	sys->create_Container();
+
+
 	sys->bucket->GetCollisionModel()->SetFamily(sys->envFamily);
 	sys->bucket->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
+
 
 	sys->bucket_bott->GetCollisionModel()->SetFamily(sys->envFamily);
 	sys->bucket_bott->GetCollisionModel()->SetFamilyMaskNoCollisionWithFamily(1);
@@ -1414,7 +1424,7 @@ void FixSmarticles(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::
 
 		switch (bucketType)
 		{
-		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
+		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER: case HOOKRAISE2:
 			//if (!IsInRadial(sPtr->Get_cm(), sys->bucket_bott->GetPos() + ChVector<>(0, 0, sys->bucket_interior_halfDim.z()), ChVector<>(sys->bucket_rad * 3, sys->bucket_bott->GetPos().z(), sys->bucket_bott->GetPos().z() + 4 * sys->bucket_interior_halfDim.z())))
 			//{
 			//	EraseSmarticle(mphysicalSystem, myIter, sPtr, mySmarticlesVec);
@@ -1767,7 +1777,7 @@ void PrintStress2(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, double 
 			currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
 			stress_of << mphysicalSystem->GetChTime() << ", " << 0 << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl; //final 0 is a placeholder 
 			break;
-		case STRESSSTICK: case KNOBCYLINDER:
+		case STRESSSTICK: case KNOBCYLINDER: case HOOKRAISE2:
 			temp = bucket_bod_vec.at(1)->GetPos();
 			currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
 			stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl;
@@ -1931,6 +1941,35 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 		zComz = zComz / countInside2;
 		totalTorque = totalTorque / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
 		break;
+
+	case HOOKRAISE2:
+	{
+		countInside2 = mySmarticlesVec.size();
+		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
+			std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
+			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
+
+			com = sPtr->Get_cm() - ChVector<>(0, 0, bucketMin.z());
+			zComz += com.z();
+			max2 = std::max(max2, com.z());
+			if (max2 > zMax)
+			{
+				double temp = zMax;
+				zMax = max2;
+				max2 = temp;
+			}
+			totalTorque += abs(sPtr->GetMotTorque(0)) + abs(sPtr->GetMotTorque(1));
+			//totalTorque += abs(sPtr->GetReactTorqueVector(0).z()) + abs(sPtr->GetReactTorqueVector(1).z());
+			//zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z()- bucketMin.z());
+		}
+		double bucketVol = (max2*PI*sys->bucket_rad*sys->bucket_rad);
+		volumeFraction = countInside2*vol / (bucketVol-sys->hookVol);
+		//GetLog() << vol << " " << countInside2 << " " << sys->bucket_rad << " " << zMax << " " << volumeFraction << "\n";
+		//GetLog() << "phi=" << volumeFraction << "\n";
+		zComz = zComz / countInside2;
+		totalTorque = totalTorque / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
+		break;
+	}
 	case FLATHOPPER:
 	{
 		zComz = 0;
@@ -2358,7 +2397,10 @@ bool SetGait(double time, std::shared_ptr<CH_SYSTEM>m_sys)
 	else if (time >= 4.5 && time < 6)
 		Smarticle::global_GUI_value = 4;
 	else if (time >= 6 && time < 8)
+	{
+		Smarticle::global_GUI_value = 1;
 		removeBucket();
+	}
 	else if (time >= 8)
 		return true;
 
@@ -2593,7 +2635,7 @@ int main(int argc, char* argv[]) {
 
 		break;
 
-	case KNOBCYLINDER: case CYLINDER: case STRESSSTICK: case HOOKRAISE:
+	case KNOBCYLINDER: case CYLINDER: case STRESSSTICK: case HOOKRAISE: case HOOKRAISE2:
 
 		if (stapleSize)
 		{
@@ -2661,69 +2703,9 @@ int main(int argc, char* argv[]) {
 	int stepEnd = int(tFinal / dT);  // 1.0e6;//2.4e6;//600000;//2.4e6 * (.02 * paramsH.sizeScale) /
 
 
-	switch (bucketType)
-	{
-	case STRESSSTICK: case HOOKRAISE:// case KNOBCYLINDER:
-	{
-		double rodLen = sys->bucket_interior_halfDim.z()*1.5;
-
-		sys->create_CentralColumn(rodLen);
-		sys->create_Truss();
-		sys->create_Prismatic(sys->stick);
-
-		break;
-	}
-
-	case DRUM:
-	{
-		sys->setUpBucketActuator(sys->bucket->GetRot());
-		sys->bucket->SetBodyFixed(true);
-		break;
-	}
-	case BOX:
-	{
-
-		sys->setUpBucketActuator(Q_from_AngAxis(PI_2, VECT_Y));
-		sys->bucket->SetBodyFixed(true);
-		break;
-	}
+	
 
 
-	case HOPPER:
-	{
-		sys->create_Truss();
-		sys->create_VibrateLink(omega_bucket, vibration_amp, vibrateStart, sys->bucket);
-		break;
-
-	}
-	case CYLINDER:
-	{
-		sys->create_Truss();
-		sys->create_VibrateLink(omega_bucket, vibration_amp, vibrateStart, sys->bucket_bott);
-
-		break;
-	}
-	case BOXDROP:
-	{
-		sys->create_Truss();
-		sys->create_VibrateLink(omega_bucket, vibration_amp, vibrateStart, sys->bucket_bott);
-		break;
-	}
-
-	case KNOBCYLINDER:
-	{
-		unsigned int kpr = 4;//knobs per row
-		unsigned int rows = 15; //knob per z
-		double rodLen = sys->bucket_interior_halfDim.z()*2.0;
-		sys->create_CentralColumn(rodLen);
-		sys->create_Knobs(kpr, rows, rodLen);
-		sys->setUpBucketActuator();
-		break;
-
-	}
-	default:
-		break;
-	}
 	double timeForVerticalDisplacement = 0.015;
 	if (bucketType == DRUM)
 		timeForVerticalDisplacement = 0.095; // 1.5 for safety proximity .015
@@ -2752,6 +2734,7 @@ int main(int argc, char* argv[]) {
 	const std::string ringContact = out_dir + "/RingContact.txt";
 	const std::string inactivePos = out_dir + "/InactivePos.txt";
 	const std::string ringDead = out_dir + "/RingDead.txt";
+	const std::string stressHook = out_dir + "/stressHook.txt";
 
 	ringPos_of.open(ringPos.c_str());
 	ringContact_of.open(ringContact.c_str());
@@ -2760,6 +2743,7 @@ int main(int argc, char* argv[]) {
 	vol_frac_of.open(vol_frac.c_str());
 	inactive_of.open(inactivePos.c_str());
 	ringDeadSmart_of.open(ringDead.c_str());
+	stressHook_of.open(stressHook.c_str());
 
 	inactive_of << "# ring rad = " << ringRad << " tstep, contactx, contacty, contactz, forcex,forcey,forcez, arm1Posx, arm1Posy, arm1Posz, arm1RotE0, arm1PosE1, arm1PosE2, arm1PosE3" << std::endl;
 	ringContact_of << "# ring rad = " << ringRad << " tstep, contactx, contacty, contactz, forcex,forcey,forcez" << std::endl;
@@ -2814,68 +2798,8 @@ int main(int argc, char* argv[]) {
 
 		}
 
-		///add method about system actuation
-		if (bucketType == DRUM)
-		{
-			sys->bucket_bott->SetBodyFixed(true);
-			sys->rotate_body_sp(t, sys->bucket, sys->bucket_actuator, drum_omega);
-		}
-		if (bucketType == BOX)
-		{
-			sys->bucket_bott->SetBodyFixed(true);
-			sys->rotate_body_rot(t, sys->bucket, sys->bucket_actuator, Quat_to_Angle(ANGLE, sys->bucket->GetRot()).x());
-		}
-		//vibration movement
-		if (t > vibrateStart && t < vibrateStart + 3)
-		{
-			switch (bucketType)
-			{
-			case HOOKRAISE: case STRESSSTICK:
-			{
-				sys->stick->SetBodyFixed(false);
-				sys->pris_link->SetDisabled(false);
-				break;
-
-				//if (sys->pris_engine->IsDisabled())
-				//{
-				//	sys->stick->SetBodyFixed(false);
-				//	sys->pris_engine->SetDisabled(false);
-				//
-				//}
-				//sys->pris_engine->GetDist_dt();
-				//break;
-			}
-			case KNOBCYLINDER:
-			{
-				double rotSpeed = 2; //rads/sec
-				sys->bucket_actuator->SetDisabled(false);
-				sys->stick->SetBodyFixed(false);
-				sys->rotate_body_sp(t, sys->stick, sys->bucket_actuator, PPI);
-				break;
-			}
-
-			case CYLINDER:
-			{
-				sys->bucket_bott->SetBodyFixed(false);
-				sys->vibrate_link->SetDisabled(false);
-				break;
-			}
-			case HOPPER:
-			{
-				sys->bucket->SetBodyFixed(false);
-				sys->vibrate_link->SetDisabled(false);
-				break;
-			}
-			case FLATHOPPER:
-			{
-				sys->bucket_bott->SetPos(ChVector<>(1, 0, 0));
-				bucket_exist = false;
-				break;
-			}
-			default:
-				break;
-			}
-		}
+		//actuate systemGeometry
+		sys->performActuation();
 
 
 		if ((fmod(t, timeForVerticalDisplacement) < dT) && (mySmarticlesVec.size() < numPerLayer*numLayers) && (numGeneratedLayers == numLayers))

@@ -30,7 +30,12 @@ namespace chrono {
 		//methods
 		BucketType getGeom();
 		void create_Ground();
+	
+		std::shared_ptr<ChBody> create_topHook();
+		std::shared_ptr<ChBody> create_bottomHook();
+
 		void create_Container();
+
 		std::shared_ptr<ChBody> create_Maze();
 		std::shared_ptr<ChBody> create_Box();
 		std::shared_ptr<ChBody> create_Box2();
@@ -46,15 +51,15 @@ namespace chrono {
 		std::shared_ptr<ChBody> create_Hull(double numBoxes);
 		std::shared_ptr<ChBody> create_ChordRing(int num_boxes, double half_h, double t, double r, double sagitta, ChVector<> pos, std::shared_ptr<ChTexture> texture, double m);
 		void										create_CentralColumn(double length);
-		void										create_Prismatic(std::shared_ptr<ChBody> body);
+		void										create_Prismatic(std::shared_ptr<ChBody> body,double raiseLen, double spd);
 		void										create_Knobs(double kpr, double rows, double length);
 		void										create_CentralColumnEngine(double t_0);
 		void										create_Truss();
 		void										create_VibrateLink(double w, double A, double t_0, std::shared_ptr<ChBody> body);
 
 		//void vibrate_body(double t, std::shared_ptr<ChBody> mainbody, std::shared_ptr<ChBody> body);
-		void setUpBucketActuator(ChQuaternion<double> rot);
-		void setUpBucketActuator();
+		void setupBucketActuator(ChQuaternion<double> rot);
+		void performActuation();
 		void vibrate_body(double t, double w, double A, double t_0, std::shared_ptr<ChBody> body);
 		void rotate_body_rot(double t, std::shared_ptr<ChBody> body, std::shared_ptr<ChLinkEngine> actuator, double ang);
 		void rotate_body_sp(double t, std::shared_ptr<ChBody> body, std::shared_ptr<ChLinkEngine> actuator, double w);
@@ -67,9 +72,11 @@ namespace chrono {
 		std::shared_ptr<ChBody> bucket;
 		std::shared_ptr<ChBody> truss;
 		std::shared_ptr<ChBody> stick;
-
+		std::shared_ptr<ChBody> topHook;
+		std::shared_ptr<ChBody> bottomHook;
 
 		std::vector<std::shared_ptr<ChBody>> sphereStick;
+
 
 		std::shared_ptr<ChLinkLock> vibrate_link;
 		std::shared_ptr<ChLinkLock> pris_link;
@@ -77,12 +84,13 @@ namespace chrono {
 		std::shared_ptr<ChLinkEngine> bucket_actuator;
 		std::shared_ptr<ChLinkLinActuator> pris_engine;
 		std::shared_ptr<ChLinkLockPrismatic> link_prismatic;
-
+		
 
 		static std::shared_ptr <ChTexture> bucketTexture;
 		static std::shared_ptr <ChTexture> sphereTexture;
 		static std::shared_ptr <ChTexture> floorTexture;
 		static std::shared_ptr <ChTexture> groundTexture;
+		static std::shared_ptr <ChTexture> hookTexture;
 		static std::shared_ptr<MATSURF> mat_wall;
 
 		double collisionEnvelope;
@@ -96,10 +104,15 @@ namespace chrono {
 		double l_smarticle;
 		double t_smarticle;
 		double t2_smarticle;
-
+		double omega_bucket;
+		double actuation_amp;
+		double actuationStart;
 		double rho_cylinder;
 		double hole_size;
-
+		double hookVol;
+		double topHookVol;
+		double bottomHookVol;
+		double pullLen;
 		ChVector<> bucket_interior_halfDim;
 		ChVector<> boxdim;
 		ChVector<> bucket_ctr;
@@ -108,8 +121,8 @@ namespace chrono {
 		//vars
 		int bucketID;
 		double wall_fric;//.3814; //keyboard box friction = .3814
-
-
+		int bottomHookID;
+		int topHookID;
 
 		//system type
 		BucketType sType;

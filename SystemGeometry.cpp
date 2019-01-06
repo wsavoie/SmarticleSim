@@ -84,7 +84,7 @@ SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysTy
 	sphereTexture->SetTextureFilename(GetChronoDataFile("sphereTexture.png"));
 	groundTexture->SetTextureFilename(GetChronoDataFile("greenwhite.png"));
 	floorTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));//custom file
-
+	hookTexture->SetTextureFilename(GetChronoDataFile("cubetexture_black_bordersBlack.png"));//custom file
 	//auto mmaterial = std::make_shared<ChMaterialSurface>();
 	//mmaterial->SetFriction(0.4f);
 	//mat_wall = mmaterial;
@@ -97,6 +97,14 @@ SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysTy
 	w_smarticle = w_smart;
 	t_smarticle = t_smart;
 	t2_smarticle = t2_smart;
+	hookVol = 0; //define when creating hook
+	topHookID = 9998;
+	bottomHookID = 9999;
+	
+	//initialize vars
+	actuationStart = 0;
+	omega_bucket = 0;
+	actuation_amp = 0;
 
 
 #if stapleSize
@@ -122,6 +130,7 @@ SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysTy
 std::shared_ptr<ChTexture> SystemGeometry::bucketTexture = std::make_shared<ChTexture>();
 std::shared_ptr<ChTexture> SystemGeometry::sphereTexture = std::make_shared<ChTexture>();
 std::shared_ptr<ChTexture> SystemGeometry::groundTexture = std::make_shared<ChTexture>();
+std::shared_ptr<ChTexture> SystemGeometry::hookTexture = std::make_shared<ChTexture>();
 std::shared_ptr<ChTexture> SystemGeometry::floorTexture = std::make_shared<ChTexture>();
 std::shared_ptr<MATSURF> SystemGeometry::mat_wall = std::make_shared<MATSURF>();
 SystemGeometry::~SystemGeometry()
@@ -295,6 +304,104 @@ std::shared_ptr<ChBody> SystemGeometry::create_Box2()
 
 	return bucket;
 }
+
+void chrono::SystemGeometry::performActuation()
+{
+	double t=sys->GetChTime();
+	///add method about system actuation
+	if (bucketType == DRUM)
+	{
+		bucket_bott->SetBodyFixed(true);
+		rotate_body_sp(t, bucket, bucket_actuator, drum_omega);
+	}
+	if (bucketType == BOX)
+	{
+		bucket_bott->SetBodyFixed(true);
+		rotate_body_rot(t, bucket, bucket_actuator, Quat_to_Angle(ANGLE, bucket->GetRot()).x());
+	}
+	//vibration movement
+	if (t > actuationStart && t < actuationStart + 3)
+	{
+		//GetLog() << "actuation started!" << nl;
+		switch (bucketType)
+		{
+			case HOOKRAISE: case STRESSSTICK:
+			{
+				stick->SetBodyFixed(false);
+				pris_link->SetDisabled(false);
+
+				if (pris_engine->IsDisabled())
+				{
+					stick->SetBodyFixed(false);
+					pris_engine->SetDisabled(false);
+			
+				}
+				pris_engine->GetDist_dt();
+				break;
+			}
+			case HOOKRAISE2:
+			{
+				static bool finishedActuation = false;
+
+				if (!finishedActuation)
+				{
+					topHook->SetBodyFixed(false);
+					//bucket_actuator->SetDisabled(false);
+					pris_engine->SetDisabled(false);
+					link_prismatic->SetDisabled(false);
+					//auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(pris_engine->Get_dist_funct());
+					//mfun->Set_yconst(-0.0001 + mfun->Get_yconst());
+					GetLog() << pris_engine->Get_react_force().z()<<nl;
+					if (topHook->GetPos().z() >= pullLen*.995)
+					{
+						auto pris_motion = std::make_shared<ChFunctionCustom>(0, 0 + .1, 0);  // there is an hidden -0.1 offset so 0.1 keeps it from working
+						pris_engine->Set_dist_funct(pris_motion);
+						finishedActuation = true;
+					}
+				}
+				else {
+					GetLog() <<"stopped moving";
+					
+				}
+
+			
+			
+				break;
+			}
+
+			case CYLINDER:
+			{
+				bucket_bott->SetBodyFixed(false);
+				vibrate_link->SetDisabled(false);
+				break;
+			}
+			case KNOBCYLINDER:
+			{
+				double rotSpeed = 2; //rads/sec
+				bucket_actuator->SetDisabled(false);
+				stick->SetBodyFixed(false);
+				rotate_body_sp(t, stick, bucket_actuator, PPI);
+				break;
+			}
+			case HOPPER:
+			{
+				bucket->SetBodyFixed(false);
+				vibrate_link->SetDisabled(false);
+				break;
+			}
+			case FLATHOPPER:
+			{
+				bucket_bott->SetPos(ChVector<>(1, 0, 0));
+				bucket_exist = false;
+				break;
+			}
+			default:
+			{
+				break;
+			}
+		}
+	}
+}
 std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool overlap)
 {
 	double t = bucket_half_thick;
@@ -308,6 +415,59 @@ std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool o
 
 	return create_EmptyCylinder(num_boxes, overlap, true, h, t, r, bucket_ctr, true, bucketTexture, m);
 }
+std::shared_ptr<ChBody> SystemGeometry::create_topHook()
+{
+	auto tophk = std::make_shared<ChBody>();
+	tophk->SetIdentifier(topHookID);
+	tophk->SetBodyFixed(true);
+	tophk->SetCollide(true);
+	int height =60;
+	ChVector<> 	gyr = utils::CalcBoxGyration(ChVector<>(w_smarticle , t2_smarticle, t2_smarticle)).Get_Diag()+ utils::CalcBoxGyration(ChVector<>(t2_smarticle,w_smarticle, t2_smarticle)).Get_Diag();
+
+	tophk->SetMaterialSurface(mat_wall);
+	tophk->GetCollisionModel()->ClearModel();
+	tophk->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+	
+	
+
+	utils::AddBoxGeometry(tophk.get(), ChVector<>(w_smarticle,t2_smarticle,t2_smarticle), bucket_bott->GetPos()+ ChVector<>(0,0,height*t2_smarticle), QUNIT, true);
+	utils::AddBoxGeometry(tophk.get(), ChVector<>(t2_smarticle, w_smarticle, t2_smarticle), bucket_bott->GetPos() + ChVector<>(0, 0, height * t2_smarticle), QUNIT, true);
+	topHookVol = 2 * t2_smarticle*t2_smarticle*w_smarticle - t2_smarticle*t2_smarticle*t2_smarticle; //width of cross volume minus the overlap
+	tophk->GetCollisionModel()->BuildModel();
+	tophk->SetMass(rho_cylinder*topHookVol);
+	tophk->SetInertiaXX(rho_cylinder*topHookVol * gyr);
+	sys->AddBody(tophk);
+	tophk->AddAsset(hookTexture);
+
+	return tophk;
+}
+std::shared_ptr<ChBody> SystemGeometry::create_bottomHook()
+{
+	auto botthk = std::make_shared<ChBody>();
+	botthk->SetIdentifier(bottomHookID);
+	botthk->SetBodyFixed(true);
+	botthk->SetCollide(true);
+	int height = 5;
+	ChVector<> 	gyr = utils::CalcBoxGyration(ChVector<>(w_smarticle, t2_smarticle, t2_smarticle)).Get_Diag() + utils::CalcBoxGyration(ChVector<>(t2_smarticle, w_smarticle, t2_smarticle)).Get_Diag();
+
+	botthk->SetMaterialSurface(mat_wall);
+	botthk->GetCollisionModel()->ClearModel();
+	botthk->GetCollisionModel()->SetEnvelope(collisionEnvelope);
+
+	utils::AddBoxGeometry(botthk.get(), ChVector<>(w_smarticle, t2_smarticle, t2_smarticle), bucket_bott->GetPos() + ChVector<>(0, 0, height*t2_smarticle), QUNIT, true);
+	utils::AddBoxGeometry(botthk.get(), ChVector<>(t2_smarticle, w_smarticle, t2_smarticle), bucket_bott->GetPos() + ChVector<>(0, 0, height*t2_smarticle), QUNIT, true);
+	bottomHookVol = 2 * t2_smarticle*t2_smarticle*w_smarticle - t2_smarticle*t2_smarticle*t2_smarticle; //width of cross volume minus the overlap
+
+
+	botthk->GetCollisionModel()->BuildModel();
+	botthk->SetMass(rho_cylinder*bottomHookVol);
+	botthk->SetInertiaXX(rho_cylinder*bottomHookVol * gyr);
+	sys->AddBody(botthk);
+	botthk->AddAsset(hookTexture);
+	return botthk;
+}
+
+
 
 std::shared_ptr<ChBody> SystemGeometry::create_ChordRing(int num_boxes, double half_h, double t, double r, double sagitta, ChVector<> pos, std::shared_ptr<ChTexture> texture, double m)
 {
@@ -946,8 +1106,53 @@ void SystemGeometry::create_Container()
 	bucket = std::make_shared<ChBody>();
 	bucket_bott = std::make_shared<ChBody>();
 	bucket->SetIdentifier(bucketID);
+
+
 	switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 	{
+
+	case STRESSSTICK:
+	{
+		create_Bucket_Bott();
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+		bucket = create_bucketShell(25, true);
+		
+		double rodLen = bucket_interior_halfDim.z()*1.5;
+		create_CentralColumn(rodLen);
+		create_Truss();
+		create_Prismatic(stick, 0,0);
+		break;
+	}
+	case HOOKRAISE:
+	{
+		create_Bucket_Bott();
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+		bucket = create_bucketShell(25, true);
+
+		double rodLen = bucket_interior_halfDim.z()*1.5;
+		create_CentralColumn(rodLen);
+		create_Truss();
+		//create_Prismatic(stick);
+		setupBucketActuator(Q_from_AngAxis(PI_2, VECT_Y));
+		break;
+	}
+	case HOOKRAISE2:
+	{
+		stickLen = bucket_interior_halfDim.z()*2.0;
+		create_Bucket_Bott();
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+		bucket = create_bucketShell(25, true);
+
+		bottomHook = create_bottomHook();
+		topHook = create_topHook();
+		hookVol = bottomHookVol + topHookVol;
+
+		create_Truss();
+		create_Prismatic(topHook, pullLen=w_smarticle,-w_smarticle);
+		//setupBucketActuator(bucket->GetRot());
+
+		break;
+	}
 	case BOX:
 	{
 		//FUTNOTE uncomment for old box
@@ -960,19 +1165,48 @@ void SystemGeometry::create_Container()
 		bucket_bott->SetCollide(false);
 		bucket_bott->SetPos(ChVector<>(5, 5, 5));
 		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_red_borderRed.png"));
-		;
+		
+		setupBucketActuator(Q_from_AngAxis(PI_2, VECT_Y));
+		bucket->SetBodyFixed(true);
 		break;
 	}
+	case BOXDROP:
+	{
+			create_Truss();
+			create_VibrateLink(omega_bucket, actuation_amp, actuationStart, bucket_bott);
+			break;
 
-	case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER:
+		break;
+	}
+	case CYLINDER:
 	{
 		create_Bucket_Bott();
 		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 		bucket = create_bucketShell(25, true);
+
+		create_Truss();
+		create_VibrateLink(omega_bucket, actuation_amp, actuationStart, bucket_bott);
+
+
 		break;
 	}
+	case KNOBCYLINDER:
+	{
+		create_Bucket_Bott();
+		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+		bucket = create_bucketShell(25, true);
+		create_Truss();
+		create_VibrateLink(omega_bucket, actuation_amp, actuationStart, bucket_bott);
 
-
+		unsigned int kpr = 4;//knobs per row
+		unsigned int rows = 15; //knob per z
+		double rodlen = bucket_interior_halfDim.z()*2.0;
+		create_CentralColumn(rodlen);
+		create_Truss();
+		create_Knobs(kpr, rows, rodlen);
+		setupBucketActuator(bucket->GetRot());
+		break;
+	}
 	case FLATHOPPER:
 	{
 		bucket = create_FlatHopper(boxdim);
@@ -985,6 +1219,9 @@ void SystemGeometry::create_Container()
 		bucket = create_Hopper(box_ang, true);
 		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_black_bordersBlack.png"));
 		create_Bucket_Bott();
+
+		create_Truss();
+		create_VibrateLink(omega_bucket, actuation_amp, actuationStart, bucket);
 		break;
 	}
 	case HULL:
@@ -997,6 +1234,9 @@ void SystemGeometry::create_Container()
 	{
 		bucket = create_Drum(25, true);
 		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
+
+		setupBucketActuator(bucket->GetRot());
+		bucket->SetBodyFixed(true);
 		break;
 	}
 	}
@@ -1058,12 +1298,16 @@ void SystemGeometry::create_VibrateLink(double w, double A, double t_0, std::sha
 	sys->Add(vibrate_link);
 
 }
-void SystemGeometry::create_Prismatic(std::shared_ptr<ChBody> body)
+void SystemGeometry::create_Prismatic(std::shared_ptr<ChBody> body,double raiseLen,double spd)
 {
+
+	////////////////
+
 	////
 	//ChFunctionCustom* pris_motion = new ChFunctionCustom(0, 1.5, 0);  // phase freq ampl
 
-	auto pris_motion = std::make_shared<ChFunctionCustom>(0, 1.5, 0);  // phase freq ampl
+//	
+	auto pris_motion = std::make_shared<ChFunctionCustom>(0, spd+.1, 0);  // phase freq ampl
 	//pris_motion->Set_y(.1);
 	//pris_motion->Set_y_dx(.1);
 	//pris_motion->Set_y_dxdx(.1);
@@ -1073,33 +1317,53 @@ void SystemGeometry::create_Prismatic(std::shared_ptr<ChBody> body)
 	pris_link = std::make_shared<ChLinkLockLock>();
 
 
-	//link_prismatic = std::make_shared<ChLinkLockPointLine>();
+	link_prismatic = std::make_shared<ChLinkLockPrismatic>();
 	pris_engine = std::make_shared<ChLinkLinActuator>();
-	auto sinefunc = std::make_shared<ChFunction_Sine>();
+	pris_engine->Set_lin_offset(0.0);
+	//auto sinefunc = std::make_shared<ChFunction_Sine>();
 	switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
 	{
-	case STRESSSTICK: case HOOKRAISE:
-	{
+		case STRESSSTICK: case HOOKRAISE:
+		{
+			auto pris_motion = std::make_shared<ChFunctionCustom>(0, 1.5, .1);  // phase freq ampl
+			//pris_link->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
+			//pris_link->SetMotion_Z(pris_motion);
 
-		pris_link->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
-		pris_link->SetMotion_Z(pris_motion);
+			link_prismatic->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
+			link_prismatic->SetMotion_Z(pris_motion);
 
-		//link_prismatic->Initialize(body, truss, true, ChCoordsys<>(), ChCoordsys<>(ChVector<>(0, 0, 0), QUNIT));  // set prism as vertical (default would be aligned to z, horizontal
-		//pris_engine->Initialize(body, truss, true, ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
-		//func->Set_y(0);
-		//func->Set_y_dx(2.5 - .5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
-		//pris_engine->Set_dist_funct(func);
-		break;
+			pris_engine->Initialize(body, truss, true, ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
+			func->Set_y(0);
+			func->Set_y_dx(2.5 - .5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
+			pris_engine->Set_dist_funct(func);
+			break;
+		}
+		case HOOKRAISE2:
+		{
+
+			link_prismatic->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
+			//link_prismatic->Initialize(body, truss, ChCoordsys<>(truss->GetPos(), chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Z)));
+			//sys->Add(link_prismatic);
+			
+			//pris_engine->Initialize(body, truss, false, ChCoordsys<>(body->GetPos(), QUNIT), ChCoordsys<>(truss->GetPos(), QUNIT));
+			//pris_engine->Initialize(body, truss,ChCoordsys<>(truss->GetPos(), chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Z)));
+			pris_engine->Initialize(body, truss, true, ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, -raiseLen/2.0), QUNIT), ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, raiseLen /2.0), QUNIT));
+		
+			
+			pris_engine->Set_dist_funct(pris_motion);
+			break;
+		}
 	}
 
-	}
-	//pris_engine->SetDisabled(true);
-	//sys->AddLink(link_prismatic);
-	////func = std::dynamic_pointer_cast<ChFunctionCustom>(pris_engine->Get_dist_funct());
-	//sys->AddLink(pris_engine);
+	sys->AddLink(pris_engine);
+	
 
-	pris_link->SetDisabled(true);
-	sys->Add(pris_link);
+	//pris_link->SetDisabled(false);
+	sys->Add(link_prismatic);
+	pris_engine->SetDisabled(true);
+	link_prismatic->SetDisabled(true);
+	//pris_motion = std::dynamic_pointer_cast<ChFunctionCustom>(pris_engine->Get_dist_funct());
+	
 }
 
 void SystemGeometry::create_Truss()
@@ -1110,7 +1374,7 @@ void SystemGeometry::create_Truss()
 	truss->GetCollisionModel()->ClearModel();
 	utils::AddCylinderGeometry(truss.get(), t2_smarticle / 2, bucket_interior_halfDim.z() * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z()), Angle_to_Quat(ANGLE, ChVector<>(-PI_2, 0, 0)), false);
 	truss->GetCollisionModel()->BuildModel();
-	truss->AddAsset(sphereTexture);
+	//truss->AddAsset(sphereTexture);
 	truss->SetCollide(false);
 	sys->AddBody(truss);
 }
@@ -1264,7 +1528,6 @@ void SystemGeometry::create_CentralColumn(double length)
 	stick->GetPhysicsItem()->SetIdentifier(largeID + 1);
 	stick->SetCollide(true);
 	sys->AddBody(stick);
-	create_Truss();
 }
 void SystemGeometry::vibrate_body(double t, double w, double A, double t_0, std::shared_ptr<ChBody> body)  //!!!!!!!!!!!USE CREATE_VIBRATELINK INSTEAD!!!!!!!!!!!!!!
 {
@@ -1282,107 +1545,133 @@ void SystemGeometry::vibrate_body(double t, double w, double A, double t_0, std:
 	body->SetRot(QUNIT);
 }
 
-
-void SystemGeometry::setUpBucketActuator()
+void SystemGeometry::setupBucketActuator(ChQuaternion<double> rot)
 {
+
 	std::shared_ptr<ChFunction_Const> mfun2; //needs to be declared outside switch
 	ChVector<> pR01(0, 0, 0);
 	ChQuaternion<> qx;
 	bucket_actuator = std::make_shared<ChLinkEngine>();
+	
 	switch (bucketType)
 	{
-	case DRUM:
+		case DRUM:
+		{
 
-		qx = bucket->GetRot();
-		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), qx));
-		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
-		sys->AddLink(bucket_actuator);
-		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_spe_funct());
-		mfun2->Set_yconst(0);
-		//mfun2->Set_yconst(drum_omega);
-		break;
+			bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), rot));
+			bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+			//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
+			sys->AddLink(bucket_actuator);
+			mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_spe_funct());
+			mfun2->Set_yconst(0);
+			//mfun2->Set_yconst(drum_omega);
+			break;
+		}
+		case BOX:
+		{
+			/*qx = Q_from_AngAxis(PI_2, VECT_Y);*/
+			bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), rot));
+			bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+			//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
+			sys->AddLink(bucket_actuator);
+			mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_rot_funct());
+			mfun2->Set_yconst(0);
+			break;
 
-	case KNOBCYLINDER:
+		}
+		case FLATHOPPER:
+		{
+			//qx = Q_from_AngAxis(PI_2, VECT_Y);
+			bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), rot));
+			bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+			//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
+			//sys->AddLink(bucket_actuator);
+			mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_rot_funct());
+			mfun2->Set_yconst(0);
+			break;
 
-		qx = bucket->GetRot();
-		bucket_actuator->Initialize(stick, truss, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), qx));
-		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
-		sys->AddLink(bucket_actuator);
-		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_spe_funct());
-		mfun2->Set_yconst(0);
-		//mfun2->Set_yconst(drum_omega);
-		break;
-	case BOX:
+		}
+		case KNOBCYLINDER:
+		{
+			
+			bucket_actuator->Initialize(stick, truss, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), rot));
+			bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+			//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
+			//sys->AddLink(bucket_actuator);
+			mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_spe_funct());
+			mfun2->Set_yconst(0);
+			//mfun2->Set_yconst(drum_omega);
+		}
+		case HOOKRAISE:
+		{
+			bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), rot));
+			bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
+			bucket_actuator->SetMotion_axis(ChVector<>(0, 0, 1));
+			//sys->AddLink(bucket_actuator);
+			mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_rot_funct());
+			mfun2->Set_yconst(0);
+			break;
+		}
+		case HOOKRAISE2:
+		{
 
-		qx = Q_from_AngAxis(PI_2, VECT_Y);
-		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), qx));
-		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
-		sys->AddLink(bucket_actuator);
-		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_rot_funct());
-		mfun2->Set_yconst(0);
-		break;
+			//auto func = std::make_shared<ChFunctionCustom>();
+			//pris_link = std::make_shared<ChLinkLockLock>();
+	
 
-	case FLATHOPPER:
+			//auto prismatic1 = std::make_shared<ChLinkLockPrismatic>();
+			//prismatic1->Initialize(ground, slider1, ChCoordsys<>(ChVector<>(0, 0, -1), Q_from_AngY(CH_C_PI_2)));
+			//prismatic1->GetLimit_Z()->Set_active(true);
+			//prismatic1->GetLimit_Z()->Set_min(-6);
+			//system.AddLink(prismatic1);
 
-		qx = Q_from_AngAxis(PI_2, VECT_Y);
-		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), qx));
-		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
-		sys->AddLink(bucket_actuator);
-		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_rot_funct());
-		mfun2->Set_yconst(0);
-		break;
+			// .. create the prismatic joint between the fork and arm
+			//bucket_actuator = std::make_shared<ChLinkLinActuator>();
+			//link_prismaticFork->Initialize(
+			//	fork, arm,
+			//	ChCoordsys<>(
+			//		POS_prismatic,
+			//		chrono::Q_from_AngAxis(CH_C_PI / 2,
+			//			VECT_X)));  // set prism as vertical (default would be aligned to z, horizontal
+			//app->GetSystem()->AddLink(link_prismaticFork);
+
+			//// .. create the linear actuator that pushes upward the fork
+			//link_actuatorFork = std::make_shared<ChLinkLinActuator>();
+			//link_actuatorFork->Initialize(fork, arm, false,
+			//	ChCoordsys<>(POS_prismatic + ChVector<>(0, 0.01, 0), QUNIT),
+			//	ChCoordsys<>(POS_prismatic, QUNIT));
+			//app->GetSystem()->AddLink(link_actuatorFork);
+
+			bucket_actuator->Set_shaft_mode(ChLinkEngine::ENG_SHAFT_PRISM);
+			bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+			
+			//link_prismatic = std::make_shared<ChLinkLockPointLine>();
+			//bucket_actuator->Initialize(topHook, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
+			//pris_link->SetMotion_Z(pris_motion);
+
+			//bucket_actuator->Initialize(topHook, truss, true, ChCoordsys<>(topHook->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(truss->GetPos(), QUNIT));
+			bucket_actuator->Initialize(topHook, truss, true, ChCoordsys<>(topHook->GetPos(), QUNIT), ChCoordsys<>(truss->GetPos(), QUNIT));
+			mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_spe_funct());
+			mfun2->Set_yconst(3);
+			bucket_actuator->SetMotion_Z(mfun2);
+			//func->Set_y(0);
+			//func->Set_y_dx(2.5 - .5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
+			//pris_engine->Set_dist_funct(func);
+			//	break;
+
+			////qx = Q_from_AngAxis(PI_2, VECT_Y);
+			//bucket_actuator->Initialize(topHook, truss, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), rot));
+			//bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
+			////drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
+			////sys->AddLink(bucket_actuator);
+			//mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_spe_funct());
+			//mfun2->Set_yconst(3);
+
+			break;
+		}
 	}
-
-
-}
-void SystemGeometry::setUpBucketActuator(ChQuaternion<double> rot)
-{
-	std::shared_ptr<ChFunction_Const> mfun2; //needs to be declared outside switch
-	ChVector<> pR01(0, 0, 0);
-	ChQuaternion<> qx;
-	bucket_actuator = std::make_shared<ChLinkEngine>();
-	switch (bucketType)
-	{
-	case DRUM:
-
-		//qx = bucket->GetRot()
-		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), rot));
-		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_SPEED);
-		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
-		sys->AddLink(bucket_actuator);
-		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_spe_funct());
-		mfun2->Set_yconst(0);
-		//mfun2->Set_yconst(drum_omega);
-		break;
-
-	case BOX:
-
-		/*qx = Q_from_AngAxis(PI_2, VECT_Y);*/
-		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), rot));
-		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
-		sys->AddLink(bucket_actuator);
-		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_rot_funct());
-		mfun2->Set_yconst(0);
-		break;
-
-	case FLATHOPPER:
-
-		//qx = Q_from_AngAxis(PI_2, VECT_Y);
-		bucket_actuator->Initialize(bucket_bott, bucket, ChCoordsys<>(bucket->GetRot().Rotate(pR01) + bucket->GetPos(), rot));
-		bucket_actuator->Set_eng_mode(ChLinkEngine::ENG_MODE_ROTATION);
-		//drum_actuator->SetMotion_axis(ChVector<>(1, 0, 0));
-		sys->AddLink(bucket_actuator);
-		mfun2 = std::dynamic_pointer_cast<ChFunction_Const>(bucket_actuator->Get_rot_funct());
-		mfun2->Set_yconst(0);
-		break;
-	}
-
-
+	sys->AddLink(bucket_actuator);
+	bucket_actuator->SetDisabled(true);
 }
 
 void SystemGeometry::rotate_body_rot(double t, std::shared_ptr<ChBody> body, std::shared_ptr<ChLinkEngine> actuator, double ang)
