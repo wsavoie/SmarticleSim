@@ -16,15 +16,13 @@ load(fullfile(fold,'vibData.mat'));
 %* 7. plot <N> vs lw
 %* 8. plot pdf of motor torque vs <N>
 %* 9. plot radial and z frc on cylinder vs time
-%*10. plot radial frc on cylinder vs time const l/w diff vib amps
-%*11. plot radial frc on cylinder vs time const l/w diff vib amps
-%*12. plot radial and z frc on cylinder vs time const vib diff l/w
-%*13. plot topHook force vs time
-%*14. hook force for constant l/w
-%*15. plot sphericity for different l/w
+%*10/11. plot z/r frc on cylinder vs time const l/w=1 or const vib=0
+%*12. plot topHook force vs time
+%*13. hook force for constant l/w=1 or const vib=0
+%*14. plot sphericity for different l/w
 %************************************************************
 set(0, 'DefaultLineLineWidth', 2);
-showFigs=[15];
+showFigs=[11];
 
 lw=[]; nl=[]; npl=[]; vib=[]; N=[]; v=[];
 props={lw nl npl vib N v};
@@ -475,99 +473,45 @@ if(showFigs(showFigs==xx))
     legend(legz);
 end
 
-%% 10. plot radial and z frc on cylinder vs time const l/w diff vib amps
+%% 10/11. plot z/r frc on cylinder vs time const l/w=1 or const vib=0
 xx=10;
 if(showFigs(showFigs==xx))
     clear r z
     figure(xx);
     hold on;
-    legz=[];
-    ds=7; % downsample
-    ts= 2.4; %start time
-
-    
-    
-    %     unVib=unique([vibs]);
-    %     unLW=unique([usedD.lw]);
-    unLW=[0.8];
-
-    for(i = 1:length(unLW))
-        unVib=unique(vibs(lws==unLW(i)));
-        phiVals={};
-        for(j=1:length(unVib))
-            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
-            idz=find(cond);
-            for k=1:length(idz)
-                
-                t=usedD(idz(k)).t; %runs everytime even though I only need it once
-                wallR=usedD(idz(k)).wallF(:,1);
-                wallF=usedD(idz(k)).wallF(:,2);
-                prismSt=usedD(idz(k)).prismSt;
-                
-                prismSt=prismSt(t>ts); %runs everytime even though I only need it once
-                wallR=wallR(t>ts);
-                wallF=wallF(t>ts);
-                t=t(t>ts);
-                
-                t=downsample(t,ds);
-                wallR=downsample(wallR,ds);
-                wallF=downsample(wallF,ds);
-                prismSt=downsample(prismSt,ds);
-                
-                r(k,:)=[wallR];
-                z(k,:)=[wallF];
-                
-            end
-            a=shadedErrorBar(t,mean(r),std(r),{'linewidth',2,'DisplayName',['F_r,v=',num2str(unVib(j))]},.5);
-%             b=shadedErrorBar(t,mean(z),std(z),{'linewidth',2,'DisplayName',['F_z,v=',num2str(unVib(j))]},.5);
-            legz(end+1)=a.mainLine;
-%             legz(end+1)=b.mainLine;
-            
-            clear r z a
-        end
-    end
-    
-
-    
- %%%%%%find changes in guid%%%%%%%%%%%%%%%
-    gc=findChangesInGui(prismSt);
-    gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
-    axis tight
-    dispName=["Before Lifting","Lift Begin","Lift End"];
-    for(i=1:size(gc,1))
-        legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
-            'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
-    end
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
-text(.2,.8,['l/w=',num2str(unLW)],'units','normalized');
-xlabel('t (s)');
-ylabel('Force (N)');
-figText(gcf,18);
-legend(legz)
-    
-end
-
-%% 11. plot z frc on cylinder vs time const l/w diff vib amps
-xx=11;
-if(showFigs(showFigs==xx))
-    clear r z
-    figure(xx);
+    figure(xx+1);
     hold on;
     legz=[];
+    legza=[];
+    legzb=[];
     ds=7; % downsample
     ts= 2.4; %start time
-
     
+    %varyType, vib=1, vary l/w=0
     
-    %     unVib=unique([vibs]);
-    %     unLW=unique([usedD.lw]);
-    unLW=[0.8];
-
-    for(i = 1:length(unLW))
-        unVib=unique(vibs(lws==unLW(i)));
-        phiVals={};
-        for(j=1:length(unVib))
-            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
+    varyType=1;
+    if(varyType)
+        varyz=vibs;
+        constz=lws;
+        unConstz=[0.8]; %constant value you want to use
+        constName='l/w';
+        constUnits='';
+        varyName='v';
+        varyUnits='\circ';
+    else
+        varyz=lws;
+        constz=vibs;
+        unConstz=[5]; %constant value you want to use
+        constName='v';
+        constUnits='\circ';
+        varyName='l/w';
+        varyUnits='';
+    end
+    
+    for(i = 1:length(unConstz))
+        unVaryz=unique(varyz(constz==unConstz(i)));
+        for(j=1:length(unVaryz))
+            cond=[constz==unConstz(i)]&[varyz==(unVaryz(j))];
             idz=find(cond);
             for k=1:length(idz)
                 
@@ -590,18 +534,27 @@ if(showFigs(showFigs==xx))
                 z(k,:)=[wallF];
                 
             end
-%             a=shadedErrorBar(t,mean(r),std(r),{'linewidth',2,'DisplayName',['F_r,v=',num2str(unVib(j))]},.5);
-            a=shadedErrorBar(t,mean(z),std(z),{'linewidth',2,'DisplayName',['F_z,v=',num2str(unVib(j))]},.5);
-            legz(end+1)=a.mainLine;
-%             legz(end+1)=b.mainLine;
-            
-            clear r z a
+            %             a=shadedErrorBar(t,mean(r),std(r),{'linewidth',2,'DisplayName',['F_r,v=',num2str(unVib(j))]},.5);
+            figure(xx)
+            a=shadedErrorBar(t,mean(z),std(z),{'linewidth',2,'DisplayName',['F_z, ',varyName,'=',num2str(unVaryz(j)),varyUnits]},.5);
+            figure(xx+1)
+            b=shadedErrorBar(t,mean(r),std(r),{'linewidth',2,'DisplayName',['F_r, ',varyName,'=',num2str(unVaryz(j)),varyUnits]},.5);
+
+            legza(end+1)=a.mainLine;
+            legzb(end+1)=b.mainLine;
+            clear r z a b
         end
     end
     
-
     
- %%%%%%find changes in guid%%%%%%%%%%%%%%%
+    for(qq=xx:xx+1)
+    figure(qq);
+    if(qq==xx)
+        legz=legza;    
+    else
+        legz=legzb;
+    end
+    %%%%%%find changes in guid%%%%%%%%%%%%%%%
     gc=findChangesInGui(prismSt);
     gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
     axis tight
@@ -610,84 +563,18 @@ if(showFigs(showFigs==xx))
         legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
             'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
     end
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
-text(.2,.8,['l/w=',num2str(unLW)],'units','normalized');
-xlabel('t (s)');
-ylabel('Force (N)');
-figText(gcf,18);
-legend(legz)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    text(.2,.8,[constName,'=',num2str(unConstz),constUnits],'units','normalized')
+    xlabel('t (s)');
+    ylabel('Force (N)');
+    figText(gcf,18);
+    legend(legz);
+    end
     
 end
 
-%% 12. plot radial and z frc on cylinder vs time const vib diff l/w
+%% 12. plot topHook force vs time
 xx=12;
-if(showFigs(showFigs==xx))
-    clear r z
-    figure(xx);
-    hold on;
-    legz=[];
-    ds=7; % downsample
-    ts= 2.4; %start time
-
-    
-    
-    %     unVib=unique([vibs]);
-    %     unLW=unique([usedD.lw]);
-    unVib=[2];
-    clear allr allz allrM allrE allzM allzE 
-    for(i = 1:length(unVib))
-        unLW=unique(lws(vibs==unVib(i)));
-        phiVals={};
-        for(j=1:length(unLW))
-            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
-            idz=find(cond);
-            for k=1:length(idz)
-                
-                t=usedD(idz(k)).t; %runs everytime even though I only need it once
-                wallR=usedD(idz(k)).wallF(:,1);
-                wallF=usedD(idz(k)).wallF(:,2);
-                prismSt=usedD(idz(k)).prismSt;
-                
-                prismSt=prismSt(t>ts); %runs everytime even though I only need it once
-                wallR=wallR(t>ts);
-                wallF=wallF(t>ts);
-                t=t(t>ts);
-                
-                t=downsample(t,ds);
-                wallR=downsample(wallR,ds);
-                wallF=downsample(wallF,ds);
-                prismSt=downsample(prismSt,ds);
-                
-                r(k,:)=[wallR];
-                z(k,:)=[wallF];
-                
-            end
-            legz(end+1)=errorbar(t,mean(r),std(r),'linewidth',2,'DisplayName',['F_r,l/w=',num2str(unLW(j))]);
-            legz(end+1)=errorbar(t,mean(z),std(z),'linewidth',2,'DisplayName',['F_z,l/w=',num2str(unLW(j))]);
-            clear r z
-        end
-    end
-   
- %%%%%%find changes in guid%%%%%%%%%%%%%%%
-    gc=findChangesInGui(prismSt);
-    gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
-    axis tight
-    dispName=["Before Lifting","Lift Begin","Lift End"];
-    for(i=1:size(gc,1))
-        legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
-            'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
-    end
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
-text(.2,.2,['vib=',num2str(unVib)],'units','normalized');
-xlabel('t (s)');
-ylabel('Force (N)');
-figText(gcf,18);
-    
-    
-end
-
-%% 13. plot topHook force vs time
-xx=13;
 if(showFigs(showFigs==xx))
     figure(xx);
     hold on;
@@ -726,8 +613,8 @@ if(showFigs(showFigs==xx))
     figText(gcf,18);
     legend(legz);
 end
-%% 14.hook force for constant l/w 
-xx=14;
+%% 13.hook force for constant l/w=1 or const vib=0
+xx=13;
 if(showFigs(showFigs==xx))
     clear F
     figure(xx);
@@ -735,18 +622,33 @@ if(showFigs(showFigs==xx))
     legz=[];
     ds=5; % downsample
     ts= 1; %start time
-
     
+    %varyType, vib=1, vary l/w=0
     
-    %     unVib=unique([vibs]);
-    %     unLW=unique([usedD.lw]);
-    unLW=[0.8];
-
-    for(i = 1:length(unLW))
-        unVib=unique(vibs(lws==unLW(i)));
+    varyType=0;
+    if(varyType)
+        varyz=vibs;
+        constz=lws;
+        unConstz=[0.8]; %constant value you want to use
+        constName='l/w';
+        constUnits='';
+        varyName='v';
+        varyUnits='\circ';
+    else
+        varyz=lws;
+        constz=vibs;
+        unConstz=[5]; %constant value you want to use
+        constName='v';
+        constUnits='\circ';
+        varyName='l/w';
+        varyUnits='';
+    end
+    
+    for(i = 1:length(unConstz))
+        unVaryz=unique(varyz(constz==unConstz(i)));
         phiVals={};
-        for(j=1:length(unVib))
-            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
+        for(j=1:length(unVaryz))
+            cond=[constz==unConstz(i)]&[varyz==(unVaryz(j))];
             idz=find(cond);
             for k=1:length(idz)
                 
@@ -765,18 +667,18 @@ if(showFigs(showFigs==xx))
                 F(k,:)=[hookF];
                 
             end
-            a=shadedErrorBar(t,mean(F),std(F),{'linewidth',2,'DisplayName',['F_H,v=',num2str(unVib(j))]},.5);
-%             b=shadedErrorBar(t,mean(z),std(z),{'linewidth',2,'DisplayName',['F_z,v=',num2str(unVib(j))]},.5);
+            a=shadedErrorBar(t,mean(F),std(F),{'linewidth',2,'DisplayName',['F_H, ',varyName,'=',num2str(unVaryz(j)),varyUnits]},.5);
+            %             b=shadedErrorBar(t,mean(z),std(z),{'linewidth',2,'DisplayName',['F_z,v=',num2str(unVib(j))]},.5);
             legz(end+1)=a.mainLine;
-%             legz(end+1)=b.mainLine;
+            %             legz(end+1)=b.mainLine;
             
             clear F a
         end
     end
     
-
     
- %%%%%%find changes in guid%%%%%%%%%%%%%%%
+    
+    %%%%%%find changes in guid%%%%%%%%%%%%%%%
     gc=findChangesInGui(prismSt);
     gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
     axis tight
@@ -785,17 +687,17 @@ if(showFigs(showFigs==xx))
         legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
             'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
     end
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
-text(.2,.8,['l/w=',num2str(unLW)],'units','normalized');
-xlabel('t (s)');
-ylabel('Force (N)');
-figText(gcf,18);
-legend(legz)
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    text(.2,.8,[constName,'=',num2str(unConstz),constUnits],'units','normalized')
+    xlabel('t (s)');
+    ylabel('Force (N)');
+    figText(gcf,18);
+    legend(legz)
     
 end
 
-%% 15.plot sphericity for different l/w
-xx=15;
+%% 14.plot sphericity for different l/w
+xx=14;
 if(showFigs(showFigs==xx))
     figure(xx);
     hold on;
@@ -806,7 +708,7 @@ if(showFigs(showFigs==xx))
     bucketRemoveTime=19;
     unVib=5;
     
-     warning('remember to set bucketREmoveTime to correct value [14,19]')
+    warning('remember to set bucketREmoveTime to correct value [14,19]')
     clear psiz psiM psiE
     n=15;%remove n markers with highest parwise distance
     for(i = 1:length(unLW))
@@ -825,7 +727,7 @@ if(showFigs(showFigs==xx))
                 ballOut=dat(verz).ballOut;
                 
                 %%%%%%%%final vib frame data
-%                 vibFrame=find(dat(verz).gui==4,1,'last');
+                %                 vibFrame=find(dat(verz).gui==4,1,'last');
                 
                 vibFrame=size(ballOut,3)-bucketRemoveTime; %2 remove bucket and wait 2s
                 [x,y,z]=separateVec(ballOut(:,1:3,vibFrame),1);
@@ -847,7 +749,7 @@ if(showFigs(showFigs==xx))
                 shp=alphaShape(x,y,z,inf);
                 vol=volume(shp);
                 ar=surfaceArea(shp);
-                psiz(k,2)=pi^(1/3)*(6*vol)^(2/3)/ar;                  
+                psiz(k,2)=pi^(1/3)*(6*vol)^(2/3)/ar;
             end
             
         end

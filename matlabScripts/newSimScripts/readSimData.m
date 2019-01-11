@@ -42,6 +42,11 @@ for(i=1:length(vibFolds))
         dat(c).phi=fdat(:,3);
         dat(c).gui=fdat(:,7);
         dat(c).smartSize=smartSize;
+        
+        %added this param on 1/11/19
+        if size(fdat,2)>7
+            dat(c).bucketExist=fdat(:,8);
+        end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         
