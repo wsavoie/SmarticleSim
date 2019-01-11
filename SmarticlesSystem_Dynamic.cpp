@@ -1199,7 +1199,7 @@ void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<
 		mySmarticlesVec.emplace_back((std::shared_ptr<Smarticle>)smarticle0);
 		GetLog() << "Smarticles in sys: " << mySmarticlesVec.size() << "\n";
 		smarticle0->SetSpeed(dropSpeed);
-
+		
 #if irrlichtVisualization
 		application.AssetBindAll();
 		application.AssetUpdateAll();
@@ -1995,11 +1995,13 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 				//totalTorque += abs(sPtr->GetReactTorqueVector(0).z()) + abs(sPtr->GetReactTorqueVector(1).z());
 				//zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z()- bucketMin.z());
 		}
+
 		volumeFraction = countInside2*vol / (max2*PI*sys->bucket_rad*sys->bucket_rad);
 		//GetLog() << vol << " " << countInside2 << " " << sys->bucket_rad << " " << zMax << " " << volumeFraction << "\n";
 		//GetLog() << "phi=" << volumeFraction << "\n";
 		zComz = zComz / countInside2;
 		totalTorque = totalTorque / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
+
 		break;
 
 	case HOOKRAISE2:
@@ -2028,6 +2030,9 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 		//GetLog() << "phi=" << volumeFraction << "\n";
 		zComz = zComz / countInside2;
 		totalTorque = totalTorque / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
+
+		ChVector<> a = getBucketForce(mphysicalSystem);
+		stressHook_of << mphysicalSystem->GetChTime() << ", " << sys->pris_engine->Get_react_force().x() << ", " << sys->prismaticState << ", " << a.x() << ", " << a.y() << ", " << sys->topHook->GetPos().z() << std::endl;
 		break;
 	}
 	case FLATHOPPER:
@@ -2055,9 +2060,11 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 		break;
 	}
 	//totalEnergy used to be meanOT
-	ChVector<> a = getBucketForce(mphysicalSystem);
+
+
+
 	vol_frac_of << mphysicalSystem->GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << totalTorque << ", " << Smarticle::global_GUI_value << std::endl;
-	stressHook_of << mphysicalSystem->GetChTime() << ", " << sys->pris_engine->Get_react_force().x() << ", " << sys->prismaticState << ", " << a.x() << ", " << a.y() << ", " << sys->topHook->GetPos().z() << std::endl;
+	
 	
 	/*GetLog() << "length of forces " << sys->bucket->GetForceList().size();
 
@@ -2463,23 +2470,23 @@ bool SetGait(double time, std::shared_ptr<CH_SYSTEM>m_sys)
 	//	return true;
 	
 
-	/////BALLUP STUFF and vibrate in ball
-//double tm = 1.0;
-//if (time < 1)
-//	Smarticle::global_GUI_value = 1;
-//else if (time >= 1 && time < 2.5)
-//	Smarticle::global_GUI_value = 2;
-//else if (time >= 2.5 && time < 4.5)
-//	Smarticle::global_GUI_value = 1;
-//else if (time >= 4.5 && time < 6)
-//	Smarticle::global_GUI_value = 4;
-//else if (time >= 6 && time < 8)
-//{
-//	Smarticle::global_GUI_value = 1;
-//	removeBucket();
-//}
-//else if (time >= 8)
-//return true;
+	///BALLUP STUFF and vibrate in ball
+double tm = 1.0;
+if (time < 1)
+	Smarticle::global_GUI_value = 1;
+else if (time >= 1 && time < 2.5)
+	Smarticle::global_GUI_value = 2;
+else if (time >= 2.5 && time < 4.5)
+	Smarticle::global_GUI_value = 1;
+else if (time >= 4.5 && time < 6)
+	Smarticle::global_GUI_value = 4;
+else if (time >= 6 && time < 8)
+{
+	Smarticle::global_GUI_value = 1;
+	removeBucket();
+}
+else if (time >= 8)
+return true;
 
 
 /////rain down particles vibrate and measure stress
@@ -2908,14 +2915,16 @@ int main(int argc, char* argv[]) {
 		//	sys->hookraise();
 		//}
 	//	else {
+
 			sys->performActuation();
+			
 	//	}
 
 		if ((fmod(t, timeForVerticalDisplacement) < dT) && (mySmarticlesVec.size() < numPerLayer*numLayers) && (numGeneratedLayers == numLayers))
 			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplacement);
 		//SavePovFilesMBD(mphysicalSystem, tStep);
 		//step_timer.start("step time");
-
+		
 #ifdef CHRONO_OPENGL
 		if (gl_window.Active()) {
 			gl_window.DoStepDynamics(dT);
@@ -2977,7 +2986,7 @@ int main(int argc, char* argv[]) {
 			PrintRingContact(mphysicalSystem, tStep, ring, mySmarticlesVec, &application);
 		}
 		//application.GetVideoDriver()->setTransform(irr::video::ETS_VIEW, irr::core::IdentityMatrix);
-
+		
 
 		application.GetVideoDriver()->endScene();
 
@@ -2991,7 +3000,7 @@ int main(int argc, char* argv[]) {
 		if (SetGait(t, mphysicalSystem) == true)
 			break;
 
-
+		
 		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER || bucketType == CYLINDER || bucketType == BOX || bucketType == HOOKRAISE2)
 		{
 			double zmax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
@@ -3000,13 +3009,14 @@ int main(int argc, char* argv[]) {
 
 		FixSmarticles(mphysicalSystem, mySmarticlesVec, tStep);
 
-
+		
 		PrintFractions(mphysicalSystem, tStep, mySmarticlesVec);
-
+		
 		time(&rawtimeCurrent);
 		double timeDiff = difftime(rawtimeCurrent, rawtime);
 		//step_timer.stop("step time");
 		receiver.drawCamera();
+			
 		receiver.dtPerFrame = videoFrameInterval;
 		receiver.fps = out_fps;
 		receiver.screenshot(receiver.dtPerFrame);
