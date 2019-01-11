@@ -2063,7 +2063,7 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 
 
 
-	vol_frac_of << mphysicalSystem->GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << totalTorque << ", " << Smarticle::global_GUI_value << std::endl;
+	vol_frac_of << mphysicalSystem->GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << totalTorque << ", " << Smarticle::global_GUI_value << ", " << bucket_exist << std::endl;
 	
 	
 	/*GetLog() << "length of forces " << sys->bucket->GetForceList().size();
@@ -2355,6 +2355,7 @@ void removeBucket()
 		sys->bucket->GetPos().x(),
 		1,
 		sys->bucket->GetPos().z()));
+	bucket_exist = false;
 }
 // =============================================================================
 bool SetGait(double time, std::shared_ptr<CH_SYSTEM>m_sys)
