@@ -109,6 +109,20 @@ bool IrrGui::OnEvent(const SEvent& event) {
 			switchAllSmarticleStates();
 			return true;
 			break;
+
+		case irr::KEY_F9:
+			if (auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(sys->pris_engine->Get_dist_funct()))
+				mfun->Set_yconst(-.0002024 + mfun->Get_yconst());
+			GetLog() << "moving -"<<nl;
+			return true;
+			break;
+		case irr::KEY_F12:
+			if (auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(sys->pris_engine->Get_dist_funct()))
+				mfun->Set_yconst(.0002024 + mfun->Get_yconst());
+			GetLog() << "moving +"<<nl;
+			return true;
+			break;
+
 		case irr::KEY_KEY_Q:
 			if (Smarticle::global_GUI_value != MoveType::GUI1)
 				Smarticle::global_GUI_value = MoveType::GUI1;

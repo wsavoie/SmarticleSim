@@ -45,6 +45,23 @@ for(i=1:length(vibFolds))
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         
+        %%%%%%%%%read stress stick data%%%%%%%%%%%%%%
+        stressDataFile=fullfile(dat(c).fold,'PostProcess','stressHook.txt');
+        if(exist(stressDataFile,'file'))
+            fdat=importdata(stressDataFile);
+            D=fdat.data;
+            td=fdat.textdata;
+            clear fdat;
+            
+            %stresshook data fraction file format:
+            %tstep, reactForceZ, prismaticState, cylinderWallForceR, cylinderWallForceZ
+            dat(c).hookF=D(:,2);
+            dat(c).prismSt=D(:,3);
+            dat(c).wallF=D(:,4:5);
+        end
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
         %open files
         c=c+1;
     end

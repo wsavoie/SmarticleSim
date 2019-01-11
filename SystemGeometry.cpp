@@ -105,7 +105,8 @@ SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysTy
 	actuationStart = 0;
 	omega_bucket = 0;
 	actuation_amp = 0;
-
+	actuationSpd = 0;
+	prismaticState = -1;
 
 #if stapleSize
 	bucket_rad = sizeScale*w_smarticle * 2;
@@ -124,7 +125,7 @@ SystemGeometry::SystemGeometry(std::shared_ptr<CH_SYSTEM> msys, BucketType sysTy
 	bucket_ctr = ChVector<>(0, 0, 0);
 	mat_wall->SetFriction(wall_fric);
 	envFamily = 1;
-	bucketID = 1;
+	bucketID = 133711;
 	rad = 1;
 }
 std::shared_ptr<ChTexture> SystemGeometry::bucketTexture = std::make_shared<ChTexture>();
@@ -305,8 +306,64 @@ std::shared_ptr<ChBody> SystemGeometry::create_Box2()
 	return bucket;
 }
 
+void chrono::SystemGeometry::hookraise()
+{
+	static std::shared_ptr<ChLinkLinActuator> p_engine = std::make_shared<ChLinkLinActuator>();
+	static bool setup = false;
+	static bool finishedActuation = false;
+	double t = sys->GetChTime();
+	if (!setup)
+	{
+		
+		p_engine->Initialize(bucket_bott, topHook, ChCoordsys<>(topHook->GetPos() + (0, 0, .2), QUNIT));
+		setup = true;
+	}
+
+	
+
+	if (t > actuationStart)
+	{
+		if (!finishedActuation)
+		{
+			prismaticState = 0;
+			topHook->SetBodyFixed(false);
+			//bucket_actuator->SetDisabled(false);
+			p_engine->SetDisabled(false);
+			link_prismatic->SetDisabled(false);
+			auto func = p_engine->Get_dist_funct();
+
+			auto pris_motion = std::make_shared<ChFunctionCustom>(0, 0, 0);
+			p_engine->Set_dist_funct(pris_motion);
+			GetLog() << "hello";
+			//auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(pris_engine->Get_dist_funct());
+			//mfun->Set_yconst(actuationSpd*dT + mfun->Get_yconst());
+			//
+			//
+			//GetLog()<<mfun->Get_y(t)<<nl;
+			//GetLog()<<mfun->Get_y(t)<<","<< mfun->Get_y_dx(t) <<nl;
+			//mfun->Set_y(actuationSpd * dT + mfun->Get_y(t));
+			//auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(pris_engine->Get_dist_funct());
+			//mfun->Set_yconst(-0.0001 + mfun->Get_yconst());
+			//GetLog() << pris_engine->GetDist_dt()<<nl;
+			if (topHook->GetPos().z() >= (actuation_amp*.995 + topOrigHeight))
+			{
+				//auto pris_motion = std::make_shared<ChFunctionCustom>(0, 0 + .1, 0);  // there is an hidden -0.1 offset so 0.1 keeps it from working
+				//pris_engine->Set_dist_funct(pris_motion);
+				finishedActuation = true;
+				prismaticState = 1;
+				p_engine->SetDisabled(true);
+				topHook->SetBodyFixed(true);
+			}
+		}
+		else {
+			//GetLog() <<"stopped moving";
+			prismaticState = 1;
+		}
+	}
+}
 void chrono::SystemGeometry::performActuation()
 {
+	
 	double t=sys->GetChTime();
 	///add method about system actuation
 	if (bucketType == DRUM)
@@ -320,86 +377,119 @@ void chrono::SystemGeometry::performActuation()
 		rotate_body_rot(t, bucket, bucket_actuator, Quat_to_Angle(ANGLE, bucket->GetRot()).x());
 	}
 	//vibration movement
-	if (t > actuationStart && t < actuationStart + 3)
+	if (t > actuationStart && t < actuationStart + 5)
 	{
 		//GetLog() << "actuation started!" << nl;
-		switch (bucketType)
+
+		if (bucketType == HOOKRAISE2)
 		{
-			case HOOKRAISE: case STRESSSTICK:
-			{
-				stick->SetBodyFixed(false);
-				pris_link->SetDisabled(false);
+			//topHook->SetPos_dt(VNULL);
+			static bool finishedActuation = false;
 
-				if (pris_engine->IsDisabled())
-				{
-					stick->SetBodyFixed(false);
-					pris_engine->SetDisabled(false);
-			
-				}
-				pris_engine->GetDist_dt();
-				break;
-			}
-			case HOOKRAISE2:
+			if (!finishedActuation)
 			{
-				static bool finishedActuation = false;
+				prismaticState = 0;
+				topHook->SetBodyFixed(false);
+				//bucket_actuator->SetDisabled(false);
+				pris_engine->SetDisabled(false);
+				link_prismatic->SetDisabled(false);
+				if (auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(pris_engine->Get_dist_funct()))
+					mfun->Set_yconst(-actuationSpd*dT + mfun->Get_yconst());
 
-				if (!finishedActuation)
+
+				//auto pris_motion = std::dynamic_pointer_cast<ChFunction_Const>(pris_engine->Get_dist_funct());
+				//pris_motion->Set_yconst(actuationSpd);
+				//auto pris_motion = std::make_shared<ChFunction_Const>(0.1);
+				//auto pris_motion = std::make_shared<ChFunctionCustom>(0,0,0);
+				//auto pris_motion = std::make_shared<ChFunction_Const>(actuationSpd*dT);
+				//pris_engine->SetMotion_Z(pris_motion);
+				//pris_engine->Set_mot()
+				//auto func=
+				//GetLog() << func->Get_y(0) << "," << func->Get_y_dx(0)<<","<< func->Get_y_dxdx(0)<<nl;
+
+				//topHook->SetPos(ChVector<>(0, 0, topHook->GetPos().z() - dT*actuationSpd));
+				//topHook->SetPo(ChVector<>(0, 0, topHook->GetPos().z() - dT*actuationSpd));
+				//topHook->SetNoSpeedNoAcceleration();
+				//topHook->SetRot(QUNIT);
+
+				//pris_motion->Set_y(0.1 + pris_motion->Get_y(t));
+				//pris_engine->Set_dist_funct(pris_motion);
+				//auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(pris_engine->Get_dist_funct());
+				//mfun->Set_yconst(1 + mfun->Get_yconst());
+				//
+				//
+				//GetLog()<<mfun->Get_y(t)<<nl;
+				//GetLog()<<mfun->Get_y(t)<<","<< mfun->Get_y_dx(t) <<nl;
+				//mfun->Set_y(actuationSpd * dT + mfun->Get_y(t));
+				//auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(pris_engine->Get_dist_funct());
+				//mfun->Set_yconst(-0.0001 + mfun->Get_yconst());
+				//GetLog() << pris_engine->GetDist_dt()<<nl;
+				if (topHook->GetPos().z() >= (actuation_amp*.995+topOrigHeight))
 				{
-					topHook->SetBodyFixed(false);
-					//bucket_actuator->SetDisabled(false);
-					pris_engine->SetDisabled(false);
-					link_prismatic->SetDisabled(false);
-					//auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(pris_engine->Get_dist_funct());
-					//mfun->Set_yconst(-0.0001 + mfun->Get_yconst());
-					GetLog() << pris_engine->Get_react_force().z()<<nl;
-					if (topHook->GetPos().z() >= pullLen*.995)
-					{
-						auto pris_motion = std::make_shared<ChFunctionCustom>(0, 0 + .1, 0);  // there is an hidden -0.1 offset so 0.1 keeps it from working
-						pris_engine->Set_dist_funct(pris_motion);
-						finishedActuation = true;
-					}
-				}
-				else {
-					GetLog() <<"stopped moving";
 					
+					//auto pris_motion = std::make_shared<ChFunctionCustom>(0, 0 + .1, 0);  // there is an hidden -0.1 offset so 0.1 keeps it from working
+					//pris_engine->Set_dist_funct(pris_motion);
+					finishedActuation = true;
+					prismaticState = 1;
+					//pris_engine->SetDisabled(true);
+					//topHook->SetBodyFixed(true);
 				}
-
-			
-			
-				break;
 			}
-
-			case CYLINDER:
-			{
-				bucket_bott->SetBodyFixed(false);
-				vibrate_link->SetDisabled(false);
-				break;
-			}
-			case KNOBCYLINDER:
-			{
-				double rotSpeed = 2; //rads/sec
-				bucket_actuator->SetDisabled(false);
-				stick->SetBodyFixed(false);
-				rotate_body_sp(t, stick, bucket_actuator, PPI);
-				break;
-			}
-			case HOPPER:
-			{
-				bucket->SetBodyFixed(false);
-				vibrate_link->SetDisabled(false);
-				break;
-			}
-			case FLATHOPPER:
-			{
-				bucket_bott->SetPos(ChVector<>(1, 0, 0));
-				bucket_exist = false;
-				break;
-			}
-			default:
-			{
-				break;
+			else {
+				//GetLog() <<"stopped moving";
+				prismaticState = 1;
+				//GetLog() << "posdt" << topHook->GetPos_dt() << "trussdt" << truss->GetPos_dt() << nl;
 			}
 		}
+		//else {
+		//	switch (bucketType)
+		//	{
+		//	case HOOKRAISE: case STRESSSTICK:
+		//	{
+		//		stick->SetBodyFixed(false);
+		//		pris_link->SetDisabled(false);
+
+		//		if (pris_engine->IsDisabled())
+		//		{
+		//			stick->SetBodyFixed(false);
+		//			pris_engine->SetDisabled(false);
+
+		//		}
+		//		pris_engine->GetDist_dt();
+		//		break;
+		//	}
+		//	case CYLINDER:
+		//	{
+		//		bucket_bott->SetBodyFixed(false);
+		//		vibrate_link->SetDisabled(false);
+		//		break;
+		//	}
+		//	case KNOBCYLINDER:
+		//	{
+		//		double rotSpeed = 2; //rads/sec
+		//		bucket_actuator->SetDisabled(false);
+		//		stick->SetBodyFixed(false);
+		//		rotate_body_sp(t, stick, bucket_actuator, PPI);
+		//		break;
+		//	}
+		//	case HOPPER:
+		//	{
+		//		bucket->SetBodyFixed(false);
+		//		vibrate_link->SetDisabled(false);
+		//		break;
+		//	}
+		//	case FLATHOPPER:
+		//	{
+		//		bucket_bott->SetPos(ChVector<>(1, 0, 0));
+		//		bucket_exist = false;
+		//		break;
+		//	}
+		//	default:
+		//	{
+		//		break;
+		//	}
+		//	}
+		//}
 	}
 }
 std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool overlap)
@@ -418,51 +508,67 @@ std::shared_ptr<ChBody> SystemGeometry::create_bucketShell(int num_boxes, bool o
 std::shared_ptr<ChBody> SystemGeometry::create_topHook()
 {
 	auto tophk = std::make_shared<ChBody>();
+	sys->AddBody(tophk);
+	double mass = 0.001;
 	tophk->SetIdentifier(topHookID);
-	tophk->SetBodyFixed(true);
+	tophk->SetBodyFixed(false);
 	tophk->SetCollide(true);
-	int height =60;
-	ChVector<> 	gyr = utils::CalcBoxGyration(ChVector<>(w_smarticle , t2_smarticle, t2_smarticle)).Get_Diag()+ utils::CalcBoxGyration(ChVector<>(t2_smarticle,w_smarticle, t2_smarticle)).Get_Diag();
+	int height =20;
+	topOrigHeight = height*t2_smarticle;
+	topHookVol = 2 * t2_smarticle*t2_smarticle*w_smarticle - t2_smarticle*t2_smarticle*t2_smarticle; //width of cross volume minus the overlap
+
+	
+	tophk->SetPos(ChVector<>(0,0,topOrigHeight));
+	//ChVector<> 	gyr = utils::CalcBoxGyration(ChVector<>(w_smarticle, t2_smarticle, t2_smarticle)).Get_Diag() + utils::CalcBoxGyration(ChVector<>(t2_smarticle, w_smarticle, t2_smarticle)).Get_Diag();
+	ChVector<> 	gyr = utils::CalcBoxGyration(ChVector<>(w_smarticle, t2_smarticle, t2_smarticle), tophk->GetPos()).Get_Diag() + utils::CalcBoxGyration(ChVector<>(t2_smarticle, w_smarticle, t2_smarticle), tophk->GetPos()).Get_Diag();
+	tophk->SetMass(mass);
+	tophk->SetInertiaXX(mass * gyr);
 
 	tophk->SetMaterialSurface(mat_wall);
 	tophk->GetCollisionModel()->ClearModel();
 	tophk->GetCollisionModel()->SetEnvelope(collisionEnvelope);
-	
-	
+	//utils::AddBoxGeometry(tophk.get(), ChVector<>(w_smarticle,t2_smarticle,t2_smarticle), bucket_bott->GetPos()+ tophk->GetPos(), QUNIT, true);
+	//utils::AddBoxGeometry(tophk.get(), ChVector<>(t2_smarticle, w_smarticle, t2_smarticle), bucket_bott->GetPos() + tophk->GetPos(), QUNIT, true);
+	utils::AddBoxGeometry(tophk.get(), ChVector<>(w_smarticle, t2_smarticle, t2_smarticle), tophk->GetPos(), QUNIT, true);
+	utils::AddBoxGeometry(tophk.get(), ChVector<>(t2_smarticle, w_smarticle, t2_smarticle), tophk->GetPos(), QUNIT, true);
 
-	utils::AddBoxGeometry(tophk.get(), ChVector<>(w_smarticle,t2_smarticle,t2_smarticle), bucket_bott->GetPos()+ ChVector<>(0,0,height*t2_smarticle), QUNIT, true);
-	utils::AddBoxGeometry(tophk.get(), ChVector<>(t2_smarticle, w_smarticle, t2_smarticle), bucket_bott->GetPos() + ChVector<>(0, 0, height * t2_smarticle), QUNIT, true);
-	topHookVol = 2 * t2_smarticle*t2_smarticle*w_smarticle - t2_smarticle*t2_smarticle*t2_smarticle; //width of cross volume minus the overlap
 	tophk->GetCollisionModel()->BuildModel();
-	tophk->SetMass(rho_cylinder*topHookVol);
-	tophk->SetInertiaXX(rho_cylinder*topHookVol * gyr);
-	sys->AddBody(tophk);
-	tophk->AddAsset(hookTexture);
+	
 
+	tophk->AddAsset(hookTexture);
+	
 	return tophk;
 }
 std::shared_ptr<ChBody> SystemGeometry::create_bottomHook()
 {
 	auto botthk = std::make_shared<ChBody>();
+	sys->AddBody(botthk);
+	double mass = 100;
 	botthk->SetIdentifier(bottomHookID);
 	botthk->SetBodyFixed(true);
 	botthk->SetCollide(true);
+	bottomHookVol = 2 * t2_smarticle*t2_smarticle*w_smarticle - t2_smarticle*t2_smarticle*t2_smarticle; //width of cross volume minus the overlap
+
 	int height = 5;
-	ChVector<> 	gyr = utils::CalcBoxGyration(ChVector<>(w_smarticle, t2_smarticle, t2_smarticle)).Get_Diag() + utils::CalcBoxGyration(ChVector<>(t2_smarticle, w_smarticle, t2_smarticle)).Get_Diag();
+	botthk->SetPos(ChVector<>(0, 0, height*t2_smarticle));
+	//ChVector<> 	gyr = utils::CalcBoxGyration(ChVector<>(w_smarticle, t2_smarticle, t2_smarticle),botthk->GetPos()).Get_Diag() + utils::CalcBoxGyration(ChVector<>(t2_smarticle, w_smarticle, t2_smarticle)).Get_Diag();
+	ChVector<> 	gyr = utils::CalcBoxGyration(ChVector<>(w_smarticle, t2_smarticle, t2_smarticle), botthk->GetPos()).Get_Diag() + utils::CalcBoxGyration(ChVector<>(t2_smarticle, w_smarticle, t2_smarticle), botthk->GetPos()).Get_Diag();
+	botthk->SetMass(mass);
+	botthk->SetInertiaXX(mass * gyr);
 
 	botthk->SetMaterialSurface(mat_wall);
 	botthk->GetCollisionModel()->ClearModel();
 	botthk->GetCollisionModel()->SetEnvelope(collisionEnvelope);
 
-	utils::AddBoxGeometry(botthk.get(), ChVector<>(w_smarticle, t2_smarticle, t2_smarticle), bucket_bott->GetPos() + ChVector<>(0, 0, height*t2_smarticle), QUNIT, true);
-	utils::AddBoxGeometry(botthk.get(), ChVector<>(t2_smarticle, w_smarticle, t2_smarticle), bucket_bott->GetPos() + ChVector<>(0, 0, height*t2_smarticle), QUNIT, true);
-	bottomHookVol = 2 * t2_smarticle*t2_smarticle*w_smarticle - t2_smarticle*t2_smarticle*t2_smarticle; //width of cross volume minus the overlap
+	//utils::AddBoxGeometry(botthk.get(), ChVector<>(w_smarticle, t2_smarticle, t2_smarticle), bucket_bott->GetPos() + botthk->GetPos(), QUNIT, true);
+	//utils::AddBoxGeometry(botthk.get(), ChVector<>(t2_smarticle, w_smarticle, t2_smarticle), bucket_bott->GetPos() + botthk->GetPos(), QUNIT, true);
+	utils::AddBoxGeometry(botthk.get(), ChVector<>(w_smarticle, t2_smarticle, t2_smarticle), botthk->GetPos(), QUNIT, true);
+	utils::AddBoxGeometry(botthk.get(), ChVector<>(t2_smarticle, w_smarticle, t2_smarticle), botthk->GetPos(), QUNIT, true);
 
 
 	botthk->GetCollisionModel()->BuildModel();
-	botthk->SetMass(rho_cylinder*bottomHookVol);
-	botthk->SetInertiaXX(rho_cylinder*bottomHookVol * gyr);
-	sys->AddBody(botthk);
+
+
 	botthk->AddAsset(hookTexture);
 	return botthk;
 }
@@ -1120,9 +1226,10 @@ void SystemGeometry::create_Container()
 		double rodLen = bucket_interior_halfDim.z()*1.5;
 		create_CentralColumn(rodLen);
 		create_Truss();
-		create_Prismatic(stick, 0,0);
-		break;
+		create_Prismatic(stick);
+
 	}
+	break;
 	case HOOKRAISE:
 	{
 		create_Bucket_Bott();
@@ -1134,25 +1241,27 @@ void SystemGeometry::create_Container()
 		create_Truss();
 		//create_Prismatic(stick);
 		setupBucketActuator(Q_from_AngAxis(PI_2, VECT_Y));
-		break;
+		
 	}
+	break;
 	case HOOKRAISE2:
 	{
-		stickLen = bucket_interior_halfDim.z()*2.0;
+	
 		create_Bucket_Bott();
 		bucketTexture->SetTextureFilename(GetChronoDataFile("cubetexture_brown_bordersBlack.png"));
 		bucket = create_bucketShell(25, true);
 
-		bottomHook = create_bottomHook();
+		//bottomHook = create_bottomHook();
 		topHook = create_topHook();
-		hookVol = bottomHookVol + topHookVol;
+		hookVol = /*bottomHookVol +*/ topHookVol;
 
 		create_Truss();
-		create_Prismatic(topHook, pullLen=w_smarticle,-w_smarticle);
+		create_Prismatic(topHook);
 		//setupBucketActuator(bucket->GetRot());
 
-		break;
+		
 	}
+	break;
 	case BOX:
 	{
 		//FUTNOTE uncomment for old box
@@ -1298,7 +1407,7 @@ void SystemGeometry::create_VibrateLink(double w, double A, double t_0, std::sha
 	sys->Add(vibrate_link);
 
 }
-void SystemGeometry::create_Prismatic(std::shared_ptr<ChBody> body,double raiseLen,double spd)
+void SystemGeometry::create_Prismatic(std::shared_ptr<ChBody> body)
 {
 
 	////////////////
@@ -1307,7 +1416,7 @@ void SystemGeometry::create_Prismatic(std::shared_ptr<ChBody> body,double raiseL
 	//ChFunctionCustom* pris_motion = new ChFunctionCustom(0, 1.5, 0);  // phase freq ampl
 
 //	
-	auto pris_motion = std::make_shared<ChFunctionCustom>(0, spd+.1, 0);  // phase freq ampl
+	//auto pris_motion = std::make_shared<ChFunctionCustom>(0, actuationSpd+.1, 0);  // phase freq ampl
 	//pris_motion->Set_y(.1);
 	//pris_motion->Set_y_dx(.1);
 	//pris_motion->Set_y_dxdx(.1);
@@ -1319,49 +1428,65 @@ void SystemGeometry::create_Prismatic(std::shared_ptr<ChBody> body,double raiseL
 
 	link_prismatic = std::make_shared<ChLinkLockPrismatic>();
 	pris_engine = std::make_shared<ChLinkLinActuator>();
-	pris_engine->Set_lin_offset(0.0);
-	//auto sinefunc = std::make_shared<ChFunction_Sine>();
-	switch (bucketType)		//http://www.engineeringtoolbox.com/friction-coefficients-d_778.html to get coefficients
-	{
-		case STRESSSTICK: case HOOKRAISE:
-		{
-			auto pris_motion = std::make_shared<ChFunctionCustom>(0, 1.5, .1);  // phase freq ampl
-			//pris_link->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
-			//pris_link->SetMotion_Z(pris_motion);
-
-			link_prismatic->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
-			link_prismatic->SetMotion_Z(pris_motion);
-
-			pris_engine->Initialize(body, truss, true, ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
-			func->Set_y(0);
-			func->Set_y_dx(2.5 - .5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
-			pris_engine->Set_dist_funct(func);
-			break;
-		}
-		case HOOKRAISE2:
-		{
-
-			link_prismatic->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
-			//link_prismatic->Initialize(body, truss, ChCoordsys<>(truss->GetPos(), chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Z)));
-			//sys->Add(link_prismatic);
-			
-			//pris_engine->Initialize(body, truss, false, ChCoordsys<>(body->GetPos(), QUNIT), ChCoordsys<>(truss->GetPos(), QUNIT));
-			//pris_engine->Initialize(body, truss,ChCoordsys<>(truss->GetPos(), chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Z)));
-			pris_engine->Initialize(body, truss, true, ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, -raiseLen/2.0), QUNIT), ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, raiseLen /2.0), QUNIT));
-		
-			
-			pris_engine->Set_dist_funct(pris_motion);
-			break;
-		}
-	}
-
-	sys->AddLink(pris_engine);
+	double offset = 0.5;//need offset for operation of prismatic in both directions
 	
 
-	//pris_link->SetDisabled(false);
-	sys->Add(link_prismatic);
-	pris_engine->SetDisabled(true);
-	link_prismatic->SetDisabled(true);
+	//auto sinefunc = std::make_shared<ChFunction_Sine>();
+	if (bucketType == HOOKRAISE2)
+	{
+		/*if (auto mfun = std::dynamic_pointer_cast<ChFunction_Const>(forklift->link_actuatorFork->Get_dist_funct()))
+		mfun->Set_yconst(0.05 + mfun->Get_yconst());*/
+
+		//link_prismatic->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
+		link_prismatic->Initialize(body, truss, 
+			ChCoordsys<>(body->GetPos(), chrono::Q_from_AngAxis(CH_C_PI / 2, VECT_Z)));
+
+
+		//GetLog() << "old mode" << (int)link_prismatic->GetMask()->Constr_N(3).GetMode();
+		//link_prismatic->GetMask()->Constr_N(3).SetMode(CONSTRAINT_LOCK);
+		//GetLog() << "new mode" << (int)link_prismatic->GetMask()->Constr_N(3).GetMode()<<nl nl nl;
+		//link_prismatic->SetMotion_axis(VECT_Z);
+		//ChCoordsys<>(POS_prismatic + ChVector<>(0, 0.01, 0), QUNIT)-
+		//ChCoordsys<>(POS_prismatic, QUNIT));
+
+		pris_engine->Initialize(body, truss,false,
+			ChCoordsys<>(body->GetPos() + ChVector<>(0,0, offset), QUNIT), //need to offset body marker by offset or it will move when sim starts
+			ChCoordsys<>(body->GetPos(), QUNIT));
+		pris_engine->Set_lin_offset(offset);
+		//pris_engine->Initialize(body, truss, false, ChCoordsys<>(truss->GetPos() + (0, 0, .2), QUNIT), ChCoordsys<>(body->GetPos(), QUNIT));
+		//pris_engine->Initialize(truss, body, ChCoordsys<>(VNULL, QUNIT));
+		//pris_engine->GetMask()->Constr_N(3).SetMode(CONSTRAINT_LOCK);
+
+		//for (int i = 0; i < 7; i++)
+		//	pris_engine->GetMask()->Constr_N(i).SetMode(CONSTRAINT_LOCK);
+		
+		//pris_engine->GetMask()->Constr_N(2).SetMode(CONSTRAINT_FREE); //set z to free
+
+	}
+	
+	if (bucketType == STRESSSTICK || bucketType == HOOKRAISE)
+	{
+		//auto pris_motion = std::make_shared<ChFunctionCustom>(0, 1.5, .1);  // phase freq ampl
+		//pris_link->Initialize(body, truss, ChCoordsys<>(ChVector<>(0, 0, 0)));
+		//pris_link->SetMotion_Z(pris_motion);
+
+		link_prismatic->Initialize(truss, body, ChCoordsys<>(ChVector<>(0, 0, 0)));
+		//link_prismatic->SetMotion_Z(pris_motion);
+
+		pris_engine->Initialize(truss, body, false, ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, -stickLen), QUNIT), ChCoordsys<>(body->GetPos() + ChVector<>(0, 0, stickLen), QUNIT));
+		func->Set_y(0);
+		func->Set_y_dx(2.5 - .5); //the value in this is always -2.5+(value specified), dont know where -2.5 comes from....
+		//pris_engine->Set_dist_funct(func);
+
+	}
+
+
+	sys->AddLink(link_prismatic);
+	sys->AddLink(pris_engine);
+	
+	
+	//pris_engine->SetDisabled(false);
+	//link_prismatic->SetDisabled(false);
 	//pris_motion = std::dynamic_pointer_cast<ChFunctionCustom>(pris_engine->Get_dist_funct());
 	
 }
@@ -1370,13 +1495,19 @@ void SystemGeometry::create_Truss()
 {
 
 	truss = std::make_shared<ChBody>();
-	truss->SetBodyFixed(true);
-	truss->GetCollisionModel()->ClearModel();
-	utils::AddCylinderGeometry(truss.get(), t2_smarticle / 2, bucket_interior_halfDim.z() * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z()), Angle_to_Quat(ANGLE, ChVector<>(-PI_2, 0, 0)), false);
-	truss->GetCollisionModel()->BuildModel();
-	//truss->AddAsset(sphereTexture);
-	truss->SetCollide(false);
 	sys->AddBody(truss);
+	truss->SetPos((0, 0, 0));
+	//truss->SetMass(100);
+	//truss->SetInertiaXX((30, 30, 30));
+	truss->SetBodyFixed(true);
+	truss->SetCollide(false);
+	//truss->GetCollisionModel()->ClearModel();
+	//utils::AddCylinderGeometry(truss.get(), t2_smarticle / 2, bucket_interior_halfDim.z() * 1, bucket_ctr + ChVector<>(0, 0, bucket_interior_halfDim.z()), Angle_to_Quat(ANGLE, ChVector<>(-PI_2, 0, 0)), true);
+	//truss->GetCollisionModel()->BuildModel();
+	//truss->AddAsset(sphereTexture);
+	
+
+	
 }
 
 void SystemGeometry::create_Knobs(double kpr, double rows, double length)
@@ -1538,7 +1669,6 @@ void SystemGeometry::vibrate_body(double t, double w, double A, double t_0, std:
 	double x_bucket = A*sin(w * t + phase);
 	double xDot_bucket = A*w*cos(w * t + phase);
 	double xDDot_bucket = -1 * A*w*w*sin(w * t + phase);
-
 	body->SetPos(body->GetPos() + ChVector<>(0, 0, x_bucket));
 	body->SetPos_dt(ChVector<>(0, 0, xDot_bucket));
 	body->SetPos_dtdt(ChVector<>(0, 0, xDDot_bucket));

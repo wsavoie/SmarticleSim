@@ -102,7 +102,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM,FLATHOPPER,HOOKRAISE2};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = HOOKRAISE2;
+BucketType bucketType = CYLINDER;
 //std::vector<std::shared_ptr<ChBody>> /*sphereStick*/;
 //std::shared_ptr<ChBody> bucket;
 //std::shared_ptr<ChBody> bucket_bott;
@@ -128,10 +128,11 @@ int windPosy = 0;
 bool saveFrame = false;
 int inactiveLoc = 0; //location of dead particle in ring +x +y -x -y
 
-//double gravity = -9.81 * sizeScale;
-double gravity = -9.81;
+double gravity = -9.81 * sizeScale;
+//double gravity = 0;
 
-double actuationStart = .1;
+double actuationStart = 2.5;
+
 double smart_fric = .4;//.3814; //keyboard box friction = .3814
 double vibration_freq = 30;
 double omega_bucket = 2 * PI * vibration_freq;  // 30 Hz vibration similar to Gravish 2012, PRL
@@ -489,6 +490,49 @@ public:
 	}
 
 };
+
+class bucket_force :public ChContactContainer::ReportContactCallback {
+	//class ext_force :public ChContactContainer::ReportContactCallback {
+
+public:
+	double n_contact_force = 0;
+	ChVector<> t_contact_force = (0, 0, 0);
+	ChVector<> radialNorm = (0, 0, 0); //x is radial forces in bucket y is z forces on bucket
+	double m_contact_force = 0;
+	double maxHeight = 0;
+	virtual bool OnReportContact(
+		//virtual bool ReportContactCallback(
+		const ChVector<>& pA,             ///< get contact pA
+		const ChVector<>& pB,             ///< get contact pB
+		const ChMatrix33<>& plane_coord,  ///< get contact plane coordsystem (A column 'X' is contact normal)
+		const double& distance,           ///< get contact distance
+		const ChVector<>& react_forces,   ///< get react.forces (if already computed). In coordsystem 'plane_coord'
+		const ChVector<>& react_torques,  ///< get react.torques, if rolling friction (if already computed).
+		ChContactable* contactobjA,  ///< get model A (note: some containers may not support it and could be zero!)
+		ChContactable* contactobjB   ///< get model B (note: some containers may not support it and could be zero!)
+	)
+	{
+		unsigned int ia = contactobjA->GetPhysicsItem()->GetIdentifier();// reports force BY ib ON ia.
+		unsigned int ib = contactobjB->GetPhysicsItem()->GetIdentifier();
+
+		if (ia == sys->bucketID)
+		{
+
+			//GetLog() << "running method";
+			//double a = react_forces.Length();
+			this->m_contact_force += react_forces.Length();
+			//GetLog() << sqrt(react_forces.x()*react_forces.x() + react_forces.y()*react_forces.y())<< ", " << distance <<nl;
+			this->radialNorm += ChVector<>(sqrt(react_forces.x()*react_forces.x() + react_forces.y()*react_forces.y()), react_forces.z(), 0);
+			//n_contact_force += react_forces.y();
+			//GetLog() << "Normal Force: " << m_contact_force << "\n";
+			//t_contact_force += Vector(react_forces.y(), react_forces.x(), react_forces.z()); ///x(output)=y(system) y(output)=x(system)  z(output) = z(sys)
+		}
+		else
+
+		return true;
+	}
+
+};
 // =============================================================================\
 
 void placeSmarticles(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::shared_ptr<Smarticle>> & mySmarticlesVec, ChIrrApp& application, std::shared_ptr<Smarticle> smarticle0)
@@ -669,14 +713,22 @@ double showForce(std::shared_ptr<CH_SYSTEM> msys)
 	msys->GetContactContainer()->ReportAllContacts(&ef);
 	return ef.m_contact_force;
 }
+ChVector<> getBucketForce(std::shared_ptr<CH_SYSTEM> msys)
+{
+
+	bucket_force bf;
+	msys->GetContactContainer()->ReportAllContacts(&bf);
+	return bf.radialNorm;
+}
 // =============================================================================
 void MySeed(double s = time(NULL)) { srand(s); }
 double MyRand() { return float(rand()) / RAND_MAX; }
 // =============================================================================
 void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_iteration_sliding, int& max_iteration_bilateral, double& dt, int& num_layers, double& mangle, int& readFile, double& mpctActive, double& mangle1, double& mangle2) {
+	double mult_l=0;
 	if (argc > 1) {
 		const char* text = argv[1];
-		double mult_l = atof(text);
+		mult_l = atof(text);
 		l_smarticle = mult_l * w_smarticle;
 		if (stapleSize && sphereVersion)
 		{
@@ -755,6 +807,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[16];
 		//percentToMoveToGlobal = atof(text);
 		vibAmp = atof(text)*D2R;
+		vibAmp = (0.7*vibAmp) / (mult_l);
 	}
 	/// if parallel, get solver setting
 	//if (USE_PARALLEL) {
@@ -834,10 +887,10 @@ void InitializeMbdPhysicalSystem_NonParallel(std::shared_ptr<CH_SYSTEM> mphysica
 	mphysicalSystem->SetMaxItersSolverStab(50 + 1.2*numPerLayer*numLayers);   // unuseful for Anitescu, only Tasora uses this
 	if (stapleSize)
 	{
-		contact_recovery_speed = 0.1;
+		contact_recovery_speed = 0;
 	}
-	mphysicalSystem->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
-	mphysicalSystem->SetMinBounceSpeed(contact_recovery_speed);
+	//mphysicalSystem->SetMaxPenetrationRecoverySpeed(contact_recovery_speed);
+	//mphysicalSystem->SetMinBounceSpeed(contact_recovery_speed);
 	//mphysicalSystem->SetSolverWarmStarting(true);
 	//mphysicalSystem->SetUseSleeping(true);
 	
@@ -1190,9 +1243,9 @@ void CreateMbdPhysicalSystemObjects(std::shared_ptr<CH_SYSTEM> mphysicalSystem, 
 	
 	//setup vars first
 	sys->actuationStart = actuationStart;
-	sys->actuation_amp = vibration_amp;
+	sys->actuation_amp = 2*w_smarticle;
 	sys->omega_bucket = omega_bucket;
-
+	sys->actuationSpd = -w_smarticle;
 	sys->create_Container();
 
 
@@ -1777,10 +1830,17 @@ void PrintStress2(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, double 
 			currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
 			stress_of << mphysicalSystem->GetChTime() << ", " << 0 << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl; //final 0 is a placeholder 
 			break;
-		case STRESSSTICK: case KNOBCYLINDER: case HOOKRAISE2:
+		case STRESSSTICK: case KNOBCYLINDER:
 			temp = bucket_bod_vec.at(1)->GetPos();
 			currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
 			stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl;
+
+			break;
+		case HOOKRAISE2:
+			temp = bucket_bod_vec.at(1)->GetPos();
+			currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
+			stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl;
+
 			break;
 		case BOX: case BOXDROP:
 			//stress_of << mphysicalSystem->GetChTime() << ", " << angle1 << ", " << Smarticle::global_GUI_value << ", " << box_ang << ", " << angle2 << std::endl;
@@ -1995,7 +2055,24 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 		break;
 	}
 	//totalEnergy used to be meanOT
+	ChVector<> a = getBucketForce(mphysicalSystem);
 	vol_frac_of << mphysicalSystem->GetChTime() << ", " << countInside2 << ", " << volumeFraction << ", " << zMax << ", " << zComz << ", " << totalTorque << ", " << Smarticle::global_GUI_value << std::endl;
+	stressHook_of << mphysicalSystem->GetChTime() << ", " << sys->pris_engine->Get_react_force().x() << ", " << sys->prismaticState << ", " << a.x() << ", " << a.y() << ", " << sys->topHook->GetPos().z() << std::endl;
+	
+	/*GetLog() << "length of forces " << sys->bucket->GetForceList().size();
+
+	for (size_t i = 0; i < sys->bucket->GetForceList().size(); i++)
+	{
+		auto a = sys->bucket->GetForceList()[i];
+		a->SetFrame(ChForce::WORLD);
+		a->SetMode(ChForce::FORCE);
+		a->SetAlign(ChForce::WORLD_DIR);
+		ar = sqrt(a->GetForce().x()* a->GetForce().x() + a->GetForce().y()* a->GetForce().y());
+		az = a->GetForce().z();
+	}
+	GetLog() << " r=" << ar << ", z=" << az << nl;*/
+	
+
 	//vol_frac_of.close();
 	return;
 }
@@ -2387,22 +2464,47 @@ bool SetGait(double time, std::shared_ptr<CH_SYSTEM>m_sys)
 	
 
 	/////BALLUP STUFF and vibrate in ball
-	double tm = 1.0;
-	if (time < 1)
-		Smarticle::global_GUI_value = 1;
-	else if (time >= 1 && time < 2.5)
-		Smarticle::global_GUI_value = 2;
-	else if (time >= 2.5 && time < 4.5)
-		Smarticle::global_GUI_value = 1;
-	else if (time >= 4.5 && time < 6)
-		Smarticle::global_GUI_value = 4;
-	else if (time >= 6 && time < 8)
-	{
-		Smarticle::global_GUI_value = 1;
-		removeBucket();
-	}
-	else if (time >= 8)
-		return true;
+//double tm = 1.0;
+//if (time < 1)
+//	Smarticle::global_GUI_value = 1;
+//else if (time >= 1 && time < 2.5)
+//	Smarticle::global_GUI_value = 2;
+//else if (time >= 2.5 && time < 4.5)
+//	Smarticle::global_GUI_value = 1;
+//else if (time >= 4.5 && time < 6)
+//	Smarticle::global_GUI_value = 4;
+//else if (time >= 6 && time < 8)
+//{
+//	Smarticle::global_GUI_value = 1;
+//	removeBucket();
+//}
+//else if (time >= 8)
+//return true;
+
+
+/////rain down particles vibrate and measure stress
+//rain,vibrate,lift,wait .5, remove walls and wait
+//1,1.5,1,.5,1
+	//double totMoveTime = 1;
+	//double rainTime = 1;
+	//double movePStart = actuationStart + totMoveTime;
+	//double waitBucket = movePStart + 0.5;
+	//double newChkpt = 0;
+
+	//if (time < (1))// dropping into bucket
+	//	Smarticle::global_GUI_value = 1;
+	//else if (time >= 1 && time < 1+1.5) //vibrate
+	//	Smarticle::global_GUI_value = 4;
+	//else if (time >= 1 + 1.5 && time < 1 + 1.5 + 2 + 0.5) //start lifting and wait 0.5 s after done
+	//{
+	//	Smarticle::global_GUI_value = 1;
+	//}
+	//else if (time >= (1 + 1.5 + 2 + 0.5) && time < (1 + 1.5 + 2 + 0.5 + 1)) //wait .5 sec
+	//{
+	//	removeBucket();
+	//}
+	//else if (time >= (1 + 1.5 + 2 + 0.5 + 1))
+	//	return true;
 
 
 	return false;
@@ -2752,6 +2854,8 @@ int main(int argc, char* argv[]) {
 	stress_of << dT << ", " << out_fps << ", " << videoFrameInterval << ", " << numPerLayer << ", " << ringRad << std::endl;
 	flowRate_of << 0 << ", " << 0 << ", " << Smarticle::global_GUI_value << std::endl;
 	ringDeadSmart_of << "# ring rad = " << ringRad << " tstep, ringx, ringy, ringz, ringcomX, ringcomY, ringcomZ, ringdeadX, ringdeadY, ringdeadZ" << std::endl;
+	stressHook_of << "actuationStart=" << sys->actuationStart<< ", actuationAmp= "<<sys->actuation_amp << ", actuationSpeed="<<sys->actuationSpd<<", tstep, reactForceZ, prismaticState, cylinderWallForceR, cylinderWallForceZ, topHookPosZ" << std::endl;
+
 	std::shared_ptr<ChBody> ring;
 	if (ringActive)
 	{
@@ -2799,8 +2903,13 @@ int main(int argc, char* argv[]) {
 		}
 
 		//actuate systemGeometry
-		sys->performActuation();
-
+		//if (bucketType == HOOKRAISE2)
+		//{
+		//	sys->hookraise();
+		//}
+	//	else {
+			sys->performActuation();
+	//	}
 
 		if ((fmod(t, timeForVerticalDisplacement) < dT) && (mySmarticlesVec.size() < numPerLayer*numLayers) && (numGeneratedLayers == numLayers))
 			AddParticlesLayer1(mphysicalSystem, mySmarticlesVec, application, timeForVerticalDisplacement);
@@ -2883,7 +2992,7 @@ int main(int argc, char* argv[]) {
 			break;
 
 
-		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER || bucketType == CYLINDER || bucketType == BOX)
+		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER || bucketType == CYLINDER || bucketType == BOX || bucketType == HOOKRAISE2)
 		{
 			double zmax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
 			PrintStress2(mphysicalSystem, tStep, zmax, sys->rad, mySmarticlesVec);
@@ -2967,6 +3076,7 @@ int main(int argc, char* argv[]) {
 	ringPos_of.close();
 	ringContact_of.close();
 	inactive_of.close();
+	stressHook_of.close();
 
 	exit(1);
 	return 0;

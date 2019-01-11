@@ -24,7 +24,7 @@ load(fullfile(fold,fname));
 %* 7. plot <N> vs time
 %* 8. plot <N> vs lw
 %************************************************************
-showFigs=[3];
+showFigs=[9];
 
 
 I=1;%dat index
@@ -262,3 +262,26 @@ if(showFigs(showFigs==xx))
     figText(gcf,18);
     set(gca,'yscale','log');
 end
+%% 9. pairwise removal sphericity calc
+xx=9;
+if(showFigs(showFigs==xx))
+    figure(xx);
+    hold on;
+    ballOut=dat(I).ballOut;
+    fr=size(ballOut,3);
+    colormap(brewermap(size(ballOut,1),'RdYlBu'));
+    ms=40; %marker size
+%     while(1)
+        for i = 1:fr
+            S=ms*ones(size(ballOut,1),1);%markerSize
+            D=squareform(pdist(ballOut(:,1:3,i))); %square matrix
+            dout=sum(D,1);
+            scatter3(ballOut(:,1,i),ballOut(:,2,i),ballOut(:,3,i),S,dout,'filled');
+            title(['t=',num2str(dat(I).t(i)/1000),'s']);
+            pause(0.1);
+            %             axis([-.04 .04 -.04 .04 0 0.03])
+            cla;
+        end
+%     end
+end
+

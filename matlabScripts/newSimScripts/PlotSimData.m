@@ -15,13 +15,20 @@ load(fullfile(fold,'vibData.mat'));
 %* 6. plot phi evolution vs vibration amp for many runs
 %* 7. plot <N> vs lw
 %* 8. plot pdf of motor torque vs <N>
+%* 9. plot radial and z frc on cylinder vs time
+%*10. plot radial frc on cylinder vs time const l/w diff vib amps
+%*11. plot radial frc on cylinder vs time const l/w diff vib amps
+%*12. plot radial and z frc on cylinder vs time const vib diff l/w
+%*13. plot topHook force vs time
+%*14. hook force for constant l/w
+%*15. plot sphericity for different l/w
 %************************************************************
 set(0, 'DefaultLineLineWidth', 2);
-showFigs=[8];
+showFigs=[15];
 
 lw=[]; nl=[]; npl=[]; vib=[]; N=[]; v=[];
 props={lw nl npl vib N v};
-
+I=2;%ind to be used for multiple different plot numbers below
 
 clear usedD;inds=1;
 for i=1:length(dat)
@@ -46,7 +53,7 @@ end
 Ns=nls.*npls;
 
 N=length(usedD);
-I=6;%ind to be used for multiple different plot numbers below
+
 h=figure(1000);
 guiCols=get(gca,'colororder');
 close(h);
@@ -412,14 +419,445 @@ if(showFigs(showFigs==xx))
             [xx,yy]=meshgrid(XE,YE);
             
             [TY,TE]=discretize(TT,100);
-            [NY,NE]=discretize(NN,[max(NN)-min(NN)]); 
+            [NY,NE]=discretize(NN,[max(NN)-min(NN)]);
             contour(xx,yy,nZ')
         end
         
     end
+    
+    xlabel('Torque')
+    ylabel('<N>');
+    zlabel('count')
+    figText(gcf,18);
 end
-xlabel('Torque')
-ylabel('<N>');
-zlabel('count')
-figText(gcf,18);
+%% 9. plot radial and z frc on cylinder vs time
+xx=9;
+if(showFigs(showFigs==xx))
+    figure(xx);
+    hold on;
+    clear legz
+    ds=7; % downsample
+    ts= 2.4; %start time
+    %                 dat(c).hookF=td(:,2);
+    %             dat(c).prismSt=D(:,3);
+    %             dat(c).wallF=D(:,4:5);
+    t=usedD(I).t;
+    wallR=usedD(I).wallF(:,1);
+    wallF=usedD(I).wallF(:,2);
+    prismSt=usedD(I).prismSt;
+    
+    prismSt=prismSt(t>ts);
+    wallR=wallR(t>ts);
+    wallF=wallF(t>ts);
+    t=t(t>ts);
+    
+    t=downsample(t,ds);
+    wallR=downsample(wallR,ds);
+    wallF=downsample(wallF,ds);
+    prismSt=downsample(prismSt,ds);
+    
+    %find changes in guid
+    legz(1)=plot(t,wallR,'linewidth',2,'DisplayName','F_r');
+    legz(2)=plot(t,wallF,'linewidth',2,'DisplayName','F_z');
+    %find changes in guid
+    gc=findChangesInGui(prismSt);
+    gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
+    axis tight
+    dispName=["Before Lifting","Lift Begin","Lift End"];
+    for(i=1:size(gc,1))
+        legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
+            'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
+    end
+    
+    xlabel('t (s)');
+    ylabel('Force (N)');
+    figText(gcf,18);
+    legend(legz);
+end
 
+%% 10. plot radial and z frc on cylinder vs time const l/w diff vib amps
+xx=10;
+if(showFigs(showFigs==xx))
+    clear r z
+    figure(xx);
+    hold on;
+    legz=[];
+    ds=7; % downsample
+    ts= 2.4; %start time
+
+    
+    
+    %     unVib=unique([vibs]);
+    %     unLW=unique([usedD.lw]);
+    unLW=[0.8];
+
+    for(i = 1:length(unLW))
+        unVib=unique(vibs(lws==unLW(i)));
+        phiVals={};
+        for(j=1:length(unVib))
+            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
+            idz=find(cond);
+            for k=1:length(idz)
+                
+                t=usedD(idz(k)).t; %runs everytime even though I only need it once
+                wallR=usedD(idz(k)).wallF(:,1);
+                wallF=usedD(idz(k)).wallF(:,2);
+                prismSt=usedD(idz(k)).prismSt;
+                
+                prismSt=prismSt(t>ts); %runs everytime even though I only need it once
+                wallR=wallR(t>ts);
+                wallF=wallF(t>ts);
+                t=t(t>ts);
+                
+                t=downsample(t,ds);
+                wallR=downsample(wallR,ds);
+                wallF=downsample(wallF,ds);
+                prismSt=downsample(prismSt,ds);
+                
+                r(k,:)=[wallR];
+                z(k,:)=[wallF];
+                
+            end
+            a=shadedErrorBar(t,mean(r),std(r),{'linewidth',2,'DisplayName',['F_r,v=',num2str(unVib(j))]},.5);
+%             b=shadedErrorBar(t,mean(z),std(z),{'linewidth',2,'DisplayName',['F_z,v=',num2str(unVib(j))]},.5);
+            legz(end+1)=a.mainLine;
+%             legz(end+1)=b.mainLine;
+            
+            clear r z a
+        end
+    end
+    
+
+    
+ %%%%%%find changes in guid%%%%%%%%%%%%%%%
+    gc=findChangesInGui(prismSt);
+    gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
+    axis tight
+    dispName=["Before Lifting","Lift Begin","Lift End"];
+    for(i=1:size(gc,1))
+        legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
+            'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
+    end
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
+text(.2,.8,['l/w=',num2str(unLW)],'units','normalized');
+xlabel('t (s)');
+ylabel('Force (N)');
+figText(gcf,18);
+legend(legz)
+    
+end
+
+%% 11. plot z frc on cylinder vs time const l/w diff vib amps
+xx=11;
+if(showFigs(showFigs==xx))
+    clear r z
+    figure(xx);
+    hold on;
+    legz=[];
+    ds=7; % downsample
+    ts= 2.4; %start time
+
+    
+    
+    %     unVib=unique([vibs]);
+    %     unLW=unique([usedD.lw]);
+    unLW=[0.8];
+
+    for(i = 1:length(unLW))
+        unVib=unique(vibs(lws==unLW(i)));
+        phiVals={};
+        for(j=1:length(unVib))
+            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
+            idz=find(cond);
+            for k=1:length(idz)
+                
+                t=usedD(idz(k)).t; %runs everytime even though I only need it once
+                wallR=usedD(idz(k)).wallF(:,1);
+                wallF=usedD(idz(k)).wallF(:,2);
+                prismSt=usedD(idz(k)).prismSt;
+                
+                prismSt=prismSt(t>ts); %runs everytime even though I only need it once
+                wallR=wallR(t>ts);
+                wallF=wallF(t>ts);
+                t=t(t>ts);
+                
+                t=downsample(t,ds);
+                wallR=downsample(wallR,ds);
+                wallF=downsample(wallF,ds);
+                prismSt=downsample(prismSt,ds);
+                
+                r(k,:)=[wallR];
+                z(k,:)=[wallF];
+                
+            end
+%             a=shadedErrorBar(t,mean(r),std(r),{'linewidth',2,'DisplayName',['F_r,v=',num2str(unVib(j))]},.5);
+            a=shadedErrorBar(t,mean(z),std(z),{'linewidth',2,'DisplayName',['F_z,v=',num2str(unVib(j))]},.5);
+            legz(end+1)=a.mainLine;
+%             legz(end+1)=b.mainLine;
+            
+            clear r z a
+        end
+    end
+    
+
+    
+ %%%%%%find changes in guid%%%%%%%%%%%%%%%
+    gc=findChangesInGui(prismSt);
+    gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
+    axis tight
+    dispName=["Before Lifting","Lift Begin","Lift End"];
+    for(i=1:size(gc,1))
+        legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
+            'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
+    end
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
+text(.2,.8,['l/w=',num2str(unLW)],'units','normalized');
+xlabel('t (s)');
+ylabel('Force (N)');
+figText(gcf,18);
+legend(legz)
+    
+end
+
+%% 12. plot radial and z frc on cylinder vs time const vib diff l/w
+xx=12;
+if(showFigs(showFigs==xx))
+    clear r z
+    figure(xx);
+    hold on;
+    legz=[];
+    ds=7; % downsample
+    ts= 2.4; %start time
+
+    
+    
+    %     unVib=unique([vibs]);
+    %     unLW=unique([usedD.lw]);
+    unVib=[2];
+    clear allr allz allrM allrE allzM allzE 
+    for(i = 1:length(unVib))
+        unLW=unique(lws(vibs==unVib(i)));
+        phiVals={};
+        for(j=1:length(unLW))
+            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
+            idz=find(cond);
+            for k=1:length(idz)
+                
+                t=usedD(idz(k)).t; %runs everytime even though I only need it once
+                wallR=usedD(idz(k)).wallF(:,1);
+                wallF=usedD(idz(k)).wallF(:,2);
+                prismSt=usedD(idz(k)).prismSt;
+                
+                prismSt=prismSt(t>ts); %runs everytime even though I only need it once
+                wallR=wallR(t>ts);
+                wallF=wallF(t>ts);
+                t=t(t>ts);
+                
+                t=downsample(t,ds);
+                wallR=downsample(wallR,ds);
+                wallF=downsample(wallF,ds);
+                prismSt=downsample(prismSt,ds);
+                
+                r(k,:)=[wallR];
+                z(k,:)=[wallF];
+                
+            end
+            legz(end+1)=errorbar(t,mean(r),std(r),'linewidth',2,'DisplayName',['F_r,l/w=',num2str(unLW(j))]);
+            legz(end+1)=errorbar(t,mean(z),std(z),'linewidth',2,'DisplayName',['F_z,l/w=',num2str(unLW(j))]);
+            clear r z
+        end
+    end
+   
+ %%%%%%find changes in guid%%%%%%%%%%%%%%%
+    gc=findChangesInGui(prismSt);
+    gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
+    axis tight
+    dispName=["Before Lifting","Lift Begin","Lift End"];
+    for(i=1:size(gc,1))
+        legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
+            'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
+    end
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
+text(.2,.2,['vib=',num2str(unVib)],'units','normalized');
+xlabel('t (s)');
+ylabel('Force (N)');
+figText(gcf,18);
+    
+    
+end
+
+%% 13. plot topHook force vs time
+xx=13;
+if(showFigs(showFigs==xx))
+    figure(xx);
+    hold on;
+    clear legz
+    ds=5; %dowsample amt
+    ts=1; %start time
+    %                 dat(c).hookF=td(:,2);
+    %             dat(c).prismSt=D(:,3);
+    %             dat(c).wallF=D(:,4:5);
+    t=usedD(I).t;
+    prismSt=usedD(I).prismSt;
+    hookF=-usedD(I).hookF;
+    
+    prismSt=prismSt(t>ts);
+    hookF=hookF(t>ts);
+    t=t(t>ts);
+    
+    t=downsample(t,ds);
+    hookF=downsample(hookF,ds);
+    prismSt=downsample(prismSt,ds);
+    
+    %find changes in guid
+    legz(1)=plot(t,hookF,'linewidth',2,'DisplayName','F_H');
+    %find changes in guid
+    gc=findChangesInGui(prismSt);
+    gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
+    axis tight
+    dispName=["Before Lifting","Lift Begin","Lift End"];
+    for(i=1:size(gc,1))
+        legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
+            'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
+    end
+    
+    xlabel('t (s)');
+    ylabel('Force (N)');
+    figText(gcf,18);
+    legend(legz);
+end
+%% 14.hook force for constant l/w 
+xx=14;
+if(showFigs(showFigs==xx))
+    clear F
+    figure(xx);
+    hold on;
+    legz=[];
+    ds=5; % downsample
+    ts= 1; %start time
+
+    
+    
+    %     unVib=unique([vibs]);
+    %     unLW=unique([usedD.lw]);
+    unLW=[0.8];
+
+    for(i = 1:length(unLW))
+        unVib=unique(vibs(lws==unLW(i)));
+        phiVals={};
+        for(j=1:length(unVib))
+            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
+            idz=find(cond);
+            for k=1:length(idz)
+                
+                t=usedD(idz(k)).t; %runs everytime even though I only need it once
+                hookF=-usedD(idz(k)).hookF;
+                prismSt=usedD(idz(k)).prismSt;
+                
+                prismSt=prismSt(t>ts); %runs everytime even though I only need it once
+                hookF=hookF(t>ts);
+                t=t(t>ts);
+                
+                t=downsample(t,ds);
+                hookF=downsample(hookF,ds);
+                prismSt=downsample(prismSt,ds);
+                
+                F(k,:)=[hookF];
+                
+            end
+            a=shadedErrorBar(t,mean(F),std(F),{'linewidth',2,'DisplayName',['F_H,v=',num2str(unVib(j))]},.5);
+%             b=shadedErrorBar(t,mean(z),std(z),{'linewidth',2,'DisplayName',['F_z,v=',num2str(unVib(j))]},.5);
+            legz(end+1)=a.mainLine;
+%             legz(end+1)=b.mainLine;
+            
+            clear F a
+        end
+    end
+    
+
+    
+ %%%%%%find changes in guid%%%%%%%%%%%%%%%
+    gc=findChangesInGui(prismSt);
+    gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
+    axis tight
+    dispName=["Before Lifting","Lift Begin","Lift End"];
+    for(i=1:size(gc,1))
+        legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
+            'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
+    end
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%   
+text(.2,.8,['l/w=',num2str(unLW)],'units','normalized');
+xlabel('t (s)');
+ylabel('Force (N)');
+figText(gcf,18);
+legend(legz)
+    
+end
+
+%% 15.plot sphericity for different l/w
+xx=15;
+if(showFigs(showFigs==xx))
+    figure(xx);
+    hold on;
+    unVib=unique([vibs]);
+    unLW=unique([usedD.lw]);
+    
+    
+    bucketRemoveTime=19;
+    unVib=5;
+    
+     warning('remember to set bucketREmoveTime to correct value [14,19]')
+    clear psiz psiM psiE
+    n=15;%remove n markers with highest parwise distance
+    for(i = 1:length(unLW))
+        %         unVib=unique(vibs(lws==unLW(i)));
+        
+        phiVals={};
+        for(j=1:length(unVib))
+            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
+            %             vals=length(cond(cond==1));
+            idz=find(cond);
+            psiz=[];
+            for k=1:length(idz)
+                c=fileparts(usedD(idz(k)).fold);
+                load(fullfile(c,'ballDat.mat'));
+                verz=usedD(idz(k)).v;
+                ballOut=dat(verz).ballOut;
+                
+                %%%%%%%%final vib frame data
+%                 vibFrame=find(dat(verz).gui==4,1,'last');
+                
+                vibFrame=size(ballOut,3)-bucketRemoveTime; %2 remove bucket and wait 2s
+                [x,y,z]=separateVec(ballOut(:,1:3,vibFrame),1);
+                D=squareform(pdist(ballOut(:,1:3,vibFrame))); %square matrix
+                dout=sum(D,1);
+                [v,bottInds]=maxk(dout,n);
+                x(bottInds)=[];y(bottInds)=[];z(bottInds)=[];
+                shp=alphaShape(x,y,z,inf);
+                vol=volume(shp);
+                ar=surfaceArea(shp);
+                psiz(k,1)=pi^(1/3)*(6*vol)^(2/3)/ar;
+                
+                %%%%%%%%%%%final without wall frame data
+                [x,y,z]=separateVec(ballOut(:,1:3,end),1);
+                D=squareform(pdist(ballOut(:,1:3,end))); %square matrix
+                dout=sum(D,1);
+                [v,bottInds]=maxk(dout,n);
+                x(bottInds)=[];y(bottInds)=[];z(bottInds)=[];
+                shp=alphaShape(x,y,z,inf);
+                vol=volume(shp);
+                ar=surfaceArea(shp);
+                psiz(k,2)=pi^(1/3)*(6*vol)^(2/3)/ar;                  
+            end
+            
+        end
+        psiM(i,:)=mean(psiz,1);
+        psiE(i,:)=std(psiz,0,1);
+    end
+    errorbar(unLW,psiM(:,1),psiE(:,1),'--','linewidth',2,'DisplayName','with walls');
+    errorbar(unLW,psiM(:,2),psiE(:,2),'linewidth',2,'DisplayName','no walls');
+    legend;
+    xlabel('l/w')
+    ylabel('\langleN\rangle');
+    figText(gcf,18);
+end

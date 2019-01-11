@@ -51,7 +51,7 @@ namespace chrono {
 		std::shared_ptr<ChBody> create_Hull(double numBoxes);
 		std::shared_ptr<ChBody> create_ChordRing(int num_boxes, double half_h, double t, double r, double sagitta, ChVector<> pos, std::shared_ptr<ChTexture> texture, double m);
 		void										create_CentralColumn(double length);
-		void										create_Prismatic(std::shared_ptr<ChBody> body,double raiseLen, double spd);
+		void										create_Prismatic(std::shared_ptr<ChBody> body);
 		void										create_Knobs(double kpr, double rows, double length);
 		void										create_CentralColumnEngine(double t_0);
 		void										create_Truss();
@@ -60,6 +60,7 @@ namespace chrono {
 		//void vibrate_body(double t, std::shared_ptr<ChBody> mainbody, std::shared_ptr<ChBody> body);
 		void setupBucketActuator(ChQuaternion<double> rot);
 		void performActuation();
+		void hookraise();
 		void vibrate_body(double t, double w, double A, double t_0, std::shared_ptr<ChBody> body);
 		void rotate_body_rot(double t, std::shared_ptr<ChBody> body, std::shared_ptr<ChLinkEngine> actuator, double ang);
 		void rotate_body_sp(double t, std::shared_ptr<ChBody> body, std::shared_ptr<ChLinkEngine> actuator, double w);
@@ -112,17 +113,21 @@ namespace chrono {
 		double hookVol;
 		double topHookVol;
 		double bottomHookVol;
-		double pullLen;
+		double actuationSpd;
 		ChVector<> bucket_interior_halfDim;
 		ChVector<> boxdim;
 		ChVector<> bucket_ctr;
+		int prismaticState;
+		int bucketID;
+		int bottomHookID;
+		int topHookID;
+		double topOrigHeight;
 	private:
 
 		//vars
-		int bucketID;
+
 		double wall_fric;//.3814; //keyboard box friction = .3814
-		int bottomHookID;
-		int topHookID;
+
 
 		//system type
 		BucketType sType;
