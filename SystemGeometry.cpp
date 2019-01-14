@@ -515,7 +515,7 @@ std::shared_ptr<ChBody> SystemGeometry::create_topHook()
 	tophk->SetIdentifier(topHookID);
 	tophk->SetBodyFixed(false);
 	tophk->SetCollide(true);
-	int height =20;
+	int height =5;
 	topOrigHeight = height*t2_smarticle;
 	topHookVol = 2 * t2_smarticle*t2_smarticle*w_smarticle - t2_smarticle*t2_smarticle*t2_smarticle; //width of cross volume minus the overlap
 

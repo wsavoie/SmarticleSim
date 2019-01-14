@@ -223,7 +223,7 @@ double ChFunctionController::ComputeOutputSpeed(double t)
 	des_ang = controller_->LinearInterpolate(index_, curr_ang, des_ang); //linear interpolate for situations where gui changes so there isn't a major speed increase
 
 
-	double str = 10; //strength in num of smarts
+	double str = smartStr; //strength in num of smarts
 	double maxTor = str * this->controller_->smarticle_->GetMass()*this->controller_->smarticle_->w;
 	double currT=abs(this->controller_->smarticle_->getLinkActuator(index_)->Get_mot_torque());
 	double error = des_ang - curr_ang;

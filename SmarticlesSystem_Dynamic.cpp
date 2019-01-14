@@ -102,7 +102,7 @@ using namespace irr::gui;
 //enum SmarticleType { SMART_ARMS, SMART_U };
 //enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM,FLATHOPPER,HOOKRAISE2};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
-BucketType bucketType = CYLINDER;
+BucketType bucketType = HOOKRAISE2;
 //std::vector<std::shared_ptr<ChBody>> /*sphereStick*/;
 //std::shared_ptr<ChBody> bucket;
 //std::shared_ptr<ChBody> bucket_bott;
@@ -131,7 +131,7 @@ int inactiveLoc = 0; //location of dead particle in ring +x +y -x -y
 double gravity = -9.81 * sizeScale;
 //double gravity = 0;
 
-double actuationStart = 2.5;
+double actuationStart = 4;
 
 double smart_fric = .4;//.3814; //keyboard box friction = .3814
 double vibration_freq = 30;
@@ -1977,23 +1977,24 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 		break;
 
 	case CYLINDER:
+	{
 		countInside2 = mySmarticlesVec.size();
 		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
 			std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
 			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
-		
-				com = sPtr->Get_cm() - ChVector<>(0, 0, bucketMin.z());
-				zComz += com.z();
-				max2 = std::max(max2, com.z());
-				if (max2 > zMax)
-				{
-					double temp = zMax;
-					zMax = max2;
-					max2 = temp;
-				}
-				totalTorque += abs(sPtr->GetMotTorque(0)) + abs(sPtr->GetMotTorque(1));
-				//totalTorque += abs(sPtr->GetReactTorqueVector(0).z()) + abs(sPtr->GetReactTorqueVector(1).z());
-				//zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z()- bucketMin.z());
+
+			com = sPtr->Get_cm() - ChVector<>(0, 0, bucketMin.z());
+			zComz += com.z();
+			max2 = std::max(max2, com.z());
+			if (max2 > zMax)
+			{
+				double temp = zMax;
+				zMax = max2;
+				max2 = temp;
+			}
+			totalTorque += abs(sPtr->GetMotTorque(0)) + abs(sPtr->GetMotTorque(1));
+			//totalTorque += abs(sPtr->GetReactTorqueVector(0).z()) + abs(sPtr->GetReactTorqueVector(1).z());
+			//zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z()- bucketMin.z());
 		}
 
 		volumeFraction = countInside2*vol / (max2*PI*sys->bucket_rad*sys->bucket_rad);
@@ -2002,8 +2003,10 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 		zComz = zComz / countInside2;
 		totalTorque = totalTorque / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
 
+		ChVector<> a = getBucketForce(mphysicalSystem);
+		stressHook_of << mphysicalSystem->GetChTime() << ", " << 0 << ", " << 0 << ", " << a.x() << ", " << a.y() << ", " << 0 << std::endl;
 		break;
-
+	}
 	case HOOKRAISE2:
 	{
 		countInside2 = mySmarticlesVec.size();
@@ -2471,23 +2474,40 @@ bool SetGait(double time, std::shared_ptr<CH_SYSTEM>m_sys)
 	//	return true;
 	
 
-	///BALLUP STUFF and vibrate in ball
-double tm = 1.0;
-if (time < 1)
+/////BALLUP STUFF and vibrate in ball
+//double tm = 1.0;
+//if (time < 1)
+//	Smarticle::global_GUI_value = 1;
+//else if (time >= 1 && time < 2.5)
+//	Smarticle::global_GUI_value = 2;
+//else if (time >= 2.5 && time < 4.5)
+//	Smarticle::global_GUI_value = 1;
+//else if (time >= 4.5 && time < 6)
+//	Smarticle::global_GUI_value = 4;
+//else if (time >= 6 && time < 8)
+//{
+//	Smarticle::global_GUI_value = 1;
+//	removeBucket();
+//}
+//else if (time >= 8)
+//return true;
+//
+
+//rain down particles and lift
+if (time < (1))// dropping into bucket
 	Smarticle::global_GUI_value = 1;
-else if (time >= 1 && time < 2.5)
+else if (time >= 1 && time < 1+1.5) //straight
 	Smarticle::global_GUI_value = 2;
-else if (time >= 2.5 && time < 4.5)
+else if (time >= 2.5 && time < 4) //u-shape
 	Smarticle::global_GUI_value = 1;
-else if (time >= 4.5 && time < 6)
-	Smarticle::global_GUI_value = 4;
-else if (time >= 6 && time < 8)
+else if (time >= 4 && time < 6.5) //start lifting and wait 0.5 s after done actuationStart
+	Smarticle::global_GUI_value = 1;
+else if (time >= 6.5 && time < 7.5) //start lifting and wait 0.5 s after done
 {
-	Smarticle::global_GUI_value = 1;
 	removeBucket();
 }
-else if (time >= 8)
-return true;
+else if (time >=7.5)
+	return true;
 
 
 /////rain down particles vibrate and measure stress

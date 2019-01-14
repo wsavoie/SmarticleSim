@@ -19,6 +19,7 @@ namespace chrono {
 			//new ChFunctionController(index_, controller_);
 
 		}
+		double smartStr = 20;
 		virtual ChFunctionController* Clone() const override { return new ChFunctionController(*this); }
 		virtual double Get_y(double curr_t) const override;
 		void ResetCumulative(double t);
