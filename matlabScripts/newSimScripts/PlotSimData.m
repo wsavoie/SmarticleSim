@@ -20,9 +20,10 @@ load(fullfile(fold,'vibData.mat'));
 %*12. plot topHook force vs time
 %*13. hook force for constant l/w=1 or const vib=0
 %*14. plot sphericity for different l/w
+%*15. plot sphericity for different l/w outerpoints
 %************************************************************
 set(0, 'DefaultLineLineWidth', 2);
-showFigs=[11];
+showFigs=[15];
 
 lw=[]; nl=[]; npl=[]; vib=[]; N=[]; v=[];
 props={lw nl npl vib N v};
@@ -493,7 +494,7 @@ if(showFigs(showFigs==xx))
     if(varyType)
         varyz=vibs;
         constz=lws;
-        unConstz=[0.8]; %constant value you want to use
+        unConstz=[0.7]; %constant value you want to use
         constName='l/w';
         constUnits='';
         varyName='v';
@@ -700,36 +701,57 @@ end
 xx=14;
 if(showFigs(showFigs==xx))
     figure(xx);
-    hold on;
-    unVib=unique([vibs]);
-    unLW=unique([usedD.lw]);
-    
-    
+    hold on;    
     bucketRemoveTime=19;
-    unVib=5;
-    
     warning('remember to set bucketREmoveTime to correct value [14,19]')
     clear psiz psiM psiE
     n=15;%remove n markers with highest parwise distance
-    for(i = 1:length(unLW))
-        %         unVib=unique(vibs(lws==unLW(i)));
-        
-        phiVals={};
-        for(j=1:length(unVib))
-            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
-            %             vals=length(cond(cond==1));
+    legz=[];
+    varyType=1;
+    if(varyType)
+        varyz=vibs;
+        constz=lws;
+        unConstz=[unique(constz)]; %constant value you want to use
+        constName='l/w';
+        constUnits='';
+        varyName='v';
+        varyUnits='\circ';
+    else
+        varyz=lws;
+        constz=vibs;
+        unConstz=[unique(constz)]; %constant value you want to use
+        constName='v';
+        constUnits='\circ';
+        varyName='l/w';
+        varyUnits='';
+    end
+    
+    for(i = 1:length(unConstz))
+        unVaryz=unique(varyz(constz==unConstz(i)));
+        for(j=1:length(unVaryz))
+            cond=[constz==unConstz(i)]&[varyz==(unVaryz(j))];
             idz=find(cond);
-            psiz=[];
             for k=1:length(idz)
                 c=fileparts(usedD(idz(k)).fold);
                 load(fullfile(c,'ballDat.mat'));
                 verz=usedD(idz(k)).v;
                 ballOut=dat(verz).ballOut;
-                
+                if isfield(usedD(idz(k)).bucketExist)
+                    %find time bucket was removed
+                    tRem=usedD(idz(k)).t(find(usedD(idz(k)).bucketExist==0,'first'));
+                    %value needs to be rounded and multiplied to fit index
+                    %type of frame
+                    tRem=round(tRem,1)*10;
+%                     shave of indices for startTime
+                    vibFrame=trem-startTime*10;
+                    error(['first time running, check if value is expected, vibFrame starts at: ',num2str(vibFrame)])
+                else %using older file
+                    vibFrame=size(ballOut,3)-bucketRemoveTime; %2 remove bucket and wait 2s
+                end
                 %%%%%%%%final vib frame data
                 %                 vibFrame=find(dat(verz).gui==4,1,'last');
                 
-                vibFrame=size(ballOut,3)-bucketRemoveTime; %2 remove bucket and wait 2s
+                
                 [x,y,z]=separateVec(ballOut(:,1:3,vibFrame),1);
                 D=squareform(pdist(ballOut(:,1:3,vibFrame))); %square matrix
                 dout=sum(D,1);
@@ -756,10 +778,116 @@ if(showFigs(showFigs==xx))
         psiM(i,:)=mean(psiz,1);
         psiE(i,:)=std(psiz,0,1);
     end
-    errorbar(unLW,psiM(:,1),psiE(:,1),'--','linewidth',2,'DisplayName','with walls');
-    errorbar(unLW,psiM(:,2),psiE(:,2),'linewidth',2,'DisplayName','no walls');
-    legend;
-    xlabel('l/w')
-    ylabel('\langleN\rangle');
+    legz(end+1)=errorbar(unConstz,psiM(:,1),psiE(:,1),'--','linewidth',2,'DisplayName',['with walls, ', varyName,'=',num2str(unVaryz(j)),varyUnits]);
+    legz(end+1)=errorbar(unConstz,psiM(:,2),psiE(:,2),'linewidth',2,'DisplayName',['no walls, ', varyName,'=',num2str(unVaryz(j)),varyUnits]);
+    legend(legz);
+    cc=[];
+    if(constUnits)
+        cc=[' (',constUnits,')'];
+    end
+    xlabel([constName,cc])
+    ylabel('Psi');
+    figText(gcf,18);
+end
+%% 15.plot sphericity for different l/w outerpoints
+xx=15;
+if(showFigs(showFigs==xx))
+    figure(xx);
+    hold on;    
+    bucketRemoveTime=19;
+    warning('remember to set bucketREmoveTime to correct value [14,19]')
+    clear psiz psiM psiE
+    n=15*4;%remove n markers with highest parwise distance
+    legz=[];
+    varyType=1;
+    if(varyType)
+        varyz=vibs;
+        constz=lws;
+        unConstz=[unique(constz)]; %constant value you want to use
+        constName='l/w';
+        constUnits='';
+        varyName='v';
+        varyUnits='\circ';
+    else
+        varyz=lws;
+        constz=vibs;
+        unConstz=[unique(constz)]; %constant value you want to use
+        constName='v';
+        constUnits='\circ';
+        varyName='l/w';
+        varyUnits='';
+    end
+    if ~exist(fullfile(fold,'posOut.mat'),'file')
+        getAllSmartPoints(dat);
+    end
+    load(fullfile(fold,'posOut.mat'))
+    for(i = 1:length(unConstz))
+        unVaryz=unique(varyz(constz==unConstz(i)));
+        for(j=1:length(unVaryz))
+            cond=[constz==unConstz(i)]&[varyz==(unVaryz(j))];
+            idz=find(cond);
+            for k=1:length(idz)
+                c=fileparts(usedD(idz(k)).fold);
+                load(fullfile(c,'ballDat.mat'));
+                verz=usedD(idz(k)).v;
+                ballOut=dat(verz).ballOut;
+                if isfield(usedD(idz(k)),'bucketExist')
+                    %find time bucket was removed
+                    tRem=usedD(idz(k)).t(find(usedD(idz(k)).bucketExist==0,1,'first'));
+                    %value needs to be rounded and multiplied to fit index
+                    %type of frame
+                    tRem=round(tRem,1)*10;
+%                     shave of indices for startTime
+                    vibFrame=tRem-startTime*10;
+%                     error(['first time running, check if value is expected, vibFrame starts at: ',num2str(vibFrame)])
+                else %using older file
+                    vibFrame=size(ballOut,3)-bucketRemoveTime; %2 remove bucket and wait 2s
+                end
+                %%%%%%%%final vib frame data
+                %                 vibFrame=find(dat(verz).gui==4,1,'last');
+
+%                 [x,y,z]=separateVec(ballOut(:,1:3,vibFrame),1);
+%                 D=squareform(pdist(ballOut(:,1:3,vibFrame))); %square matrix
+                
+                d=squeeze(posOut(idz(k)).smartPos(vibFrame,:,:,:));
+                d=reshape(d,[],3);
+                [x,y,z]=separateVec(d,1);
+                D=squareform(pdist(d)); %square matrix
+                
+                dout=sum(D,1);
+                [v,bottInds]=maxk(dout,n);
+                x(bottInds)=[];y(bottInds)=[];z(bottInds)=[];
+                shp=alphaShape(x,y,z,inf);
+                vol=volume(shp);
+                ar=surfaceArea(shp);
+                psiz(k,1)=pi^(1/3)*(6*vol)^(2/3)/ar;
+                
+                %%%%%%%%%%%final without wall frame data
+                d=squeeze(posOut(idz(k)).smartPos(end,:,:,:));
+                d=reshape(d,[],3);
+                [x,y,z]=separateVec(d,1);
+                D=squareform(pdist(d)); %square matrix
+                dout=sum(D,1);
+                [v,bottInds]=maxk(dout,n);
+                x(bottInds)=[];y(bottInds)=[];z(bottInds)=[];
+                shp=alphaShape(x,y,z,inf);
+                vol=volume(shp);
+                ar=surfaceArea(shp);
+                psiz(k,2)=pi^(1/3)*(6*vol)^(2/3)/ar;
+            end
+            
+        end
+        psiM(i,:)=mean(psiz,1);
+        psiE(i,:)=std(psiz,0,1);
+    end
+    legz(end+1)=errorbar(unConstz,psiM(:,1),psiE(:,1),'--','linewidth',2,'DisplayName',['with walls, ', varyName,'=',num2str(unVaryz(j)),varyUnits]);
+    legz(end+1)=errorbar(unConstz,psiM(:,2),psiE(:,2),'linewidth',2,'DisplayName',['no walls, ', varyName,'=',num2str(unVaryz(j)),varyUnits]);
+    legend(legz);
+    cc=[];
+    if(constUnits)
+        cc=[' (',constUnits,')'];
+    end
+    xlabel([constName,cc])
+    ylabel('\Psi');
     figText(gcf,18);
 end

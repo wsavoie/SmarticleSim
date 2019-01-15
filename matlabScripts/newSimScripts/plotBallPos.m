@@ -23,6 +23,7 @@ load(fullfile(fold,fname));
 %* 6. pairwise dist coloration
 %* 7. plot <N> vs time
 %* 8. plot <N> vs lw
+%* 9. plot sphericity at each checkpoint out pos
 %************************************************************
 showFigs=[9];
 
@@ -262,26 +263,49 @@ if(showFigs(showFigs==xx))
     figText(gcf,18);
     set(gca,'yscale','log');
 end
-%% 9. pairwise removal sphericity calc
+%% 9. plot sphericity at each checkpoint out pos
 xx=9;
 if(showFigs(showFigs==xx))
     figure(xx);
     hold on;
-    ballOut=dat(I).ballOut;
-    fr=size(ballOut,3);
-    colormap(brewermap(size(ballOut,1),'RdYlBu'));
-    ms=40; %marker size
-%     while(1)
-        for i = 1:fr
-            S=ms*ones(size(ballOut,1),1);%markerSize
-            D=squareform(pdist(ballOut(:,1:3,i))); %square matrix
+    for j=1:length(dat)
+        ballOut=dat(j).ballOut;
+        N=size(ballOut,3);
+        smartPos=singleRunSmartPoints(dat,j);
+        n=15*4;%remove n markers with highest parwise distance
+        for i = 1:N
+            d=squeeze(smartPos(i,:,:,:));
+            d=reshape(d,[],3);
+            [x,y,z]=separateVec(d,1);
+            %%%%%%%%%%%%%%%%%remove farthest markers from calc
+            D=squareform(pdist(d)); %square matrix
             dout=sum(D,1);
-            scatter3(ballOut(:,1,i),ballOut(:,2,i),ballOut(:,3,i),S,dout,'filled');
-            title(['t=',num2str(dat(I).t(i)/1000),'s']);
-            pause(0.1);
-            %             axis([-.04 .04 -.04 .04 0 0.03])
-            cla;
+            [v,bottInds]=maxk(dout,n);
+            x(bottInds)=[];y(bottInds)=[];z(bottInds)=[];
+            %%%%%%%%%%%%%%%%
+            
+            shp=alphaShape(x,y,z,inf);
+            vol=volume(shp);
+            ar=surfaceArea(shp);
+            %         trisurf(K,x,y,z,'Facecolor','cyan')
+            %         axis([-0.03 0.03,-0.03 0.03,0, 0.05]);
+            %         cla;
+            psi(i)=pi^(1/3)*(6*vol)^(2/3)/ar;
+            cc=guiCols(ballOut(j,5,1),:);
+            
         end
-%     end
+        allPsi{j}=psi;
+        allT{j}=dat(j).t;
+        plot(dat(j).t/1000,psi,'-','linewidth',2);
+    end
+    
+    [guis]=findChangesInGui(dat(1).gui');
+    guis(1,:)=[0,1];
+    guis(2:end,1)=guis(2:end,1)-2+startTime*10;
+    for k=1:size(guis,1)
+        plot(guis(k,1)/10*ones(2,1),ylim,'linewidth',2,'color',guiCols(guis(k,2),:))
+    end
+    xlabel('t (s)');
+    ylabel('\Psi');
+    figText(gcf,18);
 end
-
