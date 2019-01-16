@@ -131,7 +131,7 @@ int inactiveLoc = 0; //location of dead particle in ring +x +y -x -y
 double gravity = -9.81 * sizeScale;
 //double gravity = 0;
 
-double actuationStart = 4;
+double actuationStart =1;
 
 double smart_fric = .4;//.3814; //keyboard box friction = .3814
 double vibration_freq = 30;
@@ -2485,7 +2485,7 @@ bool SetGait(double time, std::shared_ptr<CH_SYSTEM>m_sys)
 //else if (time >= 4.5 && time < 6)
 //	Smarticle::global_GUI_value = 4;
 //else if (time >= 6 && time < 8)
-//{
+//{		
 //	Smarticle::global_GUI_value = 1;
 //	removeBucket();
 //}
@@ -2493,21 +2493,33 @@ bool SetGait(double time, std::shared_ptr<CH_SYSTEM>m_sys)
 //return true;
 //
 
+////rain down particles switch states and lift
+//if (time < (1))// dropping into bucket
+//	Smarticle::global_GUI_value = 1;
+//else if (time >= 1 && time < 1+1.5) //straight
+//	Smarticle::global_GUI_value = 2;
+//else if (time >= 2.5 && time < 4) //u-shape
+//	Smarticle::global_GUI_value = 1;
+//else if (time >= 4 && time < 6.5) //start lifting and wait 0.5 s after done actuationStart
+//	Smarticle::global_GUI_value = 1;
+//else if (time >= 6.5 && time < 7.5) //remove bucket and wait 1 sec
+//{
+//	removeBucket();
+//}
+//else if (time >=7.5)
+//	return true;
+
 //rain down particles and lift
 if (time < (1))// dropping into bucket
 	Smarticle::global_GUI_value = 1;
-else if (time >= 1 && time < 1+1.5) //straight
-	Smarticle::global_GUI_value = 2;
-else if (time >= 2.5 && time < 4) //u-shape
+else if (time >= 1 && time < 3.5) //start lifting and wait 0.5 s after done actuationStart
 	Smarticle::global_GUI_value = 1;
-else if (time >= 4 && time < 6.5) //start lifting and wait 0.5 s after done actuationStart
-	Smarticle::global_GUI_value = 1;
-else if (time >= 6.5 && time < 7.5) //start lifting and wait 0.5 s after done
+else if (time >= 3.5 && time < 4.5)//remove bucket and wait 1 second
 {
 	removeBucket();
 }
-else if (time >=7.5)
-	return true;
+else if (time >= 4.5)
+return true;
 
 
 /////rain down particles vibrate and measure stress
