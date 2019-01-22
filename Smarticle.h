@@ -33,7 +33,7 @@ namespace chrono {
 		int steps = 0; //number of steps this smarticle has existed, updated in smarticleUpdate
 		static const size_t numEngs = 2;
 		static const size_t numSegs = 3;
-
+		double smartStr = 10;
 		double angles[numEngs]; //angle between center segment and outer segments in radians
 		double initialAngs[numEngs]; //initial angles in simulation
 		double omegas[numEngs];

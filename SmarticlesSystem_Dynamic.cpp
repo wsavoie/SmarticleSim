@@ -1142,7 +1142,7 @@ void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<
 		smarticle0->populateMoveVector();
 		smarticle0->SetAngles(angle1, angle2, true);
 		smarticle0->SetInitialAngles();
-
+		smarticle0->smartStr = smartStr;
 		if (oneInactive)
 		{
 			smarticle0->active = isActive;

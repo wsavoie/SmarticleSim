@@ -1171,6 +1171,7 @@ void Smarticle::Create() {
 	{mass = mass + arms[i]->GetMass();}
 	
 	armsController = (new Controller(m_system, this));
+	armsController->smartStr = this->smartStr;
 	armsController->outputLimit = torqueLimit;
 	armsController->omegaLimit = omegaLim;
 	if (!active)

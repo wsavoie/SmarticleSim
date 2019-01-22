@@ -28,6 +28,9 @@ namespace chrono {
 		std::shared_ptr<ChFunctionController> engine_funct0;
 		std::shared_ptr<ChFunctionController> engine_funct1;
 
+		double smartStr;
+
+		void setSmartStr();
 		double GetDesiredAngle(size_t i, double t);
 		double GetExpAngle(size_t idx, double t);
 		double GetActuatorOmega(size_t i, double t);
