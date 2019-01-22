@@ -23,7 +23,7 @@ load(fullfile(fold,'vibData.mat'));
 %*15. plot sphericity for different l/w outerpoints
 %************************************************************
 set(0, 'DefaultLineLineWidth', 2);
-showFigs=[15];
+showFigs=[1 5 7];
 
 lw=[]; nl=[]; npl=[]; vib=[]; N=[]; v=[];
 props={lw nl npl vib N v};
@@ -79,9 +79,9 @@ xx=1;
 if(showFigs(showFigs==xx))
     figure(xx);
     hold on;
-    
+    samp=10;
     t=usedD(I).t;       phi=usedD(I).phi;
-    downsample(t,100);  downsample(phi,100);
+    phi=movmean(phi,samp);
     plot(t,phi);
     xlabel('t');
     ylabel('\phi');
@@ -210,53 +210,57 @@ xx=5;
 if(showFigs(showFigs==xx))
     figure(xx);
     hold on;
-    
+    legz=[];
     %nicks stuff is defined above:
     %phi_i is dashed
-    %phi_f is
-    c=1;
-    plot(lwBS,phiBS,'--o');
-    legz{c}=['exp \phi_i']; c=c+1;
-    plot(nickD(:,1),nickD(:,2),'-o');
-    legz{c}=['exp \phi_f'];c=c+1;
+    legz(end+1)=plot(lwBS,phiBS,'--o','DisplayName',['exp \phi_i']);
+    legz(end+1)=plot(nickD(:,1),nickD(:,2),'-o','DisplayName',['exp \phi_f']);
+    
+    varyz=vibs;
+    constz=lws;
+    unConstz=[unique(constz)]; %constant value you want to use
+    constName='l/w';
+    constUnits='';
+    varyName='v';
+    varyUnits='\circ';
     
     
     
-    %     unLW=unique([usedD.lw]);
-    %     unVib=unique([usedD.vib]);
     
-    %     lws=[0.7,0.7,0.7,0.6 0.6];
-    %     vibs=[1,2,4,1,4];
-    unLW=unique([lws]);
-    unVib=5; %i'll just use vib=5 for final vibration
+    
+%     unLW=unique([lws]);
+%     unVib=5; %i'll just use vib=5 for final vibration
     %(phi_i,phi_f,dphi) and error for lwsimE
-    [lwsim,lwsimE]=deal(zeros(length(unLW),3));
-    for(i = 1:length(unLW))
+    [phiSim,phiSimE]=deal(zeros(length(unConstz),3));
+    for(i = 1:length(unConstz))
         vibVals=[];
-        for(j=1:length(unVib))
-            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
+        unVaryz=unique(varyz(constz==unConstz(i)));
+        for(j=1:length(unVaryz))
+            cond=[constz==unConstz(i)]&[varyz==(unVaryz(j))];
             %             vals=length(cond(cond==1));
             idz=find(cond);
             for k=1:length(idz)
                 [dphi,phi0,phif]=changeInPhiAmp(usedD(idz(k)),2);
                 out(k,:)=[phi0,phif,dphi];
             end
-            vibVals(j)=unVib(j);
-            phiVals(j,:)={out};
+            vibVals(j)=unVaryz(j);
+            phiVals(j,:)=out;
         end
-        lwsim(i,:)=cell2mat(cellfun(@(x) mean(x),phiVals,'UniformOutput',0));
-        lwsimE(i,:)=cell2mat(cellfun(@(x) std(x),phiVals,'UniformOutput',0));
+        phiSim(i,:)=mean(phiVals,1);
+        phiSimE(i,:)=std(phiVals,0,1);
+%         phiSim(i,:)=cell2mat(cellfun(@(x) mean(x),phiVals,'UniformOutput',0));
+%         phiSimE(i,:)=cell2mat(cellfun(@(x) std(x),phiVals,'UniformOutput',0));
+      
     end
-    errorbar(unLW,lwsim(:,1),lwsimE(:,1),'--o','linewidth',2);
-    legz{c}=['sim \phi_i vib=\pm',num2str(unVib),'\circ'];c=c+1;
-    errorbar(unLW,lwsim(:,2),lwsimE(:,2),'-o','linewidth',2);
-    legz{c}=['sim \phi_f vib=\pm',num2str(unVib),'\circ'];c=c+1;
-    
+    for j=1:length(unVaryz)
+    legz(end+1)=errorbar(unConstz,phiSim(:,1),phiSimE(:,1),'--o','linewidth',2,'DisplayName',['sim \phi_i',varyName,'=\pm',num2str(unVaryz),varyUnits]);
+    legz(end+1)=errorbar(unConstz,phiSim(:,2),phiSimE(:,2),'-o','linewidth',2,'DisplayName',['sim \phi_f ',varyName,'=\pm',num2str(unVaryz),varyUnits]); 
+    end
     legend(legz);
-    xlabel('l/w');
+    xlabel(constName);
     ylabel('\phi');
     figText(gcf,18);
-    clear 'legz' 'out' 'unLW' 'unVib' 'phiVals' 'vibVals' 'phiValsE' 'phiValsM' 'phiFVals';
+    clear 'legz' 'out' 'unVary' 'unConstz' 'phiVals' 'vibVals' 'phiValsE' 'phiValsM' 'phiFVals';
 end
 % phiM=mean(phi);
 % ro=.0234;%bucket radius without thickness taken into account in sim
@@ -441,8 +445,9 @@ if(showFigs(showFigs==xx))
     %             dat(c).prismSt=D(:,3);
     %             dat(c).wallF=D(:,4:5);
     t=usedD(I).t;
-    wallR=usedD(I).wallF(:,1);
-    wallF=usedD(I).wallF(:,2);
+    sWeight=9.8*prod(usedD(I).smartSize(1:3))*(2*usedD(I).smartSize(4)+usedD(I).smartSize(5));
+    wallR=usedD(I).wallF(:,1)/(usedD(I).N*sWeight);
+    wallF=usedD(I).wallF(:,2)/(usedD(I).N*sWeight);
     prismSt=usedD(I).prismSt;
     
     prismSt=prismSt(t>ts);
@@ -469,7 +474,7 @@ if(showFigs(showFigs==xx))
     end
     
     xlabel('t (s)');
-    ylabel('Force (N)');
+    ylabel('Force/(s_mg*N)');
     figText(gcf,18);
     legend(legz);
 end
@@ -485,12 +490,12 @@ if(showFigs(showFigs==xx))
     legz=[];
     legza=[];
     legzb=[];
-    ds=7; % downsample
+    ds=50; % downsample
     ts= 2.4; %start time
     
     %varyType, vib=1, vary l/w=0
     
-    varyType=1;
+    varyType=0;
     if(varyType)
         varyz=vibs;
         constz=lws;
@@ -502,7 +507,7 @@ if(showFigs(showFigs==xx))
     else
         varyz=lws;
         constz=vibs;
-        unConstz=[5]; %constant value you want to use
+        unConstz=[0]; %constant value you want to use
         constName='v';
         constUnits='\circ';
         varyName='l/w';
@@ -515,10 +520,11 @@ if(showFigs(showFigs==xx))
             cond=[constz==unConstz(i)]&[varyz==(unVaryz(j))];
             idz=find(cond);
             for k=1:length(idz)
-                
+                %                 smartSize=[rho,t1,t2,l,w];
+                sWeight=9.8*prod(usedD(idz(k)).smartSize(1:3))*(2*usedD(idz(k)).smartSize(4)+usedD(idz(k)).smartSize(5));
                 t=usedD(idz(k)).t; %runs everytime even though I only need it once
-                wallR=usedD(idz(k)).wallF(:,1);
-                wallF=usedD(idz(k)).wallF(:,2);
+                wallR=usedD(idz(k)).wallF(:,1)/(usedD(idz(k)).N*sWeight);
+                wallF=usedD(idz(k)).wallF(:,2)/(usedD(idz(k)).N*sWeight);
                 prismSt=usedD(idz(k)).prismSt;
                 
                 prismSt=prismSt(t>ts); %runs everytime even though I only need it once
@@ -526,21 +532,22 @@ if(showFigs(showFigs==xx))
                 wallF=wallF(t>ts);
                 t=t(t>ts);
                 
-                t=downsample(t,ds);
-                wallR=downsample(wallR,ds);
-                wallF=downsample(wallF,ds);
-                prismSt=downsample(prismSt,ds);
-                
+                %                 t=downsample(t,ds);
+                %                 wallR=downsample(wallR,ds);
+                %                 wallF=downsample(wallF,ds);
+                %                 prismSt=downsample(prismSt,ds);
+                wallR=movmean(wallR,ds);
+                wallF=movmean(wallF,ds);
                 r(k,:)=[wallR];
                 z(k,:)=[wallF];
                 
             end
             %             a=shadedErrorBar(t,mean(r),std(r),{'linewidth',2,'DisplayName',['F_r,v=',num2str(unVib(j))]},.5);
             figure(xx)
-            a=shadedErrorBar(t,mean(z),std(z),{'linewidth',2,'DisplayName',['F_z, ',varyName,'=',num2str(unVaryz(j)),varyUnits]},.5);
+            a=shadedErrorBar(t,mean(z,1),std(z,0,1),{'linewidth',2,'DisplayName',['F_z, ',varyName,'=',num2str(unVaryz(j)),varyUnits]},.5);
             figure(xx+1)
-            b=shadedErrorBar(t,mean(r),std(r),{'linewidth',2,'DisplayName',['F_r, ',varyName,'=',num2str(unVaryz(j)),varyUnits]},.5);
-
+            b=shadedErrorBar(t,mean(r,1),std(r,0,1),{'linewidth',2,'DisplayName',['F_r, ',varyName,'=',num2str(unVaryz(j)),varyUnits]},.5);
+            
             legza(end+1)=a.mainLine;
             legzb(end+1)=b.mainLine;
             clear r z a b
@@ -549,27 +556,27 @@ if(showFigs(showFigs==xx))
     
     
     for(qq=xx:xx+1)
-    figure(qq);
-    if(qq==xx)
-        legz=legza;    
-    else
-        legz=legzb;
-    end
-    %%%%%%find changes in guid%%%%%%%%%%%%%%%
-    gc=findChangesInGui(prismSt);
-    gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
-    axis tight
-    dispName=["Before Lifting","Lift Begin","Lift End"];
-    for(i=1:size(gc,1))
-        legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
-            'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
-    end
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    text(.2,.8,[constName,'=',num2str(unConstz),constUnits],'units','normalized')
-    xlabel('t (s)');
-    ylabel('Force (N)');
-    figText(gcf,18);
-    legend(legz);
+        figure(qq);
+        if(qq==xx)
+            legz=legza;
+        else
+            legz=legzb;
+        end
+        %%%%%%find changes in guid%%%%%%%%%%%%%%%
+        gc=findChangesInGui(prismSt);
+        gc(:,2)=gc(:,2)+4; %starts at -1, set lowest index to 3 for color
+        axis tight
+        dispName=["Before Lifting","Lift Begin","Lift End"];
+        for(i=1:size(gc,1))
+            legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
+                'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
+        end
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        text(.2,.8,[constName,'=',num2str(unConstz),constUnits],'units','normalized')
+        xlabel('t (s)');
+        ylabel('Force/(s_mg*N)');
+        figText(gcf,18);
+        legend(legz);
     end
     
 end
@@ -587,14 +594,15 @@ if(showFigs(showFigs==xx))
     %             dat(c).wallF=D(:,4:5);
     t=usedD(I).t;
     prismSt=usedD(I).prismSt;
-    hookF=-usedD(I).hookF;
+    sWeight=9.8*prod(usedD(I).smartSize(1:3))*(2*usedD(I).smartSize(4)+usedD(I).smartSize(5));
+    hookF=-usedD(I).hookF/(usedD(I).N*sWeight);
     
     prismSt=prismSt(t>ts);
     hookF=hookF(t>ts);
     t=t(t>ts);
     
     t=downsample(t,ds);
-    hookF=downsample(hookF,ds);
+    hookF=downsample(hookF,ds)/usedD(I).N;%scaled force by numb of smarts
     prismSt=downsample(prismSt,ds);
     
     %find changes in guid
@@ -610,7 +618,7 @@ if(showFigs(showFigs==xx))
     end
     
     xlabel('t (s)');
-    ylabel('Force (N)');
+    ylabel('Force/(s_mg*N)');
     figText(gcf,18);
     legend(legz);
 end
@@ -621,16 +629,16 @@ if(showFigs(showFigs==xx))
     figure(xx);
     hold on;
     legz=[];
-    ds=5; % downsample
+    ds=50; % downsample
     ts= 1; %start time
     
     %varyType, vib=1, vary l/w=0
     
-    varyType=0;
+    varyType=1;
     if(varyType)
         varyz=vibs;
         constz=lws;
-        unConstz=[0.8]; %constant value you want to use
+        unConstz=[0.6]; %constant value you want to use
         constName='l/w';
         constUnits='';
         varyName='v';
@@ -638,7 +646,7 @@ if(showFigs(showFigs==xx))
     else
         varyz=lws;
         constz=vibs;
-        unConstz=[5]; %constant value you want to use
+        unConstz=[0]; %constant value you want to use
         constName='v';
         constUnits='\circ';
         varyName='l/w';
@@ -653,22 +661,23 @@ if(showFigs(showFigs==xx))
             idz=find(cond);
             for k=1:length(idz)
                 
+                sWeight=9.8*prod(usedD(idz(k)).smartSize(1:3))*(2*usedD(idz(k)).smartSize(4)+usedD(idz(k)).smartSize(5));
                 t=usedD(idz(k)).t; %runs everytime even though I only need it once
-                hookF=-usedD(idz(k)).hookF;
+                hookF=-usedD(idz(k)).hookF/(usedD(idz(k)).N*sWeight);
                 prismSt=usedD(idz(k)).prismSt;
                 
                 prismSt=prismSt(t>ts); %runs everytime even though I only need it once
                 hookF=hookF(t>ts);
                 t=t(t>ts);
                 
-                t=downsample(t,ds);
-                hookF=downsample(hookF,ds);
-                prismSt=downsample(prismSt,ds);
-                
+                %                 t=downsample(t,ds);
+                %                 hookF=downsample(hookF,ds);
+                %                 prismSt=downsample(prismSt,ds);
+                hookF=movmean(hookF,ds);
                 F(k,:)=[hookF];
                 
             end
-            a=shadedErrorBar(t,mean(F),std(F),{'linewidth',2,'DisplayName',['F_H, ',varyName,'=',num2str(unVaryz(j)),varyUnits]},.5);
+            a=shadedErrorBar(t,mean(F,1),std(F,0,1),{'linewidth',2,'DisplayName',['F_H, ',varyName,'=',num2str(unVaryz(j)),varyUnits]},.5);
             %             b=shadedErrorBar(t,mean(z),std(z),{'linewidth',2,'DisplayName',['F_z,v=',num2str(unVib(j))]},.5);
             legz(end+1)=a.mainLine;
             %             legz(end+1)=b.mainLine;
@@ -691,7 +700,7 @@ if(showFigs(showFigs==xx))
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     text(.2,.8,[constName,'=',num2str(unConstz),constUnits],'units','normalized')
     xlabel('t (s)');
-    ylabel('Force (N)');
+    ylabel('Force/(s_mg*N)');
     figText(gcf,18);
     legend(legz)
     
@@ -701,9 +710,9 @@ end
 xx=14;
 if(showFigs(showFigs==xx))
     figure(xx);
-    hold on;    
-    bucketRemoveTime=19;
-    warning('remember to set bucketREmoveTime to correct value [14,19]')
+    hold on;
+    
+    
     clear psiz psiM psiE
     n=15;%remove n markers with highest parwise distance
     legz=[];
@@ -731,47 +740,45 @@ if(showFigs(showFigs==xx))
         for(j=1:length(unVaryz))
             cond=[constz==unConstz(i)]&[varyz==(unVaryz(j))];
             idz=find(cond);
+            
             for k=1:length(idz)
+                bucketRad=usedD(idz(k)).smartSize(5)*2; %2*w_smart
                 c=fileparts(usedD(idz(k)).fold);
                 load(fullfile(c,'ballDat.mat'));
                 verz=usedD(idz(k)).v;
-                ballOut=dat(verz).ballOut;
-                if isfield(usedD(idz(k)).bucketExist)
+                
+                verzID=find([dat(:).v]==verz);
+                ballOut=dat(verzID).ballOut;
+                if isfield(usedD(idz(k)),'bucketExist')
                     %find time bucket was removed
-                    tRem=usedD(idz(k)).t(find(usedD(idz(k)).bucketExist==0,'first'));
+                    tt=usedD(idz(k)).t(find(usedD(idz(k)).bucketExist==0,1,'first'));
                     %value needs to be rounded and multiplied to fit index
                     %type of frame
-                    tRem=round(tRem,1)*10;
-%                     shave of indices for startTime
-                    vibFrame=trem-startTime*10;
-                    error(['first time running, check if value is expected, vibFrame starts at: ',num2str(vibFrame)])
+                    tRem=round(tt,1)*10;
+                    %                     shave of indices for startTime
+                    BucketRemoveFrame=tRem-startTime*10;
+                    %                     error(['first time running, check if value is expected, vibFrame starts at: ',num2str(BucketRemoveFrame)])
                 else %using older file
-                    vibFrame=size(ballOut,3)-bucketRemoveTime; %2 remove bucket and wait 2s
+                    warning('remember to set bucketREmoveTime to correct value [14,19]')
+                    bucketRemoveTime=19;
+                    BucketRemoveFrame=size(ballOut,3)-bucketRemoveTime; %2 remove bucket and wait 2s
                 end
-                %%%%%%%%final vib frame data
-                %                 vibFrame=find(dat(verz).gui==4,1,'last');
-                
-                
-                [x,y,z]=separateVec(ballOut(:,1:3,vibFrame),1);
-                D=squareform(pdist(ballOut(:,1:3,vibFrame))); %square matrix
-                dout=sum(D,1);
-                [v,bottInds]=maxk(dout,n);
-                x(bottInds)=[];y(bottInds)=[];z(bottInds)=[];
-                shp=alphaShape(x,y,z,inf);
-                vol=volume(shp);
-                ar=surfaceArea(shp);
-                psiz(k,1)=pi^(1/3)*(6*vol)^(2/3)/ar;
-                
+                %%%%%%%%last frame before bucket removal
+                %                 [x,y,z]=separateVec(ballOut(:,1:3,BucketRemoveFrame),1);
+                hookPos=0;
+                if isfield(usedD(idz(k)),'hookPos')
+                    hookPos=usedD(idz(k)).hookPos(usedD(idz(k)).t==tt);
+                end
+                [smartPosOut]=RemoveSmartsFromBucket(ballOut(:,1:3,BucketRemoveFrame),n,hookPos,bucketRad);
+                psiz(k,1)=calcSphericity(smartPosOut);
                 %%%%%%%%%%%final without wall frame data
-                [x,y,z]=separateVec(ballOut(:,1:3,end),1);
-                D=squareform(pdist(ballOut(:,1:3,end))); %square matrix
-                dout=sum(D,1);
-                [v,bottInds]=maxk(dout,n);
-                x(bottInds)=[];y(bottInds)=[];z(bottInds)=[];
-                shp=alphaShape(x,y,z,inf);
-                vol=volume(shp);
-                ar=surfaceArea(shp);
-                psiz(k,2)=pi^(1/3)*(6*vol)^(2/3)/ar;
+                %                 [x,y,z]=separateVec(ballOut(:,1:3,end),1);
+                hookPos=0;
+                if isfield(usedD(idz(k)),hookPos)
+                    hookPos=usedD(idz(k)).hookPos(end);
+                end
+                [smartPosOut]=RemoveSmartsFromBucket(ballOut(:,1:3,end),n,hookPos,bucketRad);
+                psiz(k,2)=calcSphericity(smartPosOut);
             end
             
         end
@@ -793,11 +800,11 @@ end
 xx=15;
 if(showFigs(showFigs==xx))
     figure(xx);
-    hold on;    
-    bucketRemoveTime=19;
-    warning('remember to set bucketREmoveTime to correct value [14,19]')
+    hold on;
+    
+    
     clear psiz psiM psiE
-    n=15*4;%remove n markers with highest parwise distance
+    n=15;%remove n markers with highest parwise distance
     legz=[];
     varyType=1;
     if(varyType)
@@ -827,53 +834,51 @@ if(showFigs(showFigs==xx))
             cond=[constz==unConstz(i)]&[varyz==(unVaryz(j))];
             idz=find(cond);
             for k=1:length(idz)
+                bucketRad=usedD(idz(k)).smartSize(5)*2; %2*w_smart
                 c=fileparts(usedD(idz(k)).fold);
                 load(fullfile(c,'ballDat.mat'));
                 verz=usedD(idz(k)).v;
-                ballOut=dat(verz).ballOut;
+                verzID=find([dat(:).v]==verz);
+                %                 ballOut=posOut(idz(k)).ballOut;
+                ballOut=dat(verzID).ballOut;
+                smartPos=posOut(idz(k)).smartPos;
                 if isfield(usedD(idz(k)),'bucketExist')
                     %find time bucket was removed
-                    tRem=usedD(idz(k)).t(find(usedD(idz(k)).bucketExist==0,1,'first'));
+                    tt=usedD(idz(k)).t(find(usedD(idz(k)).bucketExist==0,1,'first'));
                     %value needs to be rounded and multiplied to fit index
                     %type of frame
-                    tRem=round(tRem,1)*10;
-%                     shave of indices for startTime
-                    vibFrame=tRem-startTime*10;
-%                     error(['first time running, check if value is expected, vibFrame starts at: ',num2str(vibFrame)])
+                    tRem=round(tt,1)*10;
+                    %                     shave of indices for startTime
+                    BucketRemoveFrame=tRem-startTime*10;
+                    %                     error(['first time running, check if value is expected, vibFrame starts at: ',num2str(vibFrame)])
                 else %using older file
-                    vibFrame=size(ballOut,3)-bucketRemoveTime; %2 remove bucket and wait 2s
+                    warning('remember to set bucketREmoveTime to correct value [14,19]')
+                    bucketRemoveTime=19;
+                    BucketRemoveFrame=size(ballOut,3)-bucketRemoveTime; %2 remove bucket and wait 2s
                 end
                 %%%%%%%%final vib frame data
-                %                 vibFrame=find(dat(verz).gui==4,1,'last');
-
-%                 [x,y,z]=separateVec(ballOut(:,1:3,vibFrame),1);
-%                 D=squareform(pdist(ballOut(:,1:3,vibFrame))); %square matrix
+                hookPos=0;
+                if isfield(usedD(idz(k)),'hookPos')
+                    %                     hookPos=usedD(idz(k)).hookPos(tt);
+                    hookPos=usedD(idz(k)).hookPos(usedD(idz(k)).t==tt);
+                end
                 
-                d=squeeze(posOut(idz(k)).smartPos(vibFrame,:,:,:));
-                d=reshape(d,[],3);
-                [x,y,z]=separateVec(d,1);
-                D=squareform(pdist(d)); %square matrix
-                
-                dout=sum(D,1);
-                [v,bottInds]=maxk(dout,n);
-                x(bottInds)=[];y(bottInds)=[];z(bottInds)=[];
-                shp=alphaShape(x,y,z,inf);
-                vol=volume(shp);
-                ar=surfaceArea(shp);
-                psiz(k,1)=pi^(1/3)*(6*vol)^(2/3)/ar;
-                
+                %resize smartPos
+                aa=squeeze(smartPos(BucketRemoveFrame,:,:,:));
+                aa=reshape(aa,size(aa,1)*size(aa,2),3);
+                [smartPosOut]=RemoveSmartsFromBucket(aa,n,hookPos,bucketRad);
+                psiz(k,1)=calcSphericity(smartPosOut);
                 %%%%%%%%%%%final without wall frame data
-                d=squeeze(posOut(idz(k)).smartPos(end,:,:,:));
-                d=reshape(d,[],3);
-                [x,y,z]=separateVec(d,1);
-                D=squareform(pdist(d)); %square matrix
-                dout=sum(D,1);
-                [v,bottInds]=maxk(dout,n);
-                x(bottInds)=[];y(bottInds)=[];z(bottInds)=[];
-                shp=alphaShape(x,y,z,inf);
-                vol=volume(shp);
-                ar=surfaceArea(shp);
-                psiz(k,2)=pi^(1/3)*(6*vol)^(2/3)/ar;
+                %                 [x,y,z]=separateVec(ballOut(:,1:3,end),1);
+                hookPos=0;
+                if isfield(usedD(idz(k)),hookPos)
+                    hookPos=usedD(idz(k)).hookPos(end);
+                end
+                aa=squeeze(smartPos(end,:,:,:));
+                aa=reshape(aa,size(aa,1)*size(aa,2),3);
+                [smartPosOut]=RemoveSmartsFromBucket(aa,n,hookPos,bucketRad);
+                psiz(k,2)=calcSphericity(smartPosOut);
+                clear aa
             end
             
         end
@@ -891,3 +896,7 @@ if(showFigs(showFigs==xx))
     ylabel('\Psi');
     figText(gcf,18);
 end
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -25,7 +25,7 @@ load(fullfile(fold,fname));
 %* 8. plot <N> vs lw
 %* 9. plot sphericity at each checkpoint out pos
 %************************************************************
-showFigs=[9];
+showFigs=[7];
 
 
 I=1;%dat index
@@ -223,7 +223,7 @@ if(showFigs(showFigs==xx))
     else
         wid='MATLAB:inpolygon:ModelingWorldLower';
         warning('off',wid);
-        error('Nout file doesn''t exist');
+%         error('Nout file doesn''t exist');
         for(i=1:length(dat))
             tic
                 Nout(:,:,i)=generatePackingFromSimDatPLANE_mex(dat(i),0);
@@ -257,7 +257,7 @@ if(showFigs(showFigs==xx))
     outerFolds=dir2(c,'folders');
     
     ff=fullfile(fold,'Nout.mat');
-    folder    
+    
     xlabel('t (s)')
     ylabel('\langle N\rangle');
     figText(gcf,18);
@@ -268,32 +268,34 @@ xx=9;
 if(showFigs(showFigs==xx))
     figure(xx);
     hold on;
+    q=fileparts(fileparts(dat(1).fold));
+    c=load(fullfile(q,'vibData.mat'));
+    vdat=c(1).dat;
     for j=1:length(dat)
         ballOut=dat(j).ballOut;
+        dat(j).fold
         N=size(ballOut,3);
         smartPos=singleRunSmartPoints(dat,j);
-        n=15*4;%remove n markers with highest parwise distance
+        a=string({vdat(:).fold});
+        vind=find(a==dat(j).fold);
+        n=15;%remove n markers with highest parwise distance
         for i = 1:N
-            d=squeeze(smartPos(i,:,:,:));
-            d=reshape(d,[],3);
-            [x,y,z]=separateVec(d,1);
-            %%%%%%%%%%%%%%%%%remove farthest markers from calc
-            D=squareform(pdist(d)); %square matrix
-            dout=sum(D,1);
-            [v,bottInds]=maxk(dout,n);
-            x(bottInds)=[];y(bottInds)=[];z(bottInds)=[];
-            %%%%%%%%%%%%%%%%
+            t=vdat(vind).t;
+            tapprox=startInd/100+i/10;
+            tind=find(t>=tapprox,1,'first');
+            hookPos=vdat(vind).hookPos(tind);
+            bucketRad=dat(j).smartSize(5);
             
-            shp=alphaShape(x,y,z,inf);
-            vol=volume(shp);
-            ar=surfaceArea(shp);
-            %         trisurf(K,x,y,z,'Facecolor','cyan')
-            %         axis([-0.03 0.03,-0.03 0.03,0, 0.05]);
-            %         cla;
-            psi(i)=pi^(1/3)*(6*vol)^(2/3)/ar;
+            %resize smartPos
+            aa=squeeze(smartPos(i,:,:,:));
+            aa=reshape(aa,size(aa,1)*size(aa,2),3);
+            
+            [smartPosOut]=RemoveSmartsFromBucket(aa,n,hookPos,bucketRad);  
+            psi(i)=calcSphericity(smartPosOut);
             cc=guiCols(ballOut(j,5,1),:);
-            
+            clear aa;
         end
+    
         allPsi{j}=psi;
         allT{j}=dat(j).t;
         plot(dat(j).t/1000,psi,'-','linewidth',2);

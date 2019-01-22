@@ -41,7 +41,7 @@ echo "run vars!: $lw $dt $nl $re $pa"
 # foldName=RemoveBucketAt1sNoGravUShape
 # foldName=RemoveBucketAt1s
 # foldName=RemoveBucketStraightShape
-foldName=Ballup
+
 
 # lwArr=(0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9);
 # dtVal=0.0002
@@ -49,11 +49,28 @@ foldName=Ballup
 # npl=(15 14 13 12 11 10 9 8 8)
 # re=-1
 # reArr=(0 0 0 0 0 0 0 0 0 0 0 0);
-lwArr=(0.5 0.7 0.9);
+
+# lwArr=(0.4 0.5 0.6 0.8 0.9);
+# dtVal=0.0002
+# nl=(35 30 22 20 20)
+# npl=(14 13 11 10 10)
+foldName=SCRemoveBucket
+procedure="SCRemoveBucket.txt"
+
+lwArr=(0.4 0.5 0.6 0.7 0.8);
+nl=(38 30 28 27 26)
+npl=(13 13 11 10 10)
+
+# lwArr=(0.4 0.6 0.7 0.8);
+# nl=(35 22 21 20)
+# npl=(14 11 11 10)
+
+# lwArr=(0.6);
+# nl=(22)
+# npl=(11)
+
 dtVal=0.0002
-nl=(30 20 20)
-npl=(13 10 10)
-vibAmp=0
+vibAmp=(5)
 re=-1
 pa=1
 ang1=90
@@ -63,17 +80,19 @@ windx=0
 windy=0
 ss=$2
 mkdir $foldName
-for j in `seq 0 2`; do
+for j in `seq 0 4`; do
 	for i in `seq 0 0`; do
 	  echo $i
-	  mkdir ./$foldName/lw_${lwArr[$j]}_nl_${nl[$j]}_npl_${npl[$j]}_vib_${vibAmp}
-	  a=$foldName/lw_${lwArr[$j]}_nl_${nl[$j]}_npl_${npl[$j]}/v${vers}
+	  mkdir ./$foldName/lw_${lwArr[$j]}_nl_${nl[$j]}_npl_${npl[$j]}_vib_${vibAmp[$i]}
+	  a=$foldName/lw_${lwArr[$j]}_nl_${nl[$j]}_npl_${npl[$j]}_vib_${vibAmp[$i]}/v${vers}
 	  mkdir $a
 	  cp smarticleMoves.csv $a
+	  cp ${procedure} $a
 	  cd $a
-	  $smartRunFile ${lwArr[$j]} ${dtVal} ${nl[$j]} ${re} ${pa} ${ang1} ${ang2} 0 ${npl[$j]} 0.2 ${ss} 0 ${windx} ${windy} 1 ${vibAmp};
+	  $smartRunFile ${lwArr[$j]} ${dtVal} ${nl[$j]} ${re} ${pa} ${ang1} ${ang2} 0 ${npl[$j]} 0.2 ${ss} 0 ${windx} ${windy} 1 ${vibAmp[$i]} ${procedure};
 	  cd $mf
 	  # cp -r ./PostProcess $a
 	done;
 done;
+
 powershell.exe -File "sendemail.ps1"

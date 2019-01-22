@@ -28,7 +28,7 @@ for(i=1:length(vibFolds))
             eval(['dat(c).',parNames{k},'=',num2str(vals(k)),';']);
         end
         pars(c,:)=vals;
-
+        
         dat(c).fold=fullfile(versionFolds(j).folder,versionFolds(j).name);
         dat(c).pars=pars(c,:);
         %%%%%%%%%read volume fractiond data%%%%%%%%%%%%%%
@@ -63,6 +63,11 @@ for(i=1:length(vibFolds))
             dat(c).hookF=D(:,2);
             dat(c).prismSt=D(:,3);
             dat(c).wallF=D(:,4:5);
+            
+            if size(D,2)>5
+                dat(c).hookPos=D(:,6);
+            end
+            clear D;
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -71,7 +76,7 @@ for(i=1:length(vibFolds))
         c=c+1;
     end
     %create a struct for params with nice names
-
+    
     
 end
 
