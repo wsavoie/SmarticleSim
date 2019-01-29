@@ -88,9 +88,9 @@ namespace chrono {
 		std::vector <double>  mLastCalled;
 		// last output
 		std::vector <double> mLastValue;
-
-	protected:
 		std::shared_ptr<CH_SYSTEM> ch_system_;
+	//protected:
+		
 
 
 	};

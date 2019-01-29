@@ -21,13 +21,16 @@ load(fullfile(fold,'vibData.mat'));
 %*13. hook force for constant l/w=1 or const vib=0
 %*14. plot sphericity for different l/w
 %*15. plot sphericity for different l/w outerpoints
+%*16. plot p(F) vs n for many lw
+%*17. plot p(F) vs n for single lw at diff times
 %************************************************************
 set(0, 'DefaultLineLineWidth', 2);
-showFigs=[1 5 7];
-
+showFigs=[12];
+% showFigs=[1 7 16 17];
+unViba=0;
 lw=[]; nl=[]; npl=[]; vib=[]; N=[]; v=[];
 props={lw nl npl vib N v};
-I=2;%ind to be used for multiple different plot numbers below
+I=1;%ind to be used for multiple different plot numbers below
 
 clear usedD;inds=1;
 for i=1:length(dat)
@@ -228,8 +231,8 @@ if(showFigs(showFigs==xx))
     
     
     
-%     unLW=unique([lws]);
-%     unVib=5; %i'll just use vib=5 for final vibration
+    %     unLW=unique([lws]);
+    %     unVib=5; %i'll just use vib=5 for final vibration
     %(phi_i,phi_f,dphi) and error for lwsimE
     [phiSim,phiSimE]=deal(zeros(length(unConstz),3));
     for(i = 1:length(unConstz))
@@ -248,13 +251,13 @@ if(showFigs(showFigs==xx))
         end
         phiSim(i,:)=mean(phiVals,1);
         phiSimE(i,:)=std(phiVals,0,1);
-%         phiSim(i,:)=cell2mat(cellfun(@(x) mean(x),phiVals,'UniformOutput',0));
-%         phiSimE(i,:)=cell2mat(cellfun(@(x) std(x),phiVals,'UniformOutput',0));
-      
+        %         phiSim(i,:)=cell2mat(cellfun(@(x) mean(x),phiVals,'UniformOutput',0));
+        %         phiSimE(i,:)=cell2mat(cellfun(@(x) std(x),phiVals,'UniformOutput',0));
+        
     end
     for j=1:length(unVaryz)
-    legz(end+1)=errorbar(unConstz,phiSim(:,1),phiSimE(:,1),'--o','linewidth',2,'DisplayName',['sim \phi_i',varyName,'=\pm',num2str(unVaryz),varyUnits]);
-    legz(end+1)=errorbar(unConstz,phiSim(:,2),phiSimE(:,2),'-o','linewidth',2,'DisplayName',['sim \phi_f ',varyName,'=\pm',num2str(unVaryz),varyUnits]); 
+        legz(end+1)=errorbar(unConstz,phiSim(:,1),phiSimE(:,1),'--o','linewidth',2,'DisplayName',['sim \phi_i',varyName,'=\pm',num2str(unVaryz),varyUnits]);
+        legz(end+1)=errorbar(unConstz,phiSim(:,2),phiSimE(:,2),'-o','linewidth',2,'DisplayName',['sim \phi_f ',varyName,'=\pm',num2str(unVaryz),varyUnits]);
     end
     legend(legz);
     xlabel(constName);
@@ -351,10 +354,10 @@ if(showFigs(showFigs==xx))
     unLW=unique([usedD.lw]);
     for(i = 1:length(unLW))
         %         unVib=unique(vibs(lws==unLW(i)));
-        unVib=5;
+%         unViba=0;
         phiVals={};
-        for(j=1:length(unVib))
-            cond=[lws==unLW(i)]&[vibs==(unVib(j))];
+        for(j=1:length(unViba))
+            cond=[lws==unLW(i)]&[vibs==(unViba(j))];
             %             vals=length(cond(cond==1));
             idz=find(cond);
             for k=1:length(idz)
@@ -362,6 +365,7 @@ if(showFigs(showFigs==xx))
                 load(fullfile(c,'Nout.mat'));
                 nM=mean(mean(Nout,2),3);
                 nE=std(mean(Nout,2),0,3);
+                [nf,kk]= max(nM);
                 
                 allnM(i,:)=[nM(1) nM(end)];
                 allnE(i,:)=[nE(1) nE(end)];
@@ -374,7 +378,7 @@ if(showFigs(showFigs==xx))
     xlabel('l/w')
     ylabel('\langleN\rangle');
     figText(gcf,18);
-    
+    axis([0 1.3,0 12])
 end
 %% 8. plot pdf of motor torque vs <N>
 xx=8;
@@ -587,8 +591,9 @@ if(showFigs(showFigs==xx))
     figure(xx);
     hold on;
     clear legz
-    ds=5; %dowsample amt
+    ds=10; %dowsample amt
     ts=1; %start time
+    legz=[];
     %                 dat(c).hookF=td(:,2);
     %             dat(c).prismSt=D(:,3);
     %             dat(c).wallF=D(:,4:5);
@@ -599,11 +604,12 @@ if(showFigs(showFigs==xx))
     
     prismSt=prismSt(t>ts);
     hookF=hookF(t>ts);
+    t0=t;
     t=t(t>ts);
     
-    t=downsample(t,ds);
-    hookF=downsample(hookF,ds)/usedD(I).N;%scaled force by numb of smarts
-    prismSt=downsample(prismSt,ds);
+%     t=downsample(t,ds);
+    hookF=movmean(hookF,ds)/usedD(I).N;%scaled force by numb of smarts
+%     prismSt=movmean(prismSt,ds);
     
     %find changes in guid
     legz(1)=plot(t,hookF,'linewidth',2,'DisplayName','F_H');
@@ -613,14 +619,25 @@ if(showFigs(showFigs==xx))
     axis tight
     dispName=["Before Lifting","Lift Begin","Lift End"];
     for(i=1:size(gc,1))
-        legz(end+1)=plot([t(gc(i,1)),t(gc(i,1))],get(gca,'ylim'),'linewidth',3,...
+        legz(end+1)=plot(t(gc(i,1))*[1,1],get(gca,'ylim'),'linewidth',3,...
             'color',guiCols(gc(i,2),:),'DisplayName',dispName(i));
+    end
+    
+    if isfield(usedD(I),'bucketExist')
+        bucketPt=find(usedD(I).bucketExist(t0>ts)==0,1,'first');
+        if(bucketPt)
+            legz(end+1)=plot(t(bucketPt)*[1,1],get(gca,'ylim'),'linewidth',3,...
+                'DisplayName','bucket removal','color','k');
+        end
     end
     
     xlabel('t (s)');
     ylabel('Force/(s_mg*N)');
     figText(gcf,18);
     legend(legz);
+    
+    %%%%
+    xlim([4.49,7.5])
 end
 %% 13.hook force for constant l/w=1 or const vib=0
 xx=13;
@@ -900,3 +917,93 @@ end
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 16.  plot p(F) vs n
+xx=16;
+if(showFigs(showFigs==xx))
+    if(~exist('createPlane','file'))
+        setupGeom3d
+    end
+    clear nfinal nTot
+    figure(xx);
+    hold on;
+    unVib=unique([vibs]);
+    unLW=unique([usedD.lw]);
+    edges=[0:1:30];
+%     unViba=5;
+    nfinal=zeros(length(unLW),length(diff(edges)),length(unViba));
+    colz=colormap(brewermap(length(unLW),'RdYlBu'));
+    for(i = 1:length(unLW))
+        %         unVib=unique(vibs(lws==unLW(i)));
+        phiVals={};
+        timeI=40;
+        
+        for(j=1:length(unViba))
+            cond=[lws==unLW(i)]&[vibs==(unViba(j))];
+            %             vals=length(cond(cond==1));
+            idz=find(cond);
+            nTot=[];
+            for k=1:length(idz)
+                c=fileparts(usedD(idz(k)).fold);
+                load(fullfile(c,'Nout.mat'));
+                
+                nTot=horzcat(nTot,Nout(timeI,:));
+            end
+            nfinal(i,:,j)=histcounts(nTot,'binedges',edges,'Normalization','probability');
+        end
+        plot(cumsum(diff(edges)),nfinal(i,:,1)+0.1*(length(unLW)-i),'color',colz(i,:));
+    end
+
+    xlabel('N')
+    ylabel('P(N) + constant');
+    ar=annotation('arrow','Color','k','X',[.8 , .8],'Y',[.8,.5]);
+    text(ar.X(1)+0.05,.9,['l/w'],'units','Normalized');
+
+    figText(gcf,18);
+    
+    
+end
+%% 17. plot p(F) vs n for single lw at diff times
+xx=17;
+if(showFigs(showFigs==xx))
+    if(~exist('createPlane','file'))
+        setupGeom3d
+    end
+    clear nfinal nTot
+    figure(xx);
+    hold on;
+    unVib=unique([vibs]);
+    unLW=unique([usedD.lw]);
+    edges=[0:1:14];
+%     unViba=5;
+    unLW=0.4;
+    
+    for(i = 1:length(unLW))
+        for(j=1:length(unViba))
+            cond=[lws==unLW(i)]&[vibs==(unViba(j))];
+            %             vals=length(cond(cond==1));
+            idz=find(cond);
+            nTot=[];
+            for k=1:length(idz)
+                c=fileparts(usedD(idz(k)).fold);
+                load(fullfile(c,'Nout.mat'));
+                nTot=horzcat(nTot,Nout);
+            end
+        end
+    end
+        colz=colormap(brewermap(size(Nout,1),'RdYlBu'));
+        maxline=zeros(size(nTot,1),2);
+    for(i=1:size(nTot,1))
+        nfinal(i,:)=histcounts(nTot(i,:),'binedges',edges,'Normalization','probability');
+        plot(cumsum(diff(edges)),nfinal(i,:)+0.1*i,'color',colz(i,:));
+        [maxline(i,2),maxline(i,1)]=max(nfinal(i,:)+0.1*i);
+    end
+    plot(maxline(:,1),maxline(:,2),'k','linewidth',2);
+    xlabel('N')
+    ylabel('P(N) + constant');
+    ar=annotation('arrow','Color','k','X',[.8 , .8],'Y',[.4,.8]);
+    text(ar.X(1)+0.05,.3,['time'],'units','Normalized');
+
+    figText(gcf,18);
+    
+    
+end

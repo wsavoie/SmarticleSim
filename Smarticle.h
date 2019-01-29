@@ -219,7 +219,6 @@ namespace chrono {
 		void CheckOTTimer();
 
 		//////////////
-
 		double activateStress = 0;;
 		double LTThresh; //Low  torque threshold
 		double MTThresh; //Mid  torque threshold
@@ -262,7 +261,6 @@ namespace chrono {
 
 
 		void setTextures();
-
 		void updateTorqueDeque();
 		void updateTorqueAvg(std::tuple <double, double, double, double > oldT);
 		///////////////////////////////////////////////////////////
@@ -364,7 +362,7 @@ namespace chrono {
 		double collisionEnvelope;
 		bool arm0OT;
 		bool arm2OT;
-
+		double refSmartMass=0; //mass of l/w=0.7 smarticle
 		//double LTThresh; //Low  torque threshold
 		//double MTThresh; //Mid  torque threshold
 		//double OTThresh; //Over torque threshold

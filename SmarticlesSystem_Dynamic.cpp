@@ -40,6 +40,9 @@
 #include "utils/ChUtilsGenerators.h"
 #include "common.h"
 #include <ctime>
+#include <direct.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "core/ChFileutils.h" // for MakeDirectory
 #include "IrrGui.h"
 #include "Smarticle.h"
@@ -100,7 +103,7 @@ using namespace irr::gui;
 //***********************************
 // Use the namespace of Chrono
 //enum SmarticleType { SMART_ARMS, SMART_U };
-//enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM,FLATHOPPER,HOOKRAISE2};
+//enum BucketType { KNOBCYLINDER, HOOKRAISE, STRESSSTICK, CYLINDER, BOX, HULL, RAMP, HOPPER, DRUM,FLATHOPPER,HOOKRAISE2,HOOKFRACTURE};
 SmarticleType smarticleType = SMART_ARMS;//SMART_U;
 BucketType bucketType = CYLINDER;
 //std::vector<std::shared_ptr<ChBody>> /*sphereStick*/;
@@ -131,7 +134,6 @@ int inactiveLoc = 0; //location of dead particle in ring +x +y -x -y
 double gravity = -9.81 * sizeScale;
 //double gravity = 0;
 
-double actuationStart=10;
 
 double smart_fric = .4;//.3814; //keyboard box friction = .3814
 double vibration_freq = 30;
@@ -231,6 +233,10 @@ double i_gain = 1;// 0.03;	 //.5//.225						//0.05
 double d_gain = 1; //.0025 //.01       //0.0033
 #endif
 
+
+double actuationStart = 10;
+double actuation_amp = 2 * w_smarticle;
+double actuationSpd = -1 * w_smarticle;
 
 	// double t_smarticle 	= sizeScale * .00254;
 	// double t2_smarticle	= sizeScale * .001;
@@ -740,10 +746,6 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[1];
 		mult_l = atof(text);
 		l_smarticle = mult_l * w_smarticle;
-		if (stapleSize && sphereVersion)
-		{
-			l_smarticle = t_smarticle*mult_l+t_smarticle/2.0;
-		}
 	}
 	if (argc > 2) {
 		const char* text = argv[2];
@@ -817,7 +819,7 @@ void SetArgumentsForMbdFromInput(int argc, char* argv[], int& threads, int& max_
 		const char* text = argv[16];
 		//percentToMoveToGlobal = atof(text);
 		vibAmp = atof(text)*D2R;
-		vibAmp = (0.7*vibAmp) / (mult_l);
+		vibAmp = (0.7*vibAmp) / (mult_l); //based vibration amplitude of smarticle of 0.7 size
 	}
 	if (argc > 17) {
 		const std::string text = argv[17];
@@ -910,7 +912,7 @@ void InitializeMbdPhysicalSystem_NonParallel(std::shared_ptr<CH_SYSTEM> mphysica
 	//mphysicalSystem->SetMinBounceSpeed(contact_recovery_speed);
 	//mphysicalSystem->SetSolverWarmStarting(true);
 	//mphysicalSystem->SetUseSleeping(true);
-	
+
 	//mphysicalSystem->SetSolverSharpnessParam(2); //lambda 1
 	//mphysicalSystem->SetSolverOverrelaxationParam(.4); //omega .2
 
@@ -1013,13 +1015,14 @@ void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<
 				genRand(sys->bucket_interior_halfDim.z() / 2.5),
 				zpos);
 			break;
-		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER: case HOOKRAISE2:
+		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER: case HOOKRAISE2: case HOOKFRACTURE:
 			if (!placeInMiddle)
 			{
 				myPos = sys->bucket_ctr + ChVector<>(sin(ang * i + phase) *(sys->bucket_rad / 2.2),
 					cos(ang*i + phase)*(sys->bucket_rad / 2.2),
-					std::max(sys->bucket_interior_halfDim.z() * 2.0, zpos));
-				dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2 * w_smarticle / timeForDisp);
+					std::min(sys->bucket_interior_halfDim.z() * 1.85, zpos + 0.5*w_smarticle));
+				dropSpeed = ChVector<>(0, 0, gravity*timeForDisp / 2.0 - 2.5 * w_smarticle / timeForDisp);
+				//dropSpeed = ChVector<>(0, 0, 2*gravity*timeForDisp / 2.0);
 				myRot = ChQuaternion<>(genRand(-1, 1), genRand(-1, 1), genRand(-1, 1), genRand(-1, 1));
 			}
 			else////////////place in center of bucket on bucket bottom
@@ -1218,6 +1221,7 @@ void AddParticlesLayer1(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<
 		smarticle0->SetSpeed(dropSpeed);
 		
 #if irrlichtVisualization
+
 		application.AssetBindAll();
 		application.AssetUpdateAll();
 
@@ -1260,9 +1264,9 @@ void CreateMbdPhysicalSystemObjects(std::shared_ptr<CH_SYSTEM> mphysicalSystem, 
 	
 	//setup vars first
 	sys->actuationStart = actuationStart;
-	sys->actuation_amp = 2*w_smarticle;
+	sys->actuation_amp = actuation_amp; //2 * w_smarticle
 	sys->omega_bucket = omega_bucket;
-	sys->actuationSpd = -w_smarticle;
+	sys->actuationSpd = actuationSpd; //-w_smarticle
 	sys->create_Container();
 
 
@@ -1494,7 +1498,7 @@ void FixSmarticles(std::shared_ptr<CH_SYSTEM> mphysicalSystem, std::vector<std::
 
 		switch (bucketType)
 		{
-		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER: case HOOKRAISE2:
+		case CYLINDER: case STRESSSTICK: case HOOKRAISE: case KNOBCYLINDER: case HOOKRAISE2: case HOOKFRACTURE:
 			//if (!IsInRadial(sPtr->Get_cm(), sys->bucket_bott->GetPos() + ChVector<>(0, 0, sys->bucket_interior_halfDim.z()), ChVector<>(sys->bucket_rad * 3, sys->bucket_bott->GetPos().z(), sys->bucket_bott->GetPos().z() + 4 * sys->bucket_interior_halfDim.z())))
 			//{
 			//	EraseSmarticle(mphysicalSystem, myIter, sPtr, mySmarticlesVec);
@@ -1859,6 +1863,12 @@ void PrintStress2(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tstep, double 
 			stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl;
 
 			break;
+		case HOOKFRACTURE:
+			temp = bucket_bod_vec.at(1)->GetPos();
+			currBuckRad = sqrt(temp.x()*temp.x() + temp.y()*temp.y()) - sys->bucket_half_thick / 5.0;//sys->bucket_half_thick/5 is how wall thickness is defined!
+			stress_of << mphysicalSystem->GetChTime() << ", " << showForce(mphysicalSystem) << ", " << Smarticle::global_GUI_value << ", " << currBuckRad << ", " << 0 << std::endl;
+
+			break;
 		case BOX: case BOXDROP:
 			//stress_of << mphysicalSystem->GetChTime() << ", " << angle1 << ", " << Smarticle::global_GUI_value << ", " << box_ang << ", " << angle2 << std::endl;
 
@@ -2046,6 +2056,37 @@ void PrintFractions(std::shared_ptr<CH_SYSTEM> mphysicalSystem, int tStep, std::
 		}
 		double bucketVol = (max2*PI*sys->bucket_rad*sys->bucket_rad);
 		volumeFraction = countInside2*vol / (bucketVol-sys->hookVol);
+		//GetLog() << vol << " " << countInside2 << " " << sys->bucket_rad << " " << zMax << " " << volumeFraction << "\n";
+		//GetLog() << "phi=" << volumeFraction << "\n";
+		zComz = zComz / countInside2;
+		totalTorque = totalTorque / (countInside2 * 2.0); //multiply by 2 (2 arms for each smarticle)
+
+		ChVector<> a = getBucketForce(mphysicalSystem);
+		stressHook_of << mphysicalSystem->GetChTime() << ", " << sys->pris_engine->Get_react_force().x() << ", " << sys->prismaticState << ", " << a.x() << ", " << a.y() << ", " << sys->topHook->GetPos().z() << std::endl;
+		break;
+	}
+	case HOOKFRACTURE:
+	{
+		countInside2 = mySmarticlesVec.size();
+		for (size_t i = 0; i < mySmarticlesVec.size(); i++) {
+			std::shared_ptr<Smarticle> sPtr = mySmarticlesVec[i];
+			//isinradial rad parameter is Vector(bucketrad,zmin,zmax)
+
+			com = sPtr->Get_cm() - ChVector<>(0, 0, bucketMin.z());
+			zComz += com.z();
+			max2 = std::max(max2, com.z());
+			if (max2 > zMax)
+			{
+				double temp = zMax;
+				zMax = max2;
+				max2 = temp;
+			}
+			totalTorque += abs(sPtr->GetMotTorque(0)) + abs(sPtr->GetMotTorque(1));
+			//totalTorque += abs(sPtr->GetReactTorqueVector(0).z()) + abs(sPtr->GetReactTorqueVector(1).z());
+			//zMax = std::max(zMax, sPtr->GetArm(1)->GetPos().z()- bucketMin.z());
+		}
+		double bucketVol = (max2*PI*sys->bucket_rad*sys->bucket_rad);
+		volumeFraction = countInside2*vol / (bucketVol - sys->hookVol);
 		//GetLog() << vol << " " << countInside2 << " " << sys->bucket_rad << " " << zMax << " " << volumeFraction << "\n";
 		//GetLog() << "phi=" << volumeFraction << "\n";
 		zComz = zComz / countInside2;
@@ -2390,8 +2431,14 @@ void readInProcedure(std::string a)
 	//std::system(copyPro.c_str());
 	std::ifstream inPro;
 	inPro.open(a);
-	inPro >> actuationStart>> smartStr;
+	int buckType;
+	inPro >> actuationStart>> actuation_amp>> actuationSpd >> smartStr>> buckType;
+	
+	actuationSpd = -w_smarticle*actuationSpd;
+	actuation_amp = w_smarticle*actuation_amp;
+	bucketType = (BucketType) buckType;
 	GetLog() << "$$$$$$$$$$ACTUATION START$$$$$$$$$$$" << actuationStart << nl;
+	//
 	while (inPro.good())
 	{
 		inPro >> ti >> ddCh >> te >> ddCh >> gui >> ddCh >> bucket >> ddCh;
@@ -2658,15 +2705,29 @@ int main(int argc, char* argv[]) {
 
 	//set chrono dataPath to data folder placed in smarticle directory so we can share created files
 #if defined(_WIN64)
-	char* pPath = getenv("USERNAME");
-	GetLog() << pPath;
-	std::string fp;
-	if (strcmp(pPath, "root") == 0)
-		fp = std::string("D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\");
-	else
-		fp = std::string("D:\\GT Coursework\\smarticles\\data\\");
+	//char* pPath = getenv("USERNAME");
+	//GetLog() << pPath;
+	//std::string fp;
+	//if (strcmp(pPath, "root") == 0)
+	//	fp = std::string("D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\");
+	//else
+	//	fp = std::string("D:\\GT Coursework\\smarticles\\data\\");
 	//fp = __FILE__+fp;
+	//
+	//////////////////
+	//const char* fp = "data";
 
+	//GetLog() << __FILE__+"\\..\\data\\";
+	std::string fp = argv[0];
+
+	fp = fp +"\\..\\data\\";
+	GetLog() << fp;
+	//int statRC = stat(fp.c_str(), &info);
+	//if (!(info.st_mode & S_IFDIR))
+	//{
+	//	fp = std::string("D:\\ChronoCode\\chronoPkgs\\Smarticles\\data\\");
+	//}
+	//////////////////
 	SetChronoDataPath(fp);
 #else
 	SetChronoDataPath("/home/ws/SmartSim/Smarticles/data/");
@@ -2712,10 +2773,12 @@ int main(int argc, char* argv[]) {
 	const std::string simulationParams = out_dir + "/simulation_specific_parameters.txt";
 	simParams.open(simulationParams.c_str());
 
-	sys = std::shared_ptr<SystemGeometry>(new SystemGeometry(mphysicalSystem, bucketType, collisionEnvelope,
-		l_smarticle, w_smarticle, t_smarticle, t2_smarticle));
+
 
 	InitializeMbdPhysicalSystem_NonParallel(mphysicalSystem, argc, argv);
+
+	sys = std::shared_ptr<SystemGeometry>(new SystemGeometry(mphysicalSystem, bucketType, collisionEnvelope,
+		l_smarticle, w_smarticle, t_smarticle, t2_smarticle));
 	sys->mat_wall->SetFriction(percentToChangeStressState); //########
 
 
@@ -2870,7 +2933,7 @@ int main(int argc, char* argv[]) {
 
 		break;
 
-	case KNOBCYLINDER: case CYLINDER: case STRESSSTICK: case HOOKRAISE: case HOOKRAISE2:
+	case KNOBCYLINDER: case CYLINDER: case STRESSSTICK: case HOOKRAISE: case HOOKRAISE2: case HOOKFRACTURE:
 
 		if (stapleSize)
 		{
@@ -2941,7 +3004,7 @@ int main(int argc, char* argv[]) {
 	
 
 
-	double timeForVerticalDisplacement = 0.015;
+	double timeForVerticalDisplacement = 0.015; //was 0.015
 	if (bucketType == DRUM)
 		timeForVerticalDisplacement = 0.095; // 1.5 for safety proximity .015
 	if (bucketType == BOX)
@@ -3060,7 +3123,9 @@ int main(int argc, char* argv[]) {
 #if irrlichtVisualization
 
 		if (!(application.GetDevice()->run())) break;
+
 		//if ((application.GetDevice()->isWindowMinimized())) break;
+
 		application.GetVideoDriver()->beginScene(true, true,
 			video::SColor(255, 140, 161, 192));
 		for (size_t i = 0; i < mySmarticlesVec.size(); ++i)
@@ -3069,8 +3134,9 @@ int main(int argc, char* argv[]) {
 			application.AssetUpdate(mySmarticlesVec[i]->GetArm(1));
 			application.AssetUpdate(mySmarticlesVec[i]->GetArm(2));
 		}
-
+		//GetLog() << "###############before do step################" << nl;
 		application.DoStep();
+		//GetLog() << "###############after do step################" << nl;
 		//mphysicalSystem.DoStepDynamics(dT);
 
 		UpdateSmarticles(mphysicalSystem, mySmarticlesVec);
@@ -3115,7 +3181,6 @@ int main(int argc, char* argv[]) {
 		
 
 		application.GetVideoDriver()->endScene();
-
 #else
 
 		mphysicalSystem.DoStepDynamics(dT);
@@ -3126,8 +3191,7 @@ int main(int argc, char* argv[]) {
 		if (SetGait(t, mphysicalSystem) == true)
 			break;
 
-		
-		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER || bucketType == CYLINDER || bucketType == BOX || bucketType == HOOKRAISE2)
+		if (bucketType == STRESSSTICK || bucketType == KNOBCYLINDER || bucketType == CYLINDER || bucketType == BOX || bucketType == HOOKRAISE2 || bucketType == HOOKFRACTURE)
 		{
 			double zmax = Find_Max_Z(mphysicalSystem, mySmarticlesVec);
 			PrintStress2(mphysicalSystem, tStep, zmax, sys->rad, mySmarticlesVec);

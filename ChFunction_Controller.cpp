@@ -224,7 +224,10 @@ double ChFunctionController::ComputeOutputSpeed(double t)
 
 	//strength in num of smarts
 	//GetLog() << "&&&&&&&&&&&&&&"<< this->controller_->smartStr << nl;
-	double maxTor = this->controller_->smartStr * this->controller_->smarticle_->GetMass()*this->controller_->smarticle_->w;
+	//double maxTor = this->controller_->smartStr * this->controller_->smarticle_->GetMass()*this->controller_->smarticle_->w;
+	
+	double g=abs(this->controller_->ch_system_->Get_G_acc().z());
+	double maxTor = this->controller_->smartStr*g*this->controller_->smarticle_->refSmartMass*this->controller_->smarticle_->w; //based torque off of strength variable* weight of 0.7 l/w smarticle *distance of w;
 	double currT=abs(this->controller_->smarticle_->getLinkActuator(index_)->Get_mot_torque());
 	double error = des_ang - curr_ang;
 	int countMax = 20;

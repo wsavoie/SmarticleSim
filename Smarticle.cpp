@@ -245,6 +245,7 @@ void Smarticle::setTextures()
 	}
 	
 }
+
 void Smarticle::updateTorqueDeque()
 {
 	std::tuple < double, double, double, double > oldT = torques.back();
@@ -1116,9 +1117,11 @@ void Smarticle::Create() {
 	quat1.Normalize();
 	quat2.Normalize();
 
-
+	ChVector<> armDimL = ChVector<>((w*0.7) / 2.0, r, r2); //size of arm for reference smarticle size
+	ChVector<> armDimW = ChVector<>(w / 2.0, r, r2); //size of spine for reference smarticle size
 	if (stapleSize)
 	{
+		
 		if (!sphereVersion)
 		{
 			offPlaneoffset = 0;
@@ -1126,6 +1129,7 @@ void Smarticle::Create() {
 			CreateArms(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0 - r2)*sin(-angles[0])), quat0);
 			CreateArms(1, w, ChVector<>(0, 0, 0));
 			CreateArms(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r2)*sin(-angles[1])), quat2);
+			armDimL.Set((0.7*w+2*r2-jointClearance)/2.0, armDimL.y(), armDimL.z());
 		}
 		//l_mod = l + 2*r - jointClearance;
 		//CreateArmsPill(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0-r)*sin(-angles[0])), quat0);
@@ -1138,7 +1142,10 @@ void Smarticle::Create() {
 			CreateArmsSphere(0, l_mod, ChVector<>(-w / 2.0 - (l / 2.0)*cos(-angles[0]), 0, -(l_mod / 2.0)*sin(-angles[0])), quat0);
 			CreateArmsSphere(1, w, ChVector<>(0, 0, 0));
 			CreateArmsSphere(2, l_mod, ChVector<>(w / 2.0 + (l / 2.0)*cos(-angles[1]), 0, -(l_mod / 2.0 - r)*sin(-angles[1])), quat2);
+			
 		}
+		//l_smarticle = w_smarticle*mult_l; //r2=t2/2.0
+
 	}
 	else
 	{
@@ -1152,6 +1159,7 @@ void Smarticle::Create() {
 		CreateArm3(2, l, armt, armt2, ChVector<>((w / 2.0 - (jointClearance)+cos(-angles[1])*l / 2), 0, -(l / 2.0)*sin(-angles[1]) - offPlaneoffset), quat2);
 	}
 
+	refSmartMass = (utils::CalcBoxVolume(armDimL)*arm_density) * 2 + (utils::CalcBoxVolume(armDimW)*mid_density); //doesn't work for cylindrical arms
 	//need this here
 	if (read_from_file <= 0)//not reading
 	{
