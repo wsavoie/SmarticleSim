@@ -1,0 +1,291 @@
+//
+// Academic License - for use in teaching, academic research, and meeting
+// course requirements at degree granting institutions only.  Not for
+// government, commercial, or other organizational use.
+// File: main.cpp
+//
+// MATLAB Coder version            : 4.0
+// C/C++ source code generated on  : 20-Dec-2018 12:28:38
+//
+
+//***********************************************************************
+// This automatically generated example C main file shows how to call
+// entry-point functions that MATLAB Coder generated. You must customize
+// this file for your application. Do not modify this file directly.
+// Instead, make a copy of this file, modify it, and integrate it into
+// your development environment.
+//
+// This file initializes entry-point function arguments to a default
+// size and value before calling the entry-point functions. It does
+// not store or use any values returned from the entry-point functions.
+// If necessary, it does pre-allocate memory for returned values.
+// You can use this file as a starting point for a main function that
+// you can deploy in your application.
+//
+// After you copy the file, and before you deploy it, you must make the
+// following changes:
+// * For variable-size function arguments, change the example sizes to
+// the sizes that your application requires.
+// * Change the example values of function arguments to the values that
+// your application requires.
+// * If the entry-point functions return values, store these values or
+// otherwise use them as required by your application.
+//
+//***********************************************************************
+// Include Files
+#include "rt_nonfinite.h"
+#include "generatePackingFromSimDatPLANE.h"
+#include "main.h"
+#include "generatePackingFromSimDatPLANE_terminate.h"
+#include "generatePackingFromSimDatPLANE_emxAPI.h"
+#include "generatePackingFromSimDatPLANE_initialize.h"
+
+// Function Declarations
+static void argInit_1x5_real_T(double result[5]);
+static void argInit_1x6_real_T(double result[6]);
+static emxArray_char_T *argInit_1xUnbounded_char_T();
+static emxArray_real_T *argInit_1xUnbounded_real_T();
+static char argInit_char_T();
+static double argInit_real_T();
+static void argInit_struct0_T(struct0_T *result);
+static emxArray_real_T *c_argInit_Unboundedx8xUnbounded();
+static emxArray_real_T *c_argInit_Unboundedx9xUnbounded();
+static void main_generatePackingFromSimDatPLANE();
+
+// Function Definitions
+
+//
+// Arguments    : double result[5]
+// Return Type  : void
+//
+static void argInit_1x5_real_T(double result[5])
+{
+  int idx1;
+
+  // Loop over the array to initialize each element.
+  for (idx1 = 0; idx1 < 5; idx1++) {
+    // Set the value of the array element.
+    // Change this value to the value that the application requires.
+    result[idx1] = argInit_real_T();
+  }
+}
+
+//
+// Arguments    : double result[6]
+// Return Type  : void
+//
+static void argInit_1x6_real_T(double result[6])
+{
+  int idx1;
+
+  // Loop over the array to initialize each element.
+  for (idx1 = 0; idx1 < 6; idx1++) {
+    // Set the value of the array element.
+    // Change this value to the value that the application requires.
+    result[idx1] = argInit_real_T();
+  }
+}
+
+//
+// Arguments    : void
+// Return Type  : emxArray_char_T *
+//
+static emxArray_char_T *argInit_1xUnbounded_char_T()
+{
+  emxArray_char_T *result;
+  static int iv3[2] = { 1, 2 };
+
+  int idx1;
+
+  // Set the size of the array.
+  // Change this size to the value that the application requires.
+  result = emxCreateND_char_T(2, iv3);
+
+  // Loop over the array to initialize each element.
+  for (idx1 = 0; idx1 < result->size[1U]; idx1++) {
+    // Set the value of the array element.
+    // Change this value to the value that the application requires.
+    result->data[result->size[0] * idx1] = argInit_char_T();
+  }
+
+  return result;
+}
+
+//
+// Arguments    : void
+// Return Type  : emxArray_real_T *
+//
+static emxArray_real_T *argInit_1xUnbounded_real_T()
+{
+  emxArray_real_T *result;
+  static int iv6[2] = { 1, 2 };
+
+  int idx1;
+
+  // Set the size of the array.
+  // Change this size to the value that the application requires.
+  result = emxCreateND_real_T(2, iv6);
+
+  // Loop over the array to initialize each element.
+  for (idx1 = 0; idx1 < result->size[1U]; idx1++) {
+    // Set the value of the array element.
+    // Change this value to the value that the application requires.
+    result->data[result->size[0] * idx1] = argInit_real_T();
+  }
+
+  return result;
+}
+
+//
+// Arguments    : void
+// Return Type  : char
+//
+static char argInit_char_T()
+{
+  return '?';
+}
+
+//
+// Arguments    : void
+// Return Type  : double
+//
+static double argInit_real_T()
+{
+  return 0.0;
+}
+
+//
+// Arguments    : struct0_T *result
+// Return Type  : void
+//
+static void argInit_struct0_T(struct0_T *result)
+{
+  // Set the value of each structure field.
+  // Change this value to the value that the application requires.
+  result->lw = argInit_real_T();
+  result->nl = argInit_real_T();
+  result->npl = argInit_real_T();
+  result->vib = argInit_real_T();
+  result->N = argInit_real_T();
+  result->v = argInit_real_T();
+  result->fold = argInit_1xUnbounded_char_T();
+  argInit_1x6_real_T(result->pars);
+  result->ballOut = c_argInit_Unboundedx8xUnbounded();
+  result->smartInfo = c_argInit_Unboundedx9xUnbounded();
+  result->t = argInit_1xUnbounded_real_T();
+  result->gui = argInit_1xUnbounded_real_T();
+  result->totTorque = argInit_1xUnbounded_real_T();
+  result->smartVol = argInit_real_T();
+  argInit_1x5_real_T(result->smartSize);
+}
+
+//
+// Arguments    : void
+// Return Type  : emxArray_real_T *
+//
+static emxArray_real_T *c_argInit_Unboundedx8xUnbounded()
+{
+  emxArray_real_T *result;
+  static int iv4[3] = { 2, 8, 2 };
+
+  int idx0;
+  int idx1;
+  int idx2;
+
+  // Set the size of the array.
+  // Change this size to the value that the application requires.
+  result = emxCreateND_real_T(3, iv4);
+
+  // Loop over the array to initialize each element.
+  for (idx0 = 0; idx0 < result->size[0U]; idx0++) {
+    for (idx1 = 0; idx1 < 8; idx1++) {
+      for (idx2 = 0; idx2 < result->size[2U]; idx2++) {
+        // Set the value of the array element.
+        // Change this value to the value that the application requires.
+        result->data[(idx0 + result->size[0] * idx1) + result->size[0] *
+          result->size[1] * idx2] = argInit_real_T();
+      }
+    }
+  }
+
+  return result;
+}
+
+//
+// Arguments    : void
+// Return Type  : emxArray_real_T *
+//
+static emxArray_real_T *c_argInit_Unboundedx9xUnbounded()
+{
+  emxArray_real_T *result;
+  static int iv5[3] = { 2, 9, 2 };
+
+  int idx0;
+  int idx1;
+  int idx2;
+
+  // Set the size of the array.
+  // Change this size to the value that the application requires.
+  result = emxCreateND_real_T(3, iv5);
+
+  // Loop over the array to initialize each element.
+  for (idx0 = 0; idx0 < result->size[0U]; idx0++) {
+    for (idx1 = 0; idx1 < 9; idx1++) {
+      for (idx2 = 0; idx2 < result->size[2U]; idx2++) {
+        // Set the value of the array element.
+        // Change this value to the value that the application requires.
+        result->data[(idx0 + result->size[0] * idx1) + result->size[0] *
+          result->size[1] * idx2] = argInit_real_T();
+      }
+    }
+  }
+
+  return result;
+}
+
+//
+// Arguments    : void
+// Return Type  : void
+//
+static void main_generatePackingFromSimDatPLANE()
+{
+  emxArray_real_T *smartCross;
+  struct0_T dat;
+  emxInitArray_real_T(&smartCross, 2);
+
+  // Initialize function 'generatePackingFromSimDatPLANE' input arguments.
+  // Initialize function input argument 'dat'.
+  argInit_struct0_T(&dat);
+
+  // Call the entry-point 'generatePackingFromSimDatPLANE'.
+  generatePackingFromSimDatPLANE(&dat, argInit_real_T(), smartCross);
+  emxDestroyArray_real_T(smartCross);
+  emxDestroy_struct0_T(dat);
+}
+
+//
+// Arguments    : int argc
+//                const char * const argv[]
+// Return Type  : int
+//
+int main(int, const char * const [])
+{
+  // Initialize the application.
+  // You do not need to do this more than one time.
+  generatePackingFromSimDatPLANE_initialize();
+
+  // Invoke the entry-point functions.
+  // You can call entry-point functions multiple times.
+  main_generatePackingFromSimDatPLANE();
+
+  // Terminate the application.
+  // You do not need to do this more than one time.
+  generatePackingFromSimDatPLANE_terminate();
+  return 0;
+}
+
+//
+// File trailer for main.cpp
+//
+// [EOF]
+//

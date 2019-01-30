@@ -1,0 +1,4 @@
+mkdir small
+for f in *.avi; do ffmpeg -i "$f" -an -c:v libxvid -q 0 small/"$f"; done
+
+ffmpeg -i vidin.avi -an -c:v libxvid -q 0 vidout.avi
